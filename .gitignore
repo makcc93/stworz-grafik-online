@@ -140,6 +140,7 @@ replay_pid*
 ### Maven ###
 target/
 pom.xml.tag
+application.properties
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
