@@ -26,8 +26,8 @@ public final class StoreBuilder {
                 .location(location)
                 .branch(branch)
                 .region(region)
-                .openHour(openHour)
-                .closeHour(closeHour)
+                .openForClientsHour(openHour)
+                .closeForClientsHour(closeHour)
                 .build();
     }
 

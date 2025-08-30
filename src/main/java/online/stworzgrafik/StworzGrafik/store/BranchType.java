@@ -1,25 +1,25 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 public enum BranchType {
-    BIAŁYSTOK,
+    BIALYSTOK,
     BYDGOSZCZ,
-    CZĘSTOCHOWA,
-    GDAŃSK,
+    CZESTOCHOWA,
+    GDANSK,
     KATOWICE1,
     KATOWICE2,
     KATOWICE3,
-    KRAKÓW,
+    KRAKOW,
     LUBLIN,
-    ŁÓDŹ,
+    LODZ,
     OLSZTYN,
-    POZNAŃ1,
-    POZNAŃ2,
-    RZESZÓW,
+    POZNAN1,
+    POZNAN2,
+    RZESZOW,
     SZCZECIN,
     WARSZAWA1,
     WARSZAWA2,
     WARSZAWA3,
-    WROCŁAW1,
-    WROCŁAW2
+    WROCLAW1,
+    WROCLAW2
 
 }

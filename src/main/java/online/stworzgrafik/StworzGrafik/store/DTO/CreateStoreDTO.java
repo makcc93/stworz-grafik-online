@@ -25,17 +25,25 @@ public record CreateStoreDTO(
 
         @NotNull RegionType region,
 
-        @NotNull LocalTime openHour,
+        @NotNull LocalTime openForClientsHour,
 
-        @NotNull LocalTime closeHour
+        @NotNull LocalTime closeForClientsHour
 ) {
     public CreateStoreDTO{
+        validateHours(openForClientsHour,closeForClientsHour);
+
         if (name != null){
             name = name.trim().toUpperCase();
         }
 
         if (storeCode != null){
             storeCode = storeCode.trim().toUpperCase();
+        }
+    }
+
+    private void validateHours(@NotNull LocalTime openForClientsHour, @NotNull LocalTime closeForClientsHour) {
+        if (closeForClientsHour.getHour() <= openForClientsHour.getHour()){
+            throw new IllegalArgumentException("Close hour cannot be before or equal open hour");
         }
     }
 }

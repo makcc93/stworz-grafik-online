@@ -134,7 +134,7 @@ class ShiftServiceImplIT {
         Integer id = 1234;
 
         //when
-        IllegalArgumentException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findEntityById(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findEntityById(id));
 
         //then
         assertEquals("Cannot find shift by id: " + id,exception.getMessage());
@@ -162,7 +162,7 @@ class ShiftServiceImplIT {
         Integer id = 999;
 
         //when
-        IllegalArgumentException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.delete(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.delete(id));
 
         //then
         assertEquals("Shift with id " + id + " does not exist", exception.getMessage());
@@ -228,7 +228,7 @@ class ShiftServiceImplIT {
         Integer id = 52;
 
         //when
-        IllegalArgumentException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findById(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findById(id));
 
         //then
         assertEquals("Cannot find shift by id: " + id,exception.getMessage());

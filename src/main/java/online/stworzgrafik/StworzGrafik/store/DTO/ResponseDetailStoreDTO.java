@@ -17,8 +17,8 @@ public record ResponseDetailStoreDTO(
     LocalDateTime createdAt,
     Boolean isEnable,
     Long storeManagerId,
-    LocalTime openHour,
-    LocalTime closeHour
+    LocalTime openForClientsHour,
+    LocalTime closeForClientsHour
 ) {
     public static ResponseDetailStoreDTO from (Store store){
         return new ResponseDetailStoreDTO(
@@ -31,8 +31,8 @@ public record ResponseDetailStoreDTO(
                 store.getCreatedAt(),
                 store.getIsEnable(),
                 store.getStoreManagerId(),
-                store.getOpenHour(),
-                store.getCloseHour()
+                store.getOpenForClientsHour(),
+                store.getCloseForClientsHour()
         );
     }
 }

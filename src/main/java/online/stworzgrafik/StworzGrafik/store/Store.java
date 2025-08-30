@@ -40,7 +40,9 @@ public class Store {
 
     private Long storeManagerId;
 
-    private LocalTime openHour;
+    private LocalTime openForClientsHour;
 
-    private LocalTime closeHour;
+    private LocalTime closeForClientsHour;
+
+
 }

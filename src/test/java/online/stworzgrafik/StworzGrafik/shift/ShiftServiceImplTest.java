@@ -104,6 +104,7 @@ class ShiftServiceImplTest {
 
     @Test
     void create_workingTest(){
+        //given
         ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(9, 0), LocalTime.of(20, 0));
         ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1,LocalTime.of(9, 0), LocalTime.of(20, 0),11);
         Shift shift = mock(Shift.class);
@@ -115,8 +116,10 @@ class ShiftServiceImplTest {
         when(shiftMapper.toShiftDto(any(Shift.class))).thenReturn(responseShiftDTO);
         when(shiftBuilderMock.createShift(any(),any())).thenReturn(shift);
 
+        //when
         ResponseShiftDTO serviceResponse = service.create(shiftHoursDTO);
 
+        // then
         assertEquals(9,serviceResponse.startHour().getHour());
         assertEquals(11,serviceResponse.length());
     }

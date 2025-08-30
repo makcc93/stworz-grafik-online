@@ -232,7 +232,6 @@ class ShiftControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
         //then
-
     }
 
 }
