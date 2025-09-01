@@ -7,7 +7,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public record ResponseDetailStoreDTO(
+public record ResponseStoreDTO(
     Long id,
     String name,
     String storeCode,
@@ -20,8 +20,8 @@ public record ResponseDetailStoreDTO(
     LocalTime openForClientsHour,
     LocalTime closeForClientsHour
 ) {
-    public static ResponseDetailStoreDTO from (Store store){
-        return new ResponseDetailStoreDTO(
+    public static ResponseStoreDTO from (Store store){
+        return new ResponseStoreDTO(
                 store.getId(),
                 store.getName(),
                 store.getStoreCode(),

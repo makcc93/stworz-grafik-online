@@ -2,11 +2,9 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.ResponseDetailStoreDTO;
-import org.springframework.cglib.core.Local;
+import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalTime;
 
 @Service
 public class StoreServiceImpl implements StoreService{
@@ -21,10 +19,12 @@ public class StoreServiceImpl implements StoreService{
     }
 
     @Override
-    public ResponseDetailStoreDTO create(CreateStoreDTO createStoreDTO) {
+    public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
         ArgumentNullChecker.check(createStoreDTO);
 
-        if (exists(createStoreDTO.name(),createStoreDTO.storeCode())){
+        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCode(createStoreDTO);
+
+        if (exists(storeNameAndCode)){
             throw new IllegalArgumentException("Store with this name and store code already exist");
         }
 
@@ -40,7 +40,7 @@ public class StoreServiceImpl implements StoreService{
 
         Store savedStore = storeRepository.save(store);
 
-        return storeMapper.toDetailStoreDto(savedStore);
+        return storeMapper.toResponseStoreDto(savedStore);
     }
 
     @Override
@@ -51,9 +51,34 @@ public class StoreServiceImpl implements StoreService{
     }
 
     @Override
-    public boolean exists(String storeName,String storeCode){
-        ArgumentNullChecker.checkAll(storeName,storeCode);
+    public boolean exists(StoreNameAndCodeDTO storeNameAndCodeDTO){
+        ArgumentNullChecker.checkAll(storeNameAndCodeDTO);
 
-        return storeRepository.existsByNameAndStoreCode(storeName,storeCode);
+        return storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode());
+    }
+
+    @Override
+    public void delete(Long storeId) {
+        ArgumentNullChecker.check(storeId,"Store id");
+
+        storeRepository.deleteById(storeId);
+    }
+
+    @Override
+    public Store saveEntity(Store store) {
+        ArgumentNullChecker.check(store,"Store");
+
+        return storeRepository.save(store);
+    }
+
+    @Override
+    public ResponseStoreDTO saveDto(StoreNameAndCodeDTO storeNameAndCodeDTO) {
+        ArgumentNullChecker.check(storeNameAndCodeDTO);
+
+        Store entity = storeMapper.toEntity(storeNameAndCodeDTO);
+
+        Store savedEntity = storeRepository.save(entity);
+
+        return storeMapper.toResponseStoreDto(savedEntity);
     }
 }

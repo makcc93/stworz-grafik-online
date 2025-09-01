@@ -42,8 +42,8 @@ public record CreateStoreDTO(
     }
 
     private void validateHours(@NotNull LocalTime openForClientsHour, @NotNull LocalTime closeForClientsHour) {
-        if (closeForClientsHour.getHour() <= openForClientsHour.getHour()){
-            throw new IllegalArgumentException("Close hour cannot be before or equal open hour");
+        if (closeForClientsHour.isBefore(openForClientsHour)){
+            throw new IllegalArgumentException("Close hour cannot be before open hour");
         }
     }
 }
