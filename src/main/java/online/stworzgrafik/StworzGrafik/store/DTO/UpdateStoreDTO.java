@@ -22,7 +22,7 @@ public record UpdateStoreDTO(
 
         RegionType region,
 
-        boolean isEnable,
+        Boolean isEnable,
 
         Long storeManagerId,
 
@@ -30,5 +30,3 @@ public record UpdateStoreDTO(
 
         LocalTime closeForClientsHour
 ) {}
-
-//koncze na tym ze mam dto update, teraz pora zrobic metode serwisowa update z wykorzystaniem mapStruct

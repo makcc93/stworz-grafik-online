@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,10 +34,8 @@ public class Store {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    void onCreate(){    createdAt = LocalDateTime.now();    }
-
-    private Boolean isEnable = true;
+    @Column(updatable = true, nullable = false)
+    private Boolean isEnable;
 
     private Long storeManagerId;
 
@@ -44,5 +43,9 @@ public class Store {
 
     private LocalTime closeForClientsHour;
 
-
+    @PrePersist
+    void onCreate(){
+        createdAt = LocalDateTime.now();
+        isEnable = true;
+    }
 }
