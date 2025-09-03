@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.crossstore.ChangeSetPersister;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -251,6 +252,20 @@ class StoreServiceImplTest {
 
         //then
         verify(repository,never()).deleteById(any());
+    }
+
+    @Test
+    void delete_entityDoesNotExistById(){
+        //given
+        Long id = 200L;
+
+        when(repository.existsById(id)).thenReturn(false);
+
+        //when
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.delete(id));
+
+        //then
+        assertEquals("Store with id " + id +" does not exist",exception.getMessage());
     }
 
     @Test
