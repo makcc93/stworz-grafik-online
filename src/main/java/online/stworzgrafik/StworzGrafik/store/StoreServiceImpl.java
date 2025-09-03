@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
@@ -12,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class StoreServiceImpl implements StoreService{
     private final StoreRepository storeRepository;
@@ -99,6 +101,11 @@ public class StoreServiceImpl implements StoreService{
     @Override
     public void delete(Long storeId) {
         ArgumentNullChecker.check(storeId,"Store id");
+
+
+        if (!exists(storeId)){
+            throw new EntityNotFoundException("Store with id " + storeId +" does not exist");
+        }
 
         storeRepository.deleteById(storeId);
     }
