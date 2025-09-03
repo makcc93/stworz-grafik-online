@@ -1,10 +1,16 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StoreServiceImpl implements StoreService{
@@ -19,10 +25,29 @@ public class StoreServiceImpl implements StoreService{
     }
 
     @Override
+    public List<ResponseStoreDTO> findAll() {
+        List<Store> stores = storeRepository.findAll();
+
+        return stores.stream()
+                .map(storeMapper::toResponseStoreDto)
+                .sorted(Comparator.comparing(ResponseStoreDTO::storeCode))
+                .toList();
+    }
+
+    @Override
+    public ResponseStoreDTO findById(Long id) {
+        ArgumentNullChecker.check(id,"Id");
+
+        Store store = storeRepository.findById(id).orElseThrow();
+
+        return storeMapper.toResponseStoreDto(store);
+    }
+
+    @Override
     public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
         ArgumentNullChecker.check(createStoreDTO);
 
-        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCode(createStoreDTO);
+        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
 
         if (exists(storeNameAndCode)){
             throw new IllegalArgumentException("Store with this name and store code already exist");
@@ -41,6 +66,20 @@ public class StoreServiceImpl implements StoreService{
         Store savedStore = storeRepository.save(store);
 
         return storeMapper.toResponseStoreDto(savedStore);
+    }
+
+    @Override
+    public ResponseStoreDTO update(Long id, UpdateStoreDTO updateStoreDTO) {
+        ArgumentNullChecker.check(id,"Id");
+        ArgumentNullChecker.check(updateStoreDTO);
+
+        Store store = storeRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+
+        storeMapper.updateStoreFromDTO(updateStoreDTO,store);
+
+        Store saved = storeRepository.save(store);
+
+        return storeMapper.toResponseStoreDto(saved);
     }
 
     @Override
