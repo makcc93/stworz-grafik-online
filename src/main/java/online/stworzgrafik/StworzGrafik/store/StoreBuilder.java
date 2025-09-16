@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ public final class StoreBuilder {
             String name,
             String storeCode,
             String location,
-            BranchType branch,
+            Branch branch,
             RegionType region,
             LocalTime openHour,
             LocalTime closeHour

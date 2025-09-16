@@ -10,11 +10,11 @@ public interface ShiftService {
     ResponseShiftDTO saveDto(ShiftHoursDTO shiftHoursDTO);
     Shift saveEntity(Shift shift);
     ResponseShiftDTO create(ShiftHoursDTO shiftHoursDTO);
-    Shift findEntityById(Integer id);
-    void delete(Integer id);
+    Shift findEntityById(Long id);
+    void delete(Long id);
     List<ResponseShiftDTO> findAll();
-    ResponseShiftDTO findById(Integer id);
+    ResponseShiftDTO findById(Long id);
     boolean exists(LocalTime startHour, LocalTime endHour);
-    boolean exists(Integer id);
+    boolean exists(Long id);
 
 }

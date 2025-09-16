@@ -55,14 +55,14 @@ public class ShiftServiceImpl implements ShiftService{
     }
 
     @Override
-    public Shift findEntityById(Integer id) {
+    public Shift findEntityById(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
         return shiftRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
         if (!exists(id)){
@@ -82,7 +82,7 @@ public class ShiftServiceImpl implements ShiftService{
     }
 
     @Override
-    public ResponseShiftDTO findById(Integer id) {
+    public ResponseShiftDTO findById(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
         Shift shift = shiftRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
@@ -103,7 +103,7 @@ public class ShiftServiceImpl implements ShiftService{
     }
 
     @Override
-    public boolean exists(Integer id) {
+    public boolean exists(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
         return shiftRepository.existsById(id);

@@ -1,6 +1,10 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
+import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -20,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class StoreServiceImplTest {
 
@@ -34,6 +39,12 @@ class StoreServiceImplTest {
 
     @Mock
     private StoreMapper storeMapper;
+
+    @Mock
+    private BranchRepository branchRepository;
+
+    @Mock
+    private BranchBuilder branchBuilder;
 
     @Test
     void findAll_workingTest(){
@@ -84,7 +95,7 @@ class StoreServiceImplTest {
 
         //then
         assertEquals(store.getName(),response.name());
-        assertEquals(store.getBranch(),response.branch());
+        assertEquals(store.getStoreCode(),response.storeCode());
 
         verify(repository,times(1)).findById(id);
         verify(storeMapper).toResponseStoreDto(any(Store.class));
@@ -108,36 +119,41 @@ class StoreServiceImplTest {
     @Test
     void create_workingTest(){
         //given
-        CreateStoreDTO inputDto = getCreateStoreDTO();
+        CreateStoreDTO createStoreDTO = getCreateStoreDTO();
 
-        Store store = getStore(inputDto);
+        Store store = getStore(createStoreDTO);
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Name","A1");
-        when(storeMapper.toStoreNameAndCodeDTO(inputDto)).thenReturn(storeNameAndCodeDTO);
+        when(storeMapper.toStoreNameAndCodeDTO(createStoreDTO)).thenReturn(storeNameAndCodeDTO);
 
-        ResponseStoreDTO responseStoreDTO = ResponseStoreDTO.from(store);
+        ResponseStoreDTO responseStoreDTO = storeMapper.toResponseStoreDto(store);
 
-        when(storeBuilder.createStore(inputDto.name(),
-                inputDto.storeCode(),
-                inputDto.location(),
-                inputDto.branch(),
-                inputDto.region(),
-                inputDto.openForClientsHour(),
-                inputDto.closeForClientsHour())).thenReturn(store);
+        Branch branch = branchBuilder.createBranch(createStoreDTO.name());
+        log.info("--------------branch = {}",branch);
+
+        when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.ofNullable(branch));
+
+        when(storeBuilder.createStore(
+                createStoreDTO.name(),
+                createStoreDTO.storeCode(),
+                createStoreDTO.location(),
+                branch,
+                createStoreDTO.region(),
+                createStoreDTO.openForClientsHour(),
+                createStoreDTO.closeForClientsHour())).thenReturn(store);
         when(repository.save(any(Store.class))).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
         when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
 
         //when
-        ResponseStoreDTO serviceReturn = service.create(inputDto);
+        ResponseStoreDTO serviceReturn = service.create(createStoreDTO);
 
         //then
-
-        assertEquals(serviceReturn.name(),inputDto.name());
-        assertEquals(serviceReturn.storeCode(),inputDto.storeCode());
-        assertEquals(serviceReturn.location(),inputDto.location());
-        assertEquals(serviceReturn.branch(), inputDto.branch());
-        assertEquals(serviceReturn.region(),inputDto.region());
-        assertEquals(serviceReturn.openForClientsHour(), inputDto.openForClientsHour());
-        assertEquals(serviceReturn.closeForClientsHour(),inputDto.closeForClientsHour());
+        assertEquals(serviceReturn.name(),createStoreDTO.name());
+        assertEquals(serviceReturn.storeCode(),createStoreDTO.storeCode());
+        assertEquals(serviceReturn.location(),createStoreDTO.location());
+        assertEquals(serviceReturn.branchId(), createStoreDTO.branchId());
+        assertEquals(serviceReturn.region(),createStoreDTO.region());
+        assertEquals(serviceReturn.openForClientsHour(), createStoreDTO.openForClientsHour());
+        assertEquals(serviceReturn.closeForClientsHour(),createStoreDTO.closeForClientsHour());
 
         verify(repository,times(1)).save(any(Store.class));
         }
@@ -234,6 +250,7 @@ class StoreServiceImplTest {
     void delete_workingTest(){
         //given
         Long id = 1L;
+        when(repository.existsById(id)).thenReturn(true);
 
         //when
         service.delete(id);
@@ -423,7 +440,8 @@ class StoreServiceImplTest {
                 entityFromDTO.getName(),
                 entityFromDTO.getStoreCode(),
                 entityFromDTO.getLocation(),
-                entityFromDTO.getBranch(),
+                entityFromDTO.getBranch().getId(),
+                entityFromDTO.getBranch().getName(),
                 entityFromDTO.getRegion(),
                 LocalDateTime.now(),
                 true,
@@ -438,7 +456,7 @@ class StoreServiceImplTest {
         store.setName(inputDto.name());
         store.setStoreCode(inputDto.storeCode());
         store.setLocation(inputDto.location());
-        store.setBranch(inputDto.branch());
+        store.setBranch(Branch.builder().build());
         store.setRegion(inputDto.region());
         store.setOpenForClientsHour(inputDto.openForClientsHour());
         store.setCloseForClientsHour(inputDto.closeForClientsHour());
@@ -451,7 +469,7 @@ class StoreServiceImplTest {
         store.setName("TestName");
         store.setStoreCode("AB");
         store.setLocation("TestLocation");
-        store.setBranch(BranchType.GDANSK);
+        store.setBranch(Branch.builder().build());
         store.setRegion(RegionType.ZACHOD);
         store.setOpenForClientsHour(LocalTime.of(10,0));
         store.setCloseForClientsHour(LocalTime.of(20,0));
@@ -464,7 +482,7 @@ class StoreServiceImplTest {
                 "Test store",
                 "01",
                 "Testcity",
-                BranchType.GDANSK,
+                1L,
                 RegionType.ZACHOD,
                 LocalTime.of(10,0),
                 LocalTime.of(21,0)

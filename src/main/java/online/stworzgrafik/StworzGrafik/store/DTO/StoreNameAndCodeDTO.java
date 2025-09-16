@@ -1,13 +1,8 @@
 package online.stworzgrafik.StworzGrafik.store.DTO;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.store.BranchType;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
-
-import java.time.LocalTime;
 
 public record StoreNameAndCodeDTO(
         @NotBlank(message = "Name is required")

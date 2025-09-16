@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
+import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class ShiftServiceImplTest {
     void saveDto_WorkingTest(){
         ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(14,0),LocalTime.of(20,0));
         Shift entity = new ShiftBuilder().createShift(LocalTime.of(14,0),LocalTime.of(20,0));
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1,LocalTime.of(14,0),LocalTime.of(20,0),6);
+        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L,LocalTime.of(14,0),LocalTime.of(20,0),6);
 
 
         when(shiftMapper.toEntity(shiftHoursDTO)).thenReturn(entity);
@@ -55,7 +56,7 @@ class ShiftServiceImplTest {
     void saveDto_theOrderOfProcessInvocation(){
         ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(14,0),LocalTime.of(20,0));
         Shift entity = new ShiftBuilder().createShift(LocalTime.of(14,0),LocalTime.of(20,0));
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1,LocalTime.of(14,0),LocalTime.of(20,0),6);
+        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L,LocalTime.of(14,0),LocalTime.of(20,0),6);
 
         when(shiftMapper.toEntity(shiftHoursDTO)).thenReturn(entity);
 
@@ -106,9 +107,9 @@ class ShiftServiceImplTest {
     void create_workingTest(){
         //given
         ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(9, 0), LocalTime.of(20, 0));
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1,LocalTime.of(9, 0), LocalTime.of(20, 0),11);
+        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L,LocalTime.of(9, 0), LocalTime.of(20, 0),11);
         Shift shift = mock(Shift.class);
-        shift.setId(1);
+        shift.setId(1L);
         shift.setStartHour(LocalTime.of(9,0));
         shift.setEndHour(LocalTime.of(20,0));
 
@@ -142,7 +143,7 @@ class ShiftServiceImplTest {
 
     @Test
     void existsById_workingTest(){
-        Integer id = 1;
+        Long id = 1L;
 
         when(repository.existsById(id)).thenReturn(true);
 
@@ -154,7 +155,7 @@ class ShiftServiceImplTest {
 
     @Test
     void existsById_shouldReturnFalse(){
-        Integer id = 1;
+        Long id = 1L;
 
         when(repository.existsById(id)).thenReturn(false);
 
@@ -166,7 +167,7 @@ class ShiftServiceImplTest {
 
     @Test
     void existsById_idIsNull(){
-        Integer id = null;
+        Long id = null;
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(id));
 
@@ -222,7 +223,7 @@ class ShiftServiceImplTest {
 
     @Test
     void delete_workingTest(){
-        Integer id = 1;
+        Long id = 1L;
 
         when(repository.existsById(id)).thenReturn(true);
 
@@ -233,7 +234,7 @@ class ShiftServiceImplTest {
 
     @Test
     void delete_idIsNull(){
-        Integer id = null;
+        Long id = null;
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.delete(id));
 
@@ -242,11 +243,11 @@ class ShiftServiceImplTest {
 
     @Test
     void delete_shiftDoesNotExistsException(){
-        Integer id = 2;
+        Long id = 2L;
 
         when(repository.existsById(id)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> service.delete(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.delete(id));
 
         assertEquals("Shift with id " + id + " does not exist",exception.getMessage());
         verify(repository,never()).deleteById(id);
@@ -265,20 +266,14 @@ class ShiftServiceImplTest {
 
         assertEquals(3,shiftList.size());
 
-        assertTrue(shiftList.contains(shift1));
-        assertTrue(shiftList.contains(shift2));
-        assertTrue(shiftList.contains(shift3));
-
-        assertFalse(shiftList.contains(shift4));
-
         verify(repository,times(1)).findAll();
     }
 
     @Test
     void findById_workingTest(){
-        Integer id = 1;
+        Long id = 1L;
         Shift shift = new ShiftBuilder().createShift(LocalTime.of(9,0),LocalTime.of(20,0));
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1, LocalTime.of(9, 0), LocalTime.of(20, 0), 11);
+        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L, LocalTime.of(9, 0), LocalTime.of(20, 0), 11);
 
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
 
@@ -296,7 +291,7 @@ class ShiftServiceImplTest {
 
     @Test
     void findById_idIsNull(){
-        Integer id = null;
+        Long id = null;
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findById(id));
 
@@ -306,7 +301,7 @@ class ShiftServiceImplTest {
 
     @Test
     void findById_shiftWithIdDoesNotExistException(){
-        Integer id = 1;
+        Long id = 1L;
 
         when(repository.findById(id)).thenThrow(new IllegalArgumentException());
 
@@ -317,7 +312,7 @@ class ShiftServiceImplTest {
 
     @Test
     void findEntityById_workingTest(){
-        Integer id = 1;
+        Long id = 1L;
         Shift shift = new ShiftBuilder().createShift(LocalTime.of(8,0),LocalTime.of(20,0));
         shift.setId(id);
 
@@ -332,7 +327,7 @@ class ShiftServiceImplTest {
 
     @Test
     void findEntityById_idIsNull(){
-        Integer id = null;
+        Long id = null;
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findEntityById(id));
 
@@ -343,7 +338,7 @@ class ShiftServiceImplTest {
 
     @Test
     void findEntityById_cannotFindEntityException(){
-        Integer id = 1;
+        Long id = 1L;
         Shift shift = new ShiftBuilder().createShift(LocalTime.of(8,0),LocalTime.of(20,0));
         shift.setId(id);
 

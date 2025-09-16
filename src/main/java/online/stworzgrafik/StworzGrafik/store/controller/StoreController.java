@@ -3,19 +3,19 @@ package online.stworzgrafik.StworzGrafik.store.controller;
 import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/stores")
 public class StoreController {
-    private StoreServiceImpl service;
-
+    private final StoreServiceImpl service;
 
     public StoreController(StoreServiceImpl service) {
         this.service = service;
@@ -41,5 +41,10 @@ public class StoreController {
         service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ResponseStoreDTO> updateStore(@PathVariable Long id, @RequestBody @Valid UpdateStoreDTO updateStoreDTO){
+        return ResponseEntity.ok(service.update(id,updateStoreDTO));
     }
 }

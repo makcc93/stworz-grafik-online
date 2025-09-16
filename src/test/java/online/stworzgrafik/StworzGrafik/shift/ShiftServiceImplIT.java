@@ -131,7 +131,7 @@ class ShiftServiceImplIT {
     @Test
     void findEntityById_notExistingEntityTest(){
         //given
-        Integer id = 1234;
+        Long id = 1234L;
 
         //when
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findEntityById(id));
@@ -159,7 +159,7 @@ class ShiftServiceImplIT {
     @Test
     void delete_entityNotExistException(){
         //given
-        Integer id = 999;
+        Long id = 999L;
 
         //when
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.delete(id));
@@ -225,7 +225,7 @@ class ShiftServiceImplIT {
     @Test
     void findById_emptyListThrowException(){
         //given
-        Integer id = 52;
+        Long id = 52L;
 
         //when
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftService.findById(id));
@@ -286,7 +286,7 @@ class ShiftServiceImplIT {
         boolean doExistShift1 = shiftService.exists(shift1.id);
         boolean doExistShift2 = shiftService.exists(shift2.id);
         boolean doExistShift3 = shiftService.exists(shift3.id);
-        boolean shouldNotExist = shiftService.exists(555);
+        boolean shouldNotExist = shiftService.exists(555L);
 
         //then
         assertTrue(doExistShift1);

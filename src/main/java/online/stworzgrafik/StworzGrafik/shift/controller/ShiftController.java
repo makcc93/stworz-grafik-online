@@ -24,7 +24,7 @@ public class ShiftController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseShiftDTO> getShiftById(@PathVariable Integer id){
+    public ResponseEntity<ResponseShiftDTO> getShiftById(@PathVariable Long id){
         return ResponseEntity.ok(shiftService.findById(id));
     }
 
@@ -39,14 +39,14 @@ public class ShiftController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteShift(@PathVariable Integer id) {
+    public ResponseEntity<HttpStatus> deleteShift(@PathVariable Long id) {
             shiftService.delete(id);
 
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseShiftDTO> updateShift(@RequestBody @Valid ShiftHoursDTO shiftHoursDTO,@PathVariable Integer id) {
+    public ResponseEntity<ResponseShiftDTO> updateShift(@RequestBody @Valid ShiftHoursDTO shiftHoursDTO,@PathVariable Long id) {
             Shift shift = shiftService.findEntityById(id);
             shift.setStartHour(shiftHoursDTO.startHour());
             shift.setEndHour(shiftHoursDTO.endHour());

@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.store.DTO;
 
-import online.stworzgrafik.StworzGrafik.store.BranchType;
 import online.stworzgrafik.StworzGrafik.store.RegionType;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
@@ -12,7 +11,8 @@ public record ResponseStoreDTO(
     String name,
     String storeCode,
     String location,
-    BranchType branch,
+    Long branchId,
+    String branchName,
     RegionType region,
     LocalDateTime createdAt,
     Boolean isEnable,
@@ -20,19 +20,19 @@ public record ResponseStoreDTO(
     LocalTime openForClientsHour,
     LocalTime closeForClientsHour
 ) {
-    public static ResponseStoreDTO from (Store store){
-        return new ResponseStoreDTO(
-                store.getId(),
-                store.getName(),
-                store.getStoreCode(),
-                store.getLocation(),
-                store.getBranch(),
-                store.getRegion(),
-                store.getCreatedAt(),
-                store.getIsEnable(),
-                store.getStoreManagerId(),
-                store.getOpenForClientsHour(),
-                store.getCloseForClientsHour()
-        );
-    }
+//    public static ResponseStoreDTO from (Store store){
+//        return new ResponseStoreDTO(
+//                store.getId(),
+//                store.getName(),
+//                store.getStoreCode(),
+//                store.getLocation(),
+//                store.getBranch().getId(),
+//                store.getRegion(),
+//                store.getCreatedAt(),
+//                store.getIsEnable(),
+//                store.getStoreManagerId(),
+//                store.getOpenForClientsHour(),
+//                store.getCloseForClientsHour()
+//        );
+//    }
 }

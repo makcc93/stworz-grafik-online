@@ -2,6 +2,10 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
+import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
@@ -19,11 +23,13 @@ public class StoreServiceImpl implements StoreService{
     private final StoreRepository storeRepository;
     private final StoreBuilder storeBuilder;
     private final StoreMapper storeMapper;
+    private final BranchRepository branchRepository;
 
-    public StoreServiceImpl(StoreRepository storeRepository, StoreBuilder storeBuilder, StoreMapper storeMapper) {
+    public StoreServiceImpl(StoreRepository storeRepository, StoreBuilder storeBuilder, StoreMapper storeMapper, BranchRepository branchRepository) {
         this.storeRepository = storeRepository;
         this.storeBuilder = storeBuilder;
         this.storeMapper = storeMapper;
+        this.branchRepository = branchRepository;
     }
 
     @Override
@@ -55,11 +61,13 @@ public class StoreServiceImpl implements StoreService{
             throw new IllegalArgumentException("Store with this name and store code already exist");
         }
 
+        Branch branch = branchRepository.findById(createStoreDTO.branchId()).orElseThrow();
+
         Store store = storeBuilder.createStore(
             createStoreDTO.name(),
             createStoreDTO.storeCode(),
             createStoreDTO.location(),
-            createStoreDTO.branch(),
+            branch,
             createStoreDTO.region(),
             createStoreDTO.openForClientsHour(),
             createStoreDTO.closeForClientsHour()

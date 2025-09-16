@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.persistence.*;
 import lombok.*;
+import online.stworzgrafik.StworzGrafik.branch.Branch;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,8 +26,9 @@ public class Store {
 
     private String location;
 
-    @Enumerated(EnumType.STRING)
-    private BranchType branch;
+    @ManyToOne
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 
     @Enumerated(EnumType.STRING)
     private RegionType region;
