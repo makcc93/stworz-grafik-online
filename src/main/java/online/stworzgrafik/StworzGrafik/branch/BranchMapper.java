@@ -7,7 +7,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface BranchMapper {
 
-    @Mapping(source = "isEnable", target = "isEnable")
+    @Mapping(source = "enable", target = "isEnable")
     ResponseBranchDTO toResponseBranchDTO(Branch branch);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

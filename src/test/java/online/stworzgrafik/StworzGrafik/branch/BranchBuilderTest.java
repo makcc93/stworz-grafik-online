@@ -30,4 +30,16 @@ class BranchBuilderTest {
         //then
         assertEquals("Name cannot be null", exception.getMessage());
     }
+
+    @Test
+    void create_upperCaseAndNameTrimTest(){
+        //given
+        String name = "              tEsT             ";
+
+        //when
+        Branch branch = new BranchBuilder().createBranch(name);
+
+        //then
+        assertEquals("TEST", branch.getName());
+    }
 }

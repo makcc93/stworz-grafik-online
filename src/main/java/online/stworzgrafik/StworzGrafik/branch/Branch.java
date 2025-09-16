@@ -21,7 +21,7 @@ public class Branch {
 
     private String name;
 
-    private Boolean isEnable;
+    private boolean isEnable;
 
     @OneToMany(mappedBy = "branch")
     private List<Store> stores = new ArrayList<>();
