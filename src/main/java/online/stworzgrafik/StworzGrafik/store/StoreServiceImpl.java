@@ -55,13 +55,10 @@ public class StoreServiceImpl implements StoreService{
     public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
         ArgumentNullChecker.check(createStoreDTO);
 
-        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
+        isStoreAlreadyExist(createStoreDTO);
 
-        if (exists(storeNameAndCode)){
-            throw new IllegalArgumentException("Store with this name and store code already exist");
-        }
-
-        Branch branch = branchRepository.findById(createStoreDTO.branchId()).orElseThrow();
+        Branch branch = branchRepository.findById(createStoreDTO.branchId())
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find branch by id " + createStoreDTO.branchId()));
 
         Store store = storeBuilder.createStore(
             createStoreDTO.name(),
@@ -78,6 +75,14 @@ public class StoreServiceImpl implements StoreService{
         return storeMapper.toResponseStoreDto(savedStore);
     }
 
+    private void isStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
+        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
+
+        if (exists(storeNameAndCode)){
+            throw new IllegalArgumentException("Store with this name and store code already exist");
+        }
+    }
+
     @Override
     public ResponseStoreDTO update(Long id, UpdateStoreDTO updateStoreDTO) {
         ArgumentNullChecker.check(id,"Id");
@@ -86,6 +91,8 @@ public class StoreServiceImpl implements StoreService{
         Store store = storeRepository.findById(id).orElseThrow(EntityNotFoundException::new);
 
         storeMapper.updateStoreFromDTO(updateStoreDTO,store);
+
+        whenBranchIsUpdated(updateStoreDTO, store);
 
         Store saved = storeRepository.save(store);
 
@@ -134,5 +141,14 @@ public class StoreServiceImpl implements StoreService{
         Store savedEntity = storeRepository.save(entity);
 
         return storeMapper.toResponseStoreDto(savedEntity);
+    }
+
+    private void whenBranchIsUpdated(UpdateStoreDTO updateStoreDTO, Store store) {
+        if (updateStoreDTO.branchId() != null){
+            Branch branch = branchRepository.findById(updateStoreDTO.branchId())
+                    .orElseThrow(() -> new EntityNotFoundException("Branch not found by id " + updateStoreDTO.branchId()));
+
+            store.setBranch(branch);
+        }
     }
 }

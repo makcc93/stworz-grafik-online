@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -33,7 +34,6 @@ class StoreMapperTest {
         assertEquals(responseStoreDto.branchId(),store.getBranch().getId());
         assertEquals(responseStoreDto.openForClientsHour(),store.getOpenForClientsHour());
         assertEquals(responseStoreDto.closeForClientsHour(),store.getCloseForClientsHour());
-
     }
 
     @Test
@@ -62,7 +62,6 @@ class StoreMapperTest {
         assertEquals(entity.getStoreCode(),createStoreDTO.storeCode());
         assertEquals(entity.getLocation(),createStoreDTO.location());
         assertEquals(entity.getRegion(),createStoreDTO.region());
-        assertEquals(entity.getBranch().getId(),createStoreDTO.branchId());
         assertEquals(entity.getOpenForClientsHour(),createStoreDTO.openForClientsHour());
         assertEquals(entity.getCloseForClientsHour(),createStoreDTO.closeForClientsHour());
     }
@@ -93,7 +92,6 @@ class StoreMapperTest {
         assertEquals(updateStoreDTO.name(),store.getName());
         assertEquals(updateStoreDTO.storeCode(),store.getStoreCode());
         assertEquals(updateStoreDTO.location(),store.getLocation());
-        assertEquals(updateStoreDTO.branch(),store.getBranch());
         assertEquals(updateStoreDTO.region(),store.getRegion());
         assertEquals(updateStoreDTO.openForClientsHour(),store.getOpenForClientsHour());
         assertEquals(updateStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
@@ -104,7 +102,7 @@ class StoreMapperTest {
                 "Test",
                 "TE",
                 "Wroclaw",
-                Branch.builder().name("TestBranch").build(),
+                1L,
                 RegionType.POLUDNIE,
                 true,
                 1337L,
@@ -137,7 +135,7 @@ class StoreMapperTest {
                 "TestName",
                 "11",
                 "Lublin",
-                Branch.builder().name("RandomBranch").build(),
+                new BranchBuilder().createBranch("randomName"),
                 RegionType.WSCHOD,
                 LocalTime.of(10,0),
                 LocalTime.of(19,0)

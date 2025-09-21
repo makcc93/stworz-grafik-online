@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.branch.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import online.stworzgrafik.StworzGrafik.branch.validator.NameValidator;
 
 public record UpdateBranchDTO(
         @NotBlank()
@@ -11,4 +12,7 @@ public record UpdateBranchDTO(
         @NotBlank
         Boolean isEnable
 ) {
+    public UpdateBranchDTO{
+        name = NameValidator.validate(name);
+    }
 }

@@ -37,7 +37,7 @@ public class Store {
     private LocalDateTime createdAt;
 
     @Column(updatable = true, nullable = false)
-    private Boolean isEnable;
+    private boolean isEnable;
 
     private Long storeManagerId;
 

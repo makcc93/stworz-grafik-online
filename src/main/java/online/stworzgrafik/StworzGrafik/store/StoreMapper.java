@@ -20,6 +20,7 @@ public interface StoreMapper {
 
     Store toEntity(StoreNameAndCodeDTO storeNameAndCodeDTO);
 
+    @Mapping(target = "branch",ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateStoreFromDTO(UpdateStoreDTO updateStoreDTO, @MappingTarget Store store);
 }

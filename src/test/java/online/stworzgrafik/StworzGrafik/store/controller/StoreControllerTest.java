@@ -6,10 +6,13 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.store.*;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.RegionType;
+import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,7 +28,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -56,14 +58,13 @@ class StoreControllerTest {
     @Test
     void getAllStores_workingTest() throws Exception {
         //given
-        Store store1 = firstStore();
+        Store store1 = firstStoreWithBranch();
         Store store2 = secondStore();
         Store store3 = thirdStore();
 
         service.saveEntity(store1);
         service.saveEntity(store2);
         service.saveEntity(store3);
-
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores"))
@@ -99,7 +100,7 @@ class StoreControllerTest {
     @Test
     void getStoreById_workingTest() throws Exception {
         //given
-        Store store = firstStore();
+        Store store = firstStoreWithBranch();
         service.saveEntity(store);
 
         //when
@@ -109,13 +110,14 @@ class StoreControllerTest {
                 .andReturn();
 
         //then
-        Store responseStore = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Store.class);
+        ResponseStoreDTO responseStore = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseStoreDTO.class);
 
-        assertEquals(store.getId(),responseStore.getId());
-        assertEquals(store.getStoreCode(),responseStore.getStoreCode());
-        assertEquals(store.getName(),responseStore.getName());
-        assertEquals(store.getOpenForClientsHour(),responseStore.getOpenForClientsHour());
-        assertEquals(store.getCloseForClientsHour(),responseStore.getCloseForClientsHour());
+        assertEquals(store.getId(),responseStore.id());
+        assertEquals(store.getStoreCode(),responseStore.storeCode());
+        assertEquals(store.getName(),responseStore.name());
+        assertEquals(store.getBranch().getId(),responseStore.branchId());
+        assertEquals(store.getOpenForClientsHour(),responseStore.openForClientsHour());
+        assertEquals(store.getCloseForClientsHour(),responseStore.closeForClientsHour());
     }
 
     @Test
@@ -132,7 +134,7 @@ class StoreControllerTest {
     @Test
     void createStore_workingTest() throws Exception{
         //given
-        Branch branch = branchBuilder.createBranch("RandomBranch");
+        Branch branch = branchBuilder.createBranch("TestBranch");
         branchRepository.save(branch);
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
@@ -155,17 +157,17 @@ class StoreControllerTest {
                 .andReturn();
 
         //then
-        Store store = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Store.class);
+        ResponseStoreDTO store = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseStoreDTO.class);
 
-        assertEquals(createStoreDTO.name(),store.getName());
-        assertEquals(createStoreDTO.storeCode(),store.getStoreCode());
-        assertEquals(createStoreDTO.location(),store.getLocation());
-        assertEquals(createStoreDTO.branchId(),store.getBranch().getId());
-        assertEquals(createStoreDTO.region(),store.getRegion());
-        assertEquals(createStoreDTO.openForClientsHour(),store.getOpenForClientsHour());
-        assertEquals(createStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
+        assertEquals(createStoreDTO.name(),store.name());
+        assertEquals(createStoreDTO.storeCode(),store.storeCode());
+        assertEquals(createStoreDTO.location(),store.location());
+        assertEquals(createStoreDTO.branchId(),store.branchId());
+        assertEquals(createStoreDTO.region(),store.region());
+        assertEquals(createStoreDTO.openForClientsHour(),store.openForClientsHour());
+        assertEquals(createStoreDTO.closeForClientsHour(),store.closeForClientsHour());
 
-        assertTrue(service.exists(store.getId()));
+        assertTrue(service.exists(store.id()));
     }
 
     @Test
@@ -183,7 +185,7 @@ class StoreControllerTest {
     @Test
     void deleteById_workingTest() throws Exception{
         //given
-        Store firstStore = firstStore();
+        Store firstStore = firstStoreWithBranch();
         Store secondStore = secondStore();
         Store thirdStore = thirdStore();
 
@@ -218,12 +220,22 @@ class StoreControllerTest {
     @Test
     void updateStore_workingTest() throws Exception{
         //given
-        Store store = firstStore();
+        Store store = firstStoreWithBranch();
         service.saveEntity(store);
+
         String storeNameBeforeUpdate = store.getName();
 
         UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
-                "UpdatedStoreName", null, null, null, null, null, null, null, null);
+                "UpdatedStoreName",
+                null,
+                null,
+                store.getBranch().getId(),
+                null,
+                true,
+                null,
+                null,
+                null
+        );
 
         //when
         MvcResult mvcResult = mockMvc.perform(patch("/api/stores/" + store.getId())
@@ -235,18 +247,19 @@ class StoreControllerTest {
                 .andReturn();
 
         //then
-        Store updatedStore = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Store.class);
+        ResponseStoreDTO updatedStore = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseStoreDTO.class);
 
-        assertEquals("UpdatedStoreName",updatedStore.getName());
-        assertNotEquals(storeNameBeforeUpdate,updatedStore.getName());
+        assertEquals("UpdatedStoreName",updatedStore.name());
 
-        assertEquals(store.getId(),updatedStore.getId());
-        assertEquals(store.getStoreCode(),updatedStore.getStoreCode());
-        assertEquals(store.getLocation(),updatedStore.getLocation());
-        assertEquals(store.getBranch(),updatedStore.getBranch());
-        assertEquals(store.getRegion(),updatedStore.getRegion());
-        assertEquals(store.getOpenForClientsHour(),updatedStore.getOpenForClientsHour());
-        assertEquals(store.getCloseForClientsHour(),updatedStore.getCloseForClientsHour());
+        assertNotEquals(storeNameBeforeUpdate,updatedStore.name());
+
+        assertEquals(store.getId(),updatedStore.id());
+        assertEquals(store.getStoreCode(),updatedStore.storeCode());
+        assertEquals(store.getLocation(),updatedStore.location());
+        assertEquals(store.getBranch().getId(),updatedStore.branchId());
+        assertEquals(store.getRegion(),updatedStore.region());
+        assertEquals(store.getOpenForClientsHour(),updatedStore.openForClientsHour());
+        assertEquals(store.getCloseForClientsHour(),updatedStore.closeForClientsHour());
     }
 
     @Test
@@ -254,7 +267,16 @@ class StoreControllerTest {
         //given
         long notExistingEntityById = 12345L;
         UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
-                "UpdatedStoreName", null, null, null, null, null, null, null, null);
+                "UpdatedStoreName",
+                null,
+                null,
+                null,
+                null,
+                true,
+                null,
+                null,
+                null
+        );
 
 
         //when
@@ -271,7 +293,7 @@ class StoreControllerTest {
     @Test
     void updateStore_noBodyException() throws Exception{
         //given
-        Store store = firstStore();
+        Store store = firstStoreWithBranch();
         service.saveEntity(store);
 
         //when
@@ -282,43 +304,40 @@ class StoreControllerTest {
         //then
     }
 
-    private Store firstStore(){
-        Branch randomBranch1 = branchBuilder.createBranch("RandomBranch1");
-        branchRepository.save(randomBranch1);
+    private Store firstStoreWithBranch(){
+        Branch firstBranch = branchRepository.save(new BranchBuilder().createBranch("FirstBranch"));
 
         return storeBuilder.createStore(
                 "11",
                 "NameTest1",
                 "LocationTest1",
-                randomBranch1,
+                firstBranch,
                 RegionType.ZACHOD,
                 LocalTime.of(9,0),
                 LocalTime.of(20,0));
     }
 
     private Store secondStore(){
-        Branch randomBranch2 = branchBuilder.createBranch("RandomBranch2");
-        branchRepository.save(randomBranch2);
+        Branch secondBranch = branchRepository.save(new BranchBuilder().createBranch("SecondBranch"));
 
         return storeBuilder.createStore(
                 "22",
                 "NameTest2",
                 "LocationTest2",
-                randomBranch2,
+                secondBranch,
                 RegionType.ZACHOD,
                 LocalTime.of(9,0),
                 LocalTime.of(21,0));
     }
 
     private Store thirdStore(){
-        Branch randomBranch3 = branchBuilder.createBranch("RandomBranch3");
-        branchRepository.save(randomBranch3);
+        Branch thirdBranch = branchRepository.save(new BranchBuilder().createBranch("ThirdBranch"));
 
         return storeBuilder.createStore(
                 "33",
                 "NameTest3",
                 "LocationTest3",
-                randomBranch3,
+                thirdBranch,
                 RegionType.ZACHOD,
                 LocalTime.of(10,0),
                 LocalTime.of(22,0));

@@ -15,24 +15,9 @@ public record ResponseStoreDTO(
     String branchName,
     RegionType region,
     LocalDateTime createdAt,
-    Boolean isEnable,
+    boolean isEnable,
     Long storeManagerId,
     LocalTime openForClientsHour,
     LocalTime closeForClientsHour
 ) {
-//    public static ResponseStoreDTO from (Store store){
-//        return new ResponseStoreDTO(
-//                store.getId(),
-//                store.getName(),
-//                store.getStoreCode(),
-//                store.getLocation(),
-//                store.getBranch().getId(),
-//                store.getRegion(),
-//                store.getCreatedAt(),
-//                store.getIsEnable(),
-//                store.getStoreManagerId(),
-//                store.getOpenForClientsHour(),
-//                store.getCloseForClientsHour()
-//        );
-//    }
 }

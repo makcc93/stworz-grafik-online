@@ -25,7 +25,8 @@ public class BranchServiceImpl implements BranchService{
     public ResponseBranchDTO findById(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
-        Branch branch = branchRepository.findById(id).orElseThrow();
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         return branchMapper.toResponseBranchDTO(branch);
     }
@@ -60,7 +61,7 @@ public class BranchServiceImpl implements BranchService{
 
         if (!exists(id)){
             throw new EntityNotFoundException("Branch with id " + id + "does not exist");
-        };
+        }
 
         branchRepository.deleteById(id);
     }

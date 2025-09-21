@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
+import online.stworzgrafik.StworzGrafik.branch.validator.NameValidator;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import org.springframework.stereotype.Component;
 
@@ -10,16 +11,10 @@ public final class BranchBuilder {
             String name
     ){
         ArgumentNullChecker.check(name,"Name");
-        String upperCaseName = upperCaseName(name);
+        String validatedName = NameValidator.validate(name);
 
         return Branch.builder()
-                .name(upperCaseName)
+                .name(validatedName)
                 .build();
     }
-
-
-    private String upperCaseName(String name) {
-        return name.trim().toUpperCase();
-    }
-
 }

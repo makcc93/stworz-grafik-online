@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.branch.DTO;
 
 import jakarta.validation.constraints.NotBlank;
+import online.stworzgrafik.StworzGrafik.branch.validator.NameValidator;
 
 public record NameBranchDTO(
         @NotBlank(message = "Name is required")
@@ -8,7 +9,7 @@ public record NameBranchDTO(
 ) {
     public NameBranchDTO {
         if (name != null){
-            name.trim().toUpperCase();
+            name = NameValidator.validate(name);
         }
     }
 }

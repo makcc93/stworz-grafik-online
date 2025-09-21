@@ -18,11 +18,11 @@ public record UpdateStoreDTO(
         @Size(min = 3)
         String location,
 
-        Branch branch,
+        Long branchId,
 
         RegionType region,
 
-        Boolean isEnable,
+        boolean isEnable,
 
         Long storeManagerId,
 

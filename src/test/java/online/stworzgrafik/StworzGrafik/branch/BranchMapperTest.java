@@ -1,26 +1,17 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
-import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
-import online.stworzgrafik.StworzGrafik.branch.BranchMapper;
-import online.stworzgrafik.StworzGrafik.branch.BranchMapperImpl;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class BranchMapperTest {
 
-    @Autowired
     private final BranchMapper branchMapper = new BranchMapperImpl();
-
-    @Autowired
-    private BranchService branchService;
 
     @Test
     void toResponseBranchDTO(){
@@ -36,5 +27,19 @@ class BranchMapperTest {
         assertEquals(branch.getName().toUpperCase(),responseBranchDTO.name());
         assertTrue(responseBranchDTO.isEnable());
     }
-  
+
+    @Test
+    void updateBranchFromDTO_workingTest() {
+        //given
+        Branch branch = new BranchBuilder().createBranch("Test");
+
+        UpdateBranchDTO updateBranchDTO = new UpdateBranchDTO("   Changed name   ", false);
+
+        //when
+        branchMapper.updateBranchFromDTO(updateBranchDTO, branch);
+
+        //then
+        assertEquals("CHANGEDNAME", branch.getName());
+        assertFalse(branch.isEnable());
+    }
 }

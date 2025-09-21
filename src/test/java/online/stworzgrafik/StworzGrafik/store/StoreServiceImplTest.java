@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -16,8 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.crossstore.ChangeSetPersister;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,18 +122,39 @@ class StoreServiceImplTest {
     @Test
     void create_workingTest(){
         //given
-        CreateStoreDTO createStoreDTO = getCreateStoreDTO();
+        CreateStoreDTO createStoreDTO = new CreateStoreDTO(
+                "name",
+                "aa",
+                "Location",
+                1L,
+                RegionType.POLUDNIE,
+                LocalTime.of(9, 0),
+                LocalTime.of(20, 0)
+        );
 
-        Store store = getStore(createStoreDTO);
-        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Name","A1");
+        Branch branch = getBranch();
+        when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.of(branch));
+
+        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(createStoreDTO.name(), createStoreDTO.storeCode());
         when(storeMapper.toStoreNameAndCodeDTO(createStoreDTO)).thenReturn(storeNameAndCodeDTO);
 
-        ResponseStoreDTO responseStoreDTO = storeMapper.toResponseStoreDto(store);
+        Store store = getStore(createStoreDTO);
 
-        Branch branch = branchBuilder.createBranch(createStoreDTO.name());
-        log.info("--------------branch = {}",branch);
-
-        when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.ofNullable(branch));
+        ResponseStoreDTO responseStoreDTO = new ResponseStoreDTO(
+                1L,
+                createStoreDTO.name(),
+                createStoreDTO.storeCode(),
+                createStoreDTO.location(),
+                createStoreDTO.branchId(),
+                "responseName",
+                createStoreDTO.region(),
+                LocalDateTime.now(),
+                true,
+                1L,
+                createStoreDTO.openForClientsHour(),
+                createStoreDTO.closeForClientsHour()
+        );
+        when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
 
         when(storeBuilder.createStore(
                 createStoreDTO.name(),
@@ -141,7 +165,7 @@ class StoreServiceImplTest {
                 createStoreDTO.openForClientsHour(),
                 createStoreDTO.closeForClientsHour())).thenReturn(store);
         when(repository.save(any(Store.class))).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
-        when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
+        when(repository.existsByNameAndStoreCode(any(),any())).thenReturn(false);
 
         //when
         ResponseStoreDTO serviceReturn = service.create(createStoreDTO);
@@ -430,8 +454,55 @@ class StoreServiceImplTest {
         verify(repository,never()).save(any(Store.class));
     }
 
+    @Test
+    void update_whenBranchIsUpdated(){
+        //given
+        Long id = 1L;
+
+        UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
+                null,
+                null,
+                null,
+                1L,
+                null,
+                true,
+                null,
+                null,
+                null
+        );
+
+        Store store = getStore();
+        when(repository.findById(id)).thenReturn(Optional.of(store));
+
+        ResponseStoreDTO responseStoreDTO = getResponseStoreDTO(store);
+        when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
+
+        Branch branch = getBranch();
+        when(branchRepository.findById(updateStoreDTO.branchId())).thenReturn(Optional.of(branch));
+
+        when(repository.save(any(Store.class))).thenReturn(store);
+
+        //when
+        service.update(id, updateStoreDTO);
+
+        //then
+        assertEquals(branch.getId(),store.getBranch().getId());
+
+        verify(branchRepository,times(1)).findById(any(Long.class));
+    }
+
     private static UpdateStoreDTO getUpdateStoreDTO() {
-        return new UpdateStoreDTO(null, "XX", null, null, null, null, null, null, null);
+        return new UpdateStoreDTO(
+                null,
+                "XX",
+                null,
+                null,
+                null,
+                true,
+                null,
+                null,
+                null
+        );
     }
 
     private static ResponseStoreDTO getResponseStoreDTO(Store entityFromDTO) {
@@ -448,6 +519,15 @@ class StoreServiceImplTest {
                 1L,
                 entityFromDTO.getOpenForClientsHour(),
                 entityFromDTO.getCloseForClientsHour()
+        );
+    }
+
+    private static Branch getBranch(){
+        return new Branch(
+                1L,
+                "RandomBranch",
+                true,
+                new ArrayList<>()
         );
     }
 
