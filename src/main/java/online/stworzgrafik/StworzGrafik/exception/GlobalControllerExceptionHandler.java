@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.exception;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,11 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> requestBodyException(HttpMessageNotReadableException e){
         return ResponseEntity.badRequest().body("Request body is missing or json is incorrect");
+    }
+
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<String> entityAlreadyExist(EntityExistsException e){
+        return ResponseEntity.badRequest().body("Entity with this name already exist");
     }
 
     @ExceptionHandler(Exception.class)
