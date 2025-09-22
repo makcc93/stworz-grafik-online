@@ -34,7 +34,7 @@ class NameValidatorTest {
     }
 
     @Test
-    void validate_deletingWhiteSpaces(){
+    void validate_deletingWhiteSpaces() {
         //given
         String name = "       I \n L O V E    \t\n\t\n programming";
 

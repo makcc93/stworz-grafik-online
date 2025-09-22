@@ -10,6 +10,7 @@ public record NameBranchDTO(
     public NameBranchDTO {
         if (name != null){
             name = NameValidator.validate(name);
+
         }
     }
 }

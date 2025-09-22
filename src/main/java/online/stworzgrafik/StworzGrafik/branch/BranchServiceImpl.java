@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
@@ -26,7 +27,7 @@ public class BranchServiceImpl implements BranchService{
         ArgumentNullChecker.check(id,"Id");
 
         Branch branch = branchRepository.findById(id)
-                .orElseThrow(EntityNotFoundException::new);
+                .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
         return branchMapper.toResponseBranchDTO(branch);
     }
@@ -34,6 +35,10 @@ public class BranchServiceImpl implements BranchService{
     @Override
     public ResponseBranchDTO createBranch(NameBranchDTO nameBranchDTO) {
         ArgumentNullChecker.check(nameBranchDTO);
+
+        if (branchRepository.existsByName(nameBranchDTO.name())){
+            throw new EntityExistsException("Branch with name " + nameBranchDTO.name() + " already exists");
+        }
 
         Branch branch = branchBuilder.createBranch(nameBranchDTO.name());
 
@@ -44,9 +49,11 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public ResponseBranchDTO updateBranch(Long id, UpdateBranchDTO updateBranchDTO) {
+        ArgumentNullChecker.check(id,"Id");
         ArgumentNullChecker.check(updateBranchDTO);
 
-        Branch branch = branchRepository.findById(id).orElseThrow();
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
         branchMapper.updateBranchFromDTO(updateBranchDTO, branch);
 
@@ -59,8 +66,8 @@ public class BranchServiceImpl implements BranchService{
     public void delete(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
-        if (!exists(id)){
-            throw new EntityNotFoundException("Branch with id " + id + "does not exist");
+        if (!branchRepository.existsById(id)){
+            throw new EntityNotFoundException("Branch with id " + id + " does not exist");
         }
 
         branchRepository.deleteById(id);
@@ -72,6 +79,14 @@ public class BranchServiceImpl implements BranchService{
 
         return branchRepository.existsById(id);
     }
+
+    @Override
+    public boolean exists(String name) {
+        ArgumentNullChecker.check(name,"Name");
+
+        return branchRepository.existsByName(name);
+    }
+
 
     @Override
     public List<ResponseBranchDTO> findAll() {
