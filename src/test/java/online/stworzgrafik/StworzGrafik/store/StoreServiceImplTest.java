@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -15,15 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.crossstore.ChangeSetPersister;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateStoreDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -413,7 +411,7 @@ class StoreServiceImplTest {
     void update_idIsNull(){
         //given
         Long id = null;
-        UpdateStoreDTO updateStoreDTO = getUpdateStoreDTO();
+        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
 
         //when
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.update(id, updateStoreDTO));
@@ -442,7 +440,7 @@ class StoreServiceImplTest {
     void update_entityNotFoundByIdThrowsException(){
         //given
         Long id = 100L;
-        UpdateStoreDTO updateStoreDTO = getUpdateStoreDTO();
+        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
 
         when(repository.findById(id)).thenThrow(EntityNotFoundException.class);
 
@@ -459,17 +457,7 @@ class StoreServiceImplTest {
         //given
         Long id = 1L;
 
-        UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
-                null,
-                null,
-                null,
-                1L,
-                null,
-                true,
-                null,
-                null,
-                null
-        );
+        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
 
         Store store = getStore();
         when(repository.findById(id)).thenReturn(Optional.of(store));

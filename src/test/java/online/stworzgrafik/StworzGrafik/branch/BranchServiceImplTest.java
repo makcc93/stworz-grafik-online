@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -141,7 +142,7 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
         boolean isEnable = false;
-        UpdateBranchDTO updateBranchDTO = new UpdateBranchDTO("UPDATEDNAME", isEnable);
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
 
         Branch branch = new BranchBuilder().createBranch("TEST");
         branch.setEnable(true);
@@ -168,7 +169,7 @@ class BranchServiceImplTest {
     void updateBranch_branchDoesNotExistThrowsException(){
         //given
         Long id = 1L;
-        UpdateBranchDTO updateBranchDTO = new UpdateBranchDTO("Test", true);
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         //when
@@ -182,7 +183,7 @@ class BranchServiceImplTest {
     void updateBranch_idArgumentIsNullThrowsException(){
         //given
         Long id = null;
-        UpdateBranchDTO updateBranchDTO = new UpdateBranchDTO("Test", true);
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
 
         //when
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateBranch(id, updateBranchDTO));

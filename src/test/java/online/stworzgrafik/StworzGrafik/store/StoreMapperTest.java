@@ -1,7 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,13 +34,13 @@ class BranchMapperTest {
         //given
         Branch branch = new BranchBuilder().createBranch("Test");
 
-        UpdateBranchDTO updateBranchDTO = new UpdateBranchDTO("   Changed name   ", false);
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
 
         //when
         branchMapper.updateBranchFromDTO(updateBranchDTO, branch);
 
         //then
-        assertEquals("CHANGEDNAME", branch.getName());
+        assertEquals(updateBranchDTO.name(), branch.getName());
         assertFalse(branch.isEnable());
     }
 }

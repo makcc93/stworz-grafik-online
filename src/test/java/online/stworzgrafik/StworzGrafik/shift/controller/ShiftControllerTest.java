@@ -103,7 +103,7 @@ class ShiftControllerTest {
     }
 
     @Test
-    void getAllShifts_empltyList() throws Exception {
+    void getAllShifts_emptyList() throws Exception {
         //given
 
         //when
@@ -145,11 +145,9 @@ class ShiftControllerTest {
     void createShift_withoutRequestBody() throws Exception {
         //given
         //when
-        MvcResult mvcResult = mockMvc.perform(post("/api/shifts"))
+        mockMvc.perform(post("/api/shifts"))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
+                .andExpect(status().isBadRequest());
         //then
     }
 

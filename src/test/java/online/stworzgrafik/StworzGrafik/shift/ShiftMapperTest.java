@@ -17,28 +17,39 @@ class ShiftMapperTest {
 
     @Test
     void toShiftDto_workingTest(){
-        Shift shift = new ShiftBuilder().createShift(LocalTime.of(8,0),LocalTime.of(20,0));
+        //given
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
 
+        Shift shift = new ShiftBuilder().createShift(startHour, endHour);
+
+        //when
         ResponseShiftDTO shiftDto = shiftMapper.toShiftDto(shift);
 
+        //then
         assertEquals(shift.getStartHour(),shiftDto.startHour());
-        assertEquals(8,shiftDto.startHour().getHour());
+        assertEquals(startHour.getHour(),shiftDto.startHour().getHour());
 
         assertEquals(shift.getEndHour(),shiftDto.endHour());
-        assertEquals(20,shiftDto.endHour().getHour());
+        assertEquals(endHour.getHour(),shiftDto.endHour().getHour());
     }
 
     @Test
     void toEntity_workingTest(){
-        ShiftHoursDTO dto = new ShiftHoursDTO(LocalTime.of(8, 0), LocalTime.of(20, 0));
+        //given
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+        ShiftHoursDTO dto = new ShiftHoursDTO(startHour, endHour);
 
+        //when
         Shift entity = shiftMapper.toEntity(dto);
 
+        //then
         assertEquals(entity.getStartHour(),dto.startHour());
-        assertEquals(8,entity.getStartHour().getHour());
+        assertEquals(startHour.getHour(),entity.getStartHour().getHour());
 
         assertEquals(entity.getEndHour(),dto.endHour());
-        assertEquals(20,entity.getEndHour().getHour());
+        assertEquals(endHour.getHour(),entity.getEndHour().getHour());
     }
 
 }
