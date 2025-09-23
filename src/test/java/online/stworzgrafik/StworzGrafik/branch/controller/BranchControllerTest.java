@@ -7,6 +7,8 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,8 +21,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -182,7 +186,76 @@ class BranchControllerTest {
                 .andExpect(status().isBadRequest());
         //then
     }
-    //czas na kolejna metode do testowania z kontrolera
-    //Ave MARYJA!
+
+    @Test
+    void deleteBranchById_workingTest() throws Exception {
+        //given
+        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
+        Branch secondBranch = new BranchBuilder().createBranch("SECOND");
+        Branch thirdBranch = new BranchBuilder().createBranch("THIRD");
+        branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
+
+        //when
+        mockMvc.perform(delete("/api/branches/" + secondBranch.getId()))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        //then
+        assertFalse(branchRepository.existsByName(secondBranch.getName()));
+
+        assertTrue(branchRepository.existsByName(firstBranch.getName()));
+        assertTrue(branchRepository.existsByName(thirdBranch.getName()));
+    }
+
+    @Test
+    void deleteBranchById_entityDoesNotExistThrowsException() throws Exception {
+        //given
+        long randomNumber = 123L;
+
+        //when
+        mockMvc.perform(delete("/api/branches/" + randomNumber))
+                .andExpect(status().isNotFound());
+
+        //then
+    }
+
+    @Test
+    void updateBranch_workingTest() throws Exception {
+        //given
+        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
+        branchRepository.save(firstBranch);
+
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(patch("/api/branches/" + firstBranch.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateBranchDTO)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ResponseBranchDTO responseBranchDTO = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseBranchDTO.class);
+
+        //then
+        assertEquals(updateBranchDTO.name(),responseBranchDTO.name());
+        assertEquals(updateBranchDTO.isEnable(),responseBranchDTO.isEnable());
+        assertEquals(firstBranch.getId(),responseBranchDTO.id());
+    }
+
+    @Test
+    void updateBranch_entityDoesNotExistThrowsException() throws Exception {
+        //given
+        long randomNumber = 123L;
+        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+
+        //when
+        mockMvc.perform(patch("/api/branches/" + randomNumber)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateBranchDTO)))
+                .andExpect(status().isNotFound());
+
+        //then
+    }
 
 }
