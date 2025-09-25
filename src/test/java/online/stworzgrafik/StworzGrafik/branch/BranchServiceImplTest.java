@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -142,7 +142,7 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
         boolean isEnable = false;
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().withIsEnable(isEnable).build();
 
         Branch branch = new BranchBuilder().createBranch("TEST");
         branch.setEnable(true);
@@ -169,7 +169,7 @@ class BranchServiceImplTest {
     void updateBranch_branchDoesNotExistThrowsException(){
         //given
         Long id = 1L;
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         //when
@@ -183,7 +183,7 @@ class BranchServiceImplTest {
     void updateBranch_idArgumentIsNullThrowsException(){
         //given
         Long id = null;
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateBranch(id, updateBranchDTO));

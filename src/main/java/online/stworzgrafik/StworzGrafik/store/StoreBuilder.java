@@ -1,8 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
-import lombok.NoArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +30,7 @@ public final class StoreBuilder {
                 .openForClientsHour(openHour)
                 .closeForClientsHour(closeHour)
                 .build();
+
     }
 
     private static void validateHour(LocalTime openHour, LocalTime closeHour) {

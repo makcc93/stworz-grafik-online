@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.branch.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -8,7 +7,7 @@ import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,19 +15,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -225,7 +218,7 @@ class BranchControllerTest {
         Branch firstBranch = new BranchBuilder().createBranch("FIRST");
         branchRepository.save(firstBranch);
 
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
         MvcResult mvcResult = mockMvc.perform(patch("/api/branches/" + firstBranch.getId())
@@ -247,7 +240,7 @@ class BranchControllerTest {
     void updateBranch_entityDoesNotExistThrowsException() throws Exception {
         //given
         long randomNumber = 123L;
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
         mockMvc.perform(patch("/api/branches/" + randomNumber)

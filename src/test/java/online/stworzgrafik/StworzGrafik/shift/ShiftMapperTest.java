@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ class ShiftMapperTest {
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(20, 0);
 
-        Shift shift = new ShiftBuilder().createShift(startHour, endHour);
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
         ResponseShiftDTO shiftDto = shiftMapper.toShiftDto(shift);

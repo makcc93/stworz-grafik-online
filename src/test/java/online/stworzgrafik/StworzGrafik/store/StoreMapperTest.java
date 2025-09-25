@@ -1,14 +1,14 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -20,7 +20,7 @@ class StoreMapperTest {
     @Test
     void toResponseStoreDto_workingTest(){
         //given
-        Store store = getStore();
+        Store store = new TestStoreBuilder().build();
 
         //when
         ResponseStoreDTO responseStoreDto = mapper.toResponseStoreDto(store);
@@ -38,7 +38,7 @@ class StoreMapperTest {
     @Test
     void toStoreNameAndCodeDTO_workingTest(){
         //given
-        CreateStoreDTO createStoreDTO = getCreateStoreDTO();
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
         //when
         StoreNameAndCodeDTO storeNameAndCodeDTO = mapper.toStoreNameAndCodeDTO(createStoreDTO);
@@ -51,7 +51,7 @@ class StoreMapperTest {
     @Test
     void toEntityFromCreateStoreDTO_workingTest(){
         //given
-        CreateStoreDTO createStoreDTO = getCreateStoreDTO();
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
         //when
         Store entity = mapper.toEntity(createStoreDTO);
@@ -81,8 +81,8 @@ class StoreMapperTest {
     @Test
     void updateStoreFromDTO_workingTest(){
         //given
-        Store store = getStore();
-        UpdateStoreDTO updateStoreDTO = getUpdateStoreDTO();
+        Store store = new TestStoreBuilder().build();
+        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
         //when
         mapper.updateStoreFromDTO(updateStoreDTO,store);
@@ -96,48 +96,10 @@ class StoreMapperTest {
         assertEquals(updateStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
     }
 
-    private UpdateStoreDTO getUpdateStoreDTO() {
-        return new UpdateStoreDTO(
-                "Test",
-                "TE",
-                "Wroclaw",
-                1L,
-                RegionType.POLUDNIE,
-                true,
-                1337L,
-                LocalTime.of(10,0),
-                LocalTime.of(20,0)
-        );
-    }
-
     private StoreNameAndCodeDTO getStoreNameAndCodeDTO(){
         return new StoreNameAndCodeDTO(
             "Simple Name",
             "SN");
 
-    }
-
-    private CreateStoreDTO getCreateStoreDTO(){
-        return new CreateStoreDTO(
-                "DTOname",
-                "TT",
-                "Map City",
-                1L,
-                RegionType.POLUDNIE,
-                LocalTime.of(9,0),
-                LocalTime.of(21,0)
-        );
-    }
-
-    private Store getStore(){
-        return new StoreBuilder().createStore(
-                "TestName",
-                "11",
-                "Lublin",
-                new BranchBuilder().createBranch("randomName"),
-                RegionType.WSCHOD,
-                LocalTime.of(10,0),
-                LocalTime.of(19,0)
-        );
     }
 }

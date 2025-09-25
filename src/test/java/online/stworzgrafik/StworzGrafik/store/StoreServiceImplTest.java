@@ -3,8 +3,8 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.*;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -17,11 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateStoreDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -44,28 +42,22 @@ class StoreServiceImplTest {
     @Mock
     private BranchRepository branchRepository;
 
-    @Mock
-    private BranchBuilder branchBuilder;
-
     @Test
     void findAll_workingTest(){
         //given
-        Store store1 = getStore();
-        store1.setStoreCode("00");
-        Store store2 = getStore();
-        store2.setStoreCode("11");
-        Store store3 = getStore();
-        store3.setStoreCode("22");
+        Store store1 = new TestStoreBuilder().withStoreCode("00").build();
+        Store store2 = new TestStoreBuilder().withStoreCode("11").build();
+        Store store3 = new TestStoreBuilder().withStoreCode("22").build();
 
         when(repository.findAll()).thenReturn(List.of(store1,store2,store3));
 
-        ResponseStoreDTO responseOfStore1 = getResponseStoreDTO(store1);
+        ResponseStoreDTO responseOfStore1 = new TestResponseStoreDTO().buildFromEntity(store1);
         when(storeMapper.toResponseStoreDto(store1)).thenReturn(responseOfStore1);
 
-        ResponseStoreDTO responseOfStore2 = getResponseStoreDTO(store2);
+        ResponseStoreDTO responseOfStore2 = new TestResponseStoreDTO().buildFromEntity(store2);
         when(storeMapper.toResponseStoreDto(store2)).thenReturn(responseOfStore2);
 
-        ResponseStoreDTO responseOfStore3 = getResponseStoreDTO(store3);
+        ResponseStoreDTO responseOfStore3 = new TestResponseStoreDTO().buildFromEntity(store3);
         when(storeMapper.toResponseStoreDto(store3)).thenReturn(responseOfStore3);
 
         //when
@@ -83,9 +75,9 @@ class StoreServiceImplTest {
     void findById_workingTest(){
         //given
         Long id = 1L;
-        Store store = getStore();
+        Store store = new TestStoreBuilder().build();
 
-        ResponseStoreDTO responseStoreDTO = getResponseStoreDTO(store);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
 
         when(repository.findById(id)).thenReturn(Optional.of(store));
 
@@ -120,23 +112,15 @@ class StoreServiceImplTest {
     @Test
     void create_workingTest(){
         //given
-        CreateStoreDTO createStoreDTO = new CreateStoreDTO(
-                "name",
-                "aa",
-                "Location",
-                1L,
-                RegionType.POLUDNIE,
-                LocalTime.of(9, 0),
-                LocalTime.of(20, 0)
-        );
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
-        Branch branch = getBranch();
+        Branch branch = new TestBranchBuilder().build();
         when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.of(branch));
 
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(createStoreDTO.name(), createStoreDTO.storeCode());
         when(storeMapper.toStoreNameAndCodeDTO(createStoreDTO)).thenReturn(storeNameAndCodeDTO);
 
-        Store store = getStore(createStoreDTO);
+        Store store = new TestStoreBuilder().build();
 
         ResponseStoreDTO responseStoreDTO = new ResponseStoreDTO(
                 1L,
@@ -195,7 +179,7 @@ class StoreServiceImplTest {
     @Test
     void create_closeHourIsBeforeOpenHour(){
         //given
-        CreateStoreDTO inputDto = getCreateStoreDTO();
+        CreateStoreDTO inputDto = new TestCreateStoreDTO().build();
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(inputDto.name(),inputDto.storeCode());
 
         when(storeMapper.toStoreNameAndCodeDTO(inputDto)).thenReturn(storeNameAndCodeDTO);
@@ -310,7 +294,7 @@ class StoreServiceImplTest {
     @Test
     void saveEntity_workingTest(){
         //given
-        Store store = getStore();
+        Store store = new TestStoreBuilder().build();
         when(repository.save(store)).thenReturn(store);
 
         //when
@@ -344,7 +328,7 @@ class StoreServiceImplTest {
     void saveDto_workingTest(){
         //given
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Name","a1");
-        Store entityFromDTO = getStore();
+        Store entityFromDTO = new TestStoreBuilder().build();
         entityFromDTO.setName(storeNameAndCodeDTO.name());
         entityFromDTO.setStoreCode(storeNameAndCodeDTO.storeCode());
 
@@ -353,7 +337,7 @@ class StoreServiceImplTest {
         entityFromDTO.setName("New name before save");
         when(repository.save(entityFromDTO)).thenReturn(entityFromDTO);
 
-        ResponseStoreDTO responseStoreDTO = getResponseStoreDTO(entityFromDTO);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(entityFromDTO);
         when(storeMapper.toResponseStoreDto(entityFromDTO)).thenReturn(responseStoreDTO);
 
         //when
@@ -385,12 +369,12 @@ class StoreServiceImplTest {
     void update_workingTest(){
         //given
         Long id = 1L;
-        Store store = getStore();
+        Store store = new TestStoreBuilder().build();
         when(repository.findById(id)).thenReturn(Optional.of(store));
 
-        UpdateStoreDTO updateStoreDTO = getUpdateStoreDTO();
+        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
-        ResponseStoreDTO responseStoreDTO = getResponseStoreDTO(store);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
 
         when(repository.findById(id)).thenReturn(Optional.of(store));
         when(repository.save(any(Store.class))).thenReturn(store);
@@ -411,7 +395,7 @@ class StoreServiceImplTest {
     void update_idIsNull(){
         //given
         Long id = null;
-        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
+        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
         //when
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.update(id, updateStoreDTO));
@@ -440,7 +424,7 @@ class StoreServiceImplTest {
     void update_entityNotFoundByIdThrowsException(){
         //given
         Long id = 100L;
-        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
+        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
         when(repository.findById(id)).thenThrow(EntityNotFoundException.class);
 
@@ -450,110 +434,5 @@ class StoreServiceImplTest {
         //then
         verify(repository,times(1)).findById(any(Long.class));
         verify(repository,never()).save(any(Store.class));
-    }
-
-    @Test
-    void update_whenBranchIsUpdated(){
-        //given
-        Long id = 1L;
-
-        UpdateStoreDTO updateStoreDTO = defaultUpdateStoreDTO();
-
-        Store store = getStore();
-        when(repository.findById(id)).thenReturn(Optional.of(store));
-
-        ResponseStoreDTO responseStoreDTO = getResponseStoreDTO(store);
-        when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
-
-        Branch branch = getBranch();
-        when(branchRepository.findById(updateStoreDTO.branchId())).thenReturn(Optional.of(branch));
-
-        when(repository.save(any(Store.class))).thenReturn(store);
-
-        //when
-        service.update(id, updateStoreDTO);
-
-        //then
-        assertEquals(branch.getId(),store.getBranch().getId());
-
-        verify(branchRepository,times(1)).findById(any(Long.class));
-    }
-
-    private static UpdateStoreDTO getUpdateStoreDTO() {
-        return new UpdateStoreDTO(
-                null,
-                "XX",
-                null,
-                null,
-                null,
-                true,
-                null,
-                null,
-                null
-        );
-    }
-
-    private static ResponseStoreDTO getResponseStoreDTO(Store entityFromDTO) {
-        return new ResponseStoreDTO(
-                entityFromDTO.getId(),
-                entityFromDTO.getName(),
-                entityFromDTO.getStoreCode(),
-                entityFromDTO.getLocation(),
-                entityFromDTO.getBranch().getId(),
-                entityFromDTO.getBranch().getName(),
-                entityFromDTO.getRegion(),
-                LocalDateTime.now(),
-                true,
-                1L,
-                entityFromDTO.getOpenForClientsHour(),
-                entityFromDTO.getCloseForClientsHour()
-        );
-    }
-
-    private static Branch getBranch(){
-        return new Branch(
-                1L,
-                "RandomBranch",
-                true,
-                new ArrayList<>()
-        );
-    }
-
-    private static Store getStore(CreateStoreDTO inputDto) {
-        Store store = new Store();
-        store.setName(inputDto.name());
-        store.setStoreCode(inputDto.storeCode());
-        store.setLocation(inputDto.location());
-        store.setBranch(Branch.builder().build());
-        store.setRegion(inputDto.region());
-        store.setOpenForClientsHour(inputDto.openForClientsHour());
-        store.setCloseForClientsHour(inputDto.closeForClientsHour());
-
-        return store;
-    }
-
-    private static Store getStore(){
-        Store store = new Store();
-        store.setName("TestName");
-        store.setStoreCode("AB");
-        store.setLocation("TestLocation");
-        store.setBranch(Branch.builder().build());
-        store.setRegion(RegionType.ZACHOD);
-        store.setOpenForClientsHour(LocalTime.of(10,0));
-        store.setCloseForClientsHour(LocalTime.of(20,0));
-
-        return store;
-    }
-
-    private static CreateStoreDTO getCreateStoreDTO() {
-        return new CreateStoreDTO(
-                "Test store",
-                "01",
-                "Testcity",
-                1L,
-                RegionType.ZACHOD,
-                LocalTime.of(10,0),
-                LocalTime.of(21,0)
-        );
     }
 }

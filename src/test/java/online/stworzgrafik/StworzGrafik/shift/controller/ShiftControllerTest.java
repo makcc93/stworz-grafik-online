@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.shift.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
@@ -47,7 +48,11 @@ class ShiftControllerTest {
     @Test
     void getShiftById_workingTest() throws Exception {
         //given
-        Shift shift = new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(20, 0));
+        LocalTime startHour = LocalTime.of(8,0);
+        LocalTime endHour = LocalTime.of(15,0);
+        int hoursDifference = endHour.getHour() - startHour.getHour();
+
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         shiftRepository.save(shift);
 
         //when
@@ -58,9 +63,9 @@ class ShiftControllerTest {
         //then
         Shift resultAsEntity = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
 
-        assertEquals(8, resultAsEntity.getStartHour().getHour());
-        assertEquals(20, resultAsEntity.getEndHour().getHour());
-        assertEquals(12, resultAsEntity.getLength());
+        assertEquals(startHour.getHour(), resultAsEntity.getStartHour().getHour());
+        assertEquals(endHour.getHour(), resultAsEntity.getEndHour().getHour());
+        assertEquals(hoursDifference, resultAsEntity.getLength());
         assertEquals(shift.getId(),resultAsEntity.getId());
 
         assertTrue(shiftService.exists(resultAsEntity.getId()));
@@ -81,10 +86,9 @@ class ShiftControllerTest {
     @Test
     void getAllShifts_workingTest() throws Exception {
         //given
-        Shift shift1 = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0)));
-        Shift shift2 = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(9, 0), LocalTime.of(15, 0)));
-        Shift shift3 = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(10, 0), LocalTime.of(18, 0)));
-        Shift shift4 = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(14, 0), LocalTime.of(19, 0)));
+        Shift shift1 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
+        Shift shift2 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build());
+        Shift shift3 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(18, 0)).build());
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/shifts"))
@@ -95,11 +99,10 @@ class ShiftControllerTest {
         //then
         List<ResponseShiftDTO> shiftDTOS = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseShiftDTO>>() {});
 
-        assertEquals(4,shiftDTOS.size());
+        assertEquals(3,shiftDTOS.size());
         assertTrue(shiftDTOS.stream().anyMatch(dto -> dto.id().equals(shift1.getId())));
         assertTrue(shiftDTOS.stream().anyMatch(dto -> dto.id().equals(shift2.getId())));
         assertTrue(shiftDTOS.stream().anyMatch(dto -> dto.id().equals(shift3.getId())));
-        assertTrue(shiftDTOS.stream().anyMatch(dto -> dto.id().equals(shift4.getId())));
     }
 
     @Test
@@ -154,7 +157,9 @@ class ShiftControllerTest {
     @Test
     void deleteShift_workingTest() throws Exception {
         //given
-        Shift shift = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(10, 0), LocalTime.of(20, 0)));
+        LocalTime startHour = LocalTime.of(10, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+        Shift shift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
         mockMvc.perform(delete("/api/shifts/" + shift.getId()))

@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
@@ -137,15 +138,7 @@ class StoreControllerTest {
         Branch branch = branchBuilder.createBranch("TestBranch");
         branchRepository.save(branch);
 
-        CreateStoreDTO createStoreDTO = new CreateStoreDTO(
-                "CreationName",
-                "CN",
-                "City",
-                branch.getId(),
-                RegionType.ZACHOD,
-                LocalTime.of(9,0),
-                LocalTime.of(21,0)
-        );
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
 
         //when
         MvcResult mvcResult = mockMvc.perform(post("/api/stores")

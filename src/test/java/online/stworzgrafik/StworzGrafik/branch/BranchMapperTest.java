@@ -2,11 +2,11 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static online.stworzgrafik.StworzGrafik.dataFactory.TestDataFactory.defaultUpdateBranchDTO;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +34,7 @@ class BranchMapperTest {
         //given
         Branch branch = new BranchBuilder().createBranch("Test");
 
-        UpdateBranchDTO updateBranchDTO = defaultUpdateBranchDTO();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
         branchMapper.updateBranchFromDTO(updateBranchDTO, branch);
