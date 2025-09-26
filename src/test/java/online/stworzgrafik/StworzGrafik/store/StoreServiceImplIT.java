@@ -10,6 +10,7 @@ import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +46,7 @@ public class StoreServiceImplIT {
     @Test
     void findAll_workingTest(){
         //given
-        Branch branch = new TestBranchBuilder().build();
-        branchRepository.save(branch);
+        Branch branch = buildAndSaveDefaultBranch();
 
         Store firstStore = new TestStoreBuilder().withBranch(branch).build();
         Store secondStore = new TestStoreBuilder().withName("SECONDNAME").withStoreCode("SN").withBranch(branch).build();
@@ -81,8 +81,7 @@ public class StoreServiceImplIT {
     @Test
     void findById_workingTest(){
         //given
-        Branch branch = branchBuilder.createBranch("BRANCHFORTEST");
-        branchRepository.save(branch);
+        Branch branch = buildAndSaveDefaultBranch();
 
         Store firstStore = new TestStoreBuilder().withBranch(branch).build();
         Store secondStore = new TestStoreBuilder().withName("SECONDNAME").withStoreCode("SN").withBranch(branch).build();
@@ -118,8 +117,7 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = branchBuilder.createBranch("TESINGBRANCH");
-        branchRepository.save(branch);
+        Branch branch = buildAndSaveDefaultBranch();
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
                 "TESTINGNAME",
@@ -148,8 +146,7 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = branchBuilder.createBranch("TESINGBRANCH");
-        branchRepository.save(branch);
+        Branch branch = buildAndSaveDefaultBranch();
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
                 "TESTINGNAME",
@@ -186,9 +183,7 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = branchBuilder.createBranch("TESINGBRANCH");
-        branchRepository.save(branch);
-
+        Branch branch = buildAndSaveDefaultBranch();
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
                 "TESTINGNAME",
@@ -254,8 +249,7 @@ public class StoreServiceImplIT {
     @Test
     void existsById_workingTest(){
         //given
-        Branch branch = new TestBranchBuilder().build();
-        branchRepository.save(branch);
+        Branch branch = buildAndSaveDefaultBranch();
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
         storeRepository.save(store);
@@ -273,9 +267,90 @@ public class StoreServiceImplIT {
     @Test
     void existsByNameAndStoreCode_workingTest(){
         //given
+        Branch branch = buildAndSaveDefaultBranch();
+
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+        storeRepository.save(store);
+
+        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(store.getName(), store.getStoreCode());
+
+        StoreNameAndCodeDTO notExisting = new StoreNameAndCodeDTO("RANDOMNAME","AA");
 
         //when
+        boolean exists = storeService.exists(storeNameAndCodeDTO);
+
+        boolean shouldBeFalse = storeService.exists(notExisting);
 
         //then
+        assertTrue(exists);
+
+        assertFalse(shouldBeFalse);
+    }
+
+    @Test
+    void delete_workingTest(){
+        //given
+        Branch branch = buildAndSaveDefaultBranch();
+
+        Store storeToStay = new TestStoreBuilder().withName("TOSTAY").withBranch(branch).build();
+        storeRepository.save(storeToStay);
+
+        Store storeToDelete = new TestStoreBuilder().withName("TODELETE").withBranch(branch).build();
+        storeRepository.save(storeToDelete);
+
+        //when
+        storeService.delete(storeToDelete.getId());
+
+        //then
+        assertTrue(storeService.exists(storeToStay.getId()));
+
+        assertFalse(storeService.exists(storeToDelete.getId()));
+    }
+
+    @Test
+    void delete_notEntityToDeleteThrowsException(){
+        //given
+        Long notExistingEntityId = 1234L;
+
+        //when
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.delete(notExistingEntityId));
+
+        //then
+        assertEquals("Store with id " + notExistingEntityId +" does not exist",exception.getMessage());
+    }
+
+    @Test
+    void saveEntity_workingTest(){
+        //given
+        Branch branch = buildAndSaveDefaultBranch();
+
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+
+        //when
+        storeService.saveEntity(store);
+
+        //then
+        assertTrue(storeRepository.existsById(store.getId()));
+    }
+
+    @Test
+    void saveDto_workingTest(){
+        //given
+        Branch branch = buildAndSaveDefaultBranch();
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(store.getName(), store.getStoreCode());
+
+        //when
+        storeService.saveDto(storeNameAndCodeDTO);
+
+        //then
+        assertTrue(storeRepository.existsByNameAndStoreCode(store.getName(),store.getStoreCode()));
+        assertTrue(storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode()));
+    }
+
+    private Branch buildAndSaveDefaultBranch() {
+        Branch branch = new TestBranchBuilder().build();
+        branchRepository.save(branch);
+        return branch;
     }
 }

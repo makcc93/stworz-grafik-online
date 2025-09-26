@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -186,7 +187,7 @@ class StoreServiceImplTest {
         when(repository.existsByNameAndStoreCode(inputDto.name(),inputDto.storeCode())).thenReturn(true);
 
         //when
-        assertThrows(IllegalArgumentException.class,() -> service.create(inputDto));
+        assertThrows(EntityExistsException.class,() -> service.create(inputDto));
 
         //then
         verify(repository,never()).save(any(Store.class));
