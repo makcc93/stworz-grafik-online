@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -46,7 +47,8 @@ public class StoreServiceImpl implements StoreService{
     public ResponseStoreDTO findById(Long id) {
         ArgumentNullChecker.check(id,"Id");
 
-        Store store = storeRepository.findById(id).orElseThrow();
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + id));
 
         return storeMapper.toResponseStoreDto(store);
     }
@@ -79,7 +81,8 @@ public class StoreServiceImpl implements StoreService{
         StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
 
         if (exists(storeNameAndCode)){
-            throw new IllegalArgumentException("Store with this name and store code already exist");
+            throw new EntityExistsException("Store with this name: " + storeNameAndCode.name() +
+                    " and store code: " + storeNameAndCode.storeCode() + " already exist");
         }
     }
 
@@ -88,7 +91,8 @@ public class StoreServiceImpl implements StoreService{
         ArgumentNullChecker.check(id,"Id");
         ArgumentNullChecker.check(updateStoreDTO);
 
-        Store store = storeRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store to update by id " + id));
 
         storeMapper.updateStoreFromDTO(updateStoreDTO,store);
 

@@ -338,7 +338,7 @@ class ShiftServiceImplTest {
     void findById_workingTest(){
         //given
         Long id = 1L;
-        Shift shift = new ShiftBuilder().createShift(LocalTime.of(9,0),LocalTime.of(20,0));
+        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(20, 0)).build();
         ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L, LocalTime.of(9, 0), LocalTime.of(20, 0), 11);
 
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
@@ -386,7 +386,7 @@ class ShiftServiceImplTest {
     void findEntityById_workingTest(){
         //given
         Long id = 1L;
-        Shift shift = new ShiftBuilder().createShift(LocalTime.of(8,0),LocalTime.of(20,0));
+        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
         shift.setId(id);
 
         when(repository.findById(id)).thenReturn(Optional.of(shift));
@@ -416,7 +416,7 @@ class ShiftServiceImplTest {
     void findEntityById_cannotFindEntityException(){
         //given
         Long id = 1L;
-        Shift shift = new ShiftBuilder().createShift(LocalTime.of(8,0),LocalTime.of(20,0));
+        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
         shift.setId(id);
 
         when(repository.findById(id)).thenThrow(new IllegalArgumentException());

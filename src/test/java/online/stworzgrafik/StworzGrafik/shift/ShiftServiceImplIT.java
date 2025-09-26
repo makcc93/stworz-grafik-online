@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.swing.text.html.parser.Entity;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -250,9 +249,9 @@ class ShiftServiceImplIT {
         LocalTime startHourToTest = LocalTime.of(9,0);
         LocalTime endHourToTest = LocalTime.of(15,0);
 
-        Shift shift1 = new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0));
-        Shift shift2 = new ShiftBuilder().createShift(LocalTime.of(15, 0), LocalTime.of(20, 0));
-        Shift shift3 = new ShiftBuilder().createShift(startHourToTest, endHourToTest);
+        Shift shift1 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build();
+        Shift shift2 = new TestShiftBuilder().withStartHour(LocalTime.of(15, 0)).withEndHour(LocalTime.of(20, 0)).build();
+        Shift shift3 = new TestShiftBuilder().withStartHour(startHourToTest).withEndHour(endHourToTest).build();
 
         shiftRepository.save(shift1);
         shiftRepository.save(shift2);
@@ -283,9 +282,9 @@ class ShiftServiceImplIT {
     @Test
     void existsById_workingTest(){
         //given
-        Shift shift1 = new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0));
-        Shift shift2 = new ShiftBuilder().createShift(LocalTime.of(15, 0), LocalTime.of(20, 0));
-        Shift shift3 = new ShiftBuilder().createShift(LocalTime.of(9, 0), LocalTime.of(15, 0));
+        Shift shift1 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build();
+        Shift shift2 = new TestShiftBuilder().withStartHour(LocalTime.of(15, 0)).withEndHour(LocalTime.of(20, 0)).build();
+        Shift shift3 = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build();
 
         shiftRepository.save(shift1);
         shiftRepository.save(shift2);

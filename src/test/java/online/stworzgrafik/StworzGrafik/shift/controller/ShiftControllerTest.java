@@ -186,7 +186,7 @@ class ShiftControllerTest {
     @Test
     void updateShift_workingTest() throws Exception {
         //given
-        Shift originalShift = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0)));
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
         ShiftHoursDTO dtoForUpdate = new ShiftHoursDTO(LocalTime.of(15, 0), LocalTime.of(20, 0));
 
         //when
@@ -211,7 +211,7 @@ class ShiftControllerTest {
     @Test
     void updateShift_noBodyRequest() throws Exception {
         //given
-        Shift originalShift = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0)));
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
 
         //when
        mockMvc.perform(put("/api/shifts/" + originalShift.getId()))
@@ -223,7 +223,7 @@ class ShiftControllerTest {
     @Test
     void updateShift_bodyRequestIsNull() throws Exception{
         //given
-        Shift originalShift = shiftRepository.save(new ShiftBuilder().createShift(LocalTime.of(8, 0), LocalTime.of(14, 0)));
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
 
         //when
         mockMvc.perform(put("/api/shifts/" + originalShift.getId())
