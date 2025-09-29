@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.dataBuilderForTests;
+package online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift;
 
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftBuilder;

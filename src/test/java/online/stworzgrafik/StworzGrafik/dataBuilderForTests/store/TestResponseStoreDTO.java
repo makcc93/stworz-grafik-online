@@ -1,6 +1,7 @@
-package online.stworzgrafik.StworzGrafik.dataBuilderForTests;
+package online.stworzgrafik.StworzGrafik.dataBuilderForTests.store;
 
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.RegionType;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -14,7 +15,6 @@ public class TestResponseStoreDTO {
     private String storeCode = "CC";
     private String location = "TESTCREATELOCATION";
     private Branch branch = new TestBranchBuilder().build();
-    private RegionType region = RegionType.POLUDNIE;
     private LocalDateTime createdAt = LocalDateTime.now();
     private boolean isEnable = true;
     private Long storeManagerId = 50L;
@@ -43,11 +43,6 @@ public class TestResponseStoreDTO {
 
     public TestResponseStoreDTO withBranch(Branch branch){
         this.branch = branch;
-        return this;
-    }
-
-    public TestResponseStoreDTO withRegion(RegionType region){
-        this.region = region;
         return this;
     }
 
@@ -84,7 +79,6 @@ public class TestResponseStoreDTO {
                 location,
                 branch.getId(),
                 branch.getName(),
-                region,
                 createdAt,
                 isEnable,
                 storeManagerId,
@@ -101,7 +95,6 @@ public class TestResponseStoreDTO {
                 store.getLocation(),
                 store.getBranch().getId(),
                 store.getBranch().getName(),
-                store.getRegion(),
                 store.getCreatedAt(),
                 store.isEnable(),
                 store.getStoreManagerId(),

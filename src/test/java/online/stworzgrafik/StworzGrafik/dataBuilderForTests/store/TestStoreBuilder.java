@@ -1,6 +1,7 @@
-package online.stworzgrafik.StworzGrafik.dataBuilderForTests;
+package online.stworzgrafik.StworzGrafik.dataBuilderForTests.store;
 
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.RegionType;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
@@ -12,7 +13,6 @@ public class TestStoreBuilder {
     private String storeCode = "AA";
     private String location = "TESTLOCATION";
     private Branch branch = new TestBranchBuilder().build();
-    private RegionType region = RegionType.WSCHOD;
     private LocalTime openHour = LocalTime.of(9,0);
     private LocalTime closeHour = LocalTime.of(20,0);
 
@@ -36,11 +36,6 @@ public class TestStoreBuilder {
         return this;
     }
 
-    public TestStoreBuilder withRegion(RegionType region){
-        this.region = region;
-        return this;
-    }
-
     public TestStoreBuilder withOpenHour(LocalTime openHour){
         this.openHour = openHour;
         return this;
@@ -57,7 +52,6 @@ public class TestStoreBuilder {
                 storeCode,
                 location,
                 branch,
-                region,
                 openHour,
                 closeHour
         );

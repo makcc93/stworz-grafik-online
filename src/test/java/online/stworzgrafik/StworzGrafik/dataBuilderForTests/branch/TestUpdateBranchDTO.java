@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.dataBuilderForTests;
+package online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch;
 
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 
