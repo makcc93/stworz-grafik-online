@@ -1,0 +1,17 @@
+package online.stworzgrafik.StworzGrafik.region.DTO;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import online.stworzgrafik.StworzGrafik.validator.NameValidator;
+
+public record UpdateRegionDTO(
+        @NotBlank()
+        @Size(min = 3, max = 50, message = "Region name must be between three and fifty characters")
+        String name,
+
+        boolean isEnable
+) {
+    public UpdateRegionDTO{
+        name = NameValidator.validate(name);
+    }
+}
