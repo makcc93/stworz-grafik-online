@@ -1,7 +1,4 @@
-package online.stworzgrafik.StworzGrafik.dataBuilderForTests.region;
-
-import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionBuilder;
+package online.stworzgrafik.StworzGrafik.region;
 
 public class TestRegionBuilder {
     private String name = "TESTREGION";
