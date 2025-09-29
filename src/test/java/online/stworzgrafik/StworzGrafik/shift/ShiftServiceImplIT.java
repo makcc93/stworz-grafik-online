@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestShiftBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;

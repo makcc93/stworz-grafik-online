@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.*;
 import lombok.*;
+import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.util.ArrayList;
@@ -25,6 +26,10 @@ public class Branch {
 
     @OneToMany(mappedBy = "branch")
     private List<Store> stores = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "region_id",nullable = false)
+    private Region region;
 
     @PrePersist
     void onCreate(){

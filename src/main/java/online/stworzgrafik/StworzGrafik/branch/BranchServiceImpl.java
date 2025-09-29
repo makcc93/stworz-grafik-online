@@ -2,10 +2,12 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,11 +17,13 @@ public class BranchServiceImpl implements BranchService{
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
     private final BranchBuilder branchBuilder;
+    private final RegionRepository regionRepository;
 
-    public BranchServiceImpl(BranchRepository branchRepository, BranchMapper branchMapper, BranchBuilder branchBuilder) {
+    public BranchServiceImpl(BranchRepository branchRepository, BranchMapper branchMapper, BranchBuilder branchBuilder, RegionRepository regionRepository) {
         this.branchRepository = branchRepository;
         this.branchMapper = branchMapper;
         this.branchBuilder = branchBuilder;
+        this.regionRepository = regionRepository;
     }
 
     @Override
@@ -33,14 +37,17 @@ public class BranchServiceImpl implements BranchService{
     }
 
     @Override
-    public ResponseBranchDTO createBranch(NameBranchDTO nameBranchDTO) {
-        ArgumentNullChecker.check(nameBranchDTO);
+    public ResponseBranchDTO createBranch(CreateBranchDTO createBranchDTO) {
+        ArgumentNullChecker.check(createBranchDTO);
 
-        if (branchRepository.existsByName(nameBranchDTO.name())){
-            throw new EntityExistsException("Branch with name " + nameBranchDTO.name() + " already exists");
+        if (branchRepository.existsByName(createBranchDTO.name())){
+            throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exists");
         }
 
-        Branch branch = branchBuilder.createBranch(nameBranchDTO.name());
+        Region region = regionRepository.findById(createBranchDTO.regionId())
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + createBranchDTO.regionId()));
+
+        Branch branch = branchBuilder.createBranch(createBranchDTO.name(),region);
 
         Branch savedBranch = branchRepository.save(branch);
 

@@ -4,10 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.*;
-import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,19 +47,25 @@ class BranchControllerTest {
     @Autowired
     private BranchMapper branchMapper;
 
+    @Autowired
+    private RegionRepository regionRepository;
+
     @Test
     void findAll_workingTest() throws Exception {
         //given
-        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
-        Branch secondBranch = new BranchBuilder().createBranch("SECOND");
-        Branch thirdBranch = new BranchBuilder().createBranch("THIRD");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch firstBranch = new TestBranchBuilder().withRegion(region).withName("FIRST").build();
+        Branch secondBranch = new TestBranchBuilder().withRegion(region).withName("SECOND").build();
+        Branch thirdBranch = new TestBranchBuilder().withRegion(region).withName("THIRD").build();
         branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
 
         ResponseBranchDTO responseFirstBranch = branchMapper.toResponseBranchDTO(firstBranch);
         ResponseBranchDTO responseSecondBranch = branchMapper.toResponseBranchDTO(secondBranch);
         ResponseBranchDTO responseThirdBranch = branchMapper.toResponseBranchDTO(thirdBranch);
 
-        Branch notSavedBranch = new BranchBuilder().createBranch("Not saved");
+        Branch notSavedBranch = new TestBranchBuilder().withName("NOTSAVED").build();
         ResponseBranchDTO responseNotSavedBranch = branchMapper.toResponseBranchDTO(notSavedBranch);
 
 
@@ -94,9 +105,12 @@ class BranchControllerTest {
     @Test
     void findById_workingTest() throws Exception {
         //given
-        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
-        Branch secondBranch = new BranchBuilder().createBranch("SECOND");
-        Branch thirdBranch = new BranchBuilder().createBranch("THIRD");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
+        Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
+        Branch thirdBranch = new TestBranchBuilder().withName("THIRD").withRegion(region).build();
         branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
 
         //when
@@ -128,11 +142,15 @@ class BranchControllerTest {
     @Test
     void createBranch_workingTest() throws Exception {
         //given
-        NameBranchDTO nameBranchDTO = new NameBranchDTO("ILOVEPROGRAMMING");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withRegionId(region.getId()).build();
+
         //when
         MvcResult mvcResult = mockMvc.perform(post("/api/branches")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(nameBranchDTO)))
+                        .content(objectMapper.writeValueAsString(createBranchDTO)))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -140,22 +158,25 @@ class BranchControllerTest {
         ResponseBranchDTO responseBranchDTO = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseBranchDTO.class);
 
         //then
-        assertEquals(nameBranchDTO.name(),responseBranchDTO.name());
-        assertTrue(branchRepository.existsByName(nameBranchDTO.name()));
+        assertEquals(createBranchDTO.name(),responseBranchDTO.name());
+        assertTrue(branchRepository.existsByName(createBranchDTO.name()));
     }
 
     @Test
     void createBranch_entityWithThisNameAlreadyExistThrowsException() throws Exception {
         //given
-        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         branchRepository.save(firstBranch);
 
-        NameBranchDTO nameBranchDTO = new NameBranchDTO(firstBranch.getName());
+        CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withName(firstBranch.getName()).build();
 
         //when
         mockMvc.perform(post("/api/branches")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(nameBranchDTO)))
+                        .content(objectMapper.writeValueAsString(createBranchDTO)))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
 
@@ -183,9 +204,12 @@ class BranchControllerTest {
     @Test
     void deleteBranchById_workingTest() throws Exception {
         //given
-        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
-        Branch secondBranch = new BranchBuilder().createBranch("SECOND");
-        Branch thirdBranch = new BranchBuilder().createBranch("THIRD");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
+        Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
+        Branch thirdBranch = new TestBranchBuilder().withName("THIRD").withRegion(region).build();
         branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
 
         //when
@@ -215,7 +239,10 @@ class BranchControllerTest {
     @Test
     void updateBranch_workingTest() throws Exception {
         //given
-        Branch firstBranch = new BranchBuilder().createBranch("FIRST");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         branchRepository.save(firstBranch);
 
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();

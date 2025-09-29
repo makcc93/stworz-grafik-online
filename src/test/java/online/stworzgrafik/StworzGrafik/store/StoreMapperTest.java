@@ -1,9 +1,9 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestCreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestStoreBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestUpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -29,7 +29,6 @@ class StoreMapperTest {
         assertEquals(responseStoreDto.id(),store.getId());
         assertEquals(responseStoreDto.storeCode(),store.getStoreCode());
         assertEquals(responseStoreDto.location(),store.getLocation());
-        assertEquals(responseStoreDto.region(),store.getRegion());
         assertEquals(responseStoreDto.branchId(),store.getBranch().getId());
         assertEquals(responseStoreDto.openForClientsHour(),store.getOpenForClientsHour());
         assertEquals(responseStoreDto.closeForClientsHour(),store.getCloseForClientsHour());
@@ -60,7 +59,6 @@ class StoreMapperTest {
         assertEquals(entity.getName(),createStoreDTO.name());
         assertEquals(entity.getStoreCode(),createStoreDTO.storeCode());
         assertEquals(entity.getLocation(),createStoreDTO.location());
-        assertEquals(entity.getRegion(),createStoreDTO.region());
         assertEquals(entity.getOpenForClientsHour(),createStoreDTO.openForClientsHour());
         assertEquals(entity.getCloseForClientsHour(),createStoreDTO.closeForClientsHour());
     }
@@ -91,7 +89,6 @@ class StoreMapperTest {
         assertEquals(updateStoreDTO.name(),store.getName());
         assertEquals(updateStoreDTO.storeCode(),store.getStoreCode());
         assertEquals(updateStoreDTO.location(),store.getLocation());
-        assertEquals(updateStoreDTO.region(),store.getRegion());
         assertEquals(updateStoreDTO.openForClientsHour(),store.getOpenForClientsHour());
         assertEquals(updateStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
     }

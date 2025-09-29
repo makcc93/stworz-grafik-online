@@ -2,7 +2,8 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class StoreBuilderTest {
@@ -21,6 +23,9 @@ class StoreBuilderTest {
 
     @Mock
     private BranchBuilder branchBuilder;
+
+    @Mock
+    private BranchRepository branchRepository;
 
     @Test
     void createStore_workingTest(){
@@ -33,7 +38,6 @@ class StoreBuilderTest {
                 "NA",
                 "LOCATION",
                 branch,
-                RegionType.WSCHOD,
                 LocalTime.of(10, 0),
                 LocalTime.of(20, 0)
         );
@@ -43,9 +47,30 @@ class StoreBuilderTest {
         assertEquals("NA",store.getStoreCode());
         assertEquals("LOCATION",store.getLocation());
         assertEquals(branch.getName(),store.getBranch().getName());
-        assertEquals(RegionType.WSCHOD,store.getRegion());
         assertEquals(10,store.getOpenForClientsHour().getHour());
         assertEquals(20,store.getCloseForClientsHour().getHour());
+    }
+
+    @Test
+    void create_endHourIsBeforeStartHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(20,0);
+        LocalTime endHour = LocalTime.of(8,0);
+
+        Branch branch = new TestBranchBuilder().build();
+
+        //when
+        assertThrows(IllegalArgumentException.class,() ->
+                new StoreBuilder().createStore(
+                "NAME",
+                "NE",
+                "LOCATION",
+                branch,
+                startHour,
+                endHour
+        ),"Close hour cannot be before open hour");
+
+        //then
     }
 
 }

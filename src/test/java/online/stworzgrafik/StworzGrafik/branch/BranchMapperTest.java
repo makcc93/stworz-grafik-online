@@ -2,7 +2,8 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,9 +16,9 @@ class BranchMapperTest {
     private final BranchMapper branchMapper = new BranchMapperImpl();
 
     @Test
-    void toResponseBranchDTO(){
+    void toResponseBranchDTO_workingTest(){
         //given
-        Branch branch = new BranchBuilder().createBranch("Test");
+        Branch branch = new TestBranchBuilder().withName("Test").build();
         branch.setEnable(true);
 
         //when
@@ -32,7 +33,7 @@ class BranchMapperTest {
     @Test
     void updateBranchFromDTO_workingTest() {
         //given
-        Branch branch = new BranchBuilder().createBranch("Test");
+        Branch branch = new TestBranchBuilder().withName("Test").build();
 
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 

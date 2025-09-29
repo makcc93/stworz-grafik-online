@@ -6,8 +6,12 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -23,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-public class StoreServiceImplIT {
+class StoreServiceImplIT {
 
     @Autowired
     private StoreService storeService;
@@ -43,10 +47,13 @@ public class StoreServiceImplIT {
     @Autowired
     private BranchBuilder branchBuilder;
 
+    @Autowired
+    private RegionRepository regionRepository;
+
     @Test
     void findAll_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store firstStore = new TestStoreBuilder().withBranch(branch).build();
         Store secondStore = new TestStoreBuilder().withName("SECONDNAME").withStoreCode("SN").withBranch(branch).build();
@@ -81,7 +88,7 @@ public class StoreServiceImplIT {
     @Test
     void findById_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store firstStore = new TestStoreBuilder().withBranch(branch).build();
         Store secondStore = new TestStoreBuilder().withName("SECONDNAME").withStoreCode("SN").withBranch(branch).build();
@@ -117,17 +124,9 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
-        CreateStoreDTO createStoreDTO = new CreateStoreDTO(
-                "TESTINGNAME",
-                "00",
-                "TESTINGLOCATION",
-                branch.getId(),
-                RegionType.WSCHOD,
-                startHour,
-                endHour
-        );
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).withOpenHour(startHour).withCloseHour(endHour).build();
         //when
         ResponseStoreDTO responseStoreDTO = storeService.create(createStoreDTO);
 
@@ -136,7 +135,6 @@ public class StoreServiceImplIT {
 
         assertEquals(createStoreDTO.name(),responseStoreDTO.name());
         assertEquals(createStoreDTO.storeCode(),responseStoreDTO.storeCode());
-        assertEquals(createStoreDTO.region(),responseStoreDTO.region());
         assertEquals(createStoreDTO.openForClientsHour(),responseStoreDTO.openForClientsHour());
         assertEquals(createStoreDTO.closeForClientsHour(),responseStoreDTO.closeForClientsHour());
     }
@@ -146,14 +144,13 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
                 "TESTINGNAME",
                 "00",
                 "TESTINGLOCATION",
                 branch.getId(),
-                RegionType.WSCHOD,
                 startHour,
                 endHour
         );
@@ -165,7 +162,6 @@ public class StoreServiceImplIT {
                 "00",
                 "LOCATION",
                 branch.getId(),
-                RegionType.ZACHOD,
                 startHour,
                 endHour
         );
@@ -183,14 +179,13 @@ public class StoreServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(18,0);
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
                 "TESTINGNAME",
                 "00",
                 "TESTINGLOCATION",
                 branch.getId(),
-                RegionType.WSCHOD,
                 startHour,
                 endHour
         );
@@ -201,7 +196,6 @@ public class StoreServiceImplIT {
         String newName = "SHOULDBETHISNAME";
         UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
                 newName,
-                null,
                 null,
                 null,
                 null,
@@ -232,7 +226,6 @@ public class StoreServiceImplIT {
                 null,
                 null,
                 null,
-                null,
                 true,
                 null,
                 null,
@@ -249,7 +242,7 @@ public class StoreServiceImplIT {
     @Test
     void existsById_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
         storeRepository.save(store);
@@ -267,7 +260,7 @@ public class StoreServiceImplIT {
     @Test
     void existsByNameAndStoreCode_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
         storeRepository.save(store);
@@ -290,7 +283,7 @@ public class StoreServiceImplIT {
     @Test
     void delete_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store storeToStay = new TestStoreBuilder().withName("TOSTAY").withBranch(branch).build();
         storeRepository.save(storeToStay);
@@ -322,7 +315,7 @@ public class StoreServiceImplIT {
     @Test
     void saveEntity_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
 
@@ -336,7 +329,7 @@ public class StoreServiceImplIT {
     @Test
     void saveDto_workingTest(){
         //given
-        Branch branch = buildAndSaveDefaultBranch();
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
         Store store = new TestStoreBuilder().withBranch(branch).build();
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(store.getName(), store.getStoreCode());
 
@@ -348,9 +341,13 @@ public class StoreServiceImplIT {
         assertTrue(storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode()));
     }
 
-    private Branch buildAndSaveDefaultBranch() {
-        Branch branch = new TestBranchBuilder().build();
+    private Branch buildAndSaveDefaultBranchWithRegionInside() {
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch branch = new TestBranchBuilder().withRegion(region).build();
         branchRepository.save(branch);
+
         return branch;
     }
 }

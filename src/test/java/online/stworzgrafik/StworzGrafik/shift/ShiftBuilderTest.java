@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestShiftBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalTime;

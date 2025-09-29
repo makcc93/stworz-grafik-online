@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.branch.validator;
 
 
 import jakarta.validation.ValidationException;
+import online.stworzgrafik.StworzGrafik.validator.NameValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +31,7 @@ class NameValidatorTest {
         ValidationException validationException = assertThrows(jakarta.validation.ValidationException.class, () -> NameValidator.validate(name));
 
         //then
-        assertEquals("Branch name cannot contains illegal chars", validationException.getMessage());
+        assertEquals("Name cannot contains illegal chars", validationException.getMessage());
     }
 
     @Test

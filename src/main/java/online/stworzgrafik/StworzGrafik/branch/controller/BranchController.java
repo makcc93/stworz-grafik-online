@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.branch.controller;
 
 import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
-import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import org.springframework.http.HttpStatus;
@@ -31,8 +31,8 @@ public class BranchController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseBranchDTO> createBranch(@RequestBody @Valid NameBranchDTO nameBranchDTO){
-        return ResponseEntity.status(HttpStatus.CREATED).body(branchService.createBranch(nameBranchDTO));
+    public ResponseEntity<ResponseBranchDTO> createBranch(@RequestBody @Valid CreateBranchDTO createBranchDTO){
+        return ResponseEntity.status(HttpStatus.CREATED).body(branchService.createBranch(createBranchDTO));
     }
 
     @DeleteMapping("/{id}")

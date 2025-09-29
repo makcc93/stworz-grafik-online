@@ -14,11 +14,10 @@ public final class StoreBuilder {
             String storeCode,
             String location,
             Branch branch,
-            RegionType region,
             LocalTime openHour,
             LocalTime closeHour
     ){
-        ArgumentNullChecker.checkAll(name,storeCode,location,branch,region,openHour,closeHour);
+        ArgumentNullChecker.checkAll(name,storeCode,location,branch,openHour,closeHour);
         validateHour(openHour,closeHour);
 
         return Store.builder()
@@ -26,7 +25,6 @@ public final class StoreBuilder {
                 .storeCode(storeCode)
                 .location(location)
                 .branch(branch)
-                .region(region)
                 .openForClientsHour(openHour)
                 .closeForClientsHour(closeHour)
                 .build();

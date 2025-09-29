@@ -29,9 +29,6 @@ public class Store {
     @JoinColumn(name = "branch_id")
     private Branch branch;
 
-    @Enumerated(EnumType.STRING)
-    private RegionType region;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

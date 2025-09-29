@@ -1,16 +1,19 @@
 package online.stworzgrafik.StworzGrafik.branch.DTO;
 
 import jakarta.validation.constraints.NotBlank;
-import online.stworzgrafik.StworzGrafik.branch.validator.NameValidator;
+import jakarta.validation.constraints.NotNull;
+import online.stworzgrafik.StworzGrafik.validator.NameValidator;
 
-public record NameBranchDTO(
+public record CreateBranchDTO(
         @NotBlank(message = "Name is required")
-        String name
+        String name,
+
+        @NotNull
+        Long regionId
 ) {
-    public NameBranchDTO {
+    public CreateBranchDTO {
         if (name != null){
             name = NameValidator.validate(name);
-
         }
     }
 }

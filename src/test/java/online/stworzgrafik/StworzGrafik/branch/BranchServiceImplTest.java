@@ -2,10 +2,16 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.branch.DTO.NameBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestResponseBranchDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,16 +28,19 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class BranchServiceImplTest {
     @InjectMocks
-    BranchServiceImpl service;
+    BranchServiceImpl branchService;
 
     @Mock
-    BranchRepository repository;
+    BranchRepository branchRepository;
 
     @Mock
-    BranchBuilder builder;
+    BranchBuilder branchBuilder;
 
     @Mock
-    BranchMapper mapper;
+    BranchMapper branchMapper;
+
+    @Mock
+    RegionRepository regionRepository;
 
     @Test
     void findById_workingTest(){
@@ -39,22 +48,22 @@ class BranchServiceImplTest {
         String name = "Test";
         Long id = 1L;
 
-        Branch branch = new BranchBuilder().createBranch(name);
+        Branch branch = new TestBranchBuilder().withName(name).build();
 
-        when(repository.findById(id)).thenReturn(Optional.ofNullable(branch));
+        when(branchRepository.findById(id)).thenReturn(Optional.ofNullable(branch));
 
-        ResponseBranchDTO responseBranchDTO = new ResponseBranchDTO(id, name, true);
-        when(mapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
+        ResponseBranchDTO responseBranchDTO = new TestResponseBranchDTO().withId(id).withName(name).build();
+        when(branchMapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
 
         //when
-        ResponseBranchDTO response = service.findById(id);
+        ResponseBranchDTO response = branchService.findById(id);
 
         //then
         assertEquals(id,response.id());
         assertEquals(name, response.name());
         assertTrue(response.isEnable());
 
-        verify(repository,times(1)).findById(id);
+        verify(branchRepository,times(1)).findById(id);
     }
 
     @Test
@@ -62,10 +71,10 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
 
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(branchRepository.findById(id)).thenReturn(Optional.empty());
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.findById(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> branchService.findById(id));
 
         //then
         assertEquals("Branch with id " + id + " does not exist",exception.getMessage());
@@ -77,7 +86,7 @@ class BranchServiceImplTest {
         Long id = null;
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findById(id));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchService.findById(id));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
@@ -86,55 +95,58 @@ class BranchServiceImplTest {
     @Test
     void createBranch_workingTest(){
         //given
-        NameBranchDTO nameBranchDTO = new NameBranchDTO("Test");
+        CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().build();
         Long id = 1L;
         boolean isEnable = true;
 
-        when(repository.existsByName(nameBranchDTO.name())).thenReturn(false);
+        Region region = new TestRegionBuilder().build();
+        when(regionRepository.findById(any())).thenReturn(Optional.of(region));
 
-        Branch branch = new BranchBuilder().createBranch(nameBranchDTO.name());
-        when(builder.createBranch(nameBranchDTO.name())).thenReturn(branch);
+        when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(false);
 
-        when(repository.save(branch)).thenReturn(branch);
+        Branch branch = new TestBranchBuilder().withName(createBranchDTO.name()).build();
+        when(branchBuilder.createBranch(createBranchDTO.name(),region)).thenReturn(branch);
 
-        ResponseBranchDTO responseBranchDTO = new ResponseBranchDTO(id, nameBranchDTO.name(), isEnable);
-        when(mapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
+        when(branchRepository.save(branch)).thenReturn(branch);
+
+        ResponseBranchDTO responseBranchDTO = new TestResponseBranchDTO().build();
+        when(branchMapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
 
         //when
-        ResponseBranchDTO serviceResponse = service.createBranch(nameBranchDTO);
+        ResponseBranchDTO serviceResponse = branchService.createBranch(createBranchDTO);
 
         //then
         assertEquals(id,serviceResponse.id());
-        assertEquals("TEST",responseBranchDTO.name());
-        assertEquals(isEnable,responseBranchDTO.isEnable());
+        assertEquals(responseBranchDTO.name(),serviceResponse.name());
+        assertEquals(isEnable,serviceResponse.isEnable());
 
-        verify(repository,times(1)).save(any(Branch.class));
+        verify(branchRepository,times(1)).save(any(Branch.class));
     }
 
     @Test
     void createBranch_branchAlreadyExistsThrowsException(){
         //given
-        NameBranchDTO nameBranchDTO = new NameBranchDTO("Test");
-        when(repository.existsByName(nameBranchDTO.name())).thenReturn(true);
+        CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().build();
+        when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(true);
 
         //when
-        EntityExistsException entityExistsException = assertThrows(EntityExistsException.class, () -> service.createBranch(nameBranchDTO));
+        EntityExistsException entityExistsException = assertThrows(EntityExistsException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
-        assertEquals("Branch with name " + nameBranchDTO.name() + " already exists",entityExistsException.getMessage());
+        assertEquals("Branch with name " + createBranchDTO.name() + " already exists",entityExistsException.getMessage());
     }
 
     @Test
     void createBranch_argumentDTOisNullThrowsException(){
         //given
-        NameBranchDTO nameBranchDTO = null;
+        CreateBranchDTO createBranchDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> service.createBranch(nameBranchDTO));
+        assertThrows(NullPointerException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
-        verify(repository,never()).existsByName(any());
-        verify(repository,never()).save(any());
+        verify(branchRepository,never()).existsByName(any());
+        verify(branchRepository,never()).save(any());
     }
 
     @Test
@@ -144,25 +156,26 @@ class BranchServiceImplTest {
         boolean isEnable = false;
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().withIsEnable(isEnable).build();
 
-        Branch branch = new BranchBuilder().createBranch("TEST");
+        Branch branch = new TestBranchBuilder().withName("Test").build();
         branch.setEnable(true);
-        when(repository.findById(id)).thenReturn(Optional.ofNullable(branch));
+        when(branchRepository.findById(id)).thenReturn(Optional.ofNullable(branch));
 
-        when(repository.save(branch)).thenReturn(branch);
+        when(branchRepository.save(branch)).thenReturn(branch);
 
-        ResponseBranchDTO responseBranchDTO = new ResponseBranchDTO(id,updateBranchDTO.name(),isEnable);
-        when(mapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
+        ResponseBranchDTO responseBranchDTO =
+                new TestResponseBranchDTO().withId(id).withName(updateBranchDTO.name()).withIsEnable(isEnable).build();
+        when(branchMapper.toResponseBranchDTO(branch)).thenReturn(responseBranchDTO);
 
         //when
-        ResponseBranchDTO serviceResponse = service.updateBranch(id, updateBranchDTO);
+        ResponseBranchDTO serviceResponse = branchService.updateBranch(id, updateBranchDTO);
 
         //then
         assertEquals(id,responseBranchDTO.id());
         assertEquals(updateBranchDTO.name(),serviceResponse.name());
         assertFalse(responseBranchDTO.isEnable());
 
-        verify(repository,times(1)).findById(id);
-        verify(repository,times(1)).save(any(Branch.class));
+        verify(branchRepository,times(1)).findById(id);
+        verify(branchRepository,times(1)).save(any(Branch.class));
     }
 
     @Test
@@ -170,10 +183,10 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(branchRepository.findById(id)).thenReturn(Optional.empty());
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateBranch(id, updateBranchDTO));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> branchService.updateBranch(id, updateBranchDTO));
 
         //then
         assertEquals("Branch with id " + id + " does not exist", exception.getMessage());
@@ -186,13 +199,13 @@ class BranchServiceImplTest {
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateBranch(id, updateBranchDTO));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchService.updateBranch(id, updateBranchDTO));
 
         //then
         assertEquals("Id cannot be null",exception.getMessage());
 
-        verify(repository,never()).findById(any());
-        verify(repository,never()).save(any());
+        verify(branchRepository,never()).findById(any());
+        verify(branchRepository,never()).save(any());
     }
 
     @Test
@@ -202,11 +215,11 @@ class BranchServiceImplTest {
         UpdateBranchDTO updateBranchDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> service.updateBranch(id, updateBranchDTO));
+        assertThrows(NullPointerException.class, () -> branchService.updateBranch(id, updateBranchDTO));
 
         //then
-        verify(repository,never()).findById(any());
-        verify(repository,never()).save(any());
+        verify(branchRepository,never()).findById(any());
+        verify(branchRepository,never()).save(any());
     }
 
     @Test
@@ -214,13 +227,13 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
 
-        when(repository.existsById(id)).thenReturn(true);
+        when(branchRepository.existsById(id)).thenReturn(true);
 
         //when
-        service.delete(id);
+        branchService.delete(id);
 
         //then
-        verify(repository,times(1)).deleteById(id);
+        verify(branchRepository,times(1)).deleteById(id);
     }
 
     @Test
@@ -228,16 +241,16 @@ class BranchServiceImplTest {
         //given
         Long id = 1L;
 
-        when(repository.existsById(id)).thenReturn(false);
+        when(branchRepository.existsById(id)).thenReturn(false);
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.delete(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> branchService.delete(id));
 
         //then
         assertEquals("Branch with id " + id + " does not exist",exception.getMessage());
 
-        verify(repository,times(1)).existsById(id);
-        verify(repository,never()).deleteById(any());
+        verify(branchRepository,times(1)).existsById(id);
+        verify(branchRepository,never()).deleteById(any());
     }
 
     @Test
@@ -246,26 +259,26 @@ class BranchServiceImplTest {
         Long id = null;
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.delete(id));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchService.delete(id));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
 
-        verify(repository,never()).existsById(any());
-        verify(repository,never()).save(any());
+        verify(branchRepository,never()).existsById(any());
+        verify(branchRepository,never()).save(any());
     }
 
     @Test
     void existsById_workingTest(){
         //given
         Long id = 1L;
-        when(repository.existsById(id)).thenReturn(true);
+        when(branchRepository.existsById(id)).thenReturn(true);
 
         //when
-        service.exists(id);
+        branchService.exists(id);
 
         //then
-        verify(repository,times(1)).existsById(id);
+        verify(branchRepository,times(1)).existsById(id);
     }
 
     @Test
@@ -274,25 +287,25 @@ class BranchServiceImplTest {
         Long id = null;
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(id));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchService.exists(id));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
 
-        verify(repository,never()).existsById(any());
+        verify(branchRepository,never()).existsById(any());
     }
 
     @Test
     void existsByName_workingTest(){
         //given
         String name = "Test";
-        when(repository.existsByName(name)).thenReturn(true);
+        when(branchRepository.existsByName(name)).thenReturn(true);
 
         //when
-        service.exists(name);
+        branchService.exists(name);
 
         //then
-        verify(repository,times(1)).existsByName(name);
+        verify(branchRepository,times(1)).existsByName(name);
     }
 
     @Test
@@ -301,49 +314,49 @@ class BranchServiceImplTest {
         String name = null;
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(name));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchService.exists(name));
 
         //then
         assertEquals("Name cannot be null", exception.getMessage());
 
-        verify(repository,never()).existsByName(any());
+        verify(branchRepository,never()).existsByName(any());
     }
 
     @Test
     void findAll_workingTest(){
         //given
-        Branch branch1 = new BranchBuilder().createBranch("FIRST");
-        Branch branch2 = new BranchBuilder().createBranch("SECOND");
+        Branch branch1 = new TestBranchBuilder().withName("FIRST").build();
+        Branch branch2 = new TestBranchBuilder().withName("SECOND").build();
         List<Branch> branches = List.of(branch1,branch2);
 
-        ResponseBranchDTO responseBranch1 = new ResponseBranchDTO(1L,branch1.getName(),true);
-        ResponseBranchDTO responseBranch2 = new ResponseBranchDTO(2L,branch2.getName(),true);
+        ResponseBranchDTO responseBranch1 = new TestResponseBranchDTO().withId(1L).withName(branch1.getName()).build();
+        ResponseBranchDTO responseBranch2 = new TestResponseBranchDTO().withId(2L).withName(branch2.getName()).build();
         List<ResponseBranchDTO> dtos = List.of(responseBranch1,responseBranch2);
 
-        when(repository.findAll()).thenReturn(branches);
-        when(mapper.toResponseBranchDTO(branch1)).thenReturn(responseBranch1);
-        when(mapper.toResponseBranchDTO(branch2)).thenReturn(responseBranch2);
+        when(branchRepository.findAll()).thenReturn(branches);
+        when(branchMapper.toResponseBranchDTO(branch1)).thenReturn(responseBranch1);
+        when(branchMapper.toResponseBranchDTO(branch2)).thenReturn(responseBranch2);
 
         //when
-        List<ResponseBranchDTO> branchDTOS = service.findAll();
+        List<ResponseBranchDTO> branchDTOS = branchService.findAll();
 
         //then
         assertTrue(branchDTOS.containsAll(dtos));
 
-        verify(repository,times(1)).findAll();
+        verify(branchRepository,times(1)).findAll();
     }
 
     @Test
     void findAll_emptyListWorkingTest(){
         //given
-        when(repository.findAll()).thenReturn(new ArrayList<>());
+        when(branchRepository.findAll()).thenReturn(new ArrayList<>());
 
         //when
-        List<ResponseBranchDTO> branchDTOS = service.findAll();
+        List<ResponseBranchDTO> branchDTOS = branchService.findAll();
 
         //then
         assertEquals(0,branchDTOS.size());
 
-        verify(repository,times(1)).findAll();
+        verify(branchRepository,times(1)).findAll();
     }
 }

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.validation.ValidationException;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,10 +12,9 @@ class BranchBuilderTest {
     void create_workingTest(){
         //given
         String name = "Testing branch";
-        BranchBuilder branchBuilder = new BranchBuilder();
 
         //when
-        Branch branch = branchBuilder.createBranch(name);
+        Branch branch = new TestBranchBuilder().withName(name).build();
 
         //then
         assertEquals("TESTINGBRANCH", branch.getName());
@@ -24,11 +24,9 @@ class BranchBuilderTest {
     void create_argumentIsNull(){
         //given
         String nullName = null;
-        BranchBuilder branchBuilder = new BranchBuilder();
 
         //when
-
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchBuilder.createBranch(nullName));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> new TestBranchBuilder().withName(nullName).build());
 
         //then
         assertEquals("Name cannot be null", exception.getMessage());
@@ -38,10 +36,9 @@ class BranchBuilderTest {
     void create_validationNameTest(){
         //given
         String name = "              t EsT             ";
-        BranchBuilder branchBuilder = new BranchBuilder();
 
         //when
-        Branch branch = branchBuilder.createBranch(name);
+        Branch branch = new TestBranchBuilder().withName(name).build();
 
         //then
         assertEquals("TEST", branch.getName());
@@ -51,13 +48,12 @@ class BranchBuilderTest {
     void create_illegalCharsInNameThrowsException(){
         //given
         String name = "!!!!@@@@%^&*()";
-        BranchBuilder branchBuilder = new BranchBuilder();
 
         //when
-        ValidationException validationException = assertThrows(ValidationException.class, () -> branchBuilder.createBranch(name));
+        ValidationException validationException = assertThrows(ValidationException.class, () -> new TestBranchBuilder().withName(name).build());
 
         //then
-        assertEquals("Branch name cannot contains illegal chars", validationException.getMessage());
+        assertEquals("Name cannot contains illegal chars", validationException.getMessage());
     }
 
     @Test
@@ -65,6 +61,6 @@ class BranchBuilderTest {
         //given
         //when
         //then
-        assertDoesNotThrow(BranchBuilder::new);
+        assertDoesNotThrow(TestBranchBuilder::new);
     }
 }

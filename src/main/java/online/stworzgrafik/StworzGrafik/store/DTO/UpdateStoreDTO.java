@@ -2,8 +2,6 @@ package online.stworzgrafik.StworzGrafik.store.DTO;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
 
 import java.time.LocalTime;
 
@@ -19,8 +17,6 @@ public record UpdateStoreDTO(
         String location,
 
         Long branchId,
-
-        RegionType region,
 
         boolean isEnable,
 

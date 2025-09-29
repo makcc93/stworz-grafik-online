@@ -6,11 +6,14 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
@@ -54,6 +57,9 @@ class StoreControllerTest {
 
     @Autowired
     BranchRepository branchRepository;
+
+    @Autowired
+    RegionRepository regionRepository;
 
 
     @Test
@@ -135,7 +141,10 @@ class StoreControllerTest {
     @Test
     void createStore_workingTest() throws Exception{
         //given
-        Branch branch = branchBuilder.createBranch("TestBranch");
+        Region region = new TestRegionBuilder().build();
+        regionRepository.save(region);
+
+        Branch branch = new TestBranchBuilder().withName("TestBRANCH").withRegion(region).build();
         branchRepository.save(branch);
 
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
@@ -156,7 +165,6 @@ class StoreControllerTest {
         assertEquals(createStoreDTO.storeCode(),store.storeCode());
         assertEquals(createStoreDTO.location(),store.location());
         assertEquals(createStoreDTO.branchId(),store.branchId());
-        assertEquals(createStoreDTO.region(),store.region());
         assertEquals(createStoreDTO.openForClientsHour(),store.openForClientsHour());
         assertEquals(createStoreDTO.closeForClientsHour(),store.closeForClientsHour());
 
@@ -223,7 +231,6 @@ class StoreControllerTest {
                 null,
                 null,
                 store.getBranch().getId(),
-                null,
                 true,
                 null,
                 null,
@@ -250,7 +257,6 @@ class StoreControllerTest {
         assertEquals(store.getStoreCode(),updatedStore.storeCode());
         assertEquals(store.getLocation(),updatedStore.location());
         assertEquals(store.getBranch().getId(),updatedStore.branchId());
-        assertEquals(store.getRegion(),updatedStore.region());
         assertEquals(store.getOpenForClientsHour(),updatedStore.openForClientsHour());
         assertEquals(store.getCloseForClientsHour(),updatedStore.closeForClientsHour());
     }
@@ -261,7 +267,6 @@ class StoreControllerTest {
         long notExistingEntityById = 12345L;
         UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
                 "UpdatedStoreName",
-                null,
                 null,
                 null,
                 null,
@@ -298,40 +303,43 @@ class StoreControllerTest {
     }
 
     private Store firstStoreWithBranch(){
-        Branch firstBranch = branchRepository.save(new BranchBuilder().createBranch("FirstBranch"));
+        Region region = regionRepository.save(new TestRegionBuilder().build());
+
+        Branch firstBranch = branchRepository.save(new TestBranchBuilder().withName("FirstBranch").withRegion(region).build());
 
         return storeBuilder.createStore(
                 "11",
                 "NameTest1",
                 "LocationTest1",
                 firstBranch,
-                RegionType.ZACHOD,
                 LocalTime.of(9,0),
                 LocalTime.of(20,0));
     }
 
     private Store secondStore(){
-        Branch secondBranch = branchRepository.save(new BranchBuilder().createBranch("SecondBranch"));
+        Region region = regionRepository.save(new TestRegionBuilder().build());
+
+        Branch secondBranch = branchRepository.save(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
 
         return storeBuilder.createStore(
                 "22",
                 "NameTest2",
                 "LocationTest2",
                 secondBranch,
-                RegionType.ZACHOD,
                 LocalTime.of(9,0),
                 LocalTime.of(21,0));
     }
 
     private Store thirdStore(){
-        Branch thirdBranch = branchRepository.save(new BranchBuilder().createBranch("ThirdBranch"));
+        Region region = regionRepository.save(new TestRegionBuilder().build());
+
+        Branch thirdBranch = branchRepository.save(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
 
         return storeBuilder.createStore(
                 "33",
                 "NameTest3",
                 "LocationTest3",
                 thirdBranch,
-                RegionType.ZACHOD,
                 LocalTime.of(10,0),
                 LocalTime.of(22,0));
     }

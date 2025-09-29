@@ -13,7 +13,6 @@ public record ResponseStoreDTO(
     String location,
     Long branchId,
     String branchName,
-    RegionType region,
     LocalDateTime createdAt,
     boolean isEnable,
     Long storeManagerId,

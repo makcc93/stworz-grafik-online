@@ -5,9 +5,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.branch.BranchService;
-import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -57,7 +56,7 @@ public class StoreServiceImpl implements StoreService{
     public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
         ArgumentNullChecker.check(createStoreDTO);
 
-        isStoreAlreadyExist(createStoreDTO);
+        ifStoreAlreadyExist(createStoreDTO);
 
         Branch branch = branchRepository.findById(createStoreDTO.branchId())
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find branch by id " + createStoreDTO.branchId()));
@@ -67,7 +66,6 @@ public class StoreServiceImpl implements StoreService{
             createStoreDTO.storeCode(),
             createStoreDTO.location(),
             branch,
-            createStoreDTO.region(),
             createStoreDTO.openForClientsHour(),
             createStoreDTO.closeForClientsHour()
         );
@@ -77,7 +75,7 @@ public class StoreServiceImpl implements StoreService{
         return storeMapper.toResponseStoreDto(savedStore);
     }
 
-    private void isStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
+    private void ifStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
         StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
 
         if (exists(storeNameAndCode)){

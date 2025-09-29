@@ -5,7 +5,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.*;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestUpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -17,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -130,7 +133,6 @@ class StoreServiceImplTest {
                 createStoreDTO.location(),
                 createStoreDTO.branchId(),
                 "responseName",
-                createStoreDTO.region(),
                 LocalDateTime.now(),
                 true,
                 1L,
@@ -144,7 +146,6 @@ class StoreServiceImplTest {
                 createStoreDTO.storeCode(),
                 createStoreDTO.location(),
                 branch,
-                createStoreDTO.region(),
                 createStoreDTO.openForClientsHour(),
                 createStoreDTO.closeForClientsHour())).thenReturn(store);
         when(repository.save(any(Store.class))).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
@@ -158,7 +159,6 @@ class StoreServiceImplTest {
         assertEquals(serviceReturn.storeCode(),createStoreDTO.storeCode());
         assertEquals(serviceReturn.location(),createStoreDTO.location());
         assertEquals(serviceReturn.branchId(), createStoreDTO.branchId());
-        assertEquals(serviceReturn.region(),createStoreDTO.region());
         assertEquals(serviceReturn.openForClientsHour(), createStoreDTO.openForClientsHour());
         assertEquals(serviceReturn.closeForClientsHour(),createStoreDTO.closeForClientsHour());
 
@@ -305,7 +305,6 @@ class StoreServiceImplTest {
         assertEquals(store.getName(),savedEntity.getName());
         assertEquals(store.getStoreCode(),savedEntity.getStoreCode());
         assertEquals(store.getLocation(),savedEntity.getLocation());
-        assertEquals(store.getBranch(),savedEntity.getBranch());
         assertEquals(store.getBranch(),savedEntity.getBranch());
         assertEquals(store.getOpenForClientsHour(),savedEntity.getOpenForClientsHour());
         assertEquals(store.getCloseForClientsHour(),savedEntity.getCloseForClientsHour());
