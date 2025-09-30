@@ -1,10 +1,14 @@
 package online.stworzgrafik.StworzGrafik.dataBuilderForTests.region;
 
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 
 public class TestCreateRegionDTO {
     private String name = "TESTCREATEREGION";
+
+    public TestCreateRegionDTO withName(String name){
+        this.name = name;
+        return this;
+    }
 
     public CreateRegionDTO build(){
         return new CreateRegionDTO(
