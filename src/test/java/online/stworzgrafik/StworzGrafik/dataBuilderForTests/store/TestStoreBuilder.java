@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.dataBuilderForTests.store;
 
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
 

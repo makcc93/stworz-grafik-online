@@ -3,7 +3,6 @@ package online.stworzgrafik.StworzGrafik.dataBuilderForTests.store;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
 
 import java.time.LocalTime;
 
@@ -12,7 +11,7 @@ public class TestUpdateStoreDTO {
     private String storeCode = "BB";
     private String location = "TESTUPDATELOCATION";
     private Branch branch = new TestBranchBuilder().build();
-    private boolean isEnable = true;
+    private boolean enable = true;
     private Long storeManagerId = 2L;
     private LocalTime openHour = LocalTime.of(10,0);
     private LocalTime closeHour = LocalTime.of(18,0);
@@ -37,8 +36,8 @@ public class TestUpdateStoreDTO {
         return this;
     }
 
-    public TestUpdateStoreDTO withIsEnable(boolean isEnable){
-        this.isEnable = isEnable;
+    public TestUpdateStoreDTO withIsEnable(boolean enable){
+        this.enable = enable;
         return this;
     }
 
@@ -63,7 +62,7 @@ public class TestUpdateStoreDTO {
                 storeCode,
                 location,
                 branch.getId(),
-                isEnable,
+                enable,
                 storeManagerId,
                 openHour,
                 closeHour

@@ -3,7 +3,6 @@ package online.stworzgrafik.StworzGrafik.dataBuilderForTests.store;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.RegionType;
 
 import java.time.LocalTime;
 

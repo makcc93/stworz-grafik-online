@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 public class TestResponseBranchDTO {
     private Long id = 1L;
     private String name = "TESTBRANCH";
-    private boolean isEnable = true;
+    private boolean enable = true;
     private Long regionId = 1L;
     private String regionName = "TESTREGIONNAME";
 
@@ -19,8 +19,8 @@ public class TestResponseBranchDTO {
         return this;
     }
 
-    public TestResponseBranchDTO withIsEnable(boolean isEnable){
-        this.isEnable = isEnable;
+    public TestResponseBranchDTO withIsEnable(boolean enable){
+        this.enable = enable;
         return this;
     }
 
@@ -38,7 +38,7 @@ public class TestResponseBranchDTO {
         return new ResponseBranchDTO(
                 id,
                 name,
-                isEnable,
+                enable,
                 regionId,
                 regionName
         );
