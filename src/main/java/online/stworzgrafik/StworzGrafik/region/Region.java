@@ -21,14 +21,14 @@ public class Region {
 
     private String name;
 
-    private boolean isEnable;
+    private boolean enable;
 
     @OneToMany(mappedBy = "region")
     private List<Branch> branches = new ArrayList<>();
 
     @PrePersist
     void onCreate(){
-        isEnable = true;
+        enable = true;
     }
 
 }
