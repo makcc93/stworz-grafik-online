@@ -1,19 +1,14 @@
 package online.stworzgrafik.StworzGrafik.region.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestCreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestUpdateRegionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
-import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,19 +16,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
@@ -96,7 +86,7 @@ class RegionControllerTest {
     @Test
     void getById_entityDoesNotExistThrowsException() throws Exception{
         //given
-        Long randomNumber = 12345L;
+        long randomNumber = 12345L;
 
         //when
         mockMvc.perform(get("/api/regions/" + randomNumber))
@@ -185,12 +175,12 @@ class RegionControllerTest {
     void updateRegion_workingTest() throws Exception{
         //given
         String newName = "NEWNAME";
-        boolean isEnable = false;
+        boolean enable = false;
 
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
         ResponseRegionDTO existingRegion = regionService.createRegion(createRegionDTO);
 
-        UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().withIsEnable(isEnable).withName(newName).build();
+        UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().withIsEnable(enable).withName(newName).build();
 
         //when
         MvcResult mvcResult = mockMvc.perform(patch("/api/regions/" + existingRegion.id())
@@ -205,7 +195,6 @@ class RegionControllerTest {
         //then
         assertEquals(newName,updatedRegionDTO.name());
         assertFalse(updatedRegionDTO.isEnable());
-        //koncze na tym ze update blednie ustawia wartosci isEnable - dalem false, a pozostaje jak w oryginale true
     }
 
 }

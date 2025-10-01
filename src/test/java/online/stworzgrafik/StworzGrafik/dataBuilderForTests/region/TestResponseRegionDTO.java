@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 public class TestResponseRegionDTO {
     private Long id = 1L;
     private String name = "TESTRESPONSEREGION";
-    private boolean isEnable = true;
+    private boolean enable = true;
 
     public TestResponseRegionDTO withId(Long id){
         this.id = id;
@@ -17,8 +17,8 @@ public class TestResponseRegionDTO {
         return this;
     }
 
-    public TestResponseRegionDTO withIsEnable(boolean isEnable){
-        this.isEnable = isEnable;
+    public TestResponseRegionDTO withIsEnable(boolean enable){
+        this.enable = enable;
         return this;
     }
 
@@ -26,7 +26,7 @@ public class TestResponseRegionDTO {
         return new ResponseRegionDTO(
                 id,
                 name,
-                isEnable
+                enable
         );
     }
 }

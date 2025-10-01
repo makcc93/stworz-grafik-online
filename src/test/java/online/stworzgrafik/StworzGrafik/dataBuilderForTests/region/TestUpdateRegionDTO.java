@@ -4,22 +4,22 @@ import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 
 public class TestUpdateRegionDTO {
     private String name = "UPDATEREGION";
-    private boolean isEnable = true;
+    private boolean enable = true;
 
     public TestUpdateRegionDTO withName(String name){
         this.name = name;
         return this;
     }
 
-    public TestUpdateRegionDTO withIsEnable(boolean isEnable){
-        this.isEnable = isEnable;
+    public TestUpdateRegionDTO withIsEnable(boolean enable){
+        this.enable = enable;
         return this;
     }
 
     public UpdateRegionDTO build(){
         return new UpdateRegionDTO(
                 name,
-                isEnable
+                enable
         );
     }
 }

@@ -231,7 +231,7 @@ class StoreControllerTest {
                 null,
                 null,
                 store.getBranch().getId(),
-                true,
+                false,
                 null,
                 null,
                 null
@@ -253,6 +253,7 @@ class StoreControllerTest {
 
         assertNotEquals(storeNameBeforeUpdate,updatedStore.name());
 
+        assertFalse(updatedStore.isEnable());
         assertEquals(store.getId(),updatedStore.id());
         assertEquals(store.getStoreCode(),updatedStore.storeCode());
         assertEquals(store.getLocation(),updatedStore.location());
