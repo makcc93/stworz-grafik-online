@@ -9,7 +9,7 @@ public record UpdateRegionDTO(
         @Size(min = 3, max = 50, message = "Region name must be between three and fifty characters")
         String name,
 
-        boolean isEnable
+        boolean enable
 ) {
     public UpdateRegionDTO{
         name = NameValidator.validate(name);

@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.branch.validator;
+package online.stworzgrafik.StworzGrafik.validator;
 
 
 import jakarta.validation.ValidationException;

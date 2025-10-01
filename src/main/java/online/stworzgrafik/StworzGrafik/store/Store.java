@@ -33,7 +33,7 @@ public class Store {
     private LocalDateTime createdAt;
 
     @Column(updatable = true, nullable = false)
-    private boolean isEnable;
+    private boolean enable;
 
     private Long storeManagerId;
 
@@ -44,6 +44,6 @@ public class Store {
     @PrePersist
     void onCreate(){
         createdAt = LocalDateTime.now();
-        isEnable = true;
+        enable = true;
     }
 }

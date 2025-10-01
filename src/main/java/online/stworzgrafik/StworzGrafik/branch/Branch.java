@@ -22,7 +22,7 @@ public class Branch {
 
     private String name;
 
-    private boolean isEnable;
+    private boolean enable;
 
     @OneToMany(mappedBy = "branch")
     private List<Store> stores = new ArrayList<>();
@@ -33,6 +33,6 @@ public class Branch {
 
     @PrePersist
     void onCreate(){
-        isEnable = true;
+        enable = true;
     }
 }

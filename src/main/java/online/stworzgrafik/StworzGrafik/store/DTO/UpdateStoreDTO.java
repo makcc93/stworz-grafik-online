@@ -18,7 +18,7 @@ public record UpdateStoreDTO(
 
         Long branchId,
 
-        boolean isEnable,
+        boolean enable,
 
         Long storeManagerId,
 

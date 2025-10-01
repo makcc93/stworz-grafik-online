@@ -4,6 +4,7 @@ import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 
 public final class NameValidator {
+    private NameValidator(){}
 
     public static String validate(String name){
         ArgumentNullChecker.check(name, "Name");

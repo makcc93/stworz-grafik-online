@@ -5,7 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestResponseBranchDTO;
@@ -61,7 +61,7 @@ class BranchServiceImplTest {
         //then
         assertEquals(id,response.id());
         assertEquals(name, response.name());
-        assertTrue(response.isEnable());
+        assertTrue(response.enable());
 
         verify(branchRepository,times(1)).findById(id);
     }
@@ -118,7 +118,7 @@ class BranchServiceImplTest {
         //then
         assertEquals(id,serviceResponse.id());
         assertEquals(responseBranchDTO.name(),serviceResponse.name());
-        assertEquals(isEnable,serviceResponse.isEnable());
+        assertEquals(isEnable,serviceResponse.enable());
 
         verify(branchRepository,times(1)).save(any(Branch.class));
     }
@@ -172,7 +172,7 @@ class BranchServiceImplTest {
         //then
         assertEquals(id,responseBranchDTO.id());
         assertEquals(updateBranchDTO.name(),serviceResponse.name());
-        assertFalse(responseBranchDTO.isEnable());
+        assertFalse(responseBranchDTO.enable());
 
         verify(branchRepository,times(1)).findById(id);
         verify(branchRepository,times(1)).save(any(Branch.class));

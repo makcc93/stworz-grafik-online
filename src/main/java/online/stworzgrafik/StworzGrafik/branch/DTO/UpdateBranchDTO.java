@@ -11,7 +11,7 @@ public record UpdateBranchDTO(
         String name,
 
         @NotNull()
-        Boolean isEnable
+        Boolean enable
 ) {
     public UpdateBranchDTO{
         name = NameValidator.validate(name);

@@ -7,7 +7,7 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
@@ -253,7 +253,7 @@ class StoreControllerTest {
 
         assertNotEquals(storeNameBeforeUpdate,updatedStore.name());
 
-        assertFalse(updatedStore.isEnable());
+        assertFalse(updatedStore.enable());
         assertEquals(store.getId(),updatedStore.id());
         assertEquals(store.getStoreCode(),updatedStore.storeCode());
         assertEquals(store.getLocation(),updatedStore.location());

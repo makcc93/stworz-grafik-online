@@ -27,7 +27,7 @@ class BranchMapperTest {
         //then
         assertEquals(branch.getId(),responseBranchDTO.id());
         assertEquals(branch.getName().toUpperCase(),responseBranchDTO.name());
-        assertTrue(responseBranchDTO.isEnable());
+        assertTrue(responseBranchDTO.enable());
     }
 
     @Test
@@ -35,7 +35,7 @@ class BranchMapperTest {
         //given
         Branch branch = new TestBranchBuilder().withName("Test").build();
 
-        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().withIsEnable(false).build();
 
         //when
         branchMapper.updateBranchFromDTO(updateBranchDTO, branch);

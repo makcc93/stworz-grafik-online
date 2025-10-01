@@ -9,10 +9,10 @@ public final class RegionBuilder {
     public Region createRegion(String name){
         ArgumentNullChecker.check(name,"Name");
 
-        NameValidator.validate(name);
+        String validated = NameValidator.validate(name);
 
         return Region.builder()
-                .name(name)
+                .name(validated)
                 .build();
     }
 

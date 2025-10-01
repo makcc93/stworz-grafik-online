@@ -10,7 +10,7 @@ import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import org.junit.jupiter.api.Test;
@@ -124,7 +124,7 @@ class BranchControllerTest {
         //then
         assertEquals(firstBranch.getName(),responseBranchDTO.name());
         assertEquals(firstBranch.getId(),responseBranchDTO.id());
-        assertEquals(firstBranch.isEnable(),responseBranchDTO.isEnable());
+        assertEquals(firstBranch.isEnable(),responseBranchDTO.enable());
     }
 
     @Test
@@ -259,7 +259,7 @@ class BranchControllerTest {
 
         //then
         assertEquals(updateBranchDTO.name(),responseBranchDTO.name());
-        assertEquals(updateBranchDTO.isEnable(),responseBranchDTO.isEnable());
+        assertEquals(updateBranchDTO.enable(),responseBranchDTO.enable());
         assertEquals(firstBranch.getId(),responseBranchDTO.id());
     }
 

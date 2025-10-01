@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
-import online.stworzgrafik.StworzGrafik.region.RegionMapper;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
