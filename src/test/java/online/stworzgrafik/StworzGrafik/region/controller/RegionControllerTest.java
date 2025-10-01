@@ -194,7 +194,21 @@ class RegionControllerTest {
 
         //then
         assertEquals(newName,updatedRegionDTO.name());
-        assertFalse(updatedRegionDTO.isEnable());
+        assertFalse(updatedRegionDTO.enable());
     }
 
+    @Test
+    void updateRegion_entityDoesNotExistThrowsException() throws Exception{
+        //given
+        long randomNumber = 1234L;
+        UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().build();
+
+        //when
+        mockMvc.perform(patch("/api/regions/" + randomNumber)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRegionDTO)))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+        //then
+    }
 }
