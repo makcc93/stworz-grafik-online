@@ -7,7 +7,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface RegionMapper {
 
-//    @Mapping(source = "enable", target = "isEnable")
     ResponseRegionDTO toResponseRegionDTO(Region region);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
