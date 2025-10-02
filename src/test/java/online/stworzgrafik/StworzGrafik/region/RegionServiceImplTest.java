@@ -352,8 +352,4 @@ class RegionServiceImplTest {
         //then
         verify(regionRepository,never()).deleteById(any(Long.class));
     }
-
-
-
-
 }
