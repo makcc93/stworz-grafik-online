@@ -133,7 +133,7 @@ class BranchServiceImplTest {
         EntityExistsException entityExistsException = assertThrows(EntityExistsException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
-        assertEquals("Branch with name " + createBranchDTO.name() + " already exists",entityExistsException.getMessage());
+        assertEquals("Branch with name " + createBranchDTO.name() + " already exist",entityExistsException.getMessage());
     }
 
     @Test
