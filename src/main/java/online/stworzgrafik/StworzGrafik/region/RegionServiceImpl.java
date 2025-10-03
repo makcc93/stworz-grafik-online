@@ -42,10 +42,6 @@ public class RegionServiceImpl implements RegionService{
         ArgumentNullChecker.check(id,"Id");
         ArgumentNullChecker.check(updateRegionDTO);
 
-        if (!regionRepository.existsById(id)){
-            throw new EntityNotFoundException("Region with id " + id + " does not exist");
-        }
-
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 

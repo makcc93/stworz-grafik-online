@@ -39,9 +39,9 @@ class RegionBuilderTest {
         String name = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> new RegionBuilder().createRegion(name),"Name cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> new RegionBuilder().createRegion(name));
 
         //then
+        assertEquals("Name cannot be null", exception.getMessage());
     }
-
 }

@@ -334,7 +334,9 @@ class StoreServiceImplTest {
 
         when(storeMapper.toEntity(storeNameAndCodeDTO)).thenReturn(entityFromDTO);
 
-        entityFromDTO.setName("New name before save");
+        String changedName = "New name before save";
+        entityFromDTO.setName(changedName);
+
         when(repository.save(entityFromDTO)).thenReturn(entityFromDTO);
 
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(entityFromDTO);
@@ -344,7 +346,7 @@ class StoreServiceImplTest {
         ResponseStoreDTO returnedDto = service.saveDto(storeNameAndCodeDTO);
 
         //then
-        assertEquals("New name before save",returnedDto.name());
+        assertEquals(changedName,returnedDto.name());
         assertEquals(entityFromDTO.getId(),returnedDto.id());
         assertEquals(entityFromDTO.getLocation(),returnedDto.location());
 

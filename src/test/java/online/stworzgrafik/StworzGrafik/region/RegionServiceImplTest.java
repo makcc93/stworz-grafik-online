@@ -72,10 +72,10 @@ class RegionServiceImplTest {
         when(regionRepository.existsByName(name)).thenReturn(true);
 
         //when
-        assertThrows(EntityExistsException.class, () -> regionService.createRegion(createRegionDTO),
-                "Region with name " + name + "already exist");
+        EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionService.createRegion(createRegionDTO));
 
         //then
+        assertEquals("Region with name " + name + " already exist", exception.getMessage());
     }
 
     @Test
@@ -95,7 +95,6 @@ class RegionServiceImplTest {
         long id = 1234L;
 
         Region region = new TestRegionBuilder().withName(originalName).build();
-        when(regionRepository.existsById(id)).thenReturn(true);
         when(regionRepository.findById(id)).thenReturn(Optional.ofNullable(region));
 
         String updatedName = "UPDATEDNAME";
@@ -117,7 +116,6 @@ class RegionServiceImplTest {
         assertEquals(id,serviceResponse.id());
         assertEquals(enable,serviceResponse.enable());
 
-        verify(regionRepository,times(1)).existsById(id);
         verify(regionRepository,times(1)).findById(id);
         verify(regionRepository,times(1)).save(any(Region.class));
     }
@@ -126,15 +124,15 @@ class RegionServiceImplTest {
     void updateRegion_entityDoesNotExistThrowsException(){
         //given
         Long randomId = 1234L;
-        when(regionRepository.existsById(randomId)).thenReturn(false);
 
         UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().build();
 
         //when
-        assertThrows(EntityNotFoundException.class,() -> regionService.updateRegion(randomId,updateRegionDTO),
-                "Region with id " + randomId + " does not exist");
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> regionService.updateRegion(randomId, updateRegionDTO));
 
         //then
+        assertEquals("Cannot find region by id " + randomId, exception.getMessage());
     }
 
     @Test
@@ -145,10 +143,10 @@ class RegionServiceImplTest {
         UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().build();
 
         //when
-        assertThrows(NullPointerException.class,() -> regionService.updateRegion(nullNumber,updateRegionDTO),
-                "Id cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.updateRegion(nullNumber, updateRegionDTO));
 
         //then
+        assertEquals("Id cannot be null", exception.getMessage());
     }
 
     @Test
@@ -236,10 +234,10 @@ class RegionServiceImplTest {
         Long notExistingEntityId = 1231232L;
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> regionService.findById(notExistingEntityId),
-                "Cannot find region by id " + notExistingEntityId);
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionService.findById(notExistingEntityId));
 
         //then
+        assertEquals("Cannot find region by id " + notExistingEntityId, exception.getMessage());
         verify(regionMapper,never()).toResponseRegionDTO(any(Region.class));
     }
 
@@ -249,10 +247,11 @@ class RegionServiceImplTest {
         Long nullId = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> regionService.findById(nullId),
-                "Id cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.findById(nullId));
 
         //then
+        assertEquals("Id cannot be null", exception.getMessage());
+
         verify(regionRepository,never()).findById(any(Long.class));
         verify(regionMapper,never()).toResponseRegionDTO(any(Region.class));
     }
@@ -278,10 +277,10 @@ class RegionServiceImplTest {
         Long nullId = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> regionService.findById(nullId),
-        "Id cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.findById(nullId));
 
         //then
+        assertEquals("Id cannot be null", exception.getMessage());
         verify(regionRepository,never()).findById(any(Long.class));
     }
 
@@ -304,17 +303,17 @@ class RegionServiceImplTest {
         String nullName = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> regionService.exists(nullName),
-                "Name cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.exists(nullName));
 
         //then
+        assertEquals("Name cannot be null", exception.getMessage());
+
         verify(regionRepository,never()).existsByName(any(String.class));
     }
 
     @Test
     void deleteRegion_workingTest(){
         //given
-        String name = "NAME";
         Long id = 1L;
 
         when(regionRepository.existsById(id)).thenReturn(true);
@@ -332,10 +331,10 @@ class RegionServiceImplTest {
         Long nullId = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> regionService.deleteRegion(nullId),
-                "Id cannot be null");
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.deleteRegion(nullId));
 
         //then
+        assertEquals("Id cannot be null",exception.getMessage());
         verify(regionRepository,never()).existsById(any(Long.class));
         verify(regionRepository,never()).deleteById(any(Long.class));
     }
@@ -346,10 +345,10 @@ class RegionServiceImplTest {
         Long randomId = 2154L;
 
         //when
-        assertThrows(EntityNotFoundException.class,() -> regionService.deleteRegion(randomId),
-                "Cannot find region by id" + randomId);
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionService.deleteRegion(randomId));
 
         //then
+        assertEquals("Cannot find region by id " + randomId, exception.getMessage());
         verify(regionRepository,never()).deleteById(any(Long.class));
     }
 }
