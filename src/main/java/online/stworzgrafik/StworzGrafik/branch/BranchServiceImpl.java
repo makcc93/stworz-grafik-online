@@ -41,7 +41,7 @@ public class BranchServiceImpl implements BranchService{
         ArgumentNullChecker.check(createBranchDTO);
 
         if (branchRepository.existsByName(createBranchDTO.name())){
-            throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exists");
+            throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exist");
         }
 
         Region region = regionRepository.findById(createBranchDTO.regionId())
