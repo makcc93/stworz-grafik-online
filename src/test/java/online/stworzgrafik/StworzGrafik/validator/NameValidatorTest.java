@@ -45,4 +45,75 @@ class NameValidatorTest {
         //then
         assertEquals("ILOVEPROGRAMMING", validated);
     }
+
+    @Test
+    void validate_nameIsNullThrowsException(){
+        //given
+        String name = null;
+
+        //when
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidator.validate(name));
+
+        //then
+        assertEquals("Name cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void validateForPositon_wokingTest(){
+        //given
+        String name = "kasjer";
+
+        //when
+        String response = NameValidator.validateForPosition(name);
+
+        //then
+        assertEquals("KASJER",response);
+    }
+
+    @Test
+    void validateForPosition_removingWhiteSpaces(){
+        //given
+        String name = "                 doradca klienta          ";
+
+        //when
+        String response = NameValidator.validateForPosition(name);
+
+        //then
+        assertEquals("DORADCA KLIENTA", response);
+    }
+
+    @Test
+    void validateForPositon_numbersInNameThrowsException(){
+        //given
+        String name = "Magazynier 1";
+
+        //when
+        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidator.validateForPosition(name));
+
+        //then
+        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+    }
+
+    @Test
+    void validateForPosition_illegalCharsThrowsException(){
+        //given
+        String name = "!@#$%^&*()";
+
+        //when
+        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidator.validateForPosition(name));
+
+        //then
+        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+    }
+
+    @Test
+    void validateForPosition_nameIsNullThrowsException(){
+        //given
+        String name = null;
+        //when
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidator.validateForPosition(name));
+
+        //then
+        assertEquals("Name cannot be null", exception.getMessage());
+    }
 }
