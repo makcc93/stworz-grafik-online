@@ -3,9 +3,12 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +31,9 @@ public class Store {
     @ManyToOne
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
+    @OneToMany(mappedBy = "store")
+    private List<Employee> employees = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
