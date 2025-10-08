@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
