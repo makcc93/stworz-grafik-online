@@ -6,9 +6,11 @@ import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class PositionServiceImpl implements PositionService{
     private final PositionRepository positionRepository;
     private final PositionMapper positionMapper;
@@ -52,6 +54,7 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
+        ArgumentNullChecker.check(id, "Id");
         ArgumentNullChecker.check(updatePositionDTO);
 
         Position position = positionRepository.findById(id)
@@ -64,16 +67,26 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public void deletePosition(Long id) {
+        ArgumentNullChecker.check(id, "Id");
 
+        if (!positionRepository.existsById(id)){
+            throw new EntityNotFoundException("Position with id " + id + " does not exist");
+        }
+
+        positionRepository.deleteById(id);
     }
 
     @Override
     public boolean exists(Long id) {
-        return false;
+        ArgumentNullChecker.check(id,"Id");
+
+        return positionRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        return false;
+        ArgumentNullChecker.check(name,"Name");
+
+        return positionRepository.existsByName(name);
     }
 }
