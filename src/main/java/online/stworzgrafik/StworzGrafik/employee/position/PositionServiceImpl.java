@@ -48,8 +48,9 @@ public class PositionServiceImpl implements PositionService{
         }
 
         Position position = positionBuilder.createPosition(createPositionDTO.name(), createPositionDTO.description());
+        Position savedPosition = positionRepository.save(position);
 
-        return positionMapper.toResponsePositionDTO(position);
+        return positionMapper.toResponsePositionDTO(savedPosition);
     }
 
     @Override
