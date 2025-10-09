@@ -12,8 +12,6 @@ public record CreateBranchDTO(
         Long regionId
 ) {
     public CreateBranchDTO {
-        if (name != null){
             name = NameValidator.validate(name);
-        }
     }
 }
