@@ -166,10 +166,10 @@ class RegionServiceImplIT {
         regionRepository.save(region);
 
         //when
-        boolean doExist = regionService.exists(region.getId());
+        boolean response = regionService.exists(region.getId());
 
         //then
-        assertTrue(doExist);
+        assertTrue(response);
     }
 
     @Test
@@ -178,10 +178,10 @@ class RegionServiceImplIT {
         long notExistingEntityId = 421421L;
 
         //when
-        boolean doExist = assertDoesNotThrow(() -> regionService.exists(notExistingEntityId));
+        boolean response = assertDoesNotThrow(() -> regionService.exists(notExistingEntityId));
 
         //then
-        assertFalse(doExist);
+        assertFalse(response);
     }
 
     @Test

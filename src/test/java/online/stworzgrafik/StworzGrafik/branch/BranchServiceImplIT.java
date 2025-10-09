@@ -206,10 +206,10 @@ class BranchServiceImplIT {
         long id = branch.getId();
 
         //when
-        boolean doExist = branchService.exists(id);
+        boolean response = branchService.exists(id);
 
         //then
-        assertTrue(doExist);
+        assertTrue(response);
     }
 
     @Test
@@ -220,10 +220,10 @@ class BranchServiceImplIT {
         branchRepository.save(branch);
 
         //when
-        boolean doExist = branchService.exists(name);
+        boolean response = branchService.exists(name);
 
         //then
-        assertTrue(doExist);
+        assertTrue(response);
     }
 
     private Region defaultSavedRegion(){

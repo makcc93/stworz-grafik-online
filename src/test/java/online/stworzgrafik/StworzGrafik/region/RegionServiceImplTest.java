@@ -264,10 +264,10 @@ class RegionServiceImplTest {
         when(regionRepository.existsById(id)).thenReturn(true);
 
         //when
-        boolean doExist = regionService.exists(id);
+        boolean response = regionService.exists(id);
 
         //then
-        assertTrue(doExist);
+        assertTrue(response);
         verify(regionRepository,times(1)).existsById(id);
     }
 
@@ -291,10 +291,10 @@ class RegionServiceImplTest {
         when(regionRepository.existsByName(name)).thenReturn(true);
 
         //when
-        boolean doExist = regionService.exists(name);
+        boolean response = regionService.exists(name);
 
         //then
-        assertTrue(doExist);
+        assertTrue(response);
     }
 
     @Test

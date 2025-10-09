@@ -291,15 +291,15 @@ class ShiftServiceImplIT {
         shiftRepository.save(shift3);
 
         //when
-        boolean doExistShift1 = shiftService.exists(shift1.id);
-        boolean doExistShift2 = shiftService.exists(shift2.id);
-        boolean doExistShift3 = shiftService.exists(shift3.id);
+        boolean response1 = shiftService.exists(shift1.id);
+        boolean response2 = shiftService.exists(shift2.id);
+        boolean response3 = shiftService.exists(shift3.id);
         boolean shouldNotExist = shiftService.exists(555L);
 
         //then
-        assertTrue(doExistShift1);
-        assertTrue(doExistShift2);
-        assertTrue(doExistShift3);
+        assertTrue(response1);
+        assertTrue(response2);
+        assertTrue(response3);
 
         assertFalse(shouldNotExist);
     }
