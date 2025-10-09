@@ -144,6 +144,8 @@ class PositionServiceImplTest {
         ResponsePositionDTO responsePositionDTO = new TestResponsePositionDTO().withName(name).withDescription(description).build();
         when(positionMapper.toResponsePositionDTO(position)).thenReturn(responsePositionDTO);
 
+        when(positionRepository.save(position)).thenReturn(position);
+
         //when
         ResponsePositionDTO serviceResponse = positionService.createPosition(createRegionDTO);
 
