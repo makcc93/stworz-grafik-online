@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.employee.position;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
@@ -11,10 +12,12 @@ import java.util.List;
 public class PositionServiceImpl implements PositionService{
     private final PositionRepository positionRepository;
     private final PositionMapper positionMapper;
+    private final PositionBuilder positionBuilder;
 
-    public PositionServiceImpl(PositionRepository positionRepository, PositionMapper positionMapper) {
+    public PositionServiceImpl(PositionRepository positionRepository, PositionMapper positionMapper, PositionBuilder positionBuilder) {
         this.positionRepository = positionRepository;
         this.positionMapper = positionMapper;
+        this.positionBuilder = positionBuilder;
     }
 
     @Override
@@ -36,12 +39,27 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO) {
-        return null;
+        ArgumentNullChecker.check(createPositionDTO);
+
+        if (positionRepository.existsByName(createPositionDTO.name())){
+            throw new EntityExistsException("Position with name " + createPositionDTO.name() + " already exists");
+        }
+
+        Position position = positionBuilder.createPosition(createPositionDTO.name(), createPositionDTO.description());
+
+        return positionMapper.toResponsePositionDTO(position);
     }
 
     @Override
-    public ResponsePositionDTO updatePosition(UpdatePositionDTO updatePositionDTO) {
-        return null;
+    public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
+        ArgumentNullChecker.check(updatePositionDTO);
+
+        Position position = positionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
+
+        positionMapper.updatePosition(updatePositionDTO,position);
+
+        return positionMapper.toResponsePositionDTO(position);
     }
 
     @Override

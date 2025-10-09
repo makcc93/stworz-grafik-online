@@ -10,7 +10,7 @@ public interface PositionService {
     List<ResponsePositionDTO> findAll();
     ResponsePositionDTO findById(Long id);
     ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO);
-    ResponsePositionDTO updatePosition(UpdatePositionDTO updatePositionDTO);
+    ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO);
     void deletePosition(Long id);
     boolean exists(Long id);
     boolean exists(String name);
