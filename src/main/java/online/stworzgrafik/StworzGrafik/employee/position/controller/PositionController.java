@@ -1,12 +1,12 @@
 package online.stworzgrafik.StworzGrafik.employee.position.controller;
 
+import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
+import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,5 +28,15 @@ public class PositionController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponsePositionDTO> findById(@PathVariable Long id){
         return ResponseEntity.ok(service.findById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponsePositionDTO> createPosition(@RequestBody CreatePositionDTO createPositionDTO){
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createPosition(createPositionDTO));
+    }
+
+    @PatchMapping("/api/positions/{id}")
+    public ResponseEntity<ResponsePositionDTO> updatePosition(@PathVariable Long id, @RequestBody UpdatePositionDTO updatePositionDTO){
+        return ResponseEntity.ok(service.updatePosition(id,updatePositionDTO));
     }
 }
