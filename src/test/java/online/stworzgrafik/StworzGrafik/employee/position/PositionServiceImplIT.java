@@ -1,11 +1,14 @@
 package online.stworzgrafik.StworzGrafik.employee.position;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
+import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,5 +100,118 @@ public class PositionServiceImplIT {
         assertEquals(name,serviceResponse.name());
         assertEquals(description,serviceResponse.description());
         assertTrue(repository.existsByName(name));
+    }
+
+    @Test
+    void createPosition_entityAlreadyExistsThrowsException(){
+        //given
+        String name = "NAME";
+        Position position = new TestPositionBuilder().withName(name).build();
+        repository.save(position);
+
+        CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(name).build();
+
+        //when
+        EntityExistsException exception =
+                assertThrows(EntityExistsException.class, () -> service.createPosition(createPositionDTO));
+        //then
+        assertEquals("Position with name " + name + " already exists", exception.getMessage());
+        assertTrue(repository.existsByName(name));
+    }
+
+    @Test
+    void updatePosition_workingTest(){
+        //given
+        String oldName = "OLD NAME";
+        String oldDescription = "OLD DESCRIPTION";
+        Position position = new TestPositionBuilder().withName(oldName).withDescription(oldDescription).build();
+        repository.save(position);
+
+        String newName = "NEW NAME";
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).withDescription(null).build();
+
+        //when
+        ResponsePositionDTO onlyNameUpdated = service.updatePosition(position.getId(), updatePositionDTO);
+
+        //then
+        assertEquals(position.getId(),onlyNameUpdated.id());
+        assertEquals(newName,onlyNameUpdated.name());
+        assertEquals(oldDescription,onlyNameUpdated.description());
+    }
+
+    @Test
+    void updatePosition_entityDoesNotExistThrowsException(){
+        //given
+        Long randomId = 12345L;
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> service.updatePosition(randomId, updatePositionDTO));
+
+        //then
+        assertEquals("Cannot find position by id " + randomId, exception.getMessage());
+        assertFalse(repository.existsById(randomId));
+    }
+
+    @Test
+    void deletePosition_workingTest(){
+        //given
+        Position position1 = new TestPositionBuilder().withName("FIRST").build();
+        Position positionToDelete = new TestPositionBuilder().withName("SECOND").build();
+        Position position2 = new TestPositionBuilder().withName("THIRD").build();
+        repository.saveAll(List.of(position1,positionToDelete,position2));
+
+        //when
+        service.deletePosition(positionToDelete.getId());
+
+        //then
+        assertFalse(repository.existsById(positionToDelete.getId()));
+        assertTrue(repository.existsById(position1.getId()));
+        assertTrue(repository.existsById(position2.getId()));
+    }
+
+    @Test
+    void deletePosition_entityDoesNotExistThrowsException(){
+        //given
+        Long randomId = 12345L;
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> service.deletePosition(randomId));
+
+        //then
+        assertEquals("Position with id " + randomId + " does not exist", exception.getMessage());
+        assertFalse(repository.existsById(randomId));
+    }
+
+    @Test
+    void existsById_workingTest(){
+        //given
+        String name = "NAME";
+        Position position = new TestPositionBuilder().withName(name).build();
+        repository.save(position);
+
+        Long savedPositionId = position.getId();
+
+        //when
+        boolean response = service.exists(savedPositionId);
+
+        //then
+        assertTrue(response);
+    }
+
+    @Test
+    void existsByName_workingTest(){
+        //given
+        String name = "NAME";
+        Position position = new TestPositionBuilder().withName(name).build();
+        repository.save(position);
+
+        //when
+        boolean response = service.exists(name);
+
+        //then
+        assertTrue(response);
     }
 }
