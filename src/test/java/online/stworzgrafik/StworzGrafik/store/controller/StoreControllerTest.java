@@ -290,7 +290,7 @@ class StoreControllerTest {
     }
 
     @Test
-    void updateStore_noBodyException() throws Exception{
+    void updateStore_requestBodyIsMissingThrowsException() throws Exception{
         //given
         Store store = firstStoreWithBranch();
         service.saveEntity(store);

@@ -2,6 +2,10 @@ package online.stworzgrafik.StworzGrafik.employee.position;
 
 import jakarta.persistence.*;
 import lombok.*;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -20,4 +24,8 @@ public class Position {
 
     @Column(nullable = true, unique = false)
     private String description;
+
+    @OneToMany(mappedBy = "position")
+    private List<Employee> employees = new ArrayList<>();
+
 }
