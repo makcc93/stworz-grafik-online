@@ -2,13 +2,12 @@ package online.stworzgrafik.StworzGrafik.validator;
 
 
 import jakarta.validation.ValidationException;
-import online.stworzgrafik.StworzGrafik.validator.NameValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class NameValidatorTest {
+class NameValidatorOLDTest {
 
     @Test
     void validate_workingTest(){
@@ -16,7 +15,7 @@ class NameValidatorTest {
         String name = "Test6";
 
         //when
-        String validated = NameValidator.validate(name);
+        String validated = NameValidatorOLD.validate(name);
 
         //then
         assertEquals("TEST6",validated);
@@ -28,7 +27,7 @@ class NameValidatorTest {
         String name = "Test!@#$%^&*()";
 
         //when
-        ValidationException validationException = assertThrows(jakarta.validation.ValidationException.class, () -> NameValidator.validate(name));
+        ValidationException validationException = assertThrows(jakarta.validation.ValidationException.class, () -> NameValidatorOLD.validate(name));
 
         //then
         assertEquals("Name cannot contains illegal chars", validationException.getMessage());
@@ -40,7 +39,7 @@ class NameValidatorTest {
         String name = "       I \n L O V E    \t\n\t\n programming";
 
         //when
-        String validated = NameValidator.validate(name);
+        String validated = NameValidatorOLD.validate(name);
 
         //then
         assertEquals("ILOVEPROGRAMMING", validated);
@@ -52,7 +51,7 @@ class NameValidatorTest {
         String name = null;
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidator.validate(name));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidatorOLD.validate(name));
 
         //then
         assertEquals("Name cannot be null", exception.getMessage());
@@ -64,7 +63,7 @@ class NameValidatorTest {
         String name = "kasjer";
 
         //when
-        String response = NameValidator.validateForPosition(name);
+        String response = NameValidatorOLD.validateForPosition(name);
 
         //then
         assertEquals("KASJER",response);
@@ -76,7 +75,7 @@ class NameValidatorTest {
         String name = "                 doradca klienta          ";
 
         //when
-        String response = NameValidator.validateForPosition(name);
+        String response = NameValidatorOLD.validateForPosition(name);
 
         //then
         assertEquals("DORADCA KLIENTA", response);
@@ -88,7 +87,7 @@ class NameValidatorTest {
         String name = "Magazynier 1";
 
         //when
-        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidator.validateForPosition(name));
+        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidatorOLD.validateForPosition(name));
 
         //then
         assertEquals("Name cannot contains illegal chars", exception.getMessage());
@@ -100,7 +99,7 @@ class NameValidatorTest {
         String name = "!@#$%^&*()";
 
         //when
-        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidator.validateForPosition(name));
+        ValidationException exception = assertThrows(ValidationException.class, () -> NameValidatorOLD.validateForPosition(name));
 
         //then
         assertEquals("Name cannot contains illegal chars", exception.getMessage());
@@ -111,7 +110,7 @@ class NameValidatorTest {
         //given
         String name = null;
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidator.validateForPosition(name));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> NameValidatorOLD.validateForPosition(name));
 
         //then
         assertEquals("Name cannot be null", exception.getMessage());

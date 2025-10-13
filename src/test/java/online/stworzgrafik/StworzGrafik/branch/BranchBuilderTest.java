@@ -2,6 +2,8 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,48 +14,14 @@ class BranchBuilderTest {
     void create_workingTest(){
         //given
         String name = "Testing branch";
+        Region region = new TestRegionBuilder().build();
 
         //when
-        Branch branch = new TestBranchBuilder().withName(name).build();
+        Branch branch = new TestBranchBuilder().withName(name).withRegion(region).build();
 
         //then
-        assertEquals("TESTINGBRANCH", branch.getName());
-    }
-
-    @Test
-    void create_argumentIsNull(){
-        //given
-        String nullName = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> new TestBranchBuilder().withName(nullName).build());
-
-        //then
-        assertEquals("Name cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void create_validationNameTest(){
-        //given
-        String name = "              t EsT             ";
-
-        //when
-        Branch branch = new TestBranchBuilder().withName(name).build();
-
-        //then
-        assertEquals("TEST", branch.getName());
-    }
-
-    @Test
-    void create_illegalCharsInNameThrowsException(){
-        //given
-        String name = "!!!!@@@@%^&*()";
-
-        //when
-        ValidationException validationException = assertThrows(ValidationException.class, () -> new TestBranchBuilder().withName(name).build());
-
-        //then
-        assertEquals("Name cannot contains illegal chars", validationException.getMessage());
+        assertEquals(name, branch.getName());
+        assertEquals(region.getName(),branch.getRegion().getName());
     }
 
     @Test
@@ -63,4 +31,7 @@ class BranchBuilderTest {
         //then
         assertDoesNotThrow(TestBranchBuilder::new);
     }
+    //w pierwszej kolejnosci zrob:
+    // 1: usun wszytskie walidacje w dto (zostaw @notnull, @notblank), builderach -> przenies calosc do serviceImpl tam ma byc sprwadanie
+    // 2: potem kontynuuj budowanie kolejnych NameValidatorStategy -> na razie masz BranchNameValidator, a potrzeba kolejne
 }

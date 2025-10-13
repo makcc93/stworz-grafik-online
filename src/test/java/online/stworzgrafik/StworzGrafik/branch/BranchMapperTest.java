@@ -26,7 +26,7 @@ class BranchMapperTest {
 
         //then
         assertEquals(branch.getId(),responseBranchDTO.id());
-        assertEquals(branch.getName().toUpperCase(),responseBranchDTO.name());
+        assertEquals(branch.getName(),responseBranchDTO.name());
         assertTrue(responseBranchDTO.enable());
     }
 

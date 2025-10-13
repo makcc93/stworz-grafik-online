@@ -12,6 +12,8 @@ import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestResponseB
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +43,9 @@ class BranchServiceImplTest {
 
     @Mock
     RegionRepository regionRepository;
+
+    @Mock
+    NameValidatorService nameValidatorService;
 
     @Test
     void findById_workingTest(){
@@ -103,6 +108,8 @@ class BranchServiceImplTest {
         when(regionRepository.findById(any())).thenReturn(Optional.of(region));
 
         when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(false);
+
+        when(nameValidatorService.validate(createBranchDTO.name(), ObjectType.BRANCH)).thenReturn(createBranchDTO.name());
 
         Branch branch = new TestBranchBuilder().withName(createBranchDTO.name()).build();
         when(branchBuilder.createBranch(createBranchDTO.name(),region)).thenReturn(branch);
