@@ -3,8 +3,8 @@ package online.stworzgrafik.StworzGrafik.validator;
 import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 
-public final class NameValidator {
-    private NameValidator(){}
+public final class NameValidatorOLD {
+    private NameValidatorOLD(){}
 
     public static String validate(String name){
         ArgumentNullChecker.check(name, "Name");
