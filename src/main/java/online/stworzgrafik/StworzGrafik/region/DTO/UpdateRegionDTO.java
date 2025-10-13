@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.region.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.validator.NameValidator;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
 
 public record UpdateRegionDTO(
         @NotBlank()
@@ -12,6 +12,6 @@ public record UpdateRegionDTO(
         boolean enable
 ) {
     public UpdateRegionDTO{
-        name = NameValidator.validate(name);
+        name = NameValidatorOLD.validate(name);
     }
 }

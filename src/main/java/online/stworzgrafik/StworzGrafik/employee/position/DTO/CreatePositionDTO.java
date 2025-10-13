@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.employee.position.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.validator.NameValidator;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
 
 public record CreatePositionDTO(
         @NotBlank(message = "Name is required")
@@ -12,6 +12,6 @@ public record CreatePositionDTO(
         String description
 ) {
     public CreatePositionDTO{
-        name = NameValidator.validateForPosition(name);
+        name = NameValidatorOLD.validateForPosition(name);
     }
 }
