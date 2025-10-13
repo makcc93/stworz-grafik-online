@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,12 +20,14 @@ public class BranchServiceImpl implements BranchService{
     private final BranchMapper branchMapper;
     private final BranchBuilder branchBuilder;
     private final RegionRepository regionRepository;
+    private final NameValidatorService nameValidatorService;
 
-    public BranchServiceImpl(BranchRepository branchRepository, BranchMapper branchMapper, BranchBuilder branchBuilder, RegionRepository regionRepository) {
+    public BranchServiceImpl(BranchRepository branchRepository, BranchMapper branchMapper, BranchBuilder branchBuilder, RegionRepository regionRepository, NameValidatorService nameValidatorService) {
         this.branchRepository = branchRepository;
         this.branchMapper = branchMapper;
         this.branchBuilder = branchBuilder;
         this.regionRepository = regionRepository;
+        this.nameValidatorService = nameValidatorService;
     }
 
     @Override
@@ -44,10 +48,12 @@ public class BranchServiceImpl implements BranchService{
             throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exist");
         }
 
+        String validatedName = nameValidatorService.validate(createBranchDTO.name(), ObjectType.BRANCH);
+
         Region region = regionRepository.findById(createBranchDTO.regionId())
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + createBranchDTO.regionId()));
 
-        Branch branch = branchBuilder.createBranch(createBranchDTO.name(),region);
+        Branch branch = branchBuilder.createBranch(validatedName,region);
 
         Branch savedBranch = branchRepository.save(branch);
 
