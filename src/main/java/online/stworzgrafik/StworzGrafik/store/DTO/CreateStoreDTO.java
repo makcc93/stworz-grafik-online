@@ -19,27 +19,5 @@ public record CreateStoreDTO(
 
         @NotNull String location,
 
-        @NotNull Long branchId,
-
-        @NotNull LocalTime openForClientsHour,
-
-        @NotNull LocalTime closeForClientsHour
-) {
-    public CreateStoreDTO{
-        validateHours(openForClientsHour,closeForClientsHour);
-
-        if (name != null){
-            name = name.trim().toUpperCase();
-        }
-
-        if (storeCode != null){
-            storeCode = storeCode.trim().toUpperCase();
-        }
-    }
-
-    private void validateHours(@NotNull LocalTime openForClientsHour, @NotNull LocalTime closeForClientsHour) {
-        if (closeForClientsHour.isBefore(openForClientsHour)){
-            throw new IllegalArgumentException("Close hour cannot be before open hour");
-        }
-    }
-}
+        @NotNull Long branchId
+) {}

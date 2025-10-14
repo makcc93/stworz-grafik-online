@@ -20,9 +20,5 @@ public record UpdateStoreDTO(
 
         boolean enable,
 
-        Long storeManagerId,
-
-        LocalTime openForClientsHour,
-
-        LocalTime closeForClientsHour
+        Long storeManagerId
 ) {}
