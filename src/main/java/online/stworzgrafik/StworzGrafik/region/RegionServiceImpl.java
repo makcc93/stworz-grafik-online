@@ -6,31 +6,40 @@ import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@Validated
 public class RegionServiceImpl implements RegionService{
     private final RegionRepository regionRepository;
     private final RegionBuilder regionBuilder;
     private final RegionMapper regionMapper;
+    private final NameValidatorService nameValidatorService;
 
-    public RegionServiceImpl(RegionRepository regionRepository, RegionBuilder regionBuilder, RegionMapper regionMapper) {
+    public RegionServiceImpl(RegionRepository regionRepository, RegionBuilder regionBuilder, RegionMapper regionMapper, NameValidatorService nameValidatorService) {
         this.regionRepository = regionRepository;
         this.regionBuilder = regionBuilder;
         this.regionMapper = regionMapper;
+        this.nameValidatorService = nameValidatorService;
     }
 
     @Override
     public ResponseRegionDTO createRegion(CreateRegionDTO createRegionDTO) {
-        ArgumentNullChecker.check(createRegionDTO);
+        Objects.requireNonNull(createRegionDTO);
 
         if (regionRepository.existsByName(createRegionDTO.name())){
             throw new EntityExistsException("Region with name " + createRegionDTO.name() + " already exist");
         }
 
-        Region region = regionBuilder.createRegion(createRegionDTO.name());
+        String validatedName = nameValidatorService.validate(createRegionDTO.name(), ObjectType.REGION);
+
+        Region region = regionBuilder.createRegion(validatedName);
 
         Region savedRegion = regionRepository.save(region);
 
@@ -39,11 +48,16 @@ public class RegionServiceImpl implements RegionService{
 
     @Override
     public ResponseRegionDTO updateRegion(Long id, UpdateRegionDTO updateRegionDTO) {
-        ArgumentNullChecker.check(id,"Id");
-        ArgumentNullChecker.check(updateRegionDTO);
+        Objects.requireNonNull(id, "Id cannot be null");
+        Objects.requireNonNull(updateRegionDTO);
 
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
+
+        if (updateRegionDTO.name() != null) {
+            String validatedName = nameValidatorService.validate(updateRegionDTO.name(), ObjectType.REGION);
+            region.setName(validatedName);
+        }
 
         regionMapper.updateRegionFromDTO(updateRegionDTO,region);
 
@@ -61,7 +75,7 @@ public class RegionServiceImpl implements RegionService{
 
     @Override
     public ResponseRegionDTO findById(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id, "Id cannot be null");
 
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
@@ -71,21 +85,21 @@ public class RegionServiceImpl implements RegionService{
 
     @Override
     public boolean exists(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id, "Id cannot be null");
 
         return regionRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        ArgumentNullChecker.check(name,"Name");
+        Objects.requireNonNull(name, "Name cannot be null");
 
         return regionRepository.existsByName(name);
     }
 
     @Override
     public void deleteRegion(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id, "Id cannot be null");
 
         if (!regionRepository.existsById(id)){
             throw new EntityNotFoundException("Cannot find region by id " + id);
