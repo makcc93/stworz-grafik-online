@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
@@ -11,10 +12,13 @@ import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@Validated
 public class BranchServiceImpl implements BranchService{
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
@@ -32,7 +36,7 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public ResponseBranchDTO findById(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
@@ -42,7 +46,7 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public ResponseBranchDTO createBranch(CreateBranchDTO createBranchDTO) {
-        ArgumentNullChecker.check(createBranchDTO);
+        Objects.requireNonNull(createBranchDTO);
 
         if (branchRepository.existsByName(createBranchDTO.name())){
             throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exist");
@@ -62,8 +66,8 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public ResponseBranchDTO updateBranch(Long id, UpdateBranchDTO updateBranchDTO) {
-        ArgumentNullChecker.check(id,"Id");
-        ArgumentNullChecker.check(updateBranchDTO);
+        Objects.requireNonNull(id, "Id cannot be null");
+        Objects.requireNonNull(updateBranchDTO, "Update branch DTO cannot be null");
 
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
@@ -77,7 +81,7 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public void delete(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         if (!branchRepository.existsById(id)){
             throw new EntityNotFoundException("Branch with id " + id + " does not exist");
@@ -88,14 +92,14 @@ public class BranchServiceImpl implements BranchService{
 
     @Override
     public boolean exists(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         return branchRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        ArgumentNullChecker.check(name,"Name");
+        Objects.requireNonNull(name, "Name cannot be null");
 
         return branchRepository.existsByName(name);
     }
