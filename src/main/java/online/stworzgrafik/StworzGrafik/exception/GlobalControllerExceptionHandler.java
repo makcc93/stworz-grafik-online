@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.exception;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -29,6 +30,11 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(EntityExistsException.class)
     public ResponseEntity<String> entityAlreadyExist(EntityExistsException e){
         return ResponseEntity.badRequest().body("Entity with this name already exist");
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<String> nameContainsIllegalChars(ValidationException e){
+        return ResponseEntity.badRequest().body("Name contains illegal char(s)");
     }
 
     @ExceptionHandler(Exception.class)
