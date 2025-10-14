@@ -1,7 +1,9 @@
 package online.stworzgrafik.StworzGrafik.region.DTO;
 
+import jakarta.validation.constraints.NotNull;
+
 public record ResponseRegionDTO(
-        Long id,
-        String name,
-        boolean enable
+        @NotNull Long id,
+        @NotNull String name,
+        @NotNull boolean enable
 ) {}
