@@ -9,6 +9,8 @@ import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestUpdateReg
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,6 +38,9 @@ class RegionServiceImplTest {
     @Mock
     private RegionMapperImpl regionMapper;
 
+    @Mock
+    private NameValidatorService nameValidatorService;
+
     @Test
     void createRegion_workingTest(){
         //given
@@ -43,6 +48,8 @@ class RegionServiceImplTest {
 
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName(name).build();
         when(regionRepository.existsByName(name)).thenReturn(false);
+
+        when(nameValidatorService.validate(name, ObjectType.REGION)).thenReturn(name);
 
         Region region = new TestRegionBuilder().withName(name).build();
         when(regionBuilder.createRegion(createRegionDTO.name())).thenReturn(region);
@@ -99,6 +106,8 @@ class RegionServiceImplTest {
 
         String updatedName = "UPDATEDNAME";
         boolean enable = false;
+
+        when(nameValidatorService.validate(updatedName, ObjectType.REGION)).thenReturn(updatedName);
 
         Region savedRegion = new TestRegionBuilder().withName(updatedName).build();
         UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().withName(updatedName).withIsEnable(enable).build();

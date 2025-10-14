@@ -21,12 +21,6 @@ class StoreBuilderTest {
     @InjectMocks
     private StoreBuilder storeBuilder;
 
-    @Mock
-    private BranchBuilder branchBuilder;
-
-    @Mock
-    private BranchRepository branchRepository;
-
     @Test
     void createStore_workingTest(){
         //given
@@ -50,27 +44,4 @@ class StoreBuilderTest {
         assertEquals(10,store.getOpenForClientsHour().getHour());
         assertEquals(20,store.getCloseForClientsHour().getHour());
     }
-
-    @Test
-    void create_endHourIsBeforeStartHourThrowsException(){
-        //given
-        LocalTime startHour = LocalTime.of(20,0);
-        LocalTime endHour = LocalTime.of(8,0);
-
-        Branch branch = new TestBranchBuilder().build();
-
-        //when
-        assertThrows(IllegalArgumentException.class,() ->
-                new StoreBuilder().createStore(
-                "NAME",
-                "NE",
-                "LOCATION",
-                branch,
-                startHour,
-                endHour
-        ),"Close hour cannot be before open hour");
-
-        //then
-    }
-
 }

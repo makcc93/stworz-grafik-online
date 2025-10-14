@@ -13,6 +13,7 @@ import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBra
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -49,6 +50,9 @@ class BranchControllerTest {
 
     @Autowired
     private RegionRepository regionRepository;
+
+    @Autowired
+    private NameValidatorService nameValidatorService;
 
     @Test
     void findAll_workingTest() throws Exception {

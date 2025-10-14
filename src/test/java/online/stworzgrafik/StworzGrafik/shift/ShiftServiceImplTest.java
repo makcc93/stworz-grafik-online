@@ -1,7 +1,9 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
@@ -37,9 +39,9 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
 
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(startHour,endHour);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
         Shift entity = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(entity.getId(),startHour, endHour, endHour.getHour() - startHour.getHour());
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(entity.id).withStartHour(startHour).withEndHour(endHour).build();
 
         when(shiftMapper.toEntity(shiftHoursDTO)).thenReturn(entity);
         when(shiftMapper.toShiftDto(entity)).thenReturn(responseShiftDTO);
@@ -63,9 +65,10 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
 
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(startHour,endHour);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
         Shift entity = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(entity.getId(),startHour, endHour, endHour.getHour() - startHour.getHour());
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(entity.id).withStartHour(startHour).withEndHour(endHour).build();
+
 
         when(shiftMapper.toEntity(shiftHoursDTO)).thenReturn(entity);
         when(shiftMapper.toShiftDto(entity)).thenReturn(responseShiftDTO);
@@ -130,12 +133,15 @@ class ShiftServiceImplTest {
     @Test
     void create_workingTest(){
         //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(9, 0), LocalTime.of(20, 0));
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L,LocalTime.of(9, 0), LocalTime.of(20, 0),11);
+        LocalTime startHour = LocalTime.of(9, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withStartHour(startHour).withEndHour(endHour).build();
         Shift shift = mock(Shift.class);
         shift.setId(1L);
-        shift.setStartHour(LocalTime.of(9,0));
-        shift.setEndHour(LocalTime.of(20,0));
+        shift.setStartHour(startHour);
+        shift.setEndHour(endHour);
 
         when(repository.save(shift)).thenReturn(shift);
         when(shiftMapper.toShiftDto(any(Shift.class))).thenReturn(responseShiftDTO);
@@ -161,13 +167,15 @@ class ShiftServiceImplTest {
     }
 
     @Test
-    void create_endHourIsBeforeStartHourException(){
+    void create_endHourIsBeforeStartHourThrowsException(){
         //given
         LocalTime startHour = LocalTime.of(20, 0);
         LocalTime endHour = LocalTime.of(8,0);
 
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
         //when
-        assertThrows(IllegalArgumentException.class,() -> new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
+        assertThrows(IllegalArgumentException.class,() -> service.create(shiftHoursDTO));
 
         //then
         verify(repository,never()).save(any());
@@ -338,8 +346,11 @@ class ShiftServiceImplTest {
     void findById_workingTest(){
         //given
         Long id = 1L;
-        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(20, 0)).build();
-        ResponseShiftDTO responseShiftDTO = new ResponseShiftDTO(1L, LocalTime.of(9, 0), LocalTime.of(20, 0), 11);
+        LocalTime startHour = LocalTime.of(9, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
         when(repository.findById(id)).thenReturn(Optional.ofNullable(shift));
@@ -348,8 +359,8 @@ class ShiftServiceImplTest {
         ResponseShiftDTO responseDto = service.findById(id);
 
         //then
-        assertEquals(9,responseDto.startHour().getHour());
-        assertEquals(20,responseDto.endHour().getHour());
+        assertEquals(startHour.getHour(),responseDto.startHour().getHour());
+        assertEquals(endHour.getHour(),responseDto.endHour().getHour());
         assertEquals(shift.getLength(),responseDto.length());
 
         verify(repository,times(1)).findById(id);

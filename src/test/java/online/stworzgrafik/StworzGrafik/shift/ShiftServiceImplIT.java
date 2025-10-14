@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.shift;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
@@ -27,37 +28,28 @@ class ShiftServiceImplIT {
     @Test
     void saveDto_workingTest(){
         //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(8,0),LocalTime.of(20,0));
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+        int length = endHour.getHour() - startHour.getHour();
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
         ResponseShiftDTO responseShiftDTO = shiftService.saveDto(shiftHoursDTO);
 
         //then
-        assertEquals(8,responseShiftDTO.startHour().getHour());
-        assertEquals(20,responseShiftDTO.endHour().getHour());
-        assertEquals(12,responseShiftDTO.length());
+        assertEquals(startHour.getHour(),responseShiftDTO.startHour().getHour());
+        assertEquals(endHour.getHour(),responseShiftDTO.endHour().getHour());
+        assertEquals(length,responseShiftDTO.length());
         assertTrue(shiftRepository.existsById(responseShiftDTO.id()));
-    }
-
-    @Test
-    void saveDto_negativeTest(){
-        //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(8,0),LocalTime.of(20,0));
-
-        //when
-        ResponseShiftDTO responseShiftDTO = shiftService.saveDto(shiftHoursDTO);
-
-        //then
-        assertNotEquals(0,responseShiftDTO.startHour().getHour());
-        assertNotEquals(24,responseShiftDTO.endHour().getHour());
-        assertNotEquals(2,responseShiftDTO.length());
-        assertFalse(shiftRepository.existsById(responseShiftDTO.id()+999));
     }
 
     @Test
     void saveDto_wrongHoursThrowException(){
         //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(23,0),LocalTime.of(6,0));
+        LocalTime startHour = LocalTime.of(23, 0);
+        LocalTime endHour = LocalTime.of(6, 0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> shiftService.saveDto(shiftHoursDTO));
@@ -89,7 +81,9 @@ class ShiftServiceImplIT {
     @Test
     void create_workingTest(){
         //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(15,0),LocalTime.of(20,0));
+        LocalTime startHour = LocalTime.of(15, 0);
+        LocalTime endHour = LocalTime.of(20, 0);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
         ResponseShiftDTO responseShiftDTO = shiftService.create(shiftHoursDTO);

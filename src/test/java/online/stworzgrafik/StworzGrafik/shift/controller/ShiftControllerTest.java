@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
@@ -123,7 +124,10 @@ class ShiftControllerTest {
     @Test
     void createShift_workingTest() throws Exception {
         //given
-        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(LocalTime.of(8,0),LocalTime.of(14,0));
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(14, 0);
+        int length = endHour.getHour() - startHour.getHour();
+        ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(startHour, endHour);
 
         //when
         MvcResult mvcResult = mockMvc.perform(post("/api/shifts")
@@ -136,9 +140,9 @@ class ShiftControllerTest {
         //then
         Shift shift = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
 
-        assertEquals(shiftHoursDTO.startHour(),shift.getStartHour());
-        assertEquals(shiftHoursDTO.endHour(),shift.getEndHour());
-        assertEquals(6,shift.getLength());
+        assertEquals(startHour,shift.getStartHour());
+        assertEquals(endHour,shift.getEndHour());
+        assertEquals(length,shift.getLength());
 
         assertTrue(shiftService.exists(shift.getId()));
     }
@@ -185,8 +189,15 @@ class ShiftControllerTest {
     @Test
     void updateShift_workingTest() throws Exception {
         //given
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
-        ShiftHoursDTO dtoForUpdate = new ShiftHoursDTO(LocalTime.of(15, 0), LocalTime.of(20, 0));
+        LocalTime oldStartHour = LocalTime.of(8, 0);
+        LocalTime oldEndHour = LocalTime.of(14, 0);
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(oldStartHour).withEndHour(oldEndHour).build());
+
+        LocalTime newStartHour = LocalTime.of(15, 0);
+        LocalTime newEndHour = LocalTime.of(20, 0);
+        int length = newEndHour.getHour() - newStartHour.getHour();
+
+        ShiftHoursDTO dtoForUpdate = new TestShiftHoursDTO().withStartHour(newStartHour).withEndHour(newEndHour).build();
 
         //when
         MvcResult mvcResult = mockMvc.perform(put("/api/shifts/" + originalShift.getId())
@@ -200,9 +211,9 @@ class ShiftControllerTest {
         Shift updatedShift = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
 
         assertEquals(updatedShift.getId(), originalShift.getId());
-        assertEquals(15,updatedShift.getStartHour().getHour());
-        assertEquals(20,updatedShift.getEndHour().getHour());
-        assertEquals(5,updatedShift.getLength());
+        assertEquals(newStartHour.getHour(),updatedShift.getStartHour().getHour());
+        assertEquals(newEndHour.getHour(),updatedShift.getEndHour().getHour());
+        assertEquals(length,updatedShift.getLength());
 
         assertTrue(shiftService.exists(updatedShift.getId()));
     }
@@ -210,7 +221,9 @@ class ShiftControllerTest {
     @Test
     void updateShift_noBodyRequest() throws Exception {
         //given
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(14, 0);
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
        mockMvc.perform(put("/api/shifts/" + originalShift.getId()))
@@ -222,7 +235,9 @@ class ShiftControllerTest {
     @Test
     void updateShift_bodyRequestIsNull() throws Exception{
         //given
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(14, 0);
+        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
         mockMvc.perform(put("/api/shifts/" + originalShift.getId())
@@ -232,5 +247,4 @@ class ShiftControllerTest {
                 .andExpect(status().isBadRequest());
         //then
     }
-
 }

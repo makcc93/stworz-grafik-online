@@ -3,6 +3,8 @@ package online.stworzgrafik.StworzGrafik.branch;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
@@ -12,6 +14,7 @@ import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBra
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionRepository;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class BranchServiceImplIT {
 
     @Autowired
-    private BranchServiceImpl branchService;
+    private BranchService branchService;
 
     @Autowired
     private BranchRepository branchRepository;
@@ -35,6 +38,9 @@ class BranchServiceImplIT {
 
     @Autowired
     private BranchMapper branchMapper;
+
+    @Autowired
+    private NameValidatorService nameValidatorService;
 
     @Test
     void findById_workingTest(){
@@ -138,6 +144,42 @@ class BranchServiceImplIT {
     }
 
     @Test
+    void createBranch_nameValidatorTest(){
+        //given
+        String name = "  WeIrD        namE     ";
+        Region region = defaultSavedRegion();
+
+        CreateBranchDTO createBranchDTO =
+                new TestCreateBranchDTO().withName(name).withRegionId(region.getId()).build();
+
+        String expectedSavedName = "WEIRDNAME";
+
+        //when
+        ResponseBranchDTO serviceResponse = branchService.createBranch(createBranchDTO);
+
+        //then
+        assertEquals(expectedSavedName, serviceResponse.name());
+        assertTrue(branchRepository.existsByName(serviceResponse.name()));
+    }
+
+    @Test
+    void createBranch_invalidNameThrowsException(){
+        //given
+        String name = "  !  @     # $   %      ^  &     *  ()  {} ";
+        Region region = defaultSavedRegion();
+
+        CreateBranchDTO createBranchDTO =
+                new TestCreateBranchDTO().withName(name).withRegionId(region.getId()).build();
+
+        //when
+        ValidationException exception =
+                assertThrows(ValidationException.class, () -> branchService.createBranch(createBranchDTO));
+
+        //then
+        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+    }
+
+    @Test
     void updateBranch_workingTest(){
         //given
         String originalName = "ORIGINAL";
@@ -171,6 +213,20 @@ class BranchServiceImplIT {
     }
 
     @Test
+    void updateBranch_idIsNullThrowsException(){
+        //given
+        Long nullId = null;
+        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> branchService.updateBranch(nullId, updateBranchDTO));
+
+        //then
+        assertEquals("Id cannot be null", exception.getMessage());
+    }
+
+    @Test
     void delete_workingTest(){
         //given
         Branch branch = new TestBranchBuilder().withRegion(defaultSavedRegion()).build();
@@ -182,7 +238,7 @@ class BranchServiceImplIT {
         branchService.delete(id);
 
         //then
-        assertFalse(regionRepository.existsById(id));
+        assertFalse(branchRepository.existsById(id));
     }
 
     @Test
