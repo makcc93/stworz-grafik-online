@@ -13,27 +13,14 @@ public final class StoreBuilder {
             String name,
             String storeCode,
             String location,
-            Branch branch,
-            LocalTime openHour,
-            LocalTime closeHour
+            Branch branch
     ){
-        ArgumentNullChecker.checkAll(name,storeCode,location,branch,openHour,closeHour);
-        validateHour(openHour,closeHour);
-
         return Store.builder()
                 .name(name)
                 .storeCode(storeCode)
                 .location(location)
                 .branch(branch)
-                .openForClientsHour(openHour)
-                .closeForClientsHour(closeHour)
                 .build();
 
-    }
-
-    private static void validateHour(LocalTime openHour, LocalTime closeHour) {
-        if (closeHour.isBefore(openHour)){
-            throw new IllegalArgumentException("Close hour cannot be before open hour");
-        }
     }
 }

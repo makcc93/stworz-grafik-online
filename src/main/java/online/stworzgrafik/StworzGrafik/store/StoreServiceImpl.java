@@ -12,6 +12,7 @@ import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -63,9 +64,7 @@ public class StoreServiceImpl implements StoreService{
             createStoreDTO.name(),
             createStoreDTO.storeCode(),
             createStoreDTO.location(),
-            branch,
-            createStoreDTO.openForClientsHour(),
-            createStoreDTO.closeForClientsHour()
+            branch
         );
 
         Store savedStore = storeRepository.save(store);

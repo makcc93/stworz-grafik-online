@@ -43,10 +43,6 @@ public class Store {
 
     private Long storeManagerId;
 
-    private LocalTime openForClientsHour;
-
-    private LocalTime closeForClientsHour;
-
     @PrePersist
     void onCreate(){
         createdAt = LocalDateTime.now();
