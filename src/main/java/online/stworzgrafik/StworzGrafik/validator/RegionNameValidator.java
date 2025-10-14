@@ -4,7 +4,7 @@ import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BranchNameValidator implements NameValidatorStrategy {
+public class RegionNameValidator implements NameValidatorStrategy{
     @Override
     public String validate(String name) {
         if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ0-9\\t\\n ]+$")){
@@ -16,6 +16,6 @@ public class BranchNameValidator implements NameValidatorStrategy {
 
     @Override
     public ObjectType getSupportedType() {
-        return ObjectType.BRANCH;
+        return ObjectType.REGION;
     }
 }
