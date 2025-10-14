@@ -4,5 +4,6 @@ public enum ObjectType {
     PERSON,
     POSITION,
     BRANCH,
-    REGION
+    REGION,
+    STORE
 }
