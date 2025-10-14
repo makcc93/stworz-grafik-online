@@ -10,8 +10,4 @@ public record CreateBranchDTO(
 
         @NotNull
         Long regionId
-) {
-    public CreateBranchDTO {
-            name = NameValidatorOLD.validate(name);
-    }
-}
+) {}

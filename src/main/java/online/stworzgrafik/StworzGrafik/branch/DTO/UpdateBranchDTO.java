@@ -12,8 +12,4 @@ public record UpdateBranchDTO(
 
         @NotNull()
         Boolean enable
-) {
-    public UpdateBranchDTO{
-        name = NameValidatorOLD.validate(name);
-    }
-}
+) {}
