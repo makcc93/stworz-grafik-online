@@ -17,8 +17,6 @@ public class TestResponseStoreDTO {
     private LocalDateTime createdAt = LocalDateTime.now();
     private boolean enable = true;
     private Long storeManagerId = 50L;
-    private LocalTime openHour = LocalTime.of(8,0);
-    private LocalTime closeHour = LocalTime.of(21,0);
 
     public TestResponseStoreDTO withId(Long id){
         this.id = id;
@@ -60,16 +58,6 @@ public class TestResponseStoreDTO {
         return this;
     }
 
-    public TestResponseStoreDTO withOpenHour(LocalTime openHour){
-        this.openHour = openHour;
-        return this;
-    }
-
-    public TestResponseStoreDTO withCloseHour(LocalTime closeHour){
-        this.closeHour = closeHour;
-        return this;
-    }
-
     public ResponseStoreDTO build(){
         return new ResponseStoreDTO(
                 id,
@@ -80,9 +68,7 @@ public class TestResponseStoreDTO {
                 branch.getName(),
                 createdAt,
                 enable,
-                storeManagerId,
-                openHour,
-                closeHour
+                storeManagerId
         );
     }
 
@@ -96,9 +82,7 @@ public class TestResponseStoreDTO {
                 store.getBranch().getName(),
                 store.getCreatedAt(),
                 store.isEnable(),
-                store.getStoreManagerId(),
-                store.getOpenForClientsHour(),
-                store.getCloseForClientsHour()
+                store.getStoreManagerId()
         );
     }
 }

@@ -31,9 +31,7 @@ class StoreBuilderTest {
                 "NAME",
                 "NA",
                 "LOCATION",
-                branch,
-                LocalTime.of(10, 0),
-                LocalTime.of(20, 0)
+                branch
         );
 
         //then
@@ -41,7 +39,5 @@ class StoreBuilderTest {
         assertEquals("NA",store.getStoreCode());
         assertEquals("LOCATION",store.getLocation());
         assertEquals(branch.getName(),store.getBranch().getName());
-        assertEquals(10,store.getOpenForClientsHour().getHour());
-        assertEquals(20,store.getCloseForClientsHour().getHour());
     }
 }

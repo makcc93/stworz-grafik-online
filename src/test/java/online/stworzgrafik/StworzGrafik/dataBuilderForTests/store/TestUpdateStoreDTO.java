@@ -13,8 +13,6 @@ public class TestUpdateStoreDTO {
     private Branch branch = new TestBranchBuilder().build();
     private boolean enable = true;
     private Long storeManagerId = 2L;
-    private LocalTime openHour = LocalTime.of(10,0);
-    private LocalTime closeHour = LocalTime.of(18,0);
 
     public TestUpdateStoreDTO withName(String name){
         this.name = name;
@@ -46,16 +44,6 @@ public class TestUpdateStoreDTO {
         return this;
     }
 
-    public TestUpdateStoreDTO withOpenHour(LocalTime openHour){
-        this.openHour = openHour;
-        return this;
-    }
-
-    public TestUpdateStoreDTO withCloseHour(LocalTime closeHour){
-        this.closeHour = closeHour;
-        return this;
-    }
-
     public UpdateStoreDTO build(){
         return new UpdateStoreDTO(
                 name,
@@ -63,9 +51,7 @@ public class TestUpdateStoreDTO {
                 location,
                 branch.getId(),
                 enable,
-                storeManagerId,
-                openHour,
-                closeHour
+                storeManagerId
         );
     }
 }

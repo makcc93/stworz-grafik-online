@@ -30,8 +30,6 @@ class StoreMapperTest {
         assertEquals(responseStoreDto.storeCode(),store.getStoreCode());
         assertEquals(responseStoreDto.location(),store.getLocation());
         assertEquals(responseStoreDto.branchId(),store.getBranch().getId());
-        assertEquals(responseStoreDto.openForClientsHour(),store.getOpenForClientsHour());
-        assertEquals(responseStoreDto.closeForClientsHour(),store.getCloseForClientsHour());
     }
 
     @Test
@@ -59,8 +57,6 @@ class StoreMapperTest {
         assertEquals(entity.getName(),createStoreDTO.name());
         assertEquals(entity.getStoreCode(),createStoreDTO.storeCode());
         assertEquals(entity.getLocation(),createStoreDTO.location());
-        assertEquals(entity.getOpenForClientsHour(),createStoreDTO.openForClientsHour());
-        assertEquals(entity.getCloseForClientsHour(),createStoreDTO.closeForClientsHour());
     }
 
     @Test
@@ -89,8 +85,6 @@ class StoreMapperTest {
         assertEquals(updateStoreDTO.name(),store.getName());
         assertEquals(updateStoreDTO.storeCode(),store.getStoreCode());
         assertEquals(updateStoreDTO.location(),store.getLocation());
-        assertEquals(updateStoreDTO.openForClientsHour(),store.getOpenForClientsHour());
-        assertEquals(updateStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
     }
 
     private StoreNameAndCodeDTO getStoreNameAndCodeDTO(){

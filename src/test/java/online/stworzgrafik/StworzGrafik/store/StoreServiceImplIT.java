@@ -104,8 +104,6 @@ class StoreServiceImplIT {
         assertEquals(firstStore.getId(),responseFirstStore.id());
         assertEquals(firstStore.getCreatedAt(),responseFirstStore.createdAt());
         assertEquals(firstStore.getBranch().getId(),responseFirstStore.branchId());
-        assertEquals(firstStore.getOpenForClientsHour(),responseFirstStore.openForClientsHour());
-        assertEquals(firstStore.getCloseForClientsHour(),responseFirstStore.closeForClientsHour());
     }
 
     @Test
@@ -122,11 +120,9 @@ class StoreServiceImplIT {
     @Test
     void create_workingTest(){
         //given
-        LocalTime startHour = LocalTime.of(10,0);
-        LocalTime endHour = LocalTime.of(18,0);
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
-        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).withOpenHour(startHour).withCloseHour(endHour).build();
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
         //when
         ResponseStoreDTO responseStoreDTO = storeService.create(createStoreDTO);
 
@@ -135,43 +131,70 @@ class StoreServiceImplIT {
 
         assertEquals(createStoreDTO.name(),responseStoreDTO.name());
         assertEquals(createStoreDTO.storeCode(),responseStoreDTO.storeCode());
-        assertEquals(createStoreDTO.openForClientsHour(),responseStoreDTO.openForClientsHour());
-        assertEquals(createStoreDTO.closeForClientsHour(),responseStoreDTO.closeForClientsHour());
     }
 
     @Test
-    void create_storeAlreadyExistThrowsException(){
+    void create_storeWithThisNameAlreadyExistThrowsException(){
         //given
-        LocalTime startHour = LocalTime.of(10,0);
-        LocalTime endHour = LocalTime.of(18,0);
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
+        String theSameName = "TESTINGNAME";
+        Long theSameBranchId = branch.getId();
+
         CreateStoreDTO createStoreDTO = new CreateStoreDTO(
-                "TESTINGNAME",
+                theSameName,
                 "00",
                 "TESTINGLOCATION",
-                branch.getId(),
-                startHour,
-                endHour
+                theSameBranchId
         );
 
         storeService.create(createStoreDTO);
 
-        CreateStoreDTO sameNameAndStoreCode = new CreateStoreDTO(
-                "TESTINGNAME",
-                "00",
+        CreateStoreDTO sameNameDTO = new CreateStoreDTO(
+                theSameName,
+                "11",
                 "LOCATION",
-                branch.getId(),
-                startHour,
-                endHour
+                theSameBranchId
         );
 
         //when
-        EntityExistsException entityExistsException = assertThrows(EntityExistsException.class, () -> storeService.create(sameNameAndStoreCode));
+        EntityExistsException exception =
+                assertThrows(EntityExistsException.class, () -> storeService.create(sameNameDTO));
 
         //then
-        assertEquals("Store with this name: " + sameNameAndStoreCode.name() + " and store code: " + sameNameAndStoreCode.storeCode() + " already exist",
-                entityExistsException.getMessage());
+        assertEquals("Store with name " + theSameName + " already exists", exception.getMessage());
+    }
+
+    @Test
+    void create_storeWithThisStoreCodeAlreadyExistsThrowsException(){
+        //given
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
+
+        String theSameStoreCode = "00";
+        Long theSameBranchId = branch.getId();
+
+        CreateStoreDTO createStoreDTO = new CreateStoreDTO(
+                "OLDNAME",
+                theSameStoreCode,
+                "TESTINGLOCATION",
+                theSameBranchId
+        );
+
+        storeService.create(createStoreDTO);
+
+        CreateStoreDTO sameStoreCodeDTO = new CreateStoreDTO(
+                "NEWNAME",
+                theSameStoreCode,
+                "LOCATION",
+                theSameBranchId
+        );
+
+        //when
+        EntityExistsException exception =
+                assertThrows(EntityExistsException.class, () -> storeService.create(sameStoreCodeDTO));
+
+        //then
+        assertEquals("Store with code " + theSameStoreCode + " already exists",exception.getMessage());
     }
 
     @Test
@@ -185,9 +208,7 @@ class StoreServiceImplIT {
                 "TESTINGNAME",
                 "00",
                 "TESTINGLOCATION",
-                branch.getId(),
-                startHour,
-                endHour
+                branch.getId()
         );
 
         ResponseStoreDTO responseStoreDTO = storeService.create(createStoreDTO);
@@ -200,8 +221,6 @@ class StoreServiceImplIT {
                 null,
                 null,
                 true,
-                null,
-                null,
                 null
         );
 
@@ -213,8 +232,6 @@ class StoreServiceImplIT {
         assertEquals(createStoreDTO.storeCode(),store.getStoreCode());
         assertEquals(createStoreDTO.branchId(),store.getBranch().getId());
         assertEquals(createStoreDTO.location(),store.getLocation());
-        assertEquals(createStoreDTO.openForClientsHour(),store.getOpenForClientsHour());
-        assertEquals(createStoreDTO.closeForClientsHour(),store.getCloseForClientsHour());
     }
 
     @Test
@@ -227,8 +244,6 @@ class StoreServiceImplIT {
                 null,
                 null,
                 true,
-                null,
-                null,
                 null
         );
 

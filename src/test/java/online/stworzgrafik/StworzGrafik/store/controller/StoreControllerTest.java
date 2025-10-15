@@ -17,6 +17,7 @@ import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -60,6 +61,9 @@ class StoreControllerTest {
 
     @Autowired
     RegionRepository regionRepository;
+
+    @Autowired
+    NameValidatorService nameValidatorService;
 
 
     @Test
@@ -123,8 +127,6 @@ class StoreControllerTest {
         assertEquals(store.getStoreCode(),responseStore.storeCode());
         assertEquals(store.getName(),responseStore.name());
         assertEquals(store.getBranch().getId(),responseStore.branchId());
-        assertEquals(store.getOpenForClientsHour(),responseStore.openForClientsHour());
-        assertEquals(store.getCloseForClientsHour(),responseStore.closeForClientsHour());
     }
 
     @Test
@@ -165,8 +167,6 @@ class StoreControllerTest {
         assertEquals(createStoreDTO.storeCode(),store.storeCode());
         assertEquals(createStoreDTO.location(),store.location());
         assertEquals(createStoreDTO.branchId(),store.branchId());
-        assertEquals(createStoreDTO.openForClientsHour(),store.openForClientsHour());
-        assertEquals(createStoreDTO.closeForClientsHour(),store.closeForClientsHour());
 
         assertTrue(service.exists(store.id()));
     }
@@ -232,8 +232,6 @@ class StoreControllerTest {
                 null,
                 store.getBranch().getId(),
                 false,
-                null,
-                null,
                 null
         );
 
@@ -257,9 +255,7 @@ class StoreControllerTest {
         assertEquals(store.getId(),updatedStore.id());
         assertEquals(store.getStoreCode(),updatedStore.storeCode());
         assertEquals(store.getLocation(),updatedStore.location());
-        assertEquals(store.getBranch().getId(),updatedStore.branchId());
-        assertEquals(store.getOpenForClientsHour(),updatedStore.openForClientsHour());
-        assertEquals(store.getCloseForClientsHour(),updatedStore.closeForClientsHour());
+        assertEquals(store.getBranch().getId(),updatedStore.branchId());;
     }
 
     @Test
@@ -272,8 +268,6 @@ class StoreControllerTest {
                 null,
                 null,
                 true,
-                null,
-                null,
                 null
         );
 
@@ -312,9 +306,7 @@ class StoreControllerTest {
                 "11",
                 "NameTest1",
                 "LocationTest1",
-                firstBranch,
-                LocalTime.of(9,0),
-                LocalTime.of(20,0));
+                firstBranch);
     }
 
     private Store secondStore(){
@@ -326,9 +318,8 @@ class StoreControllerTest {
                 "22",
                 "NameTest2",
                 "LocationTest2",
-                secondBranch,
-                LocalTime.of(9,0),
-                LocalTime.of(21,0));
+                secondBranch
+        );
     }
 
     private Store thirdStore(){
@@ -340,8 +331,7 @@ class StoreControllerTest {
                 "33",
                 "NameTest3",
                 "LocationTest3",
-                thirdBranch,
-                LocalTime.of(10,0),
-                LocalTime.of(22,0));
+                thirdBranch
+        );
     }
 }

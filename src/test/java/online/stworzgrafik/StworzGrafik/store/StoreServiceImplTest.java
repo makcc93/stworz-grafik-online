@@ -14,6 +14,8 @@ import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,6 +47,9 @@ class StoreServiceImplTest {
 
     @Mock
     private BranchRepository branchRepository;
+
+    @Mock
+    private NameValidatorService nameValidatorService;
 
     @Test
     void findAll_workingTest(){
@@ -118,52 +123,51 @@ class StoreServiceImplTest {
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
+        String name = createStoreDTO.name();
+        when(repository.existsByName(name)).thenReturn(false);
+        String storeCode = createStoreDTO.storeCode();
+        when(repository.existsByStoreCode(storeCode)).thenReturn(false);
+
         Branch branch = new TestBranchBuilder().build();
         when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.of(branch));
 
-        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(createStoreDTO.name(), createStoreDTO.storeCode());
-        when(storeMapper.toStoreNameAndCodeDTO(createStoreDTO)).thenReturn(storeNameAndCodeDTO);
+        when(nameValidatorService.validate(name,ObjectType.STORE)).thenReturn(name);
 
-        Store store = new TestStoreBuilder().build();
-
-        ResponseStoreDTO responseStoreDTO = new ResponseStoreDTO(
-                1L,
-                createStoreDTO.name(),
-                createStoreDTO.storeCode(),
-                createStoreDTO.location(),
-                createStoreDTO.branchId(),
-                "responseName",
-                LocalDateTime.now(),
-                true,
-                1L,
-                createStoreDTO.openForClientsHour(),
-                createStoreDTO.closeForClientsHour()
-        );
-        when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
+        String location = createStoreDTO.location();
+        Store store = new TestStoreBuilder()
+                .withName(name)
+                .withStoreCode(storeCode)
+                .withLocation(location)
+                .withBranch(branch)
+                .build();
 
         when(storeBuilder.createStore(
-                createStoreDTO.name(),
-                createStoreDTO.storeCode(),
-                createStoreDTO.location(),
-                branch,
-                createStoreDTO.openForClientsHour(),
-                createStoreDTO.closeForClientsHour())).thenReturn(store);
-        when(repository.save(any(Store.class))).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
-        when(repository.existsByNameAndStoreCode(any(),any())).thenReturn(false);
+                name,
+                storeCode,
+                location,
+                branch
+        )).thenReturn(store);
+
+        when(repository.save(store)).thenReturn(store);
+
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO()
+                .withName(name)
+                .withStoreCode(storeCode)
+                .withBranch(branch)
+                .withLocation(location)
+                .build();
+
+        when(storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
 
         //when
-        ResponseStoreDTO serviceReturn = service.create(createStoreDTO);
+        ResponseStoreDTO serviceResponse = service.create(createStoreDTO);
 
         //then
-        assertEquals(serviceReturn.name(),createStoreDTO.name());
-        assertEquals(serviceReturn.storeCode(),createStoreDTO.storeCode());
-        assertEquals(serviceReturn.location(),createStoreDTO.location());
-        assertEquals(serviceReturn.branchId(), createStoreDTO.branchId());
-        assertEquals(serviceReturn.openForClientsHour(), createStoreDTO.openForClientsHour());
-        assertEquals(serviceReturn.closeForClientsHour(),createStoreDTO.closeForClientsHour());
-
-        verify(repository,times(1)).save(any(Store.class));
-        }
+        assertEquals(name, serviceResponse.name());
+        assertEquals(storeCode,serviceResponse.storeCode());
+        assertEquals(location,serviceResponse.location());
+        assertEquals(branch.getId(),serviceResponse.branchId());
+    }
 
     @Test
     void create_argumentIsNull(){
@@ -178,19 +182,23 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void create_closeHourIsBeforeOpenHour(){
+    void create_branchDoesNotExistThrowsException(){
         //given
-        CreateStoreDTO inputDto = new TestCreateStoreDTO().build();
-        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(inputDto.name(),inputDto.storeCode());
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
-        when(storeMapper.toStoreNameAndCodeDTO(inputDto)).thenReturn(storeNameAndCodeDTO);
-        when(repository.existsByNameAndStoreCode(inputDto.name(),inputDto.storeCode())).thenReturn(true);
+        when(repository.existsByName(createStoreDTO.name())).thenReturn(false);
+        when(repository.existsByStoreCode(createStoreDTO.storeCode())).thenReturn(false);
+
+        when(branchRepository.findById(createStoreDTO.branchId())).thenThrow(EntityNotFoundException.class);
 
         //when
-        assertThrows(EntityExistsException.class,() -> service.create(inputDto));
+        assertThrows(EntityNotFoundException.class, () -> service.create(createStoreDTO));
 
         //then
-        verify(repository,never()).save(any(Store.class));
+        verify(nameValidatorService,never()).validate(any(),any());
+        verify(storeBuilder,never()).createStore(any(),any(),any(),any());
+        verify(repository,never()).save(any());
+        verify(storeMapper,never()).toResponseStoreDto(any());
     }
 
     @Test
@@ -306,8 +314,6 @@ class StoreServiceImplTest {
         assertEquals(store.getStoreCode(),savedEntity.getStoreCode());
         assertEquals(store.getLocation(),savedEntity.getLocation());
         assertEquals(store.getBranch(),savedEntity.getBranch());
-        assertEquals(store.getOpenForClientsHour(),savedEntity.getOpenForClientsHour());
-        assertEquals(store.getCloseForClientsHour(),savedEntity.getCloseForClientsHour());
 
         verify(repository,times(1)).save(store);
     }
@@ -375,6 +381,8 @@ class StoreServiceImplTest {
         when(repository.findById(id)).thenReturn(Optional.of(store));
 
         UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
+
+        when(nameValidatorService.validate(updateStoreDTO.name(), ObjectType.STORE)).thenReturn(updateStoreDTO.name());
 
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
 

@@ -12,8 +12,6 @@ public class TestStoreBuilder {
     private String storeCode = "AA";
     private String location = "TESTLOCATION";
     private Branch branch = new TestBranchBuilder().build();
-    private LocalTime openHour = LocalTime.of(9,0);
-    private LocalTime closeHour = LocalTime.of(20,0);
 
     public TestStoreBuilder withName(String name){
         this.name = name;
@@ -35,24 +33,12 @@ public class TestStoreBuilder {
         return this;
     }
 
-    public TestStoreBuilder withOpenHour(LocalTime openHour){
-        this.openHour = openHour;
-        return this;
-    }
-
-    public TestStoreBuilder withCloseHour(LocalTime closeHour){
-        this.closeHour = closeHour;
-        return this;
-    }
-
     public Store build(){
         return new StoreBuilder().createStore(
                 name,
                 storeCode,
                 location,
-                branch,
-                openHour,
-                closeHour
+                branch
         );
     }
 }
