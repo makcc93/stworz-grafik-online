@@ -10,11 +10,14 @@ import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -23,12 +26,14 @@ public class StoreServiceImpl implements StoreService{
     private final StoreBuilder storeBuilder;
     private final StoreMapper storeMapper;
     private final BranchRepository branchRepository;
+    private final NameValidatorService nameValidatorService;
 
-    public StoreServiceImpl(StoreRepository storeRepository, StoreBuilder storeBuilder, StoreMapper storeMapper, BranchRepository branchRepository) {
+    public StoreServiceImpl(StoreRepository storeRepository, StoreBuilder storeBuilder, StoreMapper storeMapper, BranchRepository branchRepository, NameValidatorService nameValidatorService) {
         this.storeRepository = storeRepository;
         this.storeBuilder = storeBuilder;
         this.storeMapper = storeMapper;
         this.branchRepository = branchRepository;
+        this.nameValidatorService = nameValidatorService;
     }
 
     @Override
@@ -43,7 +48,7 @@ public class StoreServiceImpl implements StoreService{
 
     @Override
     public ResponseStoreDTO findById(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id, "Id cannot be null");
 
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + id));
@@ -53,18 +58,20 @@ public class StoreServiceImpl implements StoreService{
 
     @Override
     public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
-        ArgumentNullChecker.check(createStoreDTO);
+        Objects.requireNonNull(createStoreDTO);
 
         ifStoreAlreadyExist(createStoreDTO);
 
         Branch branch = branchRepository.findById(createStoreDTO.branchId())
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find branch by id " + createStoreDTO.branchId()));
 
+        String validatedName = nameValidatorService.validate(createStoreDTO.name(), ObjectType.STORE);
+
         Store store = storeBuilder.createStore(
-            createStoreDTO.name(),
-            createStoreDTO.storeCode(),
-            createStoreDTO.location(),
-            branch
+                validatedName,
+                createStoreDTO.storeCode(),
+                createStoreDTO.location(),
+                branch
         );
 
         Store savedStore = storeRepository.save(store);
@@ -72,22 +79,18 @@ public class StoreServiceImpl implements StoreService{
         return storeMapper.toResponseStoreDto(savedStore);
     }
 
-    private void ifStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
-        StoreNameAndCodeDTO storeNameAndCode = storeMapper.toStoreNameAndCodeDTO(createStoreDTO);
-
-        if (exists(storeNameAndCode)){
-            throw new EntityExistsException("Store with this name: " + storeNameAndCode.name() +
-                    " and store code: " + storeNameAndCode.storeCode() + " already exist");
-        }
-    }
-
     @Override
     public ResponseStoreDTO update(Long id, UpdateStoreDTO updateStoreDTO) {
-        ArgumentNullChecker.check(id,"Id");
-        ArgumentNullChecker.check(updateStoreDTO);
+        Objects.requireNonNull(id,"Id cannot be null");
+        Objects.requireNonNull(updateStoreDTO);
 
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store to update by id " + id));
+
+        if (updateStoreDTO.name() != null){
+            String validatedName = nameValidatorService.validate(updateStoreDTO.name(), ObjectType.STORE);
+            store.setName(validatedName);
+        }
 
         storeMapper.updateStoreFromDTO(updateStoreDTO,store);
 
@@ -100,46 +103,57 @@ public class StoreServiceImpl implements StoreService{
 
     @Override
     public boolean exists(Long id){
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         return storeRepository.existsById(id);
     }
 
     @Override
     public boolean exists(StoreNameAndCodeDTO storeNameAndCodeDTO){
-        ArgumentNullChecker.checkAll(storeNameAndCodeDTO);
+        Objects.requireNonNull(storeNameAndCodeDTO);
 
         return storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode());
     }
 
     @Override
-    public void delete(Long storeId) {
-        ArgumentNullChecker.check(storeId,"Store id");
+    public void delete(Long id) {
+        Objects.requireNonNull(id,"Id cannot be null");
 
-
-        if (!exists(storeId)){
-            throw new EntityNotFoundException("Store with id " + storeId +" does not exist");
+        if (!exists(id)){
+            throw new EntityNotFoundException("Store with id " + id +" does not exist");
         }
 
-        storeRepository.deleteById(storeId);
+        storeRepository.deleteById(id);
     }
 
     @Override
     public Store saveEntity(Store store) {
-        ArgumentNullChecker.check(store,"Store");
+        Objects.requireNonNull(store,"Store cannot be null");
 
         return storeRepository.save(store);
     }
 
     @Override
     public ResponseStoreDTO saveDto(StoreNameAndCodeDTO storeNameAndCodeDTO) {
-        ArgumentNullChecker.check(storeNameAndCodeDTO);
+       Objects.requireNonNull(storeNameAndCodeDTO);
 
         Store entity = storeMapper.toEntity(storeNameAndCodeDTO);
 
         Store savedEntity = storeRepository.save(entity);
 
         return storeMapper.toResponseStoreDto(savedEntity);
+    }
+
+    private void ifStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
+        String name = createStoreDTO.name();
+        if (storeRepository.existsByName(name)){
+            throw new EntityExistsException("Store with name " + name + " already exists");
+        }
+
+        String storeCode = createStoreDTO.storeCode();
+        if (storeRepository.existsByStoreCode(storeCode)){
+            throw new EntityExistsException("Store with code " + storeCode + " already exists");
+        }
     }
 
     private void whenBranchIsUpdated(UpdateStoreDTO updateStoreDTO, Store store) {
