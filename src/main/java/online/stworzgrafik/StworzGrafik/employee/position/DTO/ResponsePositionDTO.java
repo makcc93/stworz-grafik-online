@@ -1,7 +1,10 @@
 package online.stworzgrafik.StworzGrafik.employee.position.DTO;
 
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+
 public record ResponsePositionDTO(
-        Long id,
-        String name,
-        String description
+        @NotNull Long id,
+        @NotNull String name,
+        @Nullable String description
 ) {}
