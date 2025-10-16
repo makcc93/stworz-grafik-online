@@ -1,9 +1,9 @@
 package online.stworzgrafik.StworzGrafik.validator;
 
 import jakarta.validation.ValidationException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class PersonNameValidator implements NameValidatorStrategy {
 
     @Override
