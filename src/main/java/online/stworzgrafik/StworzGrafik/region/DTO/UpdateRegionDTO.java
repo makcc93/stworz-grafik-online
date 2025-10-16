@@ -3,7 +3,6 @@ package online.stworzgrafik.StworzGrafik.region.DTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
 
 public record UpdateRegionDTO(
         @NotBlank()
