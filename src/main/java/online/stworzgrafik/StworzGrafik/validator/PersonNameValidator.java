@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.validator;
 
+import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -7,7 +8,11 @@ public class PersonNameValidator implements NameValidatorStrategy {
 
     @Override
     public String validate(String name) {
-        return name.toUpperCase();
+        if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")){
+            throw new ValidationException("Name cannot contains illegal chars");
+        }
+
+        return name.strip().toUpperCase();
     }
 
     @Override
