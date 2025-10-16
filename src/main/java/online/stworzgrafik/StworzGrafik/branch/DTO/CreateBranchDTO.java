@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.branch.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
 
 public record CreateBranchDTO(
         @NotBlank(message = "Name is required")
