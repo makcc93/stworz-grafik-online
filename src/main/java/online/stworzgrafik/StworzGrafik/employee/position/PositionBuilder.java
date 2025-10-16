@@ -1,19 +1,15 @@
 package online.stworzgrafik.StworzGrafik.employee.position;
 
 import jakarta.annotation.Nullable;
-import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
-import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PositionBuilder {
-    public Position createPosition(String name, @Nullable String description){
-        ArgumentNullChecker.check(name,"Name");
-
-        String validated = NameValidatorOLD.validateForPosition(name);
-
+    public Position createPosition(
+            String name,
+            @Nullable String description){
         return Position.builder()
-                .name(validated)
+                .name(name)
                 .description(description)
                 .build();
     }
