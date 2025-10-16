@@ -3,13 +3,14 @@ package online.stworzgrafik.StworzGrafik.employee.position;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
-import org.junit.jupiter.api.Assertions;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +34,9 @@ public class PositionServiceImplIT {
 
     @Autowired
     private PositionRepository repository;
+
+    @Autowired
+    private NameValidatorService nameValidatorService;
 
     @Test
     void findAll_workingTest(){
@@ -117,6 +121,36 @@ public class PositionServiceImplIT {
         //then
         assertEquals("Position with name " + name + " already exists", exception.getMessage());
         assertTrue(repository.existsByName(name));
+    }
+
+    @Test
+    void createPosition_nameToUpperCaseValidationTest(){
+        //given
+        String givenName = "manager";
+        String expectedName = "MANAGER";
+
+        CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(givenName).build();
+
+        //when
+        ResponsePositionDTO serviceResponse = service.createPosition(createPositionDTO);
+
+        //then
+        assertEquals(expectedName,serviceResponse.name());
+    }
+
+    @Test
+    void createPosition_illegalCharsInNameThrowsException(){
+        //given
+        String name = "!@#$%^&*(){}";
+
+        CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(name).build();
+
+        //when
+       ValidationException exception =
+                assertThrows(ValidationException.class, () -> service.createPosition(createPositionDTO));
+
+        //then
+        assertEquals("Name cannot contains illegal chars", exception.getMessage());
     }
 
     @Test

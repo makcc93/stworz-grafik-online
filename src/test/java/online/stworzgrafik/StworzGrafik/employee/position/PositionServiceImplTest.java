@@ -11,6 +11,8 @@ import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +39,9 @@ class PositionServiceImplTest {
 
     @Mock
     private PositionBuilder positionBuilder;
+
+    @Mock
+    private NameValidatorService nameValidatorService;
 
     @Test
     void findAll_workingTest(){
@@ -141,6 +146,8 @@ class PositionServiceImplTest {
         Position position = new TestPositionBuilder().withName(name).withDescription(description).build();
         when(positionBuilder.createPosition(any(),any())).thenReturn(position);
 
+        when(nameValidatorService.validate(name, ObjectType.POSITION)).thenReturn(name);
+
         ResponsePositionDTO responsePositionDTO = new TestResponsePositionDTO().withName(name).withDescription(description).build();
         when(positionMapper.toResponsePositionDTO(position)).thenReturn(responsePositionDTO);
 
@@ -205,6 +212,8 @@ class PositionServiceImplTest {
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).withDescription(newDescription).build();
 
         when(positionRepository.findById(id)).thenReturn(Optional.ofNullable(position));
+
+        when(nameValidatorService.validate(newName, ObjectType.POSITION)).thenReturn(newName);
 
         ResponsePositionDTO responsePositionDTO =
                 new TestResponsePositionDTO().withName(updatePositionDTO.name()).withDescription(updatePositionDTO.description()).withId(id).build();
