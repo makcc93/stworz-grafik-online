@@ -1,7 +1,5 @@
 package online.stworzgrafik.StworzGrafik.region;
 
-import online.stworzgrafik.StworzGrafik.validator.NameValidatorOLD;
-import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import org.springframework.stereotype.Component;
 
 @Component
