@@ -6,20 +6,27 @@ import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
+import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@Validated
 public class PositionServiceImpl implements PositionService{
     private final PositionRepository positionRepository;
     private final PositionMapper positionMapper;
     private final PositionBuilder positionBuilder;
+    private final NameValidatorService nameValidatorService;
 
-    public PositionServiceImpl(PositionRepository positionRepository, PositionMapper positionMapper, PositionBuilder positionBuilder) {
+    public PositionServiceImpl(PositionRepository positionRepository, PositionMapper positionMapper, PositionBuilder positionBuilder, NameValidatorService nameValidatorService) {
         this.positionRepository = positionRepository;
         this.positionMapper = positionMapper;
         this.positionBuilder = positionBuilder;
+        this.nameValidatorService = nameValidatorService;
     }
 
     @Override
@@ -31,7 +38,7 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO findById(Long id) {
-        ArgumentNullChecker.check(id, "Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
@@ -41,13 +48,15 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO) {
-        ArgumentNullChecker.check(createPositionDTO);
+        Objects.requireNonNull(createPositionDTO);
 
         if (positionRepository.existsByName(createPositionDTO.name())){
             throw new EntityExistsException("Position with name " + createPositionDTO.name() + " already exists");
         }
 
-        Position position = positionBuilder.createPosition(createPositionDTO.name(), createPositionDTO.description());
+        String validatedName = nameValidatorService.validate(createPositionDTO.name(), ObjectType.POSITION);
+
+        Position position = positionBuilder.createPosition(validatedName, createPositionDTO.description());
         Position savedPosition = positionRepository.save(position);
 
         return positionMapper.toResponsePositionDTO(savedPosition);
@@ -55,11 +64,16 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
-        ArgumentNullChecker.check(id, "Id");
-        ArgumentNullChecker.check(updatePositionDTO);
+        Objects.requireNonNull(id, "Id cannot be null");
+        Objects.requireNonNull(updatePositionDTO);
 
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
+
+        if (updatePositionDTO.name() != null){
+            String validatedName = nameValidatorService.validate(updatePositionDTO.name(), ObjectType.POSITION);
+            position.setName(validatedName);
+        }
 
         positionMapper.updatePosition(updatePositionDTO,position);
 
@@ -68,7 +82,7 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public void deletePosition(Long id) {
-        ArgumentNullChecker.check(id, "Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         if (!positionRepository.existsById(id)){
             throw new EntityNotFoundException("Position with id " + id + " does not exist");
@@ -79,14 +93,14 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public boolean exists(Long id) {
-        ArgumentNullChecker.check(id,"Id");
+        Objects.requireNonNull(id,"Id cannot be null");
 
         return positionRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        ArgumentNullChecker.check(name,"Name");
+        Objects.requireNonNull(name,"Name cannot be null");
 
         return positionRepository.existsByName(name);
     }
