@@ -226,8 +226,9 @@ class StoreControllerTest {
 
         String storeNameBeforeUpdate = store.getName();
 
+        String updatedStoreName = "UpdatedStoreName";
         UpdateStoreDTO updateStoreDTO = new UpdateStoreDTO(
-                "UpdatedStoreName",
+                updatedStoreName,
                 null,
                 null,
                 store.getBranch().getId(),
@@ -247,7 +248,7 @@ class StoreControllerTest {
         //then
         ResponseStoreDTO updatedStore = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseStoreDTO.class);
 
-        assertEquals("UpdatedStoreName",updatedStore.name());
+        assertEquals(updatedStoreName,updatedStore.name());
 
         assertNotEquals(storeNameBeforeUpdate,updatedStore.name());
 

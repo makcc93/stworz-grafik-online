@@ -1,16 +1,13 @@
 package online.stworzgrafik.StworzGrafik.employee.position.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestCreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
-import online.stworzgrafik.StworzGrafik.employee.position.Position;
+import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,18 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
@@ -159,5 +151,92 @@ class PositionControllerTest {
 
         //then
         assertEquals("Entity with this name already exist", mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void createPosition_dtoIsNullThrowsException() throws Exception{
+        //given
+        CreatePositionDTO createPositionDTO = null;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/api/positions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(createPositionDTO)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        //then
+        assertEquals("Request body is missing or json is incorrect", mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void updatePosition_workingTest() throws Exception{
+        //given
+        String oldName = "OLDNAME";
+        CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(oldName).build();
+        ResponsePositionDTO position = service.createPosition(createPositionDTO);
+
+        Long originalEntityId = position.id();
+
+        String newName = "NEWNAME";
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).build();
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(patch("/api/positions/" + originalEntityId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updatePositionDTO)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ResponsePositionDTO responsePositionDTO = mapper.readValue(mvcResult.getResponse().getContentAsString(), ResponsePositionDTO.class);
+
+        //then
+        assertEquals(newName,responsePositionDTO.name());
+        assertTrue(service.exists(originalEntityId));
+        assertFalse(service.exists(oldName));
+    }
+
+    @Test
+    void updatePosition_tooLongNameThrowsException() throws Exception {
+        //given
+        String oldName = "OLDNAME";
+        CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(oldName).build();
+        ResponsePositionDTO position = service.createPosition(createPositionDTO);
+
+        Long originalEntityId = position.id();
+
+        String newName = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).build();
+
+        //when
+        mockMvc.perform(patch("/api/positions/" + originalEntityId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updatePositionDTO)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        //then
+    }
+
+    @Test
+    void updatePosition_cannotFindEntityByIdThrowsException() throws Exception{
+        //given
+        Long randomId = 1234L;
+
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
+
+        //when
+        mockMvc.perform(patch("/api/positions/" + randomId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(updatePositionDTO)))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+
+        //then
     }
 }

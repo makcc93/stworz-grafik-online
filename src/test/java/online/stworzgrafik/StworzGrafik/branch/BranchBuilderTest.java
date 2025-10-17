@@ -1,12 +1,12 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
-import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BranchBuilderTest {
 
@@ -31,7 +31,4 @@ class BranchBuilderTest {
         //then
         assertDoesNotThrow(TestBranchBuilder::new);
     }
-    //w pierwszej kolejnosci zrob:
-    // 1: usun wszytskie walidacje w dto (zostaw @notnull, @notblank), builderach -> przenies calosc do serviceImpl tam ma byc sprwadanie
-    // 2: potem kontynuuj budowanie kolejnych NameValidatorStategy -> na razie masz BranchNameValidator, a potrzeba kolejne
 }
