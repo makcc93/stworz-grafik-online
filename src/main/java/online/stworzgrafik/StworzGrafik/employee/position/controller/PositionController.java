@@ -1,9 +1,12 @@
 package online.stworzgrafik.StworzGrafik.employee.position.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +34,19 @@ public class PositionController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponsePositionDTO> createPosition(@RequestBody CreatePositionDTO createPositionDTO){
+    public ResponseEntity<ResponsePositionDTO> createPosition(@Valid @RequestBody CreatePositionDTO createPositionDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createPosition(createPositionDTO));
     }
 
-    @PatchMapping("/api/positions/{id}")
-    public ResponseEntity<ResponsePositionDTO> updatePosition(@PathVariable Long id, @RequestBody UpdatePositionDTO updatePositionDTO){
+    @PatchMapping("/{id}")
+    public ResponseEntity<ResponsePositionDTO> updatePosition(@PathVariable Long id, @Valid @RequestBody UpdatePositionDTO updatePositionDTO){
         return ResponseEntity.ok(service.updatePosition(id,updatePositionDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<HttpStatus> deletePosition(@PathVariable Long id){
+        service.deletePosition(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
