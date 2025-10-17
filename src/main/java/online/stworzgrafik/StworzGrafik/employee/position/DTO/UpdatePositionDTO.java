@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public record UpdatePositionDTO(
         @NotBlank(message = "Name is required")
-        @Size(min = 3, max = 50, message = "Region name must be between three and fifty chars")
+        @Size(min = 3, max = 50, message = "Position name must be between three and fifty chars")
         String name,
 
         @Nullable

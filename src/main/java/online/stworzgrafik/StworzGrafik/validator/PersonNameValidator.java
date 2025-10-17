@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PersonNameValidator implements NameValidatorStrategy {
-
     @Override
     public String validate(String name) {
         if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")){
