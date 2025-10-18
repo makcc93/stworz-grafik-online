@@ -239,4 +239,60 @@ class PositionControllerTest {
 
         //then
     }
+
+    @Test
+    void updatePosition_dtoIsNullThrowsException() throws Exception{
+        //given
+        Long randomId = 1112233L;
+        UpdatePositionDTO updatePositionDTO = null;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(patch("/api/positions/" + randomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updatePositionDTO)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        //then
+        assertEquals("Request body is missing or json is incorrect",mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void deletePosition_workingTest() throws Exception{
+        //given
+        CreatePositionDTO firstDto = new TestCreatePositionDTO().withName("FIRST").build();
+        ResponsePositionDTO firstPosition = service.createPosition(firstDto);
+
+        CreatePositionDTO secondDto = new TestCreatePositionDTO().withName("SECOND").build();
+        ResponsePositionDTO secondPosition = service.createPosition(secondDto);
+
+
+        Long firstId = firstPosition.id();
+        Long secondId = secondPosition.id();
+
+        //when
+        mockMvc.perform(delete("/api/positions/" + secondId))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        //then
+        assertTrue(service.exists(firstId));
+        assertFalse(service.exists(secondId));
+    }
+
+    @Test
+    void deletePosition_entityToDeleteNotFoundThrowsException() throws Exception{
+        //given
+        Long randomId = 12345L;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(delete("/api/positions/" + randomId))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        //then
+        assertEquals("Position with id " + randomId + " does not exist",mvcResult.getResponse().getContentAsString());
+    }
 }

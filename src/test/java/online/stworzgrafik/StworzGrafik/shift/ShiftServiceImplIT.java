@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.TestShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
@@ -105,7 +106,7 @@ class ShiftServiceImplIT {
         ShiftHoursDTO shiftHoursDTO = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> shiftService.create(shiftHoursDTO));
+        assertThrows(ConstraintViolationException.class,() -> shiftService.create(shiftHoursDTO));
 
         //then
     }

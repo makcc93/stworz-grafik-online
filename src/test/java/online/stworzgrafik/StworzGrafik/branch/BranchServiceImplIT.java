@@ -219,11 +219,9 @@ class BranchServiceImplIT {
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> branchService.updateBranch(nullId, updateBranchDTO));
+        assertThrows(ConstraintViolationException.class, () -> branchService.updateBranch(nullId, updateBranchDTO));
 
         //then
-        assertEquals("Id cannot be null", exception.getMessage());
     }
 
     @Test
