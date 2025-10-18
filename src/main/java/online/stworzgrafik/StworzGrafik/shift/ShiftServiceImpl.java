@@ -1,10 +1,8 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
-import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 

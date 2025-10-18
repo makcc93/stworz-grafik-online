@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
-import online.stworzgrafik.StworzGrafik.exception.ArgumentNullChecker;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;

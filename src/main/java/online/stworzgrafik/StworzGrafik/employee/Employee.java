@@ -5,6 +5,8 @@ import lombok.*;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDateTime;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,4 +32,33 @@ public class Employee {
     @ManyToOne
     @JoinColumn(name = "position_id", nullable = false)
     private Position position;
+
+    private boolean enable;
+
+    private boolean canOperateCheckout;
+
+    private boolean canOperateCredit;
+
+    private boolean canOpenCloseStore;
+
+    private boolean seller;
+
+    private boolean manager;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    //czas przeniesc to na mysql, nowe pola klasy
+
+    @PrePersist
+    void onCreate(){
+        enable = true;
+        canOperateCheckout = false;
+        canOperateCredit = false;
+        canOpenCloseStore = false;
+        seller = false;
+        manager = false;
+        createdAt = LocalDateTime.now();
+    }
 }
