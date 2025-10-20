@@ -6,8 +6,7 @@ public record ResponseEmployeeDTO(
         @NotNull Long id,
         @NotNull String firstName,
         @NotNull String lastName,
+        @NotNull Long sap,
         @NotNull Long storeId,
-        @NotNull Long positionId,
-        @NotNull boolean enable
-) {
-}
+        @NotNull Long positionId
+) {}
