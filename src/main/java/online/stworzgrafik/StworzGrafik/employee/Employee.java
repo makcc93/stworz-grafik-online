@@ -45,11 +45,11 @@ public class Employee {
 
     private boolean manager;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    //czas przeniesc to na mysql, nowe pola klasy
 
     @PrePersist
     void onCreate(){
@@ -60,5 +60,10 @@ public class Employee {
         seller = false;
         manager = false;
         createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate(){
+        updatedAt = LocalDateTime.now();
     }
 }
