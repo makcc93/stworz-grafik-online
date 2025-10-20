@@ -5,5 +5,6 @@ public enum ObjectType {
     POSITION,
     BRANCH,
     REGION,
-    STORE
+    STORE,
+    SAP
 }
