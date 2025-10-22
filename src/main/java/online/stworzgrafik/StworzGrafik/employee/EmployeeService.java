@@ -5,11 +5,9 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
-@Validated
 @Service
 public interface EmployeeService {
     ResponseEmployeeDTO createEmployee(@NotNull CreateEmployeeDTO createEmployeeDTO);
