@@ -11,7 +11,9 @@ public record UpdateEmployeeDTO(
         @Size(min = 3, max = 50, message = "Employee last name must be between three and fifty chars")
         String lastName,
 
+        @Size(min = 8, max = 8, message = "Sap number must equals eight chars")
         Long sap,
+
         Long storeId,
         Long positionId,
         boolean enable,

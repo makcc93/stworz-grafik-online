@@ -13,7 +13,8 @@ public record CreateEmployeeDTO(
         @Size(min = 3, max = 50, message = "Employee last name must be between three and fifty chars")
         String lastName,
 
-        @NotNull
+        @NotBlank(message = "Sap is required")
+        @Size(min = 8, max = 8, message = "Sap number must equals eight chars")
         Long sap,
 
         @NotNull
