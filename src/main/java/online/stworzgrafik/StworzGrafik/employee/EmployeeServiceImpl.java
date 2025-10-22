@@ -7,16 +7,18 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreRepository;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Objects;
 
+@Service
+@Validated
 public class EmployeeServiceImpl implements EmployeeService{
     private final EmployeeRepository employeeRepository;
     private final EmployeeBuilder employeeBuilder;
@@ -38,11 +40,12 @@ public class EmployeeServiceImpl implements EmployeeService{
     public ResponseEmployeeDTO createEmployee(CreateEmployeeDTO createEmployeeDTO) {
         Objects.requireNonNull(createEmployeeDTO);
 
-        ifEntityAlreadyExists(createEmployeeDTO);
+        if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
+            throw new EntityExistsException("Employee with sap " + createEmployeeDTO.sap() + " already exists");
+        }
 
         String validatedFirstName = nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON);
         String validatedLastName = nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON);
-        Long validatedSap = Long.valueOf(nameValidatorService.validate(createEmployeeDTO.sap().toString(), ObjectType.SAP));
 
         Store store = storeRepository.findById(createEmployeeDTO.storeId())
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + createEmployeeDTO.storeId()));
@@ -52,7 +55,7 @@ public class EmployeeServiceImpl implements EmployeeService{
         Employee employee = employeeBuilder.createEmployee(
                 validatedFirstName,
                 validatedLastName,
-                validatedSap,
+                createEmployeeDTO.sap(),
                 store,
                 position
         );
@@ -97,13 +100,4 @@ public class EmployeeServiceImpl implements EmployeeService{
         return false;
     }
 
-    private void ifEntityAlreadyExists(CreateEmployeeDTO createEmployeeDTO){
-        if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
-            throw new EntityExistsException("Employee with sap " + createEmployeeDTO.sap() + " already exists");
-        }
-
-        if (employeeRepository.existsByLastName(createEmployeeDTO.lastName())){
-            throw new EntityExistsException("Employee with last name " + createEmployeeDTO.lastName() + " already exists");
-        }
-    };
 }
