@@ -5,7 +5,6 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestCreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestResponseEmployeeDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
@@ -16,17 +15,16 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,11 +63,9 @@ class EmployeeServiceImplTest {
                 .build();
 
         when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
-        when(employeeRepository.existsByLastName(createEmployeeDTO.lastName())).thenReturn(false);
 
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
-        when((nameValidatorService.validate(createEmployeeDTO.sap().toString(), ObjectType.SAP))).thenReturn(sap.toString());
 
         Store store = new TestStoreBuilder().build();
         when(storeRepository.findById(createEmployeeDTO.storeId())).thenReturn(Optional.ofNullable(store));
@@ -141,7 +137,6 @@ class EmployeeServiceImplTest {
         //then
         assertEquals("Employee with sap " + sap + " already exists", exception.getMessage());
 
-        verify(employeeRepository,never()).existsByLastName(any());
         verify(nameValidatorService,never()).validate(any(),any());
         verify(storeRepository,never()).findById(any(Long.class));
         verify(positionRepository,never()).findById(any(Long.class));
@@ -149,32 +144,6 @@ class EmployeeServiceImplTest {
         verify(employeeRepository,never()).save(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
 
-    }
-
-    @Test
-    void createEmployee_employeeWithThisLastNameAlreadyExistsThrowsException(){
-        //given
-        String lastName = "KNOWN LAST NAME";
-
-        CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().withLastName(lastName).build();
-
-        when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
-
-        when(employeeRepository.existsByLastName(createEmployeeDTO.lastName())).thenReturn(true);
-
-        //when
-        EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> employeeService.createEmployee(createEmployeeDTO));
-
-        //then
-        assertEquals("Employee with last name " + lastName + " already exists", exception.getMessage());
-
-        verify(nameValidatorService,never()).validate(any(),any());
-        verify(storeRepository,never()).findById(any(Long.class));
-        verify(positionRepository,never()).findById(any(Long.class));
-        verify(employeeBuilder,never()).createEmployee(any(),any(),any(),any(),any());
-        verify(employeeRepository,never()).save(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
 
     @Test
@@ -186,11 +155,9 @@ class EmployeeServiceImplTest {
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().build();
 
         when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
-        when(employeeRepository.existsByLastName(createEmployeeDTO.lastName())).thenReturn(false);
 
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
-        when((nameValidatorService.validate(createEmployeeDTO.sap().toString(), ObjectType.SAP))).thenReturn(sap.toString());
 
         when(storeRepository.findById(createEmployeeDTO.storeId())).thenReturn(Optional.empty());
 
@@ -215,11 +182,9 @@ class EmployeeServiceImplTest {
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().build();
 
         when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
-        when(employeeRepository.existsByLastName(createEmployeeDTO.lastName())).thenReturn(false);
 
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
-        when((nameValidatorService.validate(createEmployeeDTO.sap().toString(), ObjectType.SAP))).thenReturn(sap.toString());
 
         Store store = new TestStoreBuilder().build();
         when(storeRepository.findById(createEmployeeDTO.storeId())).thenReturn(Optional.ofNullable(store));
@@ -236,6 +201,4 @@ class EmployeeServiceImplTest {
         verify(employeeRepository,never()).save(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
-
-
 }
