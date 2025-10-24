@@ -5,10 +5,12 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestCreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestUpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -198,6 +200,96 @@ class EmployeeServiceImplTest {
         //then
         assertEquals("Cannot find position by id " + createEmployeeDTO.positionId(),exception.getMessage());
         verify(employeeBuilder,never()).createEmployee(any(),any(),any(),any(),any());
+        verify(employeeRepository,never()).save(any());
+        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
+    }
+
+    @Test
+    void updateEmployee_workingTest(){
+        //given
+        Long id = 1L;
+
+        String originalFirstName = "ORIGINAL FIRST NAME";
+        String originalLastName = "ORIGINAL LAST NAME";
+        Employee employee = new TestEmployeeBuilder().withFirstName(originalFirstName).withLastName(originalLastName).build();
+
+        String newFirstName = "NEW FIRST NAME";
+        String newLastName = "NEW LAST NAME";
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().withFirstName(newFirstName).withLastName(newLastName).build();
+
+        when(employeeRepository.findById(id)).thenReturn(Optional.ofNullable(employee));
+
+        when(nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON)).thenReturn(newFirstName);
+        when(nameValidatorService.validate(updateEmployeeDTO.lastName(),ObjectType.PERSON)).thenReturn(newLastName);
+
+        when(employeeRepository.save(employee)).thenReturn(employee);
+
+        ResponseEmployeeDTO responseEmployeeDTO = new TestResponseEmployeeDTO().withFirstName(newFirstName).withLastName(newLastName).build();
+        when(employeeMapper.toResponseEmployeeDTO(employee)).thenReturn(responseEmployeeDTO);
+
+        //when
+        ResponseEmployeeDTO serviceResponse = employeeService.updateEmployee(id, updateEmployeeDTO);
+
+        //then
+        assertEquals(newFirstName,serviceResponse.firstName());
+        assertEquals(newLastName,serviceResponse.lastName());
+        assertEquals(employee.getSap(),serviceResponse.sap());
+    }
+
+    @Test
+    void updateEmployee_idIsNullThrowsException(){
+        //given
+        Long id = null;
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.updateEmployee(id, updateEmployeeDTO));
+
+        //then
+        assertEquals("Id cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).findById(id);
+        verify(nameValidatorService,never()).validate(any(),any());
+        verify(employeeMapper,never()).updateEmployee(any(),any());
+        verify(employeeRepository,never()).save(any());
+        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
+    }
+
+    @Test
+    void updateEmployee_dtoIsNullThrowsException(){
+        //given
+        Long id = 1L;
+        UpdateEmployeeDTO updateEmployeeDTO = null;
+
+        //when
+        assertThrows(NullPointerException.class, () -> employeeService.updateEmployee(id, updateEmployeeDTO));
+
+        //then
+        verify(employeeRepository,never()).findById(id);
+        verify(nameValidatorService,never()).validate(any(),any());
+        verify(employeeMapper,never()).updateEmployee(any(),any());
+        verify(employeeRepository,never()).save(any());
+        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
+    }
+
+    @Test
+    void updateEmployee_cannotFindEntityByIdThrowsException(){
+        //given
+        Long id = 1234L;
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
+
+        when(employeeRepository.findById(id)).thenReturn(Optional.empty());
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.updateEmployee(id, updateEmployeeDTO));
+
+        //then
+        assertEquals("Cannot find employee by id " + id, exception.getMessage());
+
+        verify(nameValidatorService,never()).validate(any(),any());
+        verify(employeeMapper,never()).updateEmployee(any(),any());
         verify(employeeRepository,never()).save(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
