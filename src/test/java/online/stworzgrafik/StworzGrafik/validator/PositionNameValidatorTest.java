@@ -1,15 +1,10 @@
 package online.stworzgrafik.StworzGrafik.validator;
 
 import jakarta.validation.ValidationException;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
-import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
-import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,7 +61,7 @@ class PositionNameValidatorTest {
                 assertThrows(ValidationException.class, () -> positionNameValidator.validate(name));
 
         //then
-        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+        assertEquals("Name cannot contain illegal chars", exception.getMessage());
     }
 
     @Test

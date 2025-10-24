@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.position;
 
-import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

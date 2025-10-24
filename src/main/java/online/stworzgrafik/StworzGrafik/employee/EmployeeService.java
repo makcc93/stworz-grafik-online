@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public interface EmployeeService {
     ResponseEmployeeDTO createEmployee(@NotNull CreateEmployeeDTO createEmployeeDTO);
-    ResponseEmployeeDTO update(@NotNull UpdateEmployeeDTO updateEmployeeDTO);
+    ResponseEmployeeDTO updateEmployee(@NotNull Long id, @NotNull UpdateEmployeeDTO updateEmployeeDTO);
     void deleteEmployee(@NotNull Long id);
     List<ResponseEmployeeDTO> findAll();
     ResponseEmployeeDTO findById(@NotNull Long id);

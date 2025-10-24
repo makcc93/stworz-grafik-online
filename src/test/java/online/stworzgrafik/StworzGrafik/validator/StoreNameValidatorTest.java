@@ -35,7 +35,7 @@ class StoreNameValidatorTest {
                 assertThrows(ValidationException.class, () -> storeNameValidator.validate(name));
 
         //then
-        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+        assertEquals("Name cannot contain illegal chars", exception.getMessage());
     }
 
     @Test

@@ -150,7 +150,7 @@ public class PositionServiceImplIT {
                 assertThrows(ValidationException.class, () -> service.createPosition(createPositionDTO));
 
         //then
-        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+        assertEquals("Name cannot contain illegal chars", exception.getMessage());
     }
 
     @Test

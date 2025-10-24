@@ -176,7 +176,7 @@ class BranchServiceImplIT {
                 assertThrows(ValidationException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
-        assertEquals("Name cannot contains illegal chars", exception.getMessage());
+        assertEquals("Name cannot contain illegal chars", exception.getMessage());
     }
 
     @Test
