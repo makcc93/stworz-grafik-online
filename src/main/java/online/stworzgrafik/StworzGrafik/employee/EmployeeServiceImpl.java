@@ -66,8 +66,30 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public ResponseEmployeeDTO update(UpdateEmployeeDTO updateEmployeeDTO) {
-        return null;
+    public ResponseEmployeeDTO updateEmployee(Long id, UpdateEmployeeDTO updateEmployeeDTO) {
+        Objects.requireNonNull(id,"Id cannot be null");
+        Objects.requireNonNull(updateEmployeeDTO);
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
+
+        if (updateEmployeeDTO.firstName() != null){
+            String validatedFirstName = nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON);
+
+            employee.setFirstName(validatedFirstName);
+        }
+
+        if (updateEmployeeDTO.lastName() != null){
+            String validatedLastName = nameValidatorService.validate(updateEmployeeDTO.lastName(),ObjectType.PERSON);
+
+            employee.setFirstName(validatedLastName);
+        }
+
+        employeeMapper.updateEmployee(updateEmployeeDTO,employee);
+
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        return employeeMapper.toResponseEmployeeDTO(savedEmployee);
     }
 
     @Override
