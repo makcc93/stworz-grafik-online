@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -10,11 +9,13 @@ import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestCreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestEmployeeBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestUpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
 import online.stworzgrafik.StworzGrafik.region.Region;
@@ -25,8 +26,6 @@ import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,7 +124,7 @@ public class EmployeeServiceImplIT {
         ValidationException exceptionLastName = assertThrows(ValidationException.class, () -> employeeService.createEmployee(invalidLastNameDTO));
 
         //then
-        assertEquals("Name cannot contains illegal chars",exceptionFistName.getMessage());
+        assertEquals("Name cannot contain illegal chars",exceptionFistName.getMessage());
         assertEquals(exceptionFistName.getMessage(), exceptionLastName.getMessage());
     }
 
@@ -157,6 +156,87 @@ public class EmployeeServiceImplIT {
         //then
         assertEquals("Cannot find position by id " + randomPositionId, exceptionForPosition.getMessage());
         assertEquals("Cannot find store by id " + randomStoreId, exceptionForStore.getMessage());
+    }
+
+    @Test
+    void updateEmployee_workingTest(){
+        //given
+        String originalFirstName = "ORIGINAL FIRST NAME";
+        String originalLastName = "ORIGINAL LAST NAME";
+
+        Store store = getDefaultSavedStore();
+        Position position = getDefaultSavedPosition();
+
+        Employee employee = new TestEmployeeBuilder()
+                .withFirstName(originalFirstName)
+                .withLastName(originalLastName)
+                .withStore(store)
+                .withPosition(position)
+                .build();
+        employeeRepository.save(employee);
+
+        Long id = employee.getId();
+
+        String updatedFirstName = "UPDATED FIRST NAME";
+        String updatedLastName = "UPDATED LAST NAME";
+        boolean updatedOpenCloseStore = false;
+        boolean updatedManager = false;
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO()
+                .withFirstName(updatedFirstName)
+                .withLastName(updatedLastName)
+                .withCanOpenCloseStore(updatedOpenCloseStore)
+                .withManager(updatedManager)
+                .build();
+
+        //when
+        ResponseEmployeeDTO serviceResponse = employeeService.updateEmployee(id, updateEmployeeDTO);
+
+        //then
+        assertEquals(updatedFirstName,serviceResponse.firstName());
+        assertEquals(updatedLastName,serviceResponse.lastName());
+        assertEquals(updatedOpenCloseStore,serviceResponse.canOpenCloseStore());
+        assertEquals(updatedManager,serviceResponse.manager());
+
+        assertEquals(employee.getId(),serviceResponse.id());
+        assertEquals(employee.getSap(),serviceResponse.sap());
+        assertEquals(employee.getPosition().getId(),serviceResponse.positionId());
+        assertEquals(employee.getStore().getId(),serviceResponse.storeId());
+        assertEquals(employee.isCanOperateCheckout(),serviceResponse.canOperateCheckout());
+        assertEquals(employee.isCanOperateCredit(),serviceResponse.canOperateCredit());
+        assertEquals(employee.isSeller(),serviceResponse.seller());
+    }
+
+    @Test
+    void updateEmployee_entityDoesNotExistThrowsException(){
+        //given
+        Long randomId = 12345L;
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.updateEmployee(randomId, updateEmployeeDTO));
+
+        //then
+        assertEquals("Cannot find employee by id " + randomId, exception.getMessage());
+    }
+
+    @Test
+    void updateEmployee_invalidNamesIsDtoThrowsException(){
+        //given
+        Store store = getDefaultSavedStore();
+        Position position = getDefaultSavedPosition();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+
+        String invalidFirstName = "!@#$%^&*()";
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().withFirstName(invalidFirstName).build();
+
+        //when
+        ValidationException exception =
+                assertThrows(ValidationException.class, () -> employeeService.updateEmployee(employee.getId(), updateEmployeeDTO));
+
+        //then
+        assertEquals("Name cannot contain illegal chars", exception.getMessage());
     }
 
     private Store getDefaultSavedStore(){
