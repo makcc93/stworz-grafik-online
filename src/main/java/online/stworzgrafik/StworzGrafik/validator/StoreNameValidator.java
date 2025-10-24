@@ -8,7 +8,7 @@ public class StoreNameValidator implements NameValidatorStrategy{
     @Override
     public String validate(String name) {
         if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")){
-            throw new ValidationException("Name cannot contains illegal chars");
+            throw new ValidationException("Name cannot contain illegal chars");
         }
 
         return name.strip().toUpperCase();

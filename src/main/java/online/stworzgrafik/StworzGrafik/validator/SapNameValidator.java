@@ -8,7 +8,7 @@ public class SapNameValidator implements NameValidatorStrategy{
     @Override
     public String validate(String name) {
         if (!name.matches("^[0-9\\t\\n\\s ]+$")){
-            throw new ValidationException("Sap number cannot contains illegal chars");
+            throw new ValidationException("Sap number cannot contain illegal chars");
         }
 
         return name.strip().replaceAll("\\s","");
