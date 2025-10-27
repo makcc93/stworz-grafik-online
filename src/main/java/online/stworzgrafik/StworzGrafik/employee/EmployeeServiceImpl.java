@@ -94,17 +94,30 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public void deleteEmployee(Long id) {
+        Objects.requireNonNull(id,"Id cannot be null");
 
+        if (!employeeRepository.existsById(id)){
+            throw new EntityNotFoundException("Cannot find employee by id " + id);
+        }
+
+        employeeRepository.deleteById(id);
     }
 
     @Override
     public List<ResponseEmployeeDTO> findAll() {
-        return List.of();
+        return employeeRepository.findAll().stream()
+                .map(employeeMapper::toResponseEmployeeDTO)
+                .toList();
     }
 
     @Override
     public ResponseEmployeeDTO findById(Long id) {
-        return null;
+        Objects.requireNonNull(id,"Id cannot be null");
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
+
+        return employeeMapper.toResponseEmployeeDTO(employee);
     }
 
     @Override
