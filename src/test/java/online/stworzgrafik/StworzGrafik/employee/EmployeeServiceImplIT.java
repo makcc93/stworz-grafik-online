@@ -9,6 +9,7 @@ import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestCreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestEmployeeBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestUpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
@@ -26,6 +27,8 @@ import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -237,6 +240,82 @@ public class EmployeeServiceImplIT {
 
         //then
         assertEquals("Name cannot contain illegal chars", exception.getMessage());
+    }
+
+    @Test
+    void deleteEmployee_workingTest(){
+        //given
+        Store store = getDefaultSavedStore();
+        Position position = getDefaultSavedPosition();
+
+        String stay = "STAY";
+        String delete = "DELETE";
+
+        Employee employeeToStay = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(stay).build();
+        employeeRepository.save(employeeToStay);
+
+        Employee employeeToDelete = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(delete).build();
+        employeeRepository.save(employeeToDelete);
+
+        Long employeeToStayId = employeeToStay.getId();
+        Long employeeToDeleteId = employeeToDelete.getId();
+
+        //when
+        employeeService.deleteEmployee(employeeToDeleteId);
+
+        //then
+        assertTrue(employeeRepository.existsById(employeeToStayId));
+
+        assertFalse(employeeRepository.existsById(employeeToDeleteId));
+    }
+
+    @Test
+    void deleteEmployee_employeeWithIdDoesNotExistThrowsException(){
+        //given
+        Long randomId = 1234L;
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(randomId));
+
+        //then
+        assertEquals("Cannot find employee by id " + randomId, exception.getMessage());
+    }
+
+    @Test
+    void findAll_workingTest(){
+        //given
+        Store store = getDefaultSavedStore();
+        Position position = getDefaultSavedPosition();
+
+        Employee first = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("FIRST").build();
+        Employee second = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("SECOND").build();
+        Employee third = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("THIRD").build();
+        employeeRepository.saveAll(List.of(first,second,third));
+
+        ResponseEmployeeDTO firstResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(first).build();
+        ResponseEmployeeDTO secondResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(second).build();
+        ResponseEmployeeDTO thirdResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(third).build();
+        List<ResponseEmployeeDTO> employeeDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
+
+        //when
+        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+
+        //then
+        assertEquals(3,serviceResponse.size());
+        assertTrue(serviceResponse.containsAll(employeeDTOs));
+    }
+
+    @Test
+    void findAll_emptyListDoesNotThrowException(){
+        //given
+
+        //when
+        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+
+        //then
+        assertEquals(0, serviceResponse.size());
+        assertDoesNotThrow(() -> employeeService.findAll());
     }
 
     private Store getDefaultSavedStore(){
