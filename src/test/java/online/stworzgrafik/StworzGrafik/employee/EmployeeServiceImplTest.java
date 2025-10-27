@@ -23,10 +23,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -291,6 +292,159 @@ class EmployeeServiceImplTest {
         verify(nameValidatorService,never()).validate(any(),any());
         verify(employeeMapper,never()).updateEmployee(any(),any());
         verify(employeeRepository,never()).save(any());
+        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
+    }
+
+    @Test
+    void deleteEmployee_workingTest(){
+        //given
+        Long id = 123L;
+
+        when(employeeRepository.existsById(id)).thenReturn(true);
+
+        //when
+        employeeService.deleteEmployee(id);
+
+        //then
+        verify(employeeRepository,times(1)).deleteById(id);
+        verify(employeeRepository,times(1)).existsById(id);
+    }
+
+    @Test
+    void deleteEmployee_employeeByIdDoesNotExistThrowsException(){
+        //given
+        Long id = 1L;
+
+        when(employeeRepository.existsById(id)).thenReturn(false);
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(id));
+
+        //then
+        assertEquals("Cannot find employee by id " + id, exception.getMessage());
+
+        verify(employeeRepository,times(1)).existsById(id);
+        verify(employeeRepository,never()).deleteById(id);
+    }
+
+    @Test
+    void deleteEmployee_idIsNullThrowsException(){
+        //given
+        Long id = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.deleteEmployee(id));
+
+        //then
+        assertEquals("Id cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).existsById(any());
+        verify(employeeRepository,never()).deleteById(any());
+    }
+
+    @Test
+    void findAll_workingTest(){
+        //given
+        String first = "FIRST";
+        String second = "SECOND";
+        String third = "THIRD";
+
+        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(first).build();
+        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(second).build();
+        Employee thirdEmployee = new TestEmployeeBuilder().withFirstName(third).build();
+        List<Employee> employees = List.of(firstEmployee,secondEmployee,thirdEmployee);
+
+        when(employeeRepository.findAll()).thenReturn(employees);
+
+        ResponseEmployeeDTO firstResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(firstEmployee).build();
+        ResponseEmployeeDTO secondResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(secondEmployee).build();
+        ResponseEmployeeDTO thirdResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(thirdEmployee).build();
+
+        when(employeeMapper.toResponseEmployeeDTO(firstEmployee)).thenReturn(firstResponseEmployeeDTO);
+        when(employeeMapper.toResponseEmployeeDTO(secondEmployee)).thenReturn(secondResponseEmployeeDTO);
+        when(employeeMapper.toResponseEmployeeDTO(thirdEmployee)).thenReturn(thirdResponseEmployeeDTO);
+
+        List<ResponseEmployeeDTO> employeesDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
+
+        //when
+        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+
+        //then
+        assertTrue(serviceResponse.containsAll(employeesDTOs));
+    }
+
+    @Test
+    void findAll_emptyListDoesNotThrowException(){
+        //given
+
+        //when
+        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+
+        //then
+        assertEquals(0, serviceResponse.size());
+        assertDoesNotThrow(() -> employeeService.findAll());
+    }
+
+    @Test
+    void findById_workingTest(){
+        //given
+        Long id = 6988L;
+        Employee employee = new TestEmployeeBuilder().build();
+
+        when(employeeRepository.findById(id)).thenReturn(Optional.ofNullable(employee));
+
+        ResponseEmployeeDTO responseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(employee).build();
+        when(employeeMapper.toResponseEmployeeDTO(employee)).thenReturn(responseEmployeeDTO);
+
+        //when
+        ResponseEmployeeDTO serviceResponse = employeeService.findById(id);
+
+        //then
+        assertEquals(responseEmployeeDTO.firstName(), serviceResponse.firstName());
+        assertEquals(responseEmployeeDTO.lastName(),serviceResponse.lastName());
+        assertEquals(responseEmployeeDTO.sap(),serviceResponse.sap());
+        assertEquals(responseEmployeeDTO.storeId(),serviceResponse.storeId());
+        assertEquals(responseEmployeeDTO.positionId(),serviceResponse.positionId());
+        assertEquals(responseEmployeeDTO.canOperateCheckout(),serviceResponse.canOperateCheckout());
+        assertEquals(responseEmployeeDTO.canOperateCredit(),serviceResponse.canOperateCredit());
+        assertEquals(responseEmployeeDTO.canOpenCloseStore(),serviceResponse.canOpenCloseStore());
+        assertEquals(responseEmployeeDTO.seller(),serviceResponse.seller());
+        assertEquals(responseEmployeeDTO.manager(),serviceResponse.manager());
+        assertEquals(responseEmployeeDTO.createdAt(),serviceResponse.createdAt());
+        assertEquals(responseEmployeeDTO.updatedAt(),serviceResponse.updatedAt());
+    }
+
+    @Test
+    void findById_cannotFindEmployeeThrowsException(){
+        //given
+        Long randomId = 1234L;
+
+        when(employeeRepository.findById(randomId)).thenReturn(Optional.empty());
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.findById(randomId));
+
+        //then
+        assertEquals("Cannot find employee by id " + randomId, exception.getMessage());
+        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
+    }
+
+    @Test
+    void findById_idIsNullThrowsException(){
+        //given
+        Long id = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.findById(id));
+
+        //then
+        assertEquals("Id cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).findById(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
 }
