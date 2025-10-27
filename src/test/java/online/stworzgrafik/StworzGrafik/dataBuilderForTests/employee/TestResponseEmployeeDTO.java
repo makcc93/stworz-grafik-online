@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee;
 
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +20,25 @@ public class TestResponseEmployeeDTO {
     private boolean manager = true;
     private LocalDateTime createdAt = LocalDateTime.of(2000,1,1,14,0);
     private LocalDateTime updatedAt = LocalDateTime.of(2019,10,5,14,0);
+
+    public TestResponseEmployeeDTO fromEmployee(Employee employee){
+        this.id = employee.getId();
+        this.firstName = employee.getFirstName();
+        this.lastName = employee.getLastName();
+        this.sap = employee.getSap();
+        this.storeId = employee.getStore().getId();
+        this.positionId = employee.getPosition().getId();
+        this.enable = employee.isEnable();
+        this.canOperateCheckout = employee.isCanOperateCheckout();
+        this.canOperateCredit = employee.isCanOperateCredit();
+        this.canOpenCloseStore = employee.isCanOpenCloseStore();
+        this.seller = employee.isSeller();
+        this.manager = employee.isManager();
+        this.createdAt = employee.getCreatedAt();
+        this.updatedAt = employee.getUpdatedAt();
+
+        return this;
+    }
 
     public TestResponseEmployeeDTO withId(Long id){
         this.id = id;
