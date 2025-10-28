@@ -24,6 +24,7 @@ import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,21 +63,29 @@ public class EmployeeServiceImplIT {
     @Autowired
     private RegionRepository regionRepository;
 
+    private Store store;
+
+    private Position position;
+
+    @BeforeEach
+    void setUpStoreAndPosition(){
+        store = getDefaultSavedStore();
+        position = getDefaultSavedPosition();
+    }
+
     @Test
     void createEmployee_workingTest(){
         //given
         String firstName = "JOHN";
         String lastName = "SILVERHAND";
         Long sap = 2077L;
-        Store defaultSavedStore = getDefaultSavedStore();
-        Position defaultSavedPosition = getDefaultSavedPosition();
 
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO()
                 .withFirstName(firstName)
                 .withLastName(lastName)
                 .withSap(sap)
-                .withStoreId(defaultSavedStore.getId())
-                .withPositionId(defaultSavedPosition.getId())
+                .withStoreId(store.getId())
+                .withPositionId(position.getId())
                 .build();
 
 
@@ -94,9 +103,6 @@ public class EmployeeServiceImplIT {
     @Test
     void createEmployee_employeeWithThisSapAlreadyExistsThrowsException(){
         //given
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
-
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
         employeeRepository.save(employee);
 
@@ -134,9 +140,6 @@ public class EmployeeServiceImplIT {
     @Test
     void createEmployee_sapNumberLengthIsIncorrectThrowsException(){
         //given
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
-
         Long randomPositionId = 12345L;
         CreateEmployeeDTO withoutPositionDTO = new TestCreateEmployeeDTO()
                 .withPositionId(randomPositionId)
@@ -166,9 +169,6 @@ public class EmployeeServiceImplIT {
         //given
         String originalFirstName = "ORIGINAL FIRST NAME";
         String originalLastName = "ORIGINAL LAST NAME";
-
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
 
         Employee employee = new TestEmployeeBuilder()
                 .withFirstName(originalFirstName)
@@ -226,8 +226,6 @@ public class EmployeeServiceImplIT {
     @Test
     void updateEmployee_invalidNamesIsDtoThrowsException(){
         //given
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
         employeeRepository.save(employee);
 
@@ -245,9 +243,6 @@ public class EmployeeServiceImplIT {
     @Test
     void deleteEmployee_workingTest(){
         //given
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
-
         String stay = "STAY";
         String delete = "DELETE";
 
@@ -285,9 +280,6 @@ public class EmployeeServiceImplIT {
     @Test
     void findAll_workingTest(){
         //given
-        Store store = getDefaultSavedStore();
-        Position position = getDefaultSavedPosition();
-
         Employee first = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("FIRST").build();
         Employee second = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("SECOND").build();
         Employee third = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("THIRD").build();
@@ -316,6 +308,100 @@ public class EmployeeServiceImplIT {
         //then
         assertEquals(0, serviceResponse.size());
         assertDoesNotThrow(() -> employeeService.findAll());
+    }
+
+    @Test
+    void findById_workingTest(){
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+        Long id = employee.getId();
+
+        //when
+        ResponseEmployeeDTO serviceResponse = employeeService.findById(id);
+
+        //then
+        assertEquals(employee.getFirstName(), serviceResponse.firstName());
+        assertEquals(employee.getLastName(),serviceResponse.lastName());
+        assertEquals(employee.getSap(),serviceResponse.sap());
+        assertEquals(employee.getStore().getId(),serviceResponse.storeId());
+        assertEquals(employee.getPosition().getId(),serviceResponse.positionId());
+        assertEquals(employee.isCanOperateCheckout(),serviceResponse.canOperateCheckout());
+        assertEquals(employee.isCanOperateCredit(),serviceResponse.canOperateCredit());
+        assertEquals(employee.isCanOpenCloseStore(),serviceResponse.canOpenCloseStore());
+        assertEquals(employee.isSeller(),serviceResponse.seller());
+        assertEquals(employee.isManager(),serviceResponse.manager());
+        assertEquals(employee.getCreatedAt(),serviceResponse.createdAt());
+        assertEquals(employee.getUpdatedAt(),serviceResponse.updatedAt());
+    }
+
+    @Test
+    void findById_employeeWithThisIdDoesNotExistThrowsException(){
+        //given
+        Long id = 123456789L;
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.findById(id));
+
+        //then
+        assertEquals("Cannot find employee by id " + id, exception.getMessage());
+
+        assertFalse(employeeRepository.existsById(id));
+    }
+
+    @Test
+    void existsById_workingTest(){
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+
+        Long id = employee.getId();
+        Long randomId = 12345L;
+
+        //when
+        boolean serviceResponse = employeeService.existsById(id);
+        boolean shouldNotExist = employeeService.existsById(randomId);
+
+        //then
+        assertTrue(serviceResponse);
+        assertFalse(shouldNotExist);
+    }
+
+    @Test
+    void existsBySap_workingTest(){
+        //given
+        Long sap = 1230123L;
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).build();
+        employeeRepository.save(employee);
+
+        Long randomSap = 11111111L;
+
+        //when
+        boolean serviceResponse = employeeService.existsBySap(sap);
+        boolean shouldBeFalse = employeeService.existsBySap(randomSap);
+
+        //then
+        assertTrue(serviceResponse);
+        assertFalse(shouldBeFalse);
+    }
+
+    @Test
+    void existsByLastName_workingTest(){
+        //given
+        String lastName = "TEST-LAST-NAME";
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withLastName(lastName).build();
+        employeeRepository.save(employee);
+
+        String randomLastName = "RANDOM";
+
+        //when
+        boolean serviceResponse = employeeService.existsByLastName(lastName);
+        boolean shouldBeFalse = employeeService.existsByLastName(randomLastName);
+
+        //then
+        assertTrue(serviceResponse);
+        assertFalse(shouldBeFalse);
     }
 
     private Store getDefaultSavedStore(){
