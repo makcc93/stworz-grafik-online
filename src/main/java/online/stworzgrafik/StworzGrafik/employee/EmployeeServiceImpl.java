@@ -122,17 +122,22 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public boolean existsById(Long id) {
-        return false;
+        Objects.requireNonNull(id,"Id cannot be null");
+
+        return employeeRepository.existsById(id);
     }
 
     @Override
     public boolean existsBySap(Long sap) {
-        return false;
+        Objects.requireNonNull(sap,"Sap cannot be null");
+
+        return employeeRepository.existsBySap(sap);
     }
 
     @Override
     public boolean existsByLastName(String lastName) {
-        return false;
-    }
+        Objects.requireNonNull(lastName,"Last name cannot be null");
 
+        return employeeRepository.existsByLastName(lastName);
+    }
 }
