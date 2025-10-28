@@ -447,4 +447,95 @@ class EmployeeServiceImplTest {
         verify(employeeRepository,never()).findById(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
+
+    @Test
+    void existsById_workingTest(){
+        //given
+        Long id = 321L;
+        Employee employee = new TestEmployeeBuilder().build();
+
+        when(employeeRepository.existsById(id)).thenReturn(true);
+
+        //when
+        boolean serviceResponse = employeeService.existsById(id);
+
+        //then
+        assertTrue(serviceResponse);
+        verify(employeeRepository,times(1)).existsById(id);
+    }
+
+    @Test
+    void existsById_idIsNullThrowsException(){
+        //given
+        Long id = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.existsById(id));
+
+        //then
+        assertEquals("Id cannot be null", exception.getMessage());
+
+        verify(employeeRepository, never()).existsById(any());
+    }
+
+    @Test
+    void existsBySap_workingTest(){
+        //given
+        Long sap = 87654321L;
+        Employee employee = new TestEmployeeBuilder().withSap(sap).build();
+
+        when(employeeRepository.existsBySap(sap)).thenReturn(true);
+
+        //when
+        boolean serviceResponse = employeeService.existsBySap(sap);
+
+        //then
+        assertTrue(serviceResponse);
+    }
+
+    @Test
+    void existsBySap_sapIsNullThrowsException(){
+        //given
+        Long sap = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.existsBySap(sap));
+
+        //then
+        assertEquals("Sap cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).existsBySap(any());
+    }
+
+    @Test
+    void existsByLastName_workingTest(){
+        //given
+        String lastName = "LAST-NAME";
+        Employee employee = new TestEmployeeBuilder().withLastName(lastName).build();
+        
+        when(employeeRepository.existsByLastName(lastName)).thenReturn(true);
+        
+        //when
+        boolean serviceResponse = employeeService.existsByLastName(lastName);
+        
+        //then
+        assertTrue(serviceResponse);
+    }
+
+    @Test
+    void existsByLastName_lastNameIsNullThrowsException(){
+        //given
+        String lastName = null;
+        
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.existsByLastName(lastName));
+
+        //then
+        assertEquals("Last name cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).existsByLastName(any());
+    }
 }
