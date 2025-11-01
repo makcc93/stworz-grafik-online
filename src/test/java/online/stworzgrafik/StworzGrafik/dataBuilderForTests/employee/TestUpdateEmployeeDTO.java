@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 public class TestUpdateEmployeeDTO {
     private String firstName = "TESTUPDATEFIRSTNAME";
     private String lastName = "TESTUPDATELASTNAME";
-    private Long sap = 1L;
+    private Long sap = 10000000L;
     private Long storeId = 1L;
     private Long positionId = 1L;
     private boolean enable = true;
