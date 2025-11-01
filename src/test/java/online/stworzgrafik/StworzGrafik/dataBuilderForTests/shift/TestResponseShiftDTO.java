@@ -25,8 +25,8 @@ public class TestResponseShiftDTO {
         return this;
     }
 
- public TestResponseShiftDTO withLength(int lenght){
-        this.length = lenght;
+ public TestResponseShiftDTO withLength(int length){
+        this.length = length;
         return this;
  }
 

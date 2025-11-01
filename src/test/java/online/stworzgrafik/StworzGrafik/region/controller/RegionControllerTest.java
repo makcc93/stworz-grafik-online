@@ -134,7 +134,7 @@ class RegionControllerTest {
                 .andReturn();
 
         //then
-        assertEquals("Entity with this name already exist",mvcResult.getResponse().getContentAsString());
+        assertEquals("Entity with this data already exists",mvcResult.getResponse().getContentAsString());
     }
 
     @Test

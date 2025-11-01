@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 public class TestCreateEmployeeDTO {
     private String firstName = "TESTCREATEFIRSTNAME";
     private String lastName = "TESTCREATELASTNAME";
-    private Long sap = 1L;
+    private Long sap = 11112222L;
     private Long storeId = 1L;
     private Long positionId = 1L;
 

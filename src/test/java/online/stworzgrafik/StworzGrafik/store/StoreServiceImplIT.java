@@ -118,13 +118,13 @@ class StoreServiceImplIT {
     }
 
     @Test
-    void create_workingTest(){
+    void create_Store_workingTest(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
         //when
-        ResponseStoreDTO responseStoreDTO = storeService.create(createStoreDTO);
+        ResponseStoreDTO responseStoreDTO = storeService.createStore(createStoreDTO);
 
         //then
         assertTrue(storeRepository.existsById(responseStoreDTO.id()));
@@ -134,7 +134,7 @@ class StoreServiceImplIT {
     }
 
     @Test
-    void create_storeWithThisNameAlreadyExistThrowsException(){
+    void create_Store_storeWithThisNameAlreadyExistThrowsException(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
@@ -148,7 +148,7 @@ class StoreServiceImplIT {
                 theSameBranchId
         );
 
-        storeService.create(createStoreDTO);
+        storeService.createStore(createStoreDTO);
 
         CreateStoreDTO sameNameDTO = new CreateStoreDTO(
                 theSameName,
@@ -159,14 +159,14 @@ class StoreServiceImplIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> storeService.create(sameNameDTO));
+                assertThrows(EntityExistsException.class, () -> storeService.createStore(sameNameDTO));
 
         //then
         assertEquals("Store with name " + theSameName + " already exists", exception.getMessage());
     }
 
     @Test
-    void create_storeWithThisStoreCodeAlreadyExistsThrowsException(){
+    void create_Store_storeWithThisStoreCodeAlreadyExistsThrowsException(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
@@ -180,7 +180,7 @@ class StoreServiceImplIT {
                 theSameBranchId
         );
 
-        storeService.create(createStoreDTO);
+        storeService.createStore(createStoreDTO);
 
         CreateStoreDTO sameStoreCodeDTO = new CreateStoreDTO(
                 "NEWNAME",
@@ -191,7 +191,7 @@ class StoreServiceImplIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> storeService.create(sameStoreCodeDTO));
+                assertThrows(EntityExistsException.class, () -> storeService.createStore(sameStoreCodeDTO));
 
         //then
         assertEquals("Store with code " + theSameStoreCode + " already exists",exception.getMessage());
@@ -211,7 +211,7 @@ class StoreServiceImplIT {
                 branch.getId()
         );
 
-        ResponseStoreDTO responseStoreDTO = storeService.create(createStoreDTO);
+        ResponseStoreDTO responseStoreDTO = storeService.createStore(createStoreDTO);
         Store store = storeRepository.findById(responseStoreDTO.id()).orElseThrow();
 
         String newName = "SHOULDBETHISNAME";

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class TestResponseStoreDTO {
-    private Long id = 6988L;
+    private Long id = 1L;
     private String name = "TESTCREATESTORE";
     private String storeCode = "CC";
     private String location = "TESTCREATELOCATION";

@@ -100,6 +100,8 @@ class ShiftServiceImplTest {
         LocalTime endHour = LocalTime.of(20,0);
         int hoursDifference = endHour.getHour() - startHour.getHour();
 
+        when(repository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
+
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
         when(repository.save(shift)).thenReturn(shift);
@@ -136,12 +138,11 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(9, 0);
         LocalTime endHour = LocalTime.of(20, 0);
 
+        when(repository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
+
         ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
         ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withStartHour(startHour).withEndHour(endHour).build();
-        Shift shift = mock(Shift.class);
-        shift.setId(1L);
-        shift.setStartHour(startHour);
-        shift.setEndHour(endHour);
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
         when(repository.save(shift)).thenReturn(shift);
         when(shiftMapper.toShiftDto(any(Shift.class))).thenReturn(responseShiftDTO);

@@ -12,7 +12,7 @@ public class TestUpdateStoreDTO {
     private String location = "TESTUPDATELOCATION";
     private Branch branch = new TestBranchBuilder().build();
     private boolean enable = true;
-    private Long storeManagerId = 2L;
+    private Long storeManagerId = 1L;
 
     public TestUpdateStoreDTO withName(String name){
         this.name = name;

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.shift.controller;
 
 import jakarta.validation.Valid;
+import online.stworzgrafik.StworzGrafik.schedule.shiftCreator.ShiftGeneratorAlgorithm;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
@@ -17,10 +18,12 @@ import java.util.List;
 public class ShiftController {
     private final ShiftService shiftService;
     private final ShiftMapper shiftMapper;
+    private final ShiftGeneratorAlgorithm shiftGeneratorAlgorithm;
 
-    public ShiftController(ShiftService shiftService, ShiftMapper shiftMapper) {
+    public ShiftController(ShiftService shiftService, ShiftMapper shiftMapper, ShiftGeneratorAlgorithm shiftGeneratorAlgorithm) {
         this.shiftService = shiftService;
         this.shiftMapper = shiftMapper;
+        this.shiftGeneratorAlgorithm = shiftGeneratorAlgorithm;
     }
 
     @GetMapping("/{id}")
@@ -54,5 +57,11 @@ public class ShiftController {
             Shift savedEntity = shiftService.saveEntity(shift);
 
             return ResponseEntity.ok().body(shiftMapper.toShiftDto(savedEntity));
+    }
+
+    @PostMapping("/test")
+    public String testAlgorithm(){
+        shiftGeneratorAlgorithm.generate();
+        return "OK";
     }
 }

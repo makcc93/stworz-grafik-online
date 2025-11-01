@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.store;
 
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -22,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,7 +117,7 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void create_workingTest(){
+    void create_Store_workingTest(){
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
@@ -160,7 +158,7 @@ class StoreServiceImplTest {
         when(storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
 
         //when
-        ResponseStoreDTO serviceResponse = service.create(createStoreDTO);
+        ResponseStoreDTO serviceResponse = service.createStore(createStoreDTO);
 
         //then
         assertEquals(name, serviceResponse.name());
@@ -170,19 +168,19 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void create_argumentIsNull(){
+    void create_Store_argumentIsNull(){
         //given
         CreateStoreDTO createStoreDTO = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> service.create(createStoreDTO));
+        assertThrows(NullPointerException.class,() -> service.createStore(createStoreDTO));
 
         //then
         verify(repository,never()).save(any(Store.class));
     }
 
     @Test
-    void create_branchDoesNotExistThrowsException(){
+    void create_Store_branchDoesNotExistThrowsException(){
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
@@ -192,7 +190,7 @@ class StoreServiceImplTest {
         when(branchRepository.findById(createStoreDTO.branchId())).thenThrow(EntityNotFoundException.class);
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> service.create(createStoreDTO));
+        assertThrows(EntityNotFoundException.class, () -> service.createStore(createStoreDTO));
 
         //then
         verify(nameValidatorService,never()).validate(any(),any());

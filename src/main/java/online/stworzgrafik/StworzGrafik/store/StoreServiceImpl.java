@@ -55,7 +55,7 @@ public class StoreServiceImpl implements StoreService{
     }
 
     @Override
-    public ResponseStoreDTO create(CreateStoreDTO createStoreDTO) {
+    public ResponseStoreDTO createStore(CreateStoreDTO createStoreDTO) {
         Objects.requireNonNull(createStoreDTO);
 
         ifStoreAlreadyExist(createStoreDTO);
