@@ -40,9 +40,13 @@ public class ShiftServiceImpl implements ShiftService{
     public Shift saveEntity(Shift shift) {
        Objects.requireNonNull(shift,"Shift cannot be null");
 
+       if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
+           return shift;
+       }
+
        validateHour(shift.startHour,shift.endHour);
 
-        return shiftRepository.save(shift);
+       return shiftRepository.save(shift);
     }
 
 
@@ -50,11 +54,22 @@ public class ShiftServiceImpl implements ShiftService{
     public ResponseShiftDTO create(ShiftHoursDTO shiftHoursDTO) {
         Objects.requireNonNull(shiftHoursDTO);
 
-        validateHour(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+        LocalTime startHour = shiftHoursDTO.startHour();
+        LocalTime endHour = shiftHoursDTO.endHour();
+
+        if (shiftRepository.existsByStartHourAndEndHour(startHour, endHour)){
+            return shiftMapper.toShiftDto(
+                    shiftRepository.findByStartHourAndEndHour(
+                            startHour,
+                            endHour)
+                    .orElseThrow());
+        }
+
+        validateHour(startHour, endHour);
 
         Shift shift = shiftBuilder.createShift(
-                shiftHoursDTO.startHour(),
-                shiftHoursDTO.endHour()
+                startHour,
+                endHour
         );
 
         Shift savedShift = shiftRepository.save(shift);
@@ -82,9 +97,7 @@ public class ShiftServiceImpl implements ShiftService{
 
     @Override
     public List<ResponseShiftDTO> findAll() {
-        List<Shift> shifts = shiftRepository.findAll();
-
-        return shifts.stream()
+        return shiftRepository.findAll().stream()
                 .map(shiftMapper::toShiftDto)
                 .toList();
     }
