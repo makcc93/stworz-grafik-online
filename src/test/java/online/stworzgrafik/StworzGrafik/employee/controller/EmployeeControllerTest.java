@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.employee.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
@@ -8,12 +9,15 @@ import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestCreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestEmployeeBuilder;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.employee.TestUpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.employee.EmployeeMapper;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeRepository;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
@@ -32,8 +36,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,6 +76,9 @@ class EmployeeControllerTest {
     @Autowired
     private PositionRepository positionRepository;
 
+    @Autowired
+    private EmployeeMapper employeeMapper;
+
     private Region region;
 
     private Branch branch;
@@ -83,6 +93,88 @@ class EmployeeControllerTest {
         branch = branchRepository.save(new TestBranchBuilder().withRegion(region).build());
         store = storeRepository.save(new TestStoreBuilder().withBranch(branch).build());
         position = positionRepository.save(new TestPositionBuilder().build());
+    }
+
+    @Test
+    void findAll_workingTest() throws Exception{
+        //given
+        Employee first = new TestEmployeeBuilder().withFirstName("FIRST").withStore(store).withPosition(position).build();
+        Employee second = new TestEmployeeBuilder().withFirstName("SECOND").withStore(store).withPosition(position).build();
+        Employee third = new TestEmployeeBuilder().withFirstName("THIRD").withStore(store).withPosition(position).build();
+        employeeRepository.saveAll(List.of(first,second,third));
+
+        List<ResponseEmployeeDTO> employees = List.of(first, second, third).stream()
+                .map(empl -> employeeMapper.toResponseEmployeeDTO(empl))
+                .toList();
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get("/api/employees"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ResponseEmployeeDTO> serviceResponse =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeDTO>>() {});
+
+        //then
+        assertEquals(3,serviceResponse.size());
+        assertTrue(serviceResponse.containsAll(employees));
+    }
+
+    @Test
+    void findAll_emptyListDoesNotThrowException() throws Exception{
+        //given
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get("/api/employees"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ResponseEmployeeDTO> serviceResponse =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeDTO>>() {});
+
+        //then
+        assertEquals(0,serviceResponse.size());
+    }
+
+    @Test
+    void findById_workingTest() throws Exception{
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+
+        Long id = employee.getId();
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get("/api/employees/" + id))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ResponseEmployeeDTO serviceResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseEmployeeDTO.class);
+
+        //then
+        assertTrue(employeeRepository.existsById(id));
+        assertEquals(employee.getFirstName(),serviceResponse.firstName());
+        assertEquals(employee.getLastName(),serviceResponse.lastName());
+    }
+
+    @Test
+    void findById_cannotFindEmployeeWithThisIdThrowsException() throws Exception{
+        //given
+        Long randomId = 11223344L;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get("/api/employees/" + randomId))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        String serviceResponse = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertEquals("Cannot find employee by id " + randomId,serviceResponse);
     }
 
     @Test
@@ -142,5 +234,31 @@ class EmployeeControllerTest {
         String serviceResponse = mvcResult.getResponse().getContentAsString();
         //then
         assertEquals("Entity with this data already exists",serviceResponse);
+    }
+
+    @Test
+    void updateEmployee_workingTest() throws Exception{
+        //given
+        String originalFirstName = "ORIGINAL";
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(originalFirstName).build();
+        employeeRepository.save(employee);
+
+        Long employeeId = employee.getId();
+
+        String newFirstName = "NEW";
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO()
+                .withFirstName(newFirstName)
+                .build();
+
+        //when
+        mockMvc.perform(patch("/api/employees/" + employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        //then
+        assertEquals(newFirstName, employee.getFirstName());
+        assertTrue(employeeRepository.existsById(employeeId));
     }
 }
