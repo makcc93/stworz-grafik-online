@@ -19,8 +19,5 @@ public record CreateEmployeeDTO(
         Long sap,
 
         @NotNull
-        Long storeId,
-
-        @NotNull
         Long positionId
         ) {}

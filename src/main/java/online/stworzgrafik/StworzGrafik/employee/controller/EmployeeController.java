@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("/api/stores/{storeId}/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
 
@@ -32,13 +32,18 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseEmployeeDTO> createEmployee (@Valid @RequestBody CreateEmployeeDTO createEmployeeDTO){
-        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(createEmployeeDTO));
+    public ResponseEntity<ResponseEmployeeDTO> createEmployee (
+            @Valid @PathVariable Long storeId,
+            @Valid @RequestBody CreateEmployeeDTO createEmployeeDTO){
+        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(storeId, createEmployeeDTO));
     }
 
     @PatchMapping("/{employeeId}")
-    public ResponseEntity<ResponseEmployeeDTO> updateEmployee(@Valid @PathVariable Long employeeId,@Valid @RequestBody UpdateEmployeeDTO updateEmployeeDTO){
-        return ResponseEntity.ok(employeeService.updateEmployee(employeeId,updateEmployeeDTO));
+    public ResponseEntity<ResponseEmployeeDTO> updateEmployee(
+            @Valid @PathVariable Long storeId,
+            @Valid @PathVariable Long employeeId,
+            @Valid @RequestBody UpdateEmployeeDTO updateEmployeeDTO){
+        return ResponseEntity.ok(employeeService.updateEmployee(storeId,employeeId,updateEmployeeDTO));
     }
 
     //time for DeleteMapping and tests

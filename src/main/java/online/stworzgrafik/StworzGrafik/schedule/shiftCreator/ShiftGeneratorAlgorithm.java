@@ -18,7 +18,7 @@ public class ShiftGeneratorAlgorithm {
         this.shiftService = shiftService;
     }
 
-    public void generate() {
+    public List<Shift> generate() {
         List<Shift> shifts = new ArrayList<>();
 
         List<Shift> startHoursShifts = generateShiftStartHours(shifts);
@@ -32,6 +32,8 @@ public class ShiftGeneratorAlgorithm {
         for (Shift shift : startEndHoursShifts) {
             shiftService.saveEntity(shift);
         }
+
+        return startEndHoursShifts;
     }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc) {

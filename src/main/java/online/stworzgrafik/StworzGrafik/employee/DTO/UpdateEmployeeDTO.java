@@ -18,7 +18,6 @@ public record UpdateEmployeeDTO(
         @Digits(integer = 8, fraction = 0, message = "Sap number must equals eight chars")
         Long sap,
 
-        Long storeId,
         Long positionId,
         boolean enable,
         boolean canOperateCheckout,
