@@ -6,7 +6,6 @@ public class TestUpdateEmployeeDTO {
     private String firstName = "TESTUPDATEFIRSTNAME";
     private String lastName = "TESTUPDATELASTNAME";
     private Long sap = 10000000L;
-    private Long storeId = 1L;
     private Long positionId = 1L;
     private boolean enable = true;
     private boolean canOperateCheckout = true;
@@ -27,11 +26,6 @@ public class TestUpdateEmployeeDTO {
 
     public TestUpdateEmployeeDTO withSap(Long sap){
         this.sap = sap;
-        return this;
-    }
-
-    public TestUpdateEmployeeDTO withStoreId(Long storeId){
-        this.storeId = storeId;
         return this;
     }
 
@@ -75,7 +69,6 @@ public class TestUpdateEmployeeDTO {
                 firstName,
                 lastName,
                 sap,
-                storeId,
                 positionId,
                 enable,
                 canOperateCheckout,

@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.employee.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
@@ -37,9 +36,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -85,6 +84,8 @@ class EmployeeControllerTest {
 
     private Store store;
 
+    private Long storeId;
+
     private Position position;
 
     @BeforeEach
@@ -93,6 +94,8 @@ class EmployeeControllerTest {
         branch = branchRepository.save(new TestBranchBuilder().withRegion(region).build());
         store = storeRepository.save(new TestStoreBuilder().withBranch(branch).build());
         position = positionRepository.save(new TestPositionBuilder().build());
+
+        storeId = store.getId();
     }
 
     @Test
@@ -108,7 +111,7 @@ class EmployeeControllerTest {
                 .toList();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/employees"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -126,7 +129,7 @@ class EmployeeControllerTest {
         //given
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/employees"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -147,7 +150,7 @@ class EmployeeControllerTest {
         Long id = employee.getId();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/employees/" + id))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/" + id))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -166,7 +169,7 @@ class EmployeeControllerTest {
         Long randomId = 11223344L;
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/employees/" + randomId))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/" + randomId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andReturn();
@@ -180,6 +183,8 @@ class EmployeeControllerTest {
     @Test
     void createEmployee_workingTest() throws Exception{
         //given
+        Long storeId = store.getId();
+
         String firstName = "NEW";
         String lastName = "EMPLOYEE";
         Long sap = 10020033L;
@@ -187,12 +192,11 @@ class EmployeeControllerTest {
                 .withFirstName(firstName)
                 .withLastName(lastName)
                 .withSap(sap)
-                .withStoreId(store.getId())
                 .withPositionId(position.getId())
                 .build();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(post("/api/employees")
+        MvcResult mvcResult = mockMvc.perform(post("/api/stores/" + storeId + "/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createEmployeeDTO)))
                 .andDo(print())
@@ -218,13 +222,12 @@ class EmployeeControllerTest {
         employeeRepository.save(employee);
 
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO()
-                .withStoreId(store.getId())
                 .withPositionId(position.getId())
                 .withSap(sap)
                 .build();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(post("/api/employees")
+        MvcResult mvcResult = mockMvc.perform(post("/api/stores/" + storeId + "/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createEmployeeDTO)))
                 .andDo(print())
@@ -251,7 +254,7 @@ class EmployeeControllerTest {
                 .build();
 
         //when
-        mockMvc.perform(patch("/api/employees/" + employeeId)
+        mockMvc.perform(patch("/api/stores/" + storeId + "/employees/" + employeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
                 .andDo(print())

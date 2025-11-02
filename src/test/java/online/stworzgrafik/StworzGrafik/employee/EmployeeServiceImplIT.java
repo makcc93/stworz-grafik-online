@@ -65,12 +65,15 @@ public class EmployeeServiceImplIT {
 
     private Store store;
 
+    private Long storeId;
+
     private Position position;
 
     @BeforeEach
     void setUpStoreAndPosition(){
         store = getDefaultSavedStore();
         position = getDefaultSavedPosition();
+        storeId = store.getId();
     }
 
     @Test
@@ -84,18 +87,18 @@ public class EmployeeServiceImplIT {
                 .withFirstName(firstName)
                 .withLastName(lastName)
                 .withSap(sap)
-                .withStoreId(store.getId())
                 .withPositionId(position.getId())
                 .build();
 
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeService.createEmployee(createEmployeeDTO);
+        ResponseEmployeeDTO serviceResponse = employeeService.createEmployee(storeId,createEmployeeDTO);
 
         //then
         assertEquals(firstName,serviceResponse.firstName());
         assertEquals(lastName,serviceResponse.lastName());
         assertEquals(sap,serviceResponse.sap());
+        assertEquals(storeId,serviceResponse.storeId());
 
         assertTrue(employeeRepository.existsBySap(sap));
     }
@@ -112,7 +115,7 @@ public class EmployeeServiceImplIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> employeeService.createEmployee(createEmployeeDTO));
+                assertThrows(EntityExistsException.class, () -> employeeService.createEmployee(storeId,createEmployeeDTO));
 
         //then
         assertEquals("Employee with sap " + employeeSap + " already exists", exception.getMessage());
@@ -129,8 +132,10 @@ public class EmployeeServiceImplIT {
         CreateEmployeeDTO invalidLastNameDTO = new TestCreateEmployeeDTO().withLastName(invalidLastName).build();
 
         //when
-        ValidationException exceptionFistName = assertThrows(ValidationException.class, () -> employeeService.createEmployee(invalidFirstNameDTO));
-        ValidationException exceptionLastName = assertThrows(ValidationException.class, () -> employeeService.createEmployee(invalidLastNameDTO));
+        ValidationException exceptionFistName =
+                assertThrows(ValidationException.class, () -> employeeService.createEmployee(storeId,invalidFirstNameDTO));
+        ValidationException exceptionLastName =
+                assertThrows(ValidationException.class, () -> employeeService.createEmployee(storeId,invalidLastNameDTO));
 
         //then
         assertEquals("Name cannot contain illegal chars",exceptionFistName.getMessage());
@@ -143,21 +148,19 @@ public class EmployeeServiceImplIT {
         Long randomPositionId = 12345L;
         CreateEmployeeDTO withoutPositionDTO = new TestCreateEmployeeDTO()
                 .withPositionId(randomPositionId)
-                .withStoreId(store.getId())
                 .build();
 
         Long randomStoreId = 54321L;
         CreateEmployeeDTO withoutStoreDTO = new TestCreateEmployeeDTO()
-                .withStoreId(randomStoreId)
                 .withPositionId(position.getId())
                 .build();
 
         //when
         EntityNotFoundException exceptionForPosition =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(withoutPositionDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(storeId,withoutPositionDTO));
 
         EntityNotFoundException exceptionForStore =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(withoutStoreDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(randomStoreId,withoutStoreDTO));
 
         //then
         assertEquals("Cannot find position by id " + randomPositionId, exceptionForPosition.getMessage());
@@ -178,7 +181,7 @@ public class EmployeeServiceImplIT {
                 .build();
         employeeRepository.save(employee);
 
-        Long id = employee.getId();
+        Long employeeId = employee.getId();
 
         String updatedFirstName = "UPDATED FIRST NAME";
         String updatedLastName = "UPDATED LAST NAME";
@@ -192,7 +195,7 @@ public class EmployeeServiceImplIT {
                 .build();
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeService.updateEmployee(id, updateEmployeeDTO);
+        ResponseEmployeeDTO serviceResponse = employeeService.updateEmployee(storeId, employeeId, updateEmployeeDTO);
 
         //then
         assertEquals(updatedFirstName,serviceResponse.firstName());
@@ -212,15 +215,15 @@ public class EmployeeServiceImplIT {
     @Test
     void updateEmployee_entityDoesNotExistThrowsException(){
         //given
-        Long randomId = 12345L;
+        Long randomEmployeeId = 12345L;
         UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.updateEmployee(randomId, updateEmployeeDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeService.updateEmployee(storeId,randomEmployeeId, updateEmployeeDTO));
 
         //then
-        assertEquals("Cannot find employee by id " + randomId, exception.getMessage());
+        assertEquals("Cannot find employee by id " + randomEmployeeId, exception.getMessage());
     }
 
     @Test
@@ -234,7 +237,7 @@ public class EmployeeServiceImplIT {
 
         //when
         ValidationException exception =
-                assertThrows(ValidationException.class, () -> employeeService.updateEmployee(employee.getId(), updateEmployeeDTO));
+                assertThrows(ValidationException.class, () -> employeeService.updateEmployee(storeId, employee.getId(), updateEmployeeDTO));
 
         //then
         assertEquals("Name cannot contain illegal chars", exception.getMessage());
