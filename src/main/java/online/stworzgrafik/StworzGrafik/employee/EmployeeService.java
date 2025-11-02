@@ -10,8 +10,8 @@ import java.util.List;
 
 @Service
 public interface EmployeeService {
-    ResponseEmployeeDTO createEmployee(@NotNull CreateEmployeeDTO createEmployeeDTO);
-    ResponseEmployeeDTO updateEmployee(@NotNull Long id, @NotNull UpdateEmployeeDTO updateEmployeeDTO);
+    ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull CreateEmployeeDTO createEmployeeDTO);
+    ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull UpdateEmployeeDTO updateEmployeeDTO);
     void deleteEmployee(@NotNull Long id);
     List<ResponseEmployeeDTO> findAll();
     ResponseEmployeeDTO findById(@NotNull Long id);

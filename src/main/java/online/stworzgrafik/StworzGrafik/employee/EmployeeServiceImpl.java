@@ -11,6 +11,8 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.expression.AccessException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -37,7 +39,8 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public ResponseEmployeeDTO createEmployee(CreateEmployeeDTO createEmployeeDTO) {
+    public ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
+        Objects.requireNonNull(storeId, "Store id cannot be null");
         Objects.requireNonNull(createEmployeeDTO);
 
         if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
@@ -47,8 +50,8 @@ public class EmployeeServiceImpl implements EmployeeService{
         String validatedFirstName = nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON);
         String validatedLastName = nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON);
 
-        Store store = storeRepository.findById(createEmployeeDTO.storeId())
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + createEmployeeDTO.storeId()));
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
         Position position = positionRepository.findById(createEmployeeDTO.positionId())
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + createEmployeeDTO.positionId()));
 
@@ -66,12 +69,17 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public ResponseEmployeeDTO updateEmployee(Long id, UpdateEmployeeDTO updateEmployeeDTO) {
-        Objects.requireNonNull(id,"Id cannot be null");
+    public ResponseEmployeeDTO updateEmployee(Long storeId, Long employeeId, UpdateEmployeeDTO updateEmployeeDTO) {
+        Objects.requireNonNull(storeId, "Store id cannot be null");
+        Objects.requireNonNull(employeeId,"Employee id cannot be null");
         Objects.requireNonNull(updateEmployeeDTO);
 
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));
+
+        if (!employee.getStore().getId().equals(storeId)){
+            throw new AccessDeniedException("Employee does not belong to this store");
+        }
 
         if (updateEmployeeDTO.firstName() != null){
             String validatedFirstName = nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON);
