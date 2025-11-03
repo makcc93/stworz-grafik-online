@@ -375,7 +375,6 @@ class EmployeeServiceImplTest {
         //given
         Long employeeId = 1L;
         Long storeId = 1L;
-        Store store = mock(Store.class);
 
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.empty());
 
