@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.employee.controller;
 
-import jakarta.validation.ReportAsSingleViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
@@ -33,18 +33,26 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<ResponseEmployeeDTO> createEmployee (
-            @Valid @PathVariable Long storeId,
+            @NotNull @PathVariable Long storeId,
             @Valid @RequestBody CreateEmployeeDTO createEmployeeDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(storeId, createEmployeeDTO));
     }
 
     @PatchMapping("/{employeeId}")
     public ResponseEntity<ResponseEmployeeDTO> updateEmployee(
-            @Valid @PathVariable Long storeId,
-            @Valid @PathVariable Long employeeId,
+            @NotNull @PathVariable Long storeId,
+            @NotNull @PathVariable Long employeeId,
             @Valid @RequestBody UpdateEmployeeDTO updateEmployeeDTO){
         return ResponseEntity.ok(employeeService.updateEmployee(storeId,employeeId,updateEmployeeDTO));
     }
 
-    //time for DeleteMapping and tests
+    @DeleteMapping("/{employeeId}")
+    public ResponseEntity<HttpStatus> deleteEmployee(
+            @NotNull @PathVariable Long storeId,
+            @NotNull @PathVariable Long employeeId
+    ){
+        employeeService.deleteEmployee(storeId,employeeId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }
