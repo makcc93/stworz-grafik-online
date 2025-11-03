@@ -35,7 +35,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -106,7 +108,7 @@ class EmployeeControllerTest {
         Employee third = new TestEmployeeBuilder().withFirstName("THIRD").withStore(store).withPosition(position).build();
         employeeRepository.saveAll(List.of(first,second,third));
 
-        List<ResponseEmployeeDTO> employees = List.of(first, second, third).stream()
+        List<ResponseEmployeeDTO> employees = Stream.of(first, second, third)
                 .map(empl -> employeeMapper.toResponseEmployeeDTO(empl))
                 .toList();
 
@@ -166,7 +168,7 @@ class EmployeeControllerTest {
     @Test
     void findById_cannotFindEmployeeWithThisIdThrowsException() throws Exception{
         //given
-        Long randomId = 11223344L;
+        long randomId = 11223344L;
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/" + randomId))
@@ -263,5 +265,51 @@ class EmployeeControllerTest {
         //then
         assertEquals(newFirstName, employee.getFirstName());
         assertTrue(employeeRepository.existsById(employeeId));
+    }
+
+    @Test
+    void updateEmployee_cannotFindEmployeeThrowsException() throws Exception {
+        //given
+        long unknownEmployeeId = 123456789L;
+
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(patch("/api/stores/" + storeId + "/employees/" + unknownEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        String serviceResponse = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertEquals("Cannot find employee by id " + unknownEmployeeId, serviceResponse);
+    }
+
+    @Test
+    void updateEmployee_storeDoesNotExistThrowsException() throws Exception{
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+        Long employeeId = employee.getId();
+
+        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
+
+        long unknownStoreId = 1234567L;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(patch("/api/stores/" + unknownStoreId + "/employees/" + employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
+                .andDo(print())
+                .andExpect(status().is(500))
+                .andReturn();
+
+        String serviceResponse = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertEquals("Employee does not belong to this store", serviceResponse);
     }
 }

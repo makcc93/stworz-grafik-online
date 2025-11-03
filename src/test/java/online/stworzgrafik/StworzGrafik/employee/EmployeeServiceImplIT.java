@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -259,7 +260,7 @@ public class EmployeeServiceImplIT {
         Long employeeToDeleteId = employeeToDelete.getId();
 
         //when
-        employeeService.deleteEmployee(employeeToDeleteId);
+        employeeService.deleteEmployee(storeId,employeeToDeleteId);
 
         //then
         assertTrue(employeeRepository.existsById(employeeToStayId));
@@ -270,14 +271,45 @@ public class EmployeeServiceImplIT {
     @Test
     void deleteEmployee_employeeWithIdDoesNotExistThrowsException(){
         //given
-        Long randomId = 1234L;
+        Long randomEmployeeId = 1234L;
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(randomId));
+                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(storeId,randomEmployeeId));
 
         //then
-        assertEquals("Cannot find employee by id " + randomId, exception.getMessage());
+        assertEquals("Cannot find employee by id " + randomEmployeeId, exception.getMessage());
+    }
+
+    @Test
+    void deleteEmployee_cannotFindEmployeeThrowsException(){
+        //given
+        Long randomEmployeeId = 54321L;
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(storeId, randomEmployeeId));
+
+        //then
+        assertEquals("Cannot find employee by id " + randomEmployeeId,exception.getMessage());
+    }
+
+    @Test
+    void deleteEmployee_employeeDoesNotBelongToStoreThrowsException(){
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+
+        Long employeeId = employee.getId();
+
+        Long notExistingStoreId = 123456L;
+
+        //when
+        AccessDeniedException exception =
+                assertThrows(AccessDeniedException.class, () -> employeeService.deleteEmployee(notExistingStoreId, employeeId));
+
+        //then
+        assertEquals("Employee does not belong to this store", exception.getMessage());
     }
 
     @Test

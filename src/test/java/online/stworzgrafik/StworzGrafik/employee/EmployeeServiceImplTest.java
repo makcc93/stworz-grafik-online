@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Collections;
 import java.util.List;
@@ -239,25 +240,21 @@ class EmployeeServiceImplTest {
         //given
         Long storeId = 1L;
         Long employeeId = 1L;
+        Store store = mock(Store.class);
+        when(store.getId()).thenReturn(storeId);
 
         String originalFirstName = "ORIGINAL FIRST NAME";
         String originalLastName = "ORIGINAL LAST NAME";
-        Employee employee = new TestEmployeeBuilder().withFirstName(originalFirstName).withLastName(originalLastName).build();
-
-        Store mockStore = mock(Store.class);
-        when(employee.getStore()).thenReturn(mockStore);
-        when(mockStore.getId()).thenReturn(storeId);
+        Employee employee = new TestEmployeeBuilder().withStore(store).withFirstName(originalFirstName).withLastName(originalLastName).build();
+        when(employeeRepository.save(employee)).thenReturn(employee);
 
         String newFirstName = "NEW FIRST NAME";
         String newLastName = "NEW LAST NAME";
         UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().withFirstName(newFirstName).withLastName(newLastName).build();
 
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
-
         when(nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON)).thenReturn(newFirstName);
         when(nameValidatorService.validate(updateEmployeeDTO.lastName(),ObjectType.PERSON)).thenReturn(newLastName);
-
-        when(employeeRepository.save(employee)).thenReturn(employee);
 
         ResponseEmployeeDTO responseEmployeeDTO = new TestResponseEmployeeDTO().withFirstName(newFirstName).withLastName(newLastName).build();
         when(employeeMapper.toResponseEmployeeDTO(employee)).thenReturn(responseEmployeeDTO);
@@ -356,50 +353,97 @@ class EmployeeServiceImplTest {
     @Test
     void deleteEmployee_workingTest(){
         //given
-        Long id = 123L;
+        Long employeeId = 123L;
+        Long storeId = 1L;
+        Store store = mock(Store.class);
+        when(store.getId()).thenReturn(storeId);
 
-        when(employeeRepository.existsById(id)).thenReturn(true);
+        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
+
 
         //when
-        employeeService.deleteEmployee(id);
+        employeeService.deleteEmployee(storeId,employeeId);
 
         //then
-        verify(employeeRepository,times(1)).deleteById(id);
-        verify(employeeRepository,times(1)).existsById(id);
+        verify(employeeRepository,times(1)).delete(employee);
+        verify(employeeRepository,times(1)).findById(employeeId);
     }
 
     @Test
     void deleteEmployee_employeeByIdDoesNotExistThrowsException(){
         //given
-        Long id = 1L;
+        Long employeeId = 1L;
+        Long storeId = 1L;
+        Store store = mock(Store.class);
 
-        when(employeeRepository.existsById(id)).thenReturn(false);
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.empty());
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(id));
+                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(storeId,employeeId));
 
         //then
-        assertEquals("Cannot find employee by id " + id, exception.getMessage());
+        assertEquals("Cannot find employee by id " + employeeId, exception.getMessage());
 
-        verify(employeeRepository,times(1)).existsById(id);
-        verify(employeeRepository,never()).deleteById(id);
+        verify(employeeRepository,times(1)).findById(employeeId);
+        verify(employeeRepository,never()).delete(any(Employee.class));
     }
 
     @Test
-    void deleteEmployee_idIsNullThrowsException(){
+    void deleteEmployee_employeeDoesNotBelongToStoreThrowsException(){
         //given
-        Long id = null;
+        Long employeeId = 12345L;
+        Long storeId = 1L;
+        Store store = mock(Store.class);
+
+        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
+
+        when(store.getId()).thenReturn(2L);
+
+        //when
+        AccessDeniedException exception =
+                assertThrows(AccessDeniedException.class, () -> employeeService.deleteEmployee(storeId, employeeId));
+
+        //then
+        assertEquals("Employee does not belong to this store", exception.getMessage());
+
+        verify(employeeRepository,never()).delete(any(Employee.class));
+    }
+
+    @Test
+    void deleteEmployee_employeeIdIsNullThrowsException(){
+        //given
+        Long employeeId = null;
+        Long storeId = 1L;
+        Store store = mock(Store.class);
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeService.deleteEmployee(id));
+                assertThrows(NullPointerException.class, () -> employeeService.deleteEmployee(storeId,employeeId));
 
         //then
-        assertEquals("Id cannot be null", exception.getMessage());
+        assertEquals("Employee id cannot be null", exception.getMessage());
 
-        verify(employeeRepository,never()).existsById(any());
-        verify(employeeRepository,never()).deleteById(any());
+        verify(employeeRepository,never()).findById(any());
+        verify(employeeRepository,never()).delete(any(Employee.class));
+    }
+
+    @Test
+    void deleteEmployee_storeIdIsNullThrowsException(){
+        //given
+        Long employeeId = 123L;
+        Long storeId = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> employeeService.deleteEmployee(storeId, employeeId));
+
+        //then
+        assertEquals("Store id cannot be null", exception.getMessage());
+
+        verify(employeeRepository,never()).delete(any(Employee.class));
     }
 
     @Test
