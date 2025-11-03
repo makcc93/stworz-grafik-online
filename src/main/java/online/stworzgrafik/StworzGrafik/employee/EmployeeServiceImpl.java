@@ -11,7 +11,6 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
-import org.springframework.expression.AccessException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -74,12 +73,7 @@ public class EmployeeServiceImpl implements EmployeeService{
         Objects.requireNonNull(employeeId,"Employee id cannot be null");
         Objects.requireNonNull(updateEmployeeDTO);
 
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));
-
-        if (!employee.getStore().getId().equals(storeId)){
-            throw new AccessDeniedException("Employee does not belong to this store");
-        }
+        Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
         if (updateEmployeeDTO.firstName() != null){
             String validatedFirstName = nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON);
@@ -101,14 +95,13 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public void deleteEmployee(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
+    public void deleteEmployee(Long storeId, Long employeeId) {
+        Objects.requireNonNull(storeId,"Store id cannot be null");
+        Objects.requireNonNull(employeeId,"Employee id cannot be null");
 
-        if (!employeeRepository.existsById(id)){
-            throw new EntityNotFoundException("Cannot find employee by id " + id);
-        }
+        Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
-        employeeRepository.deleteById(id);
+        employeeRepository.delete(employee);
     }
 
     @Override
@@ -147,5 +140,16 @@ public class EmployeeServiceImpl implements EmployeeService{
         Objects.requireNonNull(lastName,"Last name cannot be null");
 
         return employeeRepository.existsByLastName(lastName);
+    }
+
+    private Employee getEmployeeIfBelongsToStore(Long storeId, Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));
+
+        if (!employee.getStore().getId().equals(storeId)){
+            throw new AccessDeniedException("Employee does not belong to this store");
+        }
+
+        return employee;
     }
 }

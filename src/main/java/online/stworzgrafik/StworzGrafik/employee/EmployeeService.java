@@ -12,7 +12,7 @@ import java.util.List;
 public interface EmployeeService {
     ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull CreateEmployeeDTO createEmployeeDTO);
     ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull UpdateEmployeeDTO updateEmployeeDTO);
-    void deleteEmployee(@NotNull Long id);
+    void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
     List<ResponseEmployeeDTO> findAll();
     ResponseEmployeeDTO findById(@NotNull Long id);
     boolean existsById(@NotNull Long id);
