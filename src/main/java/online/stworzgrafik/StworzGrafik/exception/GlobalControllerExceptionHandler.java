@@ -60,6 +60,6 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> others(Exception e){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Unexpected error: " + e.getMessage());
+                .body(e.getMessage());
     }
 }
