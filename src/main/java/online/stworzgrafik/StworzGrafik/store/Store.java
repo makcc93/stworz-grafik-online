@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.demand.DemandDraft;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,9 @@ public class Store {
     @OneToMany(mappedBy = "store")
     private List<Employee> employees = new ArrayList<>();
 
+    @OneToMany(mappedBy = "store")
+    private List<DemandDraft> drafts = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -45,7 +49,7 @@ public class Store {
 
     @PrePersist
     void onCreate(){
-        createdAt = LocalDateTime.now();
-        enable = true;
+        this.createdAt = LocalDateTime.now();
+        this.enable = true;
     }
 }

@@ -28,7 +28,7 @@ public class Region {
 
     @PrePersist
     void onCreate(){
-        enable = true;
+        this.enable = true;
     }
 
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 
 @Getter
@@ -34,5 +35,9 @@ public class Shift {
         }
 
         return endHour.getHour() - startHour.getHour();
+    }
+
+    public BigDecimal getDurationHours(){
+        return BigDecimal.valueOf(getLength());
     }
 }
