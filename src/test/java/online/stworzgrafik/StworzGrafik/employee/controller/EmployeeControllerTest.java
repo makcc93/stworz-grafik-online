@@ -35,7 +35,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -79,10 +78,6 @@ class EmployeeControllerTest {
     @Autowired
     private EmployeeMapper employeeMapper;
 
-    private Region region;
-
-    private Branch branch;
-
     private Store store;
 
     private Long storeId;
@@ -91,8 +86,8 @@ class EmployeeControllerTest {
 
     @BeforeEach
     void prepareData(){
-        region = regionRepository.save(new TestRegionBuilder().build());
-        branch = branchRepository.save(new TestBranchBuilder().withRegion(region).build());
+        Region region = regionRepository.save(new TestRegionBuilder().build());
+        Branch branch = branchRepository.save(new TestBranchBuilder().withRegion(region).build());
         store = storeRepository.save(new TestStoreBuilder().withBranch(branch).build());
         position = positionRepository.save(new TestPositionBuilder().build());
 
