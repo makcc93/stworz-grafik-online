@@ -39,8 +39,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -303,6 +302,64 @@ class EmployeeControllerTest {
         MvcResult mvcResult = mockMvc.perform(patch("/api/stores/" + unknownStoreId + "/employees/" + employeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
+                .andDo(print())
+                .andExpect(status().is(500))
+                .andReturn();
+
+        String serviceResponse = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertEquals("Employee does not belong to this store", serviceResponse);
+    }
+
+    @Test
+    void deleteEmployee_workingTest() throws Exception{
+        //given
+        String firstName = "FIRST";
+        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(firstName).withStore(store).withPosition(position).build();
+        employeeRepository.save(firstEmployee);
+
+        String secondName = "SECOND";
+        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(secondName).withStore(store).withPosition(position).build();
+        employeeRepository.save(secondEmployee);
+
+        //when
+        mockMvc.perform(delete("/api/stores/" + storeId + "/employees/" + firstEmployee.getId()))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        //then
+        assertFalse(employeeRepository.existsById(firstEmployee.getId()));
+        assertTrue(employeeRepository.existsById(secondEmployee.getId()));
+    }
+
+    @Test
+    void deleteEmployee_employeeWithThisIdDoesNotExistThrowsException() throws Exception {
+        //given
+        long randomUnknownId = 1234L;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(delete("/api/stores/" + storeId + "/employees/" + randomUnknownId))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        String serviceResponse = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertEquals("Cannot find employee by id " + randomUnknownId, serviceResponse);
+    }
+
+    @Test
+    void deleteEmployee_employeeDoesNotBelongToStoreThrowsException() throws Exception{
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeRepository.save(employee);
+
+        long randomUnknownStoreId = 10000L;
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(delete("/api/stores/" + randomUnknownStoreId + "/employees/" + employee.getId()))
                 .andDo(print())
                 .andExpect(status().is(500))
                 .andReturn();
