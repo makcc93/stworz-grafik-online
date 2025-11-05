@@ -11,6 +11,7 @@ import java.util.Objects;
 @Validated
 public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
     private final ShiftTypeConfigRepository shiftTypeConfigRepository;
+    private final String nullMessageForShiftCode = "Shift code cannot be null";
 
     public ShiftTypeConfigServiceImpl(ShiftTypeConfigRepository shiftTypeConfigRepository) {
         this.shiftTypeConfigRepository = shiftTypeConfigRepository;
@@ -18,7 +19,8 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
 
     @Override
     public ShiftTypeConfig findByCode(ShiftCode code){
-        Objects.requireNonNull(code,"Shift code cannot be null");
+
+        Objects.requireNonNull(code, nullMessageForShiftCode);
 
         return shiftTypeConfigRepository.findByCode(code)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find shift type config by code " + code));
@@ -26,14 +28,14 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
 
     @Override
     public BigDecimal getDefaultHours(ShiftCode code){
-        Objects.requireNonNull(code, "Shift code cannot be null");
+        Objects.requireNonNull(code, nullMessageForShiftCode);
 
         return shiftTypeConfigRepository.getDefaultHours(code);
     }
 
     @Override
     public Boolean countsAsWork(ShiftCode code){
-        Objects.requireNonNull(code, "Shift code cannot be null");
+        Objects.requireNonNull(code, nullMessageForShiftCode);
 
         return shiftTypeConfigRepository.countsAsWork(code);
     }
