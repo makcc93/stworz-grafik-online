@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,6 +70,60 @@ class ShiftTypeConfigServiceImplTest {
         verify(repository,never()).findByCode(any());
     }
 
-    //continue testing
+    @Test
+    void getDefaultHours_workingTest(){
+        //given
+        BigDecimal tenHours = BigDecimal.valueOf(10L);
+        ShiftCode code = ShiftCode.SICK_LEAVE;
+        when(repository.getDefaultHours(code)).thenReturn(tenHours);
+
+        //when
+        BigDecimal serviceResponse = service.getDefaultHours(code);
+
+        //then
+        assertEquals(tenHours,serviceResponse);
+    }
+
+    @Test
+    void getDefaultHours_codeIsNullThrowsException(){
+        //given
+        ShiftCode code = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> service.getDefaultHours(code));
+
+        //then
+        assertEquals("Shift code cannot be null", exception.getMessage());
+        verify(repository,never()).getDefaultHours(any());
+    }
+
+    @Test
+    void countsAsWork_workingTest(){
+        //given
+        ShiftCode code = ShiftCode.FREE_DAY;
+        boolean shouldBeFalse = false;
+        when(repository.countsAsWork(code)).thenReturn(false);
+
+        //when
+        Boolean serviceResponse = service.countsAsWork(code);
+
+        //then
+        assertFalse(serviceResponse);
+    }
+
+    @Test
+    void countsAsWork_codeIsNullThrowsException(){
+        //given
+        ShiftCode code = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> service.countsAsWork(code));
+
+        //then
+        assertEquals("Shift code cannot be null", exception.getMessage());
+    }
+    //dodaj optional do repository i sprawdz warunki gdy zostanie zwrocony
 
 }
