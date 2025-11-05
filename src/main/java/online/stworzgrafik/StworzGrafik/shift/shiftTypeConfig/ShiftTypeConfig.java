@@ -1,12 +1,16 @@
 package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShiftTypeConfig {
 
     @Id

@@ -1,5 +1,7 @@
 package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
+import jakarta.persistence.EntityNotFoundException;
+import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.shiftTypeConfig.TestShiftTypeConfigBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +12,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class ShiftTypeConfigServiceImplTest {
     @InjectMocks
@@ -18,25 +23,52 @@ class ShiftTypeConfigServiceImplTest {
     @Mock
     private ShiftTypeConfigRepository repository;
 
-    @Mock
-    private ShiftTypeConfig shiftTypeConfig;
-
-    //zastanawiam sie czy to robic, czy tu potrzebny service i serviceImpl a potem testy
-    //czyli 1. czy config ma miec service, testy, itd
-
-    //2. rob dalej demand_draft :D
     @Test
     void findByCode_workingTest(){
         //given
-        ShiftCode shiftCode = ShiftCode.WORK;
+        ShiftTypeConfig shiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK).build();
 
-        Mockito.when(repository.findByCode(shiftCode)).thenReturn(Optional.of(shiftTypeConfig));
+        ShiftCode shiftCodeToFind = ShiftCode.WORK;
+        when(repository.findByCode(shiftCodeToFind)).thenReturn(Optional.of(shiftTypeConfig));
 
         //when
-        ShiftTypeConfig serviceResponse = service.findByCode(shiftCode);
+        ShiftTypeConfig serviceResponse = service.findByCode(shiftCodeToFind);
 
         //then
-
+        assertEquals(shiftCodeToFind,serviceResponse.getCode());
     }
+
+    @Test
+    void findByCode_codeNotFoundThrowsException(){
+        //given
+        ShiftTypeConfig shiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK).build();
+
+        ShiftCode shiftCodeToFind = ShiftCode.WORK;
+        when(repository.findByCode(shiftCodeToFind)).thenReturn(Optional.empty());
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> service.findByCode(shiftCodeToFind));
+
+        //then
+        assertEquals("Cannot find shift type config by code " + shiftCodeToFind, exception.getMessage());
+    }
+
+    @Test
+    void findByCode_codeIsNullThrowsException(){
+        //given
+        ShiftCode shiftCode = null;
+
+        //when
+        NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> service.findByCode(shiftCode));
+
+        //then
+        assertEquals("Shift code cannot be null", exception.getMessage());
+
+        verify(repository,never()).findByCode(any());
+    }
+
+    //continue testing
 
 }
