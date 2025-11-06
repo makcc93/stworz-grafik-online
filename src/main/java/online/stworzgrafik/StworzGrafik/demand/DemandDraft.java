@@ -12,6 +12,7 @@ import java.time.LocalTime;
 @Builder
 @Getter
 @Setter
+@Table(name = "demand_draft")
 public class DemandDraft {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

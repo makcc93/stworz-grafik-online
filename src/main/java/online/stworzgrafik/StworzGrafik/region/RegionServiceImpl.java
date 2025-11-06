@@ -15,7 +15,7 @@ import java.util.Objects;
 
 @Service
 @Validated
-public class RegionServiceImpl implements RegionService{
+class RegionServiceImpl implements RegionService{
     private final RegionRepository regionRepository;
     private final RegionBuilder regionBuilder;
     private final RegionMapper regionMapper;
