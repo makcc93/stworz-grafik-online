@@ -1,7 +1,6 @@
 package online.stworzgrafik.StworzGrafik.region;
 
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestUpdateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import org.junit.jupiter.api.Test;

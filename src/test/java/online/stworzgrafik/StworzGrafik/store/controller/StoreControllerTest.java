@@ -6,17 +6,17 @@ import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
 import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreBuilder;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,29 +41,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class StoreControllerTest {
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Autowired
-    StoreService service;
+    private StoreService service;
 
     @Autowired
-    StoreBuilder storeBuilder;
+    private StoreBuilder storeBuilder;
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @Autowired
-    BranchBuilder branchBuilder;
+    private BranchBuilder branchBuilder;
 
     @Autowired
-    BranchRepository branchRepository;
+    private BranchRepository branchRepository;
 
     @Autowired
-    RegionRepository regionRepository;
+    private RegionService regionService;
 
     @Autowired
-    NameValidatorService nameValidatorService;
-
+    private NameValidatorService nameValidatorService;
 
     @Test
     void getAllStores_workingTest() throws Exception {
@@ -144,7 +142,7 @@ class StoreControllerTest {
     void createStore_workingTest() throws Exception{
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withName("TestBRANCH").withRegion(region).build();
         branchRepository.save(branch);
@@ -299,7 +297,7 @@ class StoreControllerTest {
     }
 
     private Store firstStoreWithBranch(){
-        Region region = regionRepository.save(new TestRegionBuilder().build());
+        Region region = regionService.save(new TestRegionBuilder().build());
 
         Branch firstBranch = branchRepository.save(new TestBranchBuilder().withName("FirstBranch").withRegion(region).build());
 
@@ -311,7 +309,7 @@ class StoreControllerTest {
     }
 
     private Store secondStore(){
-        Region region = regionRepository.save(new TestRegionBuilder().build());
+        Region region = regionService.save(new TestRegionBuilder().build());
 
         Branch secondBranch = branchRepository.save(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
 
@@ -324,7 +322,7 @@ class StoreControllerTest {
     }
 
     private Store thirdStore(){
-        Region region = regionRepository.save(new TestRegionBuilder().build());
+        Region region = regionService.save(new TestRegionBuilder().build());
 
         Branch thirdBranch = branchRepository.save(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
 

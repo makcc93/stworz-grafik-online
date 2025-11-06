@@ -7,12 +7,12 @@ import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.branch.TestCreateBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,7 @@ class BranchControllerTest {
     private BranchMapper branchMapper;
 
     @Autowired
-    private RegionRepository regionRepository;
+    private RegionService regionService;
 
     @Autowired
     private NameValidatorService nameValidatorService;
@@ -58,7 +58,7 @@ class BranchControllerTest {
     void findAll_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withRegion(region).withName("FIRST").build();
         Branch secondBranch = new TestBranchBuilder().withRegion(region).withName("SECOND").build();
@@ -110,7 +110,7 @@ class BranchControllerTest {
     void findById_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
@@ -147,7 +147,7 @@ class BranchControllerTest {
     void createBranch_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withRegionId(region.getId()).build();
 
@@ -170,7 +170,7 @@ class BranchControllerTest {
     void createBranch_entityWithThisNameAlreadyExistThrowsException() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         branchRepository.save(firstBranch);
@@ -209,7 +209,7 @@ class BranchControllerTest {
     void deleteBranchById_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
@@ -244,7 +244,7 @@ class BranchControllerTest {
     void updateBranch_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
         branchRepository.save(firstBranch);

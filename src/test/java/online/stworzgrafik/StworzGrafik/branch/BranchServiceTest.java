@@ -5,13 +5,9 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestResponseBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
@@ -42,7 +38,7 @@ class BranchServiceTest {
     BranchMapper branchMapper;
 
     @Mock
-    RegionRepository regionRepository;
+    RegionService regionService;
 
     @Mock
     NameValidatorService nameValidatorService;
@@ -105,7 +101,7 @@ class BranchServiceTest {
         boolean isEnable = true;
 
         Region region = new TestRegionBuilder().build();
-        when(regionRepository.findById(any())).thenReturn(Optional.of(region));
+        when(regionService.findById(any())).thenReturn(Optional.of(region));
 
         when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(false);
 

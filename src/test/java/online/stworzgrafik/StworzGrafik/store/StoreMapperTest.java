@@ -1,9 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestUpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;

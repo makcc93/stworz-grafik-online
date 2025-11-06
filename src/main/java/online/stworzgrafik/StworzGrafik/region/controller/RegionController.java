@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/regions")
-public class RegionController {
+class RegionController {
     private final RegionService regionService;
 
     public RegionController(RegionService regionService) {

@@ -2,13 +2,12 @@ package online.stworzgrafik.StworzGrafik.region.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestCreateRegionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestUpdateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestCreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.TestUpdateRegionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,9 +33,6 @@ class RegionControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private RegionRepository regionRepository;
 
     @Autowired
     private RegionService regionService;
@@ -80,7 +76,7 @@ class RegionControllerTest {
 
         //then
         assertEquals(firstCreateDTO.name(),responseRegionDTO.name());
-        assertTrue(regionRepository.existsById(responseRegionDTO.id()));
+        assertTrue(regionService.exists(responseRegionDTO.id()));
     }
 
     @Test
@@ -114,7 +110,7 @@ class RegionControllerTest {
 
         //then
         assertEquals(createRegionDTO.name(),responseRegionDTO.name());
-        assertTrue(regionRepository.existsByName(responseRegionDTO.name()));
+        assertTrue(regionService.exists(responseRegionDTO.name()));
     }
 
     @Test
@@ -152,9 +148,9 @@ class RegionControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(regionRepository.existsById(toDelete.id()));
+        assertFalse(regionService.exists(toDelete.id()));
 
-        assertTrue(regionRepository.existsById(toLeave.id()));
+        assertTrue(regionService.exists(toLeave.id()));
     }
 
     @Test
@@ -168,7 +164,7 @@ class RegionControllerTest {
                 .andExpect(status().isNotFound());
 
         //then
-        assertFalse(regionRepository.existsById(randomNumber));
+        assertFalse(regionService.exists(randomNumber));
     }
 
     @Test

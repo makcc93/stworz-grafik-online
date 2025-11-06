@@ -3,6 +3,8 @@ package online.stworzgrafik.StworzGrafik.exception;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +57,11 @@ public class GlobalControllerExceptionHandler {
         response.put("error", errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException exception){
+        return ResponseEntity.badRequest().body(exception);
     }
 
     @ExceptionHandler(Exception.class)
