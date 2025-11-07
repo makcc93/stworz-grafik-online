@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
-public interface EmployeeMapper {
+interface EmployeeMapper {
 
 
     @Mapping(source = "store.id" ,target = "storeId")

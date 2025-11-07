@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.employee.position;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
@@ -34,18 +35,14 @@ public class PositionService{
                 .toList();
     }
 
-    public ResponsePositionDTO findById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
+    public ResponsePositionDTO findById(@Valid Long id) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
         return positionMapper.toResponsePositionDTO(position);
     }
 
-    public ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO) {
-        Objects.requireNonNull(createPositionDTO);
-
+    public ResponsePositionDTO createPosition(@Valid CreatePositionDTO createPositionDTO) {
         if (positionRepository.existsByName(createPositionDTO.name())){
             throw new EntityExistsException("Position with name " + createPositionDTO.name() + " already exists");
         }
@@ -58,10 +55,7 @@ public class PositionService{
         return positionMapper.toResponsePositionDTO(savedPosition);
     }
 
-    public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
-        Objects.requireNonNull(id, "Id cannot be null");
-        Objects.requireNonNull(updatePositionDTO);
-
+    public ResponsePositionDTO updatePosition(@Valid Long id, @Valid UpdatePositionDTO updatePositionDTO) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
@@ -75,9 +69,11 @@ public class PositionService{
         return positionMapper.toResponsePositionDTO(position);
     }
 
-    public void deletePosition(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
+    public Position save(@Valid Position position){
+        return positionRepository.save(position);
+    }
 
+    public void deletePosition(@Valid Long id) {
         if (!positionRepository.existsById(id)){
             throw new EntityNotFoundException("Position with id " + id + " does not exist");
         }
@@ -85,15 +81,11 @@ public class PositionService{
         positionRepository.deleteById(id);
     }
 
-    public boolean exists(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
+    public boolean exists(@Valid Long id) {
         return positionRepository.existsById(id);
     }
 
-    public boolean exists(String name) {
-        Objects.requireNonNull(name,"Name cannot be null");
-
+    public boolean exists(@Valid String name) {
         return positionRepository.existsByName(name);
     }
 }

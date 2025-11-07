@@ -82,7 +82,7 @@ public class RegionService{
         regionRepository.deleteById(id);
     }
 
-    public void save(@Valid Region region){
-        regionRepository.save(region);
+    public Region save(@Valid Region region){
+        return regionRepository.save(region);
     }
 }

@@ -8,7 +8,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring")
-public interface PositionMapper {
+interface PositionMapper {
 
     ResponsePositionDTO toResponsePositionDTO(Position position);
 

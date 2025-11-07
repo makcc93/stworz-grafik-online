@@ -1,9 +1,10 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
@@ -40,10 +41,13 @@ class StoreServiceTest {
     private StoreMapper storeMapper;
 
     @Mock
-    private BranchRepository branchRepository;
+    private BranchService branchService;
 
     @Mock
     private NameValidatorService nameValidatorService;
+
+    @Mock
+    private EntityManager entityManager;
 
     @Test
     void findAll_workingTest(){
@@ -113,7 +117,7 @@ class StoreServiceTest {
     }
 
     @Test
-    void create_Store_workingTest(){
+    void createStore_workingTest(){
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
@@ -122,8 +126,9 @@ class StoreServiceTest {
         String storeCode = createStoreDTO.storeCode();
         when(repository.existsByStoreCode(storeCode)).thenReturn(false);
 
+        when(branchService.exists(createStoreDTO.branchId())).thenReturn(true);
         Branch branch = new TestBranchBuilder().build();
-        when(branchRepository.findById(createStoreDTO.branchId())).thenReturn(Optional.of(branch));
+        when(entityManager.getReference(Branch.class, createStoreDTO.branchId())).thenReturn(branch);
 
         when(nameValidatorService.validate(name,ObjectType.STORE)).thenReturn(name);
 
@@ -164,7 +169,7 @@ class StoreServiceTest {
     }
 
     @Test
-    void create_Store_argumentIsNull(){
+    void createStore_argumentIsNull(){
         //given
         CreateStoreDTO createStoreDTO = null;
 
@@ -176,14 +181,14 @@ class StoreServiceTest {
     }
 
     @Test
-    void create_Store_branchDoesNotExistThrowsException(){
+    void createStore_branchDoesNotExistThrowsException(){
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
         when(repository.existsByName(createStoreDTO.name())).thenReturn(false);
         when(repository.existsByStoreCode(createStoreDTO.storeCode())).thenReturn(false);
 
-        when(branchRepository.findById(createStoreDTO.branchId())).thenThrow(EntityNotFoundException.class);
+        when(branchService.findById(createStoreDTO.branchId())).thenThrow(EntityNotFoundException.class);
 
         //when
         assertThrows(EntityNotFoundException.class, () -> service.createStore(createStoreDTO));
@@ -295,13 +300,13 @@ class StoreServiceTest {
     }
 
     @Test
-    void saveEntity_workingTest(){
+    void save_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
         when(repository.save(store)).thenReturn(store);
 
         //when
-        Store savedEntity = service.saveEntity(store);
+        Store savedEntity = service.save(store);
 
         //then
         assertEquals(store.getName(),savedEntity.getName());
@@ -313,12 +318,12 @@ class StoreServiceTest {
     }
 
     @Test
-    void saveEntity_argumentIsNull(){
+    void save_argumentIsNull(){
         //given
         Store store = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> service.saveEntity(store));
+        assertThrows(NullPointerException.class,() -> service.save(store));
 
         //then
         verify(repository,never()).save(any(Store.class));

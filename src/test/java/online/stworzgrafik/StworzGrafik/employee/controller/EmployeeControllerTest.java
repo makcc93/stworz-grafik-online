@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.*;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
@@ -16,10 +17,8 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,9 +47,6 @@ class EmployeeControllerTest {
     private EmployeeService employeeService;
 
     @Autowired
-    private EmployeeRepository employeeRepository;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
@@ -61,16 +56,10 @@ class EmployeeControllerTest {
     private RegionService regionService;
 
     @Autowired
-    private BranchRepository branchRepository;
+    private BranchService branchService;
 
     @Autowired
-    private StoreRepository storeRepository;
-
-    @Autowired
-    private PositionRepository positionRepository;
-
-    @Autowired
-    private EmployeeMapper employeeMapper;
+    private PositionService positionService;
 
     private Store store;
 
@@ -84,10 +73,10 @@ class EmployeeControllerTest {
         regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchRepository.save(branch);
+        branchService.save(branch);
 
-        store = storeRepository.save(new TestStoreBuilder().withBranch(branch).build());
-        position = positionRepository.save(new TestPositionBuilder().build());
+        store = storeService.save(new TestStoreBuilder().withBranch(branch).build());
+        position = positionService.save(new TestPositionBuilder().build());
 
         storeId = store.getId();
     }
@@ -95,14 +84,10 @@ class EmployeeControllerTest {
     @Test
     void findAll_workingTest() throws Exception{
         //given
-        Employee first = new TestEmployeeBuilder().withFirstName("FIRST").withStore(store).withPosition(position).build();
-        Employee second = new TestEmployeeBuilder().withFirstName("SECOND").withStore(store).withPosition(position).build();
-        Employee third = new TestEmployeeBuilder().withFirstName("THIRD").withStore(store).withPosition(position).build();
-        employeeRepository.saveAll(List.of(first,second,third));
-
-        List<ResponseEmployeeDTO> employees = Stream.of(first, second, third)
-                .map(empl -> employeeMapper.toResponseEmployeeDTO(empl))
-                .toList();
+        ResponseEmployeeDTO firstEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("FIRST").build());
+        ResponseEmployeeDTO secondEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("SECOND").build());
+        ResponseEmployeeDTO thirdEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("THIRD").build());
+        List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees"))
@@ -115,7 +100,7 @@ class EmployeeControllerTest {
 
         //then
         assertEquals(3,serviceResponse.size());
-        assertTrue(serviceResponse.containsAll(employees));
+        assertTrue(serviceResponse.containsAll(responseDTOS));
     }
 
     @Test

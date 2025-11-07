@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/branches")
-public class BranchController {
+class BranchController {
     private final BranchService branchService;
 
     public BranchController(BranchService branchService) {

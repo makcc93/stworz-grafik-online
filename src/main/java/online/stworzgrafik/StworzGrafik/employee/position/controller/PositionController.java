@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/positions")
-public class PositionController {
+class PositionController {
 
     private final PositionService service;
 

@@ -5,20 +5,20 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import online.stworzgrafik.StworzGrafik.store.StoreRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,16 +46,16 @@ public class EmployeeServiceIT {
     private NameValidatorService nameValidatorService;
 
     @Autowired
-    private StoreRepository storeRepository;
+    private StoreService storeService;
 
     @Autowired
-    private PositionRepository positionRepository;
+    private PositionService positionService;
 
     @Autowired
     private EmployeeBuilder employeeBuilder;
 
     @Autowired
-    private BranchRepository branchRepository;
+    private BranchService branchService;
 
     @Autowired
     private RegionService regionService;
@@ -440,15 +440,15 @@ public class EmployeeServiceIT {
         regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchRepository.save(branch);
+        branchService.save(branch);
 
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
-        return storeRepository.save(store);
+        return storeService.save(store);
     }
 
     private Position getDefaultSavedPosition(){
         Position position = new TestPositionBuilder().build();
-        return positionRepository.save(position);
+        return positionService.save(position);
     }
 }

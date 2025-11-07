@@ -3,6 +3,8 @@ package online.stworzgrafik.StworzGrafik.branch;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
@@ -14,10 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Validated
+@AllArgsConstructor
 public class BranchService {
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
@@ -26,27 +28,20 @@ public class BranchService {
     private final RegionService regionService;
     private final EntityManager entityManager;
 
-    public BranchService(BranchRepository branchRepository, BranchMapper branchMapper, BranchBuilder branchBuilder, NameValidatorService nameValidatorService, RegionService regionService, EntityManager entityManager) {
-        this.branchRepository = branchRepository;
-        this.branchMapper = branchMapper;
-        this.branchBuilder = branchBuilder;
-        this.nameValidatorService = nameValidatorService;
-        this.regionService = regionService;
-        this.entityManager = entityManager;
-    }
-
-    public ResponseBranchDTO findById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
+    public ResponseBranchDTO findById(@Valid Long id) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
         return branchMapper.toResponseBranchDTO(branch);
     }
 
-    public ResponseBranchDTO createBranch(CreateBranchDTO createBranchDTO) {
-        Objects.requireNonNull(createBranchDTO);
+    public List<ResponseBranchDTO> findAll() {
+        return branchRepository.findAll().stream()
+                .map(branchMapper::toResponseBranchDTO)
+                .toList();
+    }
 
+    public ResponseBranchDTO createBranch(@Valid CreateBranchDTO createBranchDTO) {
         if (branchRepository.existsByName(createBranchDTO.name())){
             throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exist");
         }
@@ -62,10 +57,7 @@ public class BranchService {
         return branchMapper.toResponseBranchDTO(savedBranch);
     }
 
-    public ResponseBranchDTO updateBranch(Long id, UpdateBranchDTO updateBranchDTO) {
-        Objects.requireNonNull(id, "Id cannot be null");
-        Objects.requireNonNull(updateBranchDTO, "Update branch DTO cannot be null");
-
+    public ResponseBranchDTO updateBranch(@Valid Long id, @Valid UpdateBranchDTO updateBranchDTO) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
@@ -76,9 +68,11 @@ public class BranchService {
         return branchMapper.toResponseBranchDTO(savedBranch);
     }
 
-    public void delete(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
+    public Branch save(@Valid Branch branch){
+        return branchRepository.save(branch);
+    }
 
+    public void delete(@Valid Long id) {
         if (!branchRepository.existsById(id)){
             throw new EntityNotFoundException("Branch with id " + id + " does not exist");
         }
@@ -86,27 +80,15 @@ public class BranchService {
         branchRepository.deleteById(id);
     }
 
-    public boolean exists(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
+    public boolean exists(@Valid Long id) {
         return branchRepository.existsById(id);
     }
 
-    public boolean exists(String name) {
-        Objects.requireNonNull(name, "Name cannot be null");
-
+    public boolean exists(@Valid String name) {
         return branchRepository.existsByName(name);
     }
 
-    public List<ResponseBranchDTO> findAll() {
-        List<Branch> branches = branchRepository.findAll();
-
-        return branches.stream()
-                .map(branchMapper::toResponseBranchDTO)
-                .toList();
-    }
-
-    private Region getRegionReference(CreateBranchDTO createBranchDTO){
+    private Region getRegionReference(@Valid CreateBranchDTO createBranchDTO){
         if (!regionService.exists(createBranchDTO.regionId())){
             throw new EntityNotFoundException("Cannot find region by id " + createBranchDTO.regionId());
         }

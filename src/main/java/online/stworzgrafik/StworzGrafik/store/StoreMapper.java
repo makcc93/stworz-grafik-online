@@ -7,7 +7,7 @@ import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
-public interface StoreMapper {
+interface StoreMapper {
 
     @Mapping(source = "branch.id", target = "branchId")
     @Mapping(source = "branch.name",target = "branchName")

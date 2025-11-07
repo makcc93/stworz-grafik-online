@@ -3,10 +3,7 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
@@ -37,13 +34,10 @@ class StoreServiceIT {
     private StoreMapper storeMapper;
 
     @Autowired
-    private BranchRepository branchRepository;
+    private BranchService branchService;
 
     @Autowired
     private StoreBuilder storeBuilder;
-
-    @Autowired
-    private BranchBuilder branchBuilder;
 
     @Autowired
     private RegionService regionService;
@@ -326,14 +320,14 @@ class StoreServiceIT {
     }
 
     @Test
-    void saveEntity_workingTest(){
+    void save_workingTest(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
 
         //when
-        storeService.saveEntity(store);
+        storeService.save(store);
 
         //then
         assertTrue(storeRepository.existsById(store.getId()));
@@ -359,7 +353,7 @@ class StoreServiceIT {
         regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchRepository.save(branch);
+        branchService.save(branch);
 
         return branch;
     }

@@ -278,6 +278,7 @@ class BranchServiceIT {
     }
 
     private Region defaultSavedRegion(){
-        return regionService.save(new TestRegionBuilder().build());
+        Region region = new TestRegionBuilder().build();
+        return regionService.save(region);
     }
 }

@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.region.Region;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class BranchBuilder {
+final class BranchBuilder {
 
     public Branch createBranch(
             String name,

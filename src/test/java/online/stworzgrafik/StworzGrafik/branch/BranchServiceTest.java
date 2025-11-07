@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
@@ -10,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.h2.command.dml.MergeUsing;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,6 +44,9 @@ class BranchServiceTest {
 
     @Mock
     NameValidatorService nameValidatorService;
+
+    @Mock
+    EntityManager entityManager;
 
     @Test
     void findById_workingTest(){
@@ -100,8 +105,10 @@ class BranchServiceTest {
         Long id = 1L;
         boolean isEnable = true;
 
+        when(regionService.exists(createBranchDTO.regionId())).thenReturn(true);
+
         Region region = new TestRegionBuilder().build();
-        when(regionService.findById(any())).thenReturn(Optional.of(region));
+        when(entityManager.getReference(Region.class,createBranchDTO.regionId())).thenReturn(region);
 
         when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(false);
 
@@ -124,6 +131,22 @@ class BranchServiceTest {
         assertEquals(isEnable,serviceResponse.enable());
 
         verify(branchRepository,times(1)).save(any(Branch.class));
+    }
+
+    @Test
+    void createBranch_regionDoesNotExistThrowsException(){
+        //given
+        CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().build();
+        when(regionService.exists(createBranchDTO.regionId())).thenReturn(false);
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> branchService.createBranch(createBranchDTO));
+
+        //then
+        assertEquals("Cannot find region by id " + createBranchDTO.regionId(),exception.getMessage());
+        verify(entityManager,never()).getReference(any(),any());
+
     }
 
     @Test
@@ -223,6 +246,19 @@ class BranchServiceTest {
         //then
         verify(branchRepository,never()).findById(any());
         verify(branchRepository,never()).save(any());
+    }
+
+    @Test
+    void save_workingTest(){
+        //given
+        Branch branch = new TestBranchBuilder().build();
+        when(branchRepository.save(branch)).thenReturn(branch);
+
+        //when
+        Branch serviceResponse = branchService.save(branch);
+
+        //then
+        assertEquals(branch.getName(),serviceResponse.getName());
     }
 
     @Test
