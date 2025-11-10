@@ -43,7 +43,7 @@ class PositionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deletePosition(@PathVariable Long id){
-        service.deletePosition(id);
+        service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

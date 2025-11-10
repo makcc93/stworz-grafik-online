@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchService;
+import online.stworzgrafik.StworzGrafik.branch.BranchServiceImpl;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.store.StoreServiceImpl;
 import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
@@ -42,16 +42,16 @@ class StoreControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private StoreService storeService;
+    private StoreServiceImpl storeServiceImpl;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
-    private BranchService branchService;
+    private BranchServiceImpl branchServiceImpl;
 
     @Autowired
-    private RegionService regionService;
+    private RegionServiceImpl regionServiceImpl;
 
     @Autowired
     private NameValidatorService nameValidatorService;
@@ -63,9 +63,9 @@ class StoreControllerTest {
         Store store2 = secondStore();
         Store store3 = thirdStore();
 
-        storeService.save(store1);
-        storeService.save(store2);
-        storeService.save(store3);
+        storeServiceImpl.save(store1);
+        storeServiceImpl.save(store2);
+        storeServiceImpl.save(store3);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores"))
@@ -102,7 +102,7 @@ class StoreControllerTest {
     void getStoreById_workingTest() throws Exception {
         //given
         Store store = firstStoreWithBranch();
-        storeService.save(store);
+        storeServiceImpl.save(store);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + store.getId()))
@@ -134,10 +134,10 @@ class StoreControllerTest {
     void createStore_workingTest() throws Exception{
         //given
         Region region = new TestRegionBuilder().build();
-        regionService.save(region);
+        regionServiceImpl.save(region);
 
         Branch branch = new TestBranchBuilder().withName("TestBRANCH").withRegion(region).build();
-        branchService.save(branch);
+        branchServiceImpl.save(branch);
 
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
 
@@ -158,7 +158,7 @@ class StoreControllerTest {
         assertEquals(createStoreDTO.location(),store.location());
         assertEquals(createStoreDTO.branchId(),store.branchId());
 
-        assertTrue(storeService.exists(store.id()));
+        assertTrue(storeServiceImpl.exists(store.id()));
     }
 
     @Test
@@ -180,9 +180,9 @@ class StoreControllerTest {
         Store secondStore = secondStore();
         Store thirdStore = thirdStore();
 
-        storeService.save(firstStore);
-        storeService.save(secondStore);
-        storeService.save(thirdStore);
+        storeServiceImpl.save(firstStore);
+        storeServiceImpl.save(secondStore);
+        storeServiceImpl.save(thirdStore);
 
         //when
         mockMvc.perform(delete("/api/stores/" + secondStore.getId()))
@@ -190,10 +190,10 @@ class StoreControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(storeService.exists(secondStore.getId()));
+        assertFalse(storeServiceImpl.exists(secondStore.getId()));
 
-        assertTrue(storeService.exists(firstStore.getId()));
-        assertTrue(storeService.exists(thirdStore.getId()));
+        assertTrue(storeServiceImpl.exists(firstStore.getId()));
+        assertTrue(storeServiceImpl.exists(thirdStore.getId()));
     }
 
     @Test
@@ -212,7 +212,7 @@ class StoreControllerTest {
     void updateStore_workingTest() throws Exception{
         //given
         Store store = firstStoreWithBranch();
-        storeService.save(store);
+        storeServiceImpl.save(store);
 
         String storeNameBeforeUpdate = store.getName();
 
@@ -278,7 +278,7 @@ class StoreControllerTest {
     void updateStore_requestBodyIsMissingThrowsException() throws Exception{
         //given
         Store store = firstStoreWithBranch();
-        storeService.save(store);
+        storeServiceImpl.save(store);
 
         //when
         mockMvc.perform(patch("/api/stores/" + store.getId()))
@@ -289,7 +289,7 @@ class StoreControllerTest {
     }
 
     private Store firstStoreWithBranch(){
-        Region region = regionService.save(new TestRegionBuilder().build());
+        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
 
         Branch firstBranch = branchRepository.save(new TestBranchBuilder().withName("FirstBranch").withRegion(region).build());
 
@@ -301,7 +301,7 @@ class StoreControllerTest {
     }
 
     private Store secondStore(){
-        Region region = regionService.save(new TestRegionBuilder().build());
+        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
 
         Branch secondBranch = branchRepository.save(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
 
@@ -314,7 +314,7 @@ class StoreControllerTest {
     }
 
     private Store thirdStore(){
-        Region region = regionService.save(new TestRegionBuilder().build());
+        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
 
         Branch thirdBranch = branchRepository.save(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
 

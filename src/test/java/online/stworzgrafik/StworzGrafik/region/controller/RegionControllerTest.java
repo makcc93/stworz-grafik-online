@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
 import online.stworzgrafik.StworzGrafik.region.TestCreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.TestUpdateRegionDTO;
 import org.junit.jupiter.api.Test;
@@ -35,16 +35,16 @@ class RegionControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private RegionService regionService;
+    private RegionServiceImpl regionServiceImpl;
 
     @Test
     void getAll_workingTest() throws Exception {
         //given
         CreateRegionDTO firstCreateDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
-        ResponseRegionDTO firstExistingRegion = regionService.createRegion(firstCreateDTO);
+        ResponseRegionDTO firstExistingRegion = regionServiceImpl.createRegion(firstCreateDTO);
 
         CreateRegionDTO secondCreateDTO = new TestCreateRegionDTO().withName("SECONDONE").build();
-        ResponseRegionDTO secondExistingRegion = regionService.createRegion(secondCreateDTO);
+        ResponseRegionDTO secondExistingRegion = regionServiceImpl.createRegion(secondCreateDTO);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/regions"))
@@ -64,7 +64,7 @@ class RegionControllerTest {
     void getById_workingTest() throws Exception{
         //given
         CreateRegionDTO firstCreateDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
-        ResponseRegionDTO firstExistingRegion = regionService.createRegion(firstCreateDTO);
+        ResponseRegionDTO firstExistingRegion = regionServiceImpl.createRegion(firstCreateDTO);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/regions/" + firstExistingRegion.id()))
@@ -76,7 +76,7 @@ class RegionControllerTest {
 
         //then
         assertEquals(firstCreateDTO.name(),responseRegionDTO.name());
-        assertTrue(regionService.exists(responseRegionDTO.id()));
+        assertTrue(regionServiceImpl.exists(responseRegionDTO.id()));
     }
 
     @Test
@@ -110,14 +110,14 @@ class RegionControllerTest {
 
         //then
         assertEquals(createRegionDTO.name(),responseRegionDTO.name());
-        assertTrue(regionService.exists(responseRegionDTO.name()));
+        assertTrue(regionServiceImpl.exists(responseRegionDTO.name()));
     }
 
     @Test
     void createRegion_entityAlreadyExistThrowsException() throws Exception{
         //given
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
-        regionService.createRegion(createRegionDTO);
+        regionServiceImpl.createRegion(createRegionDTO);
 
         CreateRegionDTO nameWithAlreadyExistingEntity = new TestCreateRegionDTO().withName("FIRSTONE").build();
 
@@ -137,10 +137,10 @@ class RegionControllerTest {
     void deleteRegion_workingTest() throws Exception{
         //given
         CreateRegionDTO createDTOtoDelete = new TestCreateRegionDTO().withName("FIRSTONE").build();
-        ResponseRegionDTO toDelete = regionService.createRegion(createDTOtoDelete);
+        ResponseRegionDTO toDelete = regionServiceImpl.createRegion(createDTOtoDelete);
 
         CreateRegionDTO createDTOtoLeave = new TestCreateRegionDTO().withName("SECONDONE").build();
-        ResponseRegionDTO toLeave = regionService.createRegion(createDTOtoLeave);
+        ResponseRegionDTO toLeave = regionServiceImpl.createRegion(createDTOtoLeave);
 
         //when
         mockMvc.perform(delete("/api/regions/" + toDelete.id()))
@@ -148,9 +148,9 @@ class RegionControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(regionService.exists(toDelete.id()));
+        assertFalse(regionServiceImpl.exists(toDelete.id()));
 
-        assertTrue(regionService.exists(toLeave.id()));
+        assertTrue(regionServiceImpl.exists(toLeave.id()));
     }
 
     @Test
@@ -164,7 +164,7 @@ class RegionControllerTest {
                 .andExpect(status().isNotFound());
 
         //then
-        assertFalse(regionService.exists(randomNumber));
+        assertFalse(regionServiceImpl.exists(randomNumber));
     }
 
     @Test
@@ -174,7 +174,7 @@ class RegionControllerTest {
         boolean enable = false;
 
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
-        ResponseRegionDTO existingRegion = regionService.createRegion(createRegionDTO);
+        ResponseRegionDTO existingRegion = regionServiceImpl.createRegion(createRegionDTO);
 
         UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().withIsEnable(enable).withName(newName).build();
 

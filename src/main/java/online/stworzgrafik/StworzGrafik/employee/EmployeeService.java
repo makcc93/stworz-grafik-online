@@ -1,16 +1,17 @@
 package online.stworzgrafik.StworzGrafik.employee;
 
 import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
@@ -22,15 +23,16 @@ import java.util.List;
 
 @Service
 @Validated
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class EmployeeService{
     private final EmployeeRepository employeeRepository;
     private final EmployeeBuilder employeeBuilder;
-    private final NameValidatorService nameValidatorService;
     private final EmployeeMapper employeeMapper;
+    private final NameValidatorService nameValidatorService;
     private final StoreService storeService;
-    private final PositionService positionService;
-    private final EntityManager entityManager;
+    private final StoreEntityService storeEntityService;
+    private final PositionService positionServiceImpl;
+    private final PositionEntityService positionEntityService;
 
     public ResponseEmployeeDTO createEmployee(@Valid Long storeId, @Valid CreateEmployeeDTO createEmployeeDTO) {
         if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
@@ -129,14 +131,15 @@ public class EmployeeService{
             throw new EntityNotFoundException("Cannot find store by id " + storeId);
         }
 
-        return entityManager.getReference(Store.class,storeId);
+        return storeEntityService.getEntityById(storeId);
     }
 
     private Position getPositionReference(@Valid CreateEmployeeDTO createEmployeeDTO){
-        if (!positionService.exists(createEmployeeDTO.positionId())){
+        if (!positionServiceImpl.exists(createEmployeeDTO.positionId())){
             throw new EntityNotFoundException("Cannot find position by id " + createEmployeeDTO.positionId());
         }
 
-        return entityManager.getReference(Position.class,createEmployeeDTO.positionId());
+        return positionEntityService.getEntityById(createEmployeeDTO.positionId());
+
     }
 }

@@ -5,13 +5,13 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchService;
+import online.stworzgrafik.StworzGrafik.branch.BranchServiceImpl;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionServiceImpl;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.store.StoreServiceImpl;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
@@ -46,19 +46,19 @@ public class EmployeeServiceIT {
     private NameValidatorService nameValidatorService;
 
     @Autowired
-    private StoreService storeService;
+    private StoreServiceImpl storeServiceImpl;
 
     @Autowired
-    private PositionService positionService;
+    private PositionServiceImpl positionServiceImpl;
 
     @Autowired
     private EmployeeBuilder employeeBuilder;
 
     @Autowired
-    private BranchService branchService;
+    private BranchServiceImpl branchServiceImpl;
 
     @Autowired
-    private RegionService regionService;
+    private RegionServiceImpl regionServiceImpl;
 
     private Store store;
 
@@ -437,18 +437,18 @@ public class EmployeeServiceIT {
 
     private Store getDefaultSavedStore(){
         Region region = new TestRegionBuilder().build();
-        regionService.save(region);
+        regionServiceImpl.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchService.save(branch);
+        branchServiceImpl.save(branch);
 
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
-        return storeService.save(store);
+        return storeServiceImpl.save(store);
     }
 
     private Position getDefaultSavedPosition(){
         Position position = new TestPositionBuilder().build();
-        return positionService.save(position);
+        return positionServiceImpl.save(position);
     }
 }

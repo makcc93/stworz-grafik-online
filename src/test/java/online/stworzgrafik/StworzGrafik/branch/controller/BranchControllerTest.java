@@ -43,13 +43,10 @@ class BranchControllerTest {
     private BranchService branchService;
 
     @Autowired
-    private BranchRepository branchRepository;
+    private RegionService regionService;
 
     @Autowired
     private BranchMapper branchMapper;
-
-    @Autowired
-    private RegionService regionService;
 
     @Autowired
     private NameValidatorService nameValidatorService;
@@ -61,9 +58,13 @@ class BranchControllerTest {
         regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withRegion(region).withName("FIRST").build();
+        branchService.save(firstBranch);
+
         Branch secondBranch = new TestBranchBuilder().withRegion(region).withName("SECOND").build();
+        branchService.save(secondBranch);
+
         Branch thirdBranch = new TestBranchBuilder().withRegion(region).withName("THIRD").build();
-        branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
+        branchService.save(thirdBranch);
 
         ResponseBranchDTO responseFirstBranch = branchMapper.toResponseBranchDTO(firstBranch);
         ResponseBranchDTO responseSecondBranch = branchMapper.toResponseBranchDTO(secondBranch);

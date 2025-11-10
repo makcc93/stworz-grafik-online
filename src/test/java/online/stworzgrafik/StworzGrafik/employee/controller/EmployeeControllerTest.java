@@ -7,10 +7,13 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.*;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
@@ -53,13 +56,22 @@ class EmployeeControllerTest {
     private StoreService storeService;
 
     @Autowired
+    private StoreEntityService storeEntityService;
+
+    @Autowired
     private RegionService regionService;
+
+    @Autowired
+    private RegionEntityService regionEntityService;
 
     @Autowired
     private BranchService branchService;
 
     @Autowired
     private PositionService positionService;
+
+    @Autowired
+    private PositionEntityService positionEntityService;
 
     private Store store;
 
@@ -70,13 +82,13 @@ class EmployeeControllerTest {
     @BeforeEach
     void prepareData(){
         Region region = new TestRegionBuilder().build();
-        regionService.save(region);
+        regionEntityService.saveEntity(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
         branchService.save(branch);
 
-        store = storeService.save(new TestStoreBuilder().withBranch(branch).build());
-        position = positionService.save(new TestPositionBuilder().build());
+        store = storeEntityService.saveEntity(new TestStoreBuilder().withBranch(branch).build());
+        position = positionEntityService.saveEntity(new TestPositionBuilder().build());
 
         storeId = store.getId();
     }
@@ -124,7 +136,7 @@ class EmployeeControllerTest {
     void findById_workingTest() throws Exception{
         //given
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
-        employeeRepository.save(employee);
+        employeeService.save(employee);
 
         Long id = employee.getId();
 
@@ -137,7 +149,7 @@ class EmployeeControllerTest {
         ResponseEmployeeDTO serviceResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseEmployeeDTO.class);
 
         //then
-        assertTrue(employeeRepository.existsById(id));
+        assertTrue(employeeService.existsById(id));
         assertEquals(employee.getFirstName(),serviceResponse.firstName());
         assertEquals(employee.getLastName(),serviceResponse.lastName());
     }
@@ -189,7 +201,7 @@ class EmployeeControllerTest {
         assertEquals(lastName,responseEmployeeDTO.lastName());
         assertEquals(sap,responseEmployeeDTO.sap());
 
-        assertTrue(employeeRepository.existsBySap(sap));
+        assertTrue(employeeService.existsBySap(sap));
     }
 
     @Test
@@ -198,7 +210,7 @@ class EmployeeControllerTest {
         Long sap = 11100022L;
 
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).build();
-        employeeRepository.save(employee);
+        employeeService.save(employee);
 
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO()
                 .withPositionId(position.getId())
@@ -223,7 +235,7 @@ class EmployeeControllerTest {
         //given
         String originalFirstName = "ORIGINAL";
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(originalFirstName).build();
-        employeeRepository.save(employee);
+        employeeService.save(employee);
 
         Long employeeId = employee.getId();
 
@@ -241,7 +253,7 @@ class EmployeeControllerTest {
 
         //then
         assertEquals(newFirstName, employee.getFirstName());
-        assertTrue(employeeRepository.existsById(employeeId));
+        assertTrue(employeeService.existsById(employeeId));
     }
 
     @Test
@@ -269,7 +281,7 @@ class EmployeeControllerTest {
     void updateEmployee_storeDoesNotExistThrowsException() throws Exception{
         //given
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
-        employeeRepository.save(employee);
+        employeeService.save(employee);
         Long employeeId = employee.getId();
 
         UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
@@ -295,11 +307,11 @@ class EmployeeControllerTest {
         //given
         String firstName = "FIRST";
         Employee firstEmployee = new TestEmployeeBuilder().withFirstName(firstName).withStore(store).withPosition(position).build();
-        employeeRepository.save(firstEmployee);
+        employeeService.save(firstEmployee);
 
         String secondName = "SECOND";
         Employee secondEmployee = new TestEmployeeBuilder().withFirstName(secondName).withStore(store).withPosition(position).build();
-        employeeRepository.save(secondEmployee);
+        employeeService.save(secondEmployee);
 
         //when
         mockMvc.perform(delete("/api/stores/" + storeId + "/employees/" + firstEmployee.getId()))
@@ -307,8 +319,8 @@ class EmployeeControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(employeeRepository.existsById(firstEmployee.getId()));
-        assertTrue(employeeRepository.existsById(secondEmployee.getId()));
+        assertFalse(employeeService.existsById(firstEmployee.getId()));
+        assertTrue(employeeService.existsById(secondEmployee.getId()));
     }
 
     @Test
@@ -332,7 +344,7 @@ class EmployeeControllerTest {
     void deleteEmployee_employeeDoesNotBelongToStoreThrowsException() throws Exception{
         //given
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
-        employeeRepository.save(employee);
+        employeeService.save(employee);
 
         long randomUnknownStoreId = 10000L;
 

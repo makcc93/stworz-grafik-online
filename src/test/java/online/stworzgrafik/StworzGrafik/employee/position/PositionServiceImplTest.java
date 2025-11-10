@@ -1,8 +1,7 @@
-package online.stworzgrafik.StworzGrafik.shift;
+package online.stworzgrafik.StworzGrafik.employee.position;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.employee.position.*;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
@@ -21,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PositionServiceTest {
+class PositionServiceImplTest {
     @InjectMocks
-    private PositionService positionService;
+    private PositionServiceImpl positionServiceImpl;
 
     @Mock
     private PositionRepository positionRepository;
@@ -57,7 +56,7 @@ class PositionServiceTest {
         when(positionMapper.toResponsePositionDTO(position3)).thenReturn(responsePositionDTO3);
 
         //when
-        List<ResponsePositionDTO> serviceResponse = positionService.findAll();
+        List<ResponsePositionDTO> serviceResponse = positionServiceImpl.findAll();
 
         //then
         assertTrue(serviceResponse.contains(responsePositionDTO1));
@@ -71,7 +70,7 @@ class PositionServiceTest {
         //given
 
         //when
-        List<ResponsePositionDTO> serviceResponse = positionService.findAll();
+        List<ResponsePositionDTO> serviceResponse = positionServiceImpl.findAll();
 
         //then
         assertEquals(0,serviceResponse.size());
@@ -91,7 +90,7 @@ class PositionServiceTest {
         when(positionMapper.toResponsePositionDTO(position)).thenReturn(responsePositionDTO);
 
         //when
-        ResponsePositionDTO serviceResponse = positionService.findById(id);
+        ResponsePositionDTO serviceResponse = positionServiceImpl.findById(id);
 
         //then
         assertEquals(id,serviceResponse.id());
@@ -107,7 +106,7 @@ class PositionServiceTest {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> positionService.findById(randomId));
+                assertThrows(EntityNotFoundException.class, () -> positionServiceImpl.findById(randomId));
 
         //then
         assertEquals("Cannot find position by id " + randomId, exception.getMessage());
@@ -121,7 +120,7 @@ class PositionServiceTest {
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionService.findById(nullId));
+                assertThrows(NullPointerException.class, () -> positionServiceImpl.findById(nullId));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
@@ -148,7 +147,7 @@ class PositionServiceTest {
         when(positionRepository.save(position)).thenReturn(position);
 
         //when
-        ResponsePositionDTO serviceResponse = positionService.createPosition(createRegionDTO);
+        ResponsePositionDTO serviceResponse = positionServiceImpl.createPosition(createRegionDTO);
 
         //then
         assertEquals(name,serviceResponse.name());
@@ -169,7 +168,7 @@ class PositionServiceTest {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> positionService.createPosition(createRegionDTO));
+                assertThrows(EntityExistsException.class, () -> positionServiceImpl.createPosition(createRegionDTO));
 
         //then
         assertEquals("Position with name " + name + " already exists", exception.getMessage());
@@ -185,7 +184,7 @@ class PositionServiceTest {
         CreatePositionDTO createPositionDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> positionService.createPosition(createPositionDTO));
+        assertThrows(NullPointerException.class, () -> positionServiceImpl.createPosition(createPositionDTO));
 
         //then
         verify(positionRepository,never()).existsByName(any());
@@ -215,7 +214,7 @@ class PositionServiceTest {
         when(positionMapper.toResponsePositionDTO(position)).thenReturn(responsePositionDTO);
 
         //when
-        ResponsePositionDTO updated = positionService.updatePosition(id, updatePositionDTO);
+        ResponsePositionDTO updated = positionServiceImpl.updatePosition(id, updatePositionDTO);
 
         //then
         assertEquals(newName,updated.name());
@@ -232,7 +231,7 @@ class PositionServiceTest {
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> positionService.updatePosition(id, updatePositionDTO));
+        assertThrows(EntityNotFoundException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
 
         //then
         verify(positionRepository,times(1)).findById(id);
@@ -247,7 +246,7 @@ class PositionServiceTest {
         UpdatePositionDTO updatePositionDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> positionService.updatePosition(id, updatePositionDTO));
+        assertThrows(NullPointerException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
 
         //then
         verify(positionRepository,never()).findById(id);
@@ -263,28 +262,28 @@ class PositionServiceTest {
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionService.updatePosition(id, updatePositionDTO));
+                assertThrows(NullPointerException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
     }
 
     @Test
-    void deletePosition_workingTest(){
+    void delete_workingTest(){
         //given
         Long id = 1L;
 
         when(positionRepository.existsById(id)).thenReturn(true);
 
         //when
-        positionService.deletePosition(id);
+        positionServiceImpl.delete(id);
 
         //then
         verify(positionRepository, times(1)).deleteById(id);
     }
 
     @Test
-    void deletePosition_entityDoesNotExistThrowsException(){
+    void delete_entityDoesNotExistThrowsException(){
         //given
         Long id = 1L;
 
@@ -292,7 +291,7 @@ class PositionServiceTest {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> positionService.deletePosition(id));
+                assertThrows(EntityNotFoundException.class, () -> positionServiceImpl.delete(id));
 
         //then
         assertEquals("Position with id " + id + " does not exist", exception.getMessage());
@@ -301,13 +300,13 @@ class PositionServiceTest {
     }
 
     @Test
-    void deletePosition_idIsNullThrowsException(){
+    void delete_idIsNullThrowsException(){
         //given
         Long id = null;
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionService.deletePosition(id));
+                assertThrows(NullPointerException.class, () -> positionServiceImpl.delete(id));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
@@ -323,7 +322,7 @@ class PositionServiceTest {
         when(positionRepository.existsById(id)).thenReturn(true);
 
         //when
-        boolean response = positionService.exists(id);
+        boolean response = positionServiceImpl.exists(id);
 
         //then
         assertTrue(response);
@@ -336,7 +335,7 @@ class PositionServiceTest {
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionService.exists(id));
+                assertThrows(NullPointerException.class, () -> positionServiceImpl.exists(id));
 
         //then
         assertEquals("Id cannot be null", exception.getMessage());
@@ -350,7 +349,7 @@ class PositionServiceTest {
         when(positionRepository.existsByName(name)).thenReturn(true);
 
         //when
-        boolean response = positionService.exists(name);
+        boolean response = positionServiceImpl.exists(name);
 
         //then
         assertTrue(response);
@@ -363,7 +362,7 @@ class PositionServiceTest {
 
         //when
         NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionService.exists(name));
+                assertThrows(NullPointerException.class, () -> positionServiceImpl.exists(name));
 
         //then
         assertEquals("Name cannot be null", exception.getMessage());

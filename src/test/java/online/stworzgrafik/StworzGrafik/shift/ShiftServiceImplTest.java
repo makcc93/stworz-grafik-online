@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ShiftServiceTest {
+class ShiftServiceImplTest {
     @Mock
     ShiftMapper shiftMapper;
 
@@ -28,10 +28,10 @@ class ShiftServiceTest {
     ShiftBuilder shiftBuilderMock;
 
     @InjectMocks
-    ShiftService service;
+    ShiftServiceImpl service;
 
     @Test
-    void saveDto_WorkingTest(){
+    void save_WorkingTest(){
         //given
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
@@ -57,7 +57,7 @@ class ShiftServiceTest {
     }
 
     @Test
-    void saveDto_theOrderOfProcessInvocation(){
+    void save_theOrderOfProcessInvocation(){
         //given
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
@@ -80,7 +80,7 @@ class ShiftServiceTest {
     }
 
     @Test
-    void saveDto_ShiftIsNull(){
+    void save_ShiftIsNull(){
         //given
 
         //when

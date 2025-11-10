@@ -4,7 +4,7 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.*;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-class StoreServiceIT {
+class StoreServiceImplIT {
 
     @Autowired
-    private StoreService storeService;
+    private StoreServiceImpl storeServiceImpl;
 
     @Autowired
     private StoreRepository storeRepository;
@@ -34,13 +34,13 @@ class StoreServiceIT {
     private StoreMapper storeMapper;
 
     @Autowired
-    private BranchService branchService;
+    private BranchServiceImpl branchServiceImpl;
 
     @Autowired
     private StoreBuilder storeBuilder;
 
     @Autowired
-    private RegionService regionService;
+    private RegionServiceImpl regionServiceImpl;
 
     @Test
     void findAll_workingTest(){
@@ -70,11 +70,11 @@ class StoreServiceIT {
         //given
 
         //when
-        List<ResponseStoreDTO> dtos = storeService.findAll();
+        List<ResponseStoreDTO> dtos = storeServiceImpl.findAll();
 
         //then
         assertEquals(0,dtos.size());
-        assertDoesNotThrow(() -> storeService.findAll());
+        assertDoesNotThrow(() -> storeServiceImpl.findAll());
     }
 
     @Test
@@ -89,7 +89,7 @@ class StoreServiceIT {
         storeRepository.saveAll(List.of(firstStore,secondStore,thirdStore));
 
         //when
-        ResponseStoreDTO responseFirstStore = storeService.findById(firstStore.getId());
+        ResponseStoreDTO responseFirstStore = storeServiceImpl.findById(firstStore.getId());
 
         //then
         assertEquals(firstStore.getName(),responseFirstStore.name());
@@ -103,7 +103,7 @@ class StoreServiceIT {
         //given
         Long unknownId = 123L;
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.findById(unknownId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeServiceImpl.findById(unknownId));
 
         //then
         assertEquals("Cannot find store by id " + unknownId,exception.getMessage());
@@ -116,7 +116,7 @@ class StoreServiceIT {
 
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
         //when
-        ResponseStoreDTO responseStoreDTO = storeService.createStore(createStoreDTO);
+        ResponseStoreDTO responseStoreDTO = storeServiceImpl.createStore(createStoreDTO);
 
         //then
         assertTrue(storeRepository.existsById(responseStoreDTO.id()));
@@ -140,7 +140,7 @@ class StoreServiceIT {
                 theSameBranchId
         );
 
-        storeService.createStore(createStoreDTO);
+        storeServiceImpl.createStore(createStoreDTO);
 
         CreateStoreDTO sameNameDTO = new CreateStoreDTO(
                 theSameName,
@@ -151,7 +151,7 @@ class StoreServiceIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> storeService.createStore(sameNameDTO));
+                assertThrows(EntityExistsException.class, () -> storeServiceImpl.createStore(sameNameDTO));
 
         //then
         assertEquals("Store with name " + theSameName + " already exists", exception.getMessage());
@@ -172,7 +172,7 @@ class StoreServiceIT {
                 theSameBranchId
         );
 
-        storeService.createStore(createStoreDTO);
+        storeServiceImpl.createStore(createStoreDTO);
 
         CreateStoreDTO sameStoreCodeDTO = new CreateStoreDTO(
                 "NEWNAME",
@@ -183,7 +183,7 @@ class StoreServiceIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> storeService.createStore(sameStoreCodeDTO));
+                assertThrows(EntityExistsException.class, () -> storeServiceImpl.createStore(sameStoreCodeDTO));
 
         //then
         assertEquals("Store with code " + theSameStoreCode + " already exists",exception.getMessage());
@@ -203,7 +203,7 @@ class StoreServiceIT {
                 branch.getId()
         );
 
-        ResponseStoreDTO responseStoreDTO = storeService.createStore(createStoreDTO);
+        ResponseStoreDTO responseStoreDTO = storeServiceImpl.createStore(createStoreDTO);
         Store store = storeRepository.findById(responseStoreDTO.id()).orElseThrow();
 
         String newName = "SHOULDBETHISNAME";
@@ -217,7 +217,7 @@ class StoreServiceIT {
         );
 
         //when
-        storeService.update(responseStoreDTO.id(),updateStoreDTO);
+        storeServiceImpl.update(responseStoreDTO.id(),updateStoreDTO);
 
         //then
         assertEquals(newName, store.getName());
@@ -240,7 +240,7 @@ class StoreServiceIT {
         );
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.update(randomId, updateStoreDTO));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeServiceImpl.update(randomId, updateStoreDTO));
 
         //then
         assertEquals("Cannot find store to update by id " + randomId,exception.getMessage());
@@ -255,8 +255,8 @@ class StoreServiceIT {
         storeRepository.save(store);
 
         //when
-        boolean exists = storeService.exists(store.getId());
-        boolean shouldNotExist = storeService.exists(123456L);
+        boolean exists = storeServiceImpl.exists(store.getId());
+        boolean shouldNotExist = storeServiceImpl.exists(123456L);
 
         //then
         assertTrue(exists);
@@ -277,9 +277,9 @@ class StoreServiceIT {
         StoreNameAndCodeDTO notExisting = new StoreNameAndCodeDTO("RANDOMNAME","AA");
 
         //when
-        boolean exists = storeService.exists(storeNameAndCodeDTO);
+        boolean exists = storeServiceImpl.exists(storeNameAndCodeDTO);
 
-        boolean shouldBeFalse = storeService.exists(notExisting);
+        boolean shouldBeFalse = storeServiceImpl.exists(notExisting);
 
         //then
         assertTrue(exists);
@@ -299,12 +299,12 @@ class StoreServiceIT {
         storeRepository.save(storeToDelete);
 
         //when
-        storeService.delete(storeToDelete.getId());
+        storeServiceImpl.delete(storeToDelete.getId());
 
         //then
-        assertTrue(storeService.exists(storeToStay.getId()));
+        assertTrue(storeServiceImpl.exists(storeToStay.getId()));
 
-        assertFalse(storeService.exists(storeToDelete.getId()));
+        assertFalse(storeServiceImpl.exists(storeToDelete.getId()));
     }
 
     @Test
@@ -313,7 +313,7 @@ class StoreServiceIT {
         Long notExistingEntityId = 1234L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.delete(notExistingEntityId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeServiceImpl.delete(notExistingEntityId));
 
         //then
         assertEquals("Store with id " + notExistingEntityId +" does not exist",exception.getMessage());
@@ -327,21 +327,21 @@ class StoreServiceIT {
         Store store = new TestStoreBuilder().withBranch(branch).build();
 
         //when
-        storeService.save(store);
+        storeServiceImpl.save(store);
 
         //then
         assertTrue(storeRepository.existsById(store.getId()));
     }
 
     @Test
-    void saveDto_workingTest(){
+    void save_workingTest(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
         Store store = new TestStoreBuilder().withBranch(branch).build();
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(store.getName(), store.getStoreCode());
 
         //when
-        storeService.saveDto(storeNameAndCodeDTO);
+        storeServiceImpl.save(storeNameAndCodeDTO);
 
         //then
         assertTrue(storeRepository.existsByNameAndStoreCode(store.getName(),store.getStoreCode()));
@@ -350,10 +350,10 @@ class StoreServiceIT {
 
     private Branch buildAndSaveDefaultBranchWithRegionInside() {
         Region region = new TestRegionBuilder().build();
-        regionService.save(region);
+        regionServiceImpl.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchService.save(branch);
+        branchServiceImpl.save(branch);
 
         return branch;
     }

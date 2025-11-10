@@ -33,10 +33,10 @@ class ShiftControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ShiftRepository shiftRepository;
+    private ShiftService shiftService;
 
     @Autowired
-    private ShiftService shiftService;
+    private ShiftEntityService shiftEntityService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -49,7 +49,7 @@ class ShiftControllerTest {
         int hoursDifference = endHour.getHour() - startHour.getHour();
 
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
-        shiftRepository.save(shift);
+        shiftService.save(shift);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/shifts/" + shift.getId()))
@@ -82,9 +82,9 @@ class ShiftControllerTest {
     @Test
     void getAllShifts_workingTest() throws Exception {
         //given
-        Shift shift1 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
-        Shift shift2 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build());
-        Shift shift3 = shiftRepository.save(new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(18, 0)).build());
+        Shift shift1 = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build());
+        Shift shift2 = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build());
+        Shift shift3 = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(18, 0)).build());
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/shifts"))
@@ -158,7 +158,7 @@ class ShiftControllerTest {
         //given
         LocalTime startHour = LocalTime.of(10, 0);
         LocalTime endHour = LocalTime.of(20, 0);
-        Shift shift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
+        Shift shift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
         mockMvc.perform(delete("/api/shifts/" + shift.getId()))
@@ -187,7 +187,7 @@ class ShiftControllerTest {
         //given
         LocalTime oldStartHour = LocalTime.of(8, 0);
         LocalTime oldEndHour = LocalTime.of(14, 0);
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(oldStartHour).withEndHour(oldEndHour).build());
+        Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(oldStartHour).withEndHour(oldEndHour).build());
 
         LocalTime newStartHour = LocalTime.of(15, 0);
         LocalTime newEndHour = LocalTime.of(20, 0);
@@ -219,7 +219,7 @@ class ShiftControllerTest {
         //given
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(14, 0);
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
+        Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
        mockMvc.perform(put("/api/shifts/" + originalShift.getId()))
@@ -233,7 +233,7 @@ class ShiftControllerTest {
         //given
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(14, 0);
-        Shift originalShift = shiftRepository.save(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
+        Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
         mockMvc.perform(put("/api/shifts/" + originalShift.getId())

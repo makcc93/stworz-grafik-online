@@ -26,10 +26,10 @@ import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-class StoreServiceTest {
+class StoreServiceImplTest {
 
     @InjectMocks
-    private StoreService service;
+    private StoreServiceImpl service;
 
     @Mock
     private StoreRepository repository;
@@ -300,13 +300,13 @@ class StoreServiceTest {
     }
 
     @Test
-    void save_workingTest(){
+    void saveEntity_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
         when(repository.save(store)).thenReturn(store);
 
         //when
-        Store savedEntity = service.save(store);
+        Store savedEntity = service.saveEntity(store);
 
         //then
         assertEquals(store.getName(),savedEntity.getName());
@@ -318,7 +318,7 @@ class StoreServiceTest {
     }
 
     @Test
-    void save_argumentIsNull(){
+    void saveEntity_argumentIsNull(){
         //given
         Store store = null;
 
@@ -330,7 +330,7 @@ class StoreServiceTest {
     }
 
     @Test
-    void saveDto_workingTest(){
+    void save_workingTest(){
         //given
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Name","a1");
         Store entityFromDTO = new TestStoreBuilder().build();
@@ -348,7 +348,7 @@ class StoreServiceTest {
         when(storeMapper.toResponseStoreDto(entityFromDTO)).thenReturn(responseStoreDTO);
 
         //when
-        ResponseStoreDTO returnedDto = service.saveDto(storeNameAndCodeDTO);
+        ResponseStoreDTO returnedDto = service.save(entityFromDTO);
 
         //then
         assertEquals(changedName,returnedDto.name());
@@ -361,12 +361,12 @@ class StoreServiceTest {
 
 
     @Test
-    void saveDto_argumentIsNull(){
+    void save_argumentIsNull(){
         //given
-        StoreNameAndCodeDTO storeNameAndCodeDTO = null;
+        Store store = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> service.saveDto(storeNameAndCodeDTO));
+        assertThrows(NullPointerException.class,() -> service.save(store));
 
         //then
         verify(repository,never()).save(any(Store.class));
