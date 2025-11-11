@@ -102,6 +102,7 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
 
     @Override
     public Region getEntityById(Long id) {
-        return null;
+        return regionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
     }
 }
