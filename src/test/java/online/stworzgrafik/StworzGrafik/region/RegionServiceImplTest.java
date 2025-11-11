@@ -221,6 +221,23 @@ class RegionServiceImplTest {
     }
 
     @Test
+    void save_workingTest(){
+        //given
+        Region region = new TestRegionBuilder().build();
+        when(regionRepository.save(region)).thenReturn(region);
+
+        ResponseRegionDTO responseRegionDTO = new TestResponseRegionDTO().withName(region.getName()).build();
+        when(regionMapper.toResponseRegionDTO(region)).thenReturn(responseRegionDTO);
+
+        //when
+        ResponseRegionDTO serviceResponse = regionServiceImpl.save(region);
+
+        //then
+        assertEquals(region.getName(),serviceResponse.name());
+
+        verify(regionRepository,times(1)).save(region);
+    }
+    @Test
     void existsById_workingTest(){
         //given
         Long id = 1234L;
@@ -276,7 +293,7 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void save_workingTest(){
+    void saveEntity_workingTest(){
         //given
         Region region = new TestRegionBuilder().build();
         when(regionRepository.save(region)).thenReturn(region);
@@ -287,5 +304,40 @@ class RegionServiceImplTest {
         //then
         assertEquals(region.getName(),serviceResponse.getName());
         verify(regionRepository,times(1)).save(region);
+    }
+
+    @Test
+    void getEntityById_workingTest(){
+        //given
+        Long id = 123L;
+        Region region = new TestRegionBuilder().build();
+        region.setId(id);
+
+        when(regionRepository.findById(id)).thenReturn(Optional.ofNullable(region));
+
+        //when
+        Region serviceResponse = regionServiceImpl.getEntityById(id);
+
+        //then
+        assertEquals(id, serviceResponse.getId());
+        assertEquals(region.getName(), serviceResponse.getName());
+
+        verify(regionRepository,times(1)).findById(id);
+    }
+
+    @Test
+    void getEntityById_cannotFindByIdThrowsException(){
+        //given
+        long id = 54321L;
+        when(regionRepository.findById(id)).thenReturn(Optional.empty());
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.getEntityById(id));
+
+        //then
+        assertEquals("Cannot find region by id " + id, exception.getMessage());
+
+        verify(regionRepository,times(1)).findById(id);
     }
 }

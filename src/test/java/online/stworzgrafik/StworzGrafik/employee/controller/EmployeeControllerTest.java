@@ -113,7 +113,7 @@ class EmployeeControllerTest {
                 storeId,
                 new TestCreateEmployeeDTO().withFirstName("THIRD").withSap(33333333L).withPositionId(positionId).build()
         );
-        
+
         List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
 
         //when

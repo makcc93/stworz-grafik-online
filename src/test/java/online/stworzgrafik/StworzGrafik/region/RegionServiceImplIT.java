@@ -3,11 +3,9 @@ package online.stworzgrafik.StworzGrafik.region;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintDeclarationException;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -206,7 +204,10 @@ class RegionServiceImplIT {
         long notExistingEntityId = 531541L;
 
         //when
-        assertThrows(NullPointerException.class, () -> regionServiceImpl.delete(notExistingEntityId));
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.delete(notExistingEntityId));
+
         //then
+        assertEquals("Cannot find region by id " + notExistingEntityId, exception.getMessage());
     }
 }
