@@ -13,8 +13,8 @@ import java.util.List;
 public interface PositionService {
     public List<ResponsePositionDTO> findAll();
     public ResponsePositionDTO findById(@NotNull Long id);
-    public ResponsePositionDTO createPosition(@NotNull CreatePositionDTO createPositionDTO);
-    public ResponsePositionDTO updatePosition(@NotNull Long id, @NotNull UpdatePositionDTO updatePositionDTO);
+    public ResponsePositionDTO createPosition(@NotNull @Valid CreatePositionDTO createPositionDTO);
+    public ResponsePositionDTO updatePosition(@NotNull Long id, @NotNull @Valid UpdatePositionDTO updatePositionDTO);
     public ResponsePositionDTO save(@NotNull Position position);
     public void delete(@NotNull Long id);
     public boolean exists(@NotNull Long id);

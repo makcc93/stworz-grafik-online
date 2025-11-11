@@ -30,10 +30,9 @@ class ShiftServiceImplIT {
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(20, 0);
         int length = endHour.getHour() - startHour.getHour();
-        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
-
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         //when
-        ResponseShiftDTO responseShiftDTO = shiftServiceImpl.saveDto(shiftHoursDTO);
+        ResponseShiftDTO responseShiftDTO = shiftServiceImpl.save(shift);
 
         //then
         assertEquals(startHour.getHour(),responseShiftDTO.startHour().getHour());
@@ -47,11 +46,10 @@ class ShiftServiceImplIT {
         //given
         LocalTime startHour = LocalTime.of(23, 0);
         LocalTime endHour = LocalTime.of(6, 0);
-
-        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.saveDto(shiftHoursDTO));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.save(shift));
 
         //then
         assertEquals("End hour cannot be before start hour",exception.getMessage());
@@ -120,13 +118,13 @@ class ShiftServiceImplIT {
         shiftRepository.save(shift);
 
         //when
-        Shift entityById = shiftServiceImpl.findEntityById(shift.getId());
+        ResponseShiftDTO serviceResponse = shiftServiceImpl.findById(shift.getId());
 
         //then
-        assertTrue(shiftRepository.existsById(entityById.getId()));
-        assertEquals(startHour.getHour(),entityById.getStartHour().getHour());
-        assertEquals(endHour.getHour(),entityById.getEndHour().getHour());
-        assertEquals(hoursDifference,entityById.getLength());
+        assertTrue(shiftRepository.existsById(serviceResponse.id()));
+        assertEquals(startHour.getHour(),serviceResponse.startHour().getHour());
+        assertEquals(endHour.getHour(),serviceResponse.endHour().getHour());
+        assertEquals(hoursDifference,serviceResponse.length());
     }
 
     @Test
@@ -135,7 +133,7 @@ class ShiftServiceImplIT {
         Long id = 1234L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftServiceImpl.findEntityById(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftServiceImpl.findById(id));
 
         //then
         assertEquals("Cannot find shift by id: " + id,exception.getMessage());

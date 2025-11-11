@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 
 @Service
-@Validated
 @RequiredArgsConstructor
 class RegionServiceImpl implements RegionService, RegionEntityService {
     private final RegionRepository regionRepository;
@@ -24,7 +23,7 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     private final NameValidatorService nameValidatorService;
 
     @Override
-    public ResponseRegionDTO createRegion(@Valid CreateRegionDTO createRegionDTO) {
+    public ResponseRegionDTO createRegion(CreateRegionDTO createRegionDTO) {
         if (regionRepository.existsByName(createRegionDTO.name())){
             throw new EntityExistsException("Region with name " + createRegionDTO.name() + " already exist");
         }
@@ -39,7 +38,7 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
-    public ResponseRegionDTO updateRegion(@Valid Long id,@Valid UpdateRegionDTO updateRegionDTO) {
+    public ResponseRegionDTO updateRegion(Long id, UpdateRegionDTO updateRegionDTO) {
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 
@@ -63,7 +62,7 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
-    public ResponseRegionDTO findById(@Valid Long id) {
+    public ResponseRegionDTO findById(Long id) {
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 
@@ -71,24 +70,24 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
-    public ResponseRegionDTO save(@Valid Region region) {
+    public ResponseRegionDTO save(Region region) {
         Region savedRegion = regionRepository.save(region);
 
         return regionMapper.toResponseRegionDTO(savedRegion);
     }
 
     @Override
-    public boolean exists(@Valid Long id) {
+    public boolean exists(Long id) {
         return regionRepository.existsById(id);
     }
 
     @Override
-    public boolean exists(@Valid String name) {
+    public boolean exists(String name) {
         return regionRepository.existsByName(name);
     }
 
     @Override
-    public void delete(@Valid Long id) {
+    public void delete(Long id) {
         if (!regionRepository.existsById(id)){
             throw new EntityNotFoundException("Cannot find region by id " + id);
         }
@@ -97,12 +96,12 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
-    public Region saveEntity(@Valid Region region) {
+    public Region saveEntity(Region region) {
         return regionRepository.save(region);
     }
 
     @Override
-    public Region getEntityById(@Valid Long id) {
+    public Region getEntityById(Long id) {
         return null;
     }
 }

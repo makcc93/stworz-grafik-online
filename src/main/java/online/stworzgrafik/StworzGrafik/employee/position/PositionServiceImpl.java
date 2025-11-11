@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 
 @Service
-@Validated
 @RequiredArgsConstructor
 class PositionServiceImpl implements PositionService, PositionEntityService{
     private final PositionRepository positionRepository;
@@ -31,7 +30,7 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public ResponsePositionDTO findById(@Valid Long id) {
+    public ResponsePositionDTO findById(Long id) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
@@ -39,7 +38,7 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public ResponsePositionDTO createPosition(@Valid CreatePositionDTO createPositionDTO) {
+    public ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO) {
         if (positionRepository.existsByName(createPositionDTO.name())){
             throw new EntityExistsException("Position with name " + createPositionDTO.name() + " already exists");
         }
@@ -53,7 +52,7 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public ResponsePositionDTO updatePosition(@Valid Long id, @Valid UpdatePositionDTO updatePositionDTO) {
+    public ResponsePositionDTO updatePosition(Long id,  UpdatePositionDTO updatePositionDTO) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
@@ -68,14 +67,14 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public ResponsePositionDTO save(@Valid Position position){
+    public ResponsePositionDTO save(Position position){
         Position savedPosition = positionRepository.save(position);
 
         return positionMapper.toResponsePositionDTO(savedPosition);
     }
 
     @Override
-    public void delete(@Valid Long id) {
+    public void delete(Long id) {
         if (!positionRepository.existsById(id)){
             throw new EntityNotFoundException("Position with id " + id + " does not exist");
         }
@@ -84,22 +83,22 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public boolean exists(@Valid Long id) {
+    public boolean exists(Long id) {
         return positionRepository.existsById(id);
     }
 
     @Override
-    public boolean exists(@Valid String name) {
+    public boolean exists(String name) {
         return positionRepository.existsByName(name);
     }
 
     @Override
-    public Position saveEntity(@Valid Position position) {
+    public Position saveEntity(Position position) {
         return positionRepository.save(position);
     }
 
     @Override
-    public Position getEntityById(@Valid Long id) {
+    public Position getEntityById(Long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
     }

@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;

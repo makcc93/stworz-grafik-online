@@ -13,8 +13,8 @@ import java.util.List;
 public interface BranchService {
     public ResponseBranchDTO findById(@NotNull Long id);
     public List<ResponseBranchDTO> findAll();
-    public ResponseBranchDTO createBranch(@NotNull CreateBranchDTO createBranchDTO);
-    public ResponseBranchDTO updateBranch(@NotNull Long id, @NotNull UpdateBranchDTO updateBranchDTO);
+    public ResponseBranchDTO createBranch(@NotNull @Valid CreateBranchDTO createBranchDTO);
+    public ResponseBranchDTO updateBranch(@NotNull Long id, @NotNull @Valid UpdateBranchDTO updateBranchDTO);
     public ResponseBranchDTO save(@NotNull Branch branch);
     public void delete(@NotNull Long id);
     public boolean exists(@NotNull Long id);

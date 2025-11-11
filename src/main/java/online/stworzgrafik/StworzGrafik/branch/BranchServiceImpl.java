@@ -2,23 +2,20 @@ package online.stworzgrafik.StworzGrafik.branch;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @Service
-@Validated
 @RequiredArgsConstructor
 class BranchServiceImpl implements BranchService, BranchEntityService{
     private final BranchRepository branchRepository;
@@ -29,7 +26,7 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
     private final RegionEntityService regionEntityService;
 
     @Override
-    public ResponseBranchDTO findById(@Valid Long id) {
+    public ResponseBranchDTO findById(Long id) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
@@ -43,7 +40,7 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
     }
 
     @Override
-    public ResponseBranchDTO createBranch(@Valid CreateBranchDTO createBranchDTO) {
+    public ResponseBranchDTO createBranch(CreateBranchDTO createBranchDTO) {
         if (branchRepository.existsByName(createBranchDTO.name())){
             throw new EntityExistsException("Branch with name " + createBranchDTO.name() + " already exist");
         }
@@ -60,7 +57,7 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
     }
 
     @Override
-    public ResponseBranchDTO updateBranch(@Valid Long id, @Valid UpdateBranchDTO updateBranchDTO) {
+    public ResponseBranchDTO updateBranch(Long id, UpdateBranchDTO updateBranchDTO) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + id + " does not exist"));
 
@@ -79,7 +76,7 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
     }
 
     @Override
-    public void delete(@Valid Long id) {
+    public void delete(Long id) {
         if (!branchRepository.existsById(id)){
             throw new EntityNotFoundException("Branch with id " + id + " does not exist");
         }
@@ -87,22 +84,22 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
         branchRepository.deleteById(id);
     }
     @Override
-    public boolean exists(@Valid Long id) {
+    public boolean exists(Long id) {
         return branchRepository.existsById(id);
     }
 
     @Override
-    public boolean exists(@Valid String name) {
+    public boolean exists(String name) {
         return branchRepository.existsByName(name);
     }
 
     @Override
-    public Branch saveEntity(@Valid Branch branch) {
+    public Branch saveEntity(Branch branch) {
         return branchRepository.save(branch);
     }
 
     @Override
-    public Branch getEntityById(@Valid Long id) {
+    public Branch getEntityById(Long id) {
         return branchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find branch by id " + id));
     }

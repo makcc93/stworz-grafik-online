@@ -79,6 +79,8 @@ class EmployeeControllerTest {
 
     private Position position;
 
+    private Long positionId;
+
     @BeforeEach
     void prepareData(){
         Region region = new TestRegionBuilder().build();
@@ -91,14 +93,27 @@ class EmployeeControllerTest {
         position = positionEntityService.saveEntity(new TestPositionBuilder().build());
 
         storeId = store.getId();
+        positionId = position.getId();
     }
 
     @Test
     void findAll_workingTest() throws Exception{
         //given
-        ResponseEmployeeDTO firstEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("FIRST").build());
-        ResponseEmployeeDTO secondEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("SECOND").build());
-        ResponseEmployeeDTO thirdEmployeeResponseDTO = employeeService.createEmployee(storeId, new TestCreateEmployeeDTO().withFirstName("THIRD").build());
+        ResponseEmployeeDTO firstEmployeeResponseDTO = employeeService.createEmployee(
+                storeId,
+                new TestCreateEmployeeDTO().withFirstName("FIRST").withSap(11111111L).withPositionId(positionId).build()
+        );
+
+        ResponseEmployeeDTO secondEmployeeResponseDTO = employeeService.createEmployee(
+                storeId,
+                new TestCreateEmployeeDTO().withFirstName("SECOND").withSap(22222222L).withPositionId(positionId).build()
+        );
+
+        ResponseEmployeeDTO thirdEmployeeResponseDTO = employeeService.createEmployee(
+                storeId,
+                new TestCreateEmployeeDTO().withFirstName("THIRD").withSap(33333333L).withPositionId(positionId).build()
+        );
+        
         List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
 
         //when

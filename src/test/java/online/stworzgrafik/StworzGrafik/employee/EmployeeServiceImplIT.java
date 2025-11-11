@@ -5,13 +5,15 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchServiceImpl;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionServiceImpl;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.store.StoreServiceImpl;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
@@ -32,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-public class EmployeeServiceIT {
+public class EmployeeServiceImplIT {
     @Autowired
-    private EmployeeService employeeService;
+    private EmployeeServiceImpl employeeServiceImpl;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -46,19 +48,25 @@ public class EmployeeServiceIT {
     private NameValidatorService nameValidatorService;
 
     @Autowired
-    private StoreServiceImpl storeServiceImpl;
+    private StoreService storeService;
 
     @Autowired
-    private PositionServiceImpl positionServiceImpl;
+    private StoreEntityService storeEntityService;
+
+    @Autowired
+    private PositionService positionService;
+
+    @Autowired
+    private PositionEntityService positionEntityService;
 
     @Autowired
     private EmployeeBuilder employeeBuilder;
 
     @Autowired
-    private BranchServiceImpl branchServiceImpl;
+    private BranchService branchService;
 
     @Autowired
-    private RegionServiceImpl regionServiceImpl;
+    private RegionService regionService;
 
     private Store store;
 
@@ -89,7 +97,7 @@ public class EmployeeServiceIT {
 
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeService.createEmployee(storeId,createEmployeeDTO);
+        ResponseEmployeeDTO serviceResponse = employeeServiceImpl.createEmployee(storeId,createEmployeeDTO);
 
         //then
         assertEquals(firstName,serviceResponse.firstName());
@@ -112,7 +120,7 @@ public class EmployeeServiceIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> employeeService.createEmployee(storeId,createEmployeeDTO));
+                assertThrows(EntityExistsException.class, () -> employeeServiceImpl.createEmployee(storeId,createEmployeeDTO));
 
         //then
         assertEquals("Employee with sap " + employeeSap + " already exists", exception.getMessage());
@@ -130,9 +138,9 @@ public class EmployeeServiceIT {
 
         //when
         ValidationException exceptionFistName =
-                assertThrows(ValidationException.class, () -> employeeService.createEmployee(storeId,invalidFirstNameDTO));
+                assertThrows(ValidationException.class, () -> employeeServiceImpl.createEmployee(storeId,invalidFirstNameDTO));
         ValidationException exceptionLastName =
-                assertThrows(ValidationException.class, () -> employeeService.createEmployee(storeId,invalidLastNameDTO));
+                assertThrows(ValidationException.class, () -> employeeServiceImpl.createEmployee(storeId,invalidLastNameDTO));
 
         //then
         assertEquals("Name cannot contain illegal chars",exceptionFistName.getMessage());
@@ -154,10 +162,10 @@ public class EmployeeServiceIT {
 
         //when
         EntityNotFoundException exceptionForPosition =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(storeId,withoutPositionDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.createEmployee(storeId,withoutPositionDTO));
 
         EntityNotFoundException exceptionForStore =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.createEmployee(randomStoreId,withoutStoreDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.createEmployee(randomStoreId,withoutStoreDTO));
 
         //then
         assertEquals("Cannot find position by id " + randomPositionId, exceptionForPosition.getMessage());
@@ -192,7 +200,7 @@ public class EmployeeServiceIT {
                 .build();
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeService.updateEmployee(storeId, employeeId, updateEmployeeDTO);
+        ResponseEmployeeDTO serviceResponse = employeeServiceImpl.updateEmployee(storeId, employeeId, updateEmployeeDTO);
 
         //then
         assertEquals(updatedFirstName,serviceResponse.firstName());
@@ -217,7 +225,7 @@ public class EmployeeServiceIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.updateEmployee(storeId,randomEmployeeId, updateEmployeeDTO));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.updateEmployee(storeId,randomEmployeeId, updateEmployeeDTO));
 
         //then
         assertEquals("Cannot find employee by id " + randomEmployeeId, exception.getMessage());
@@ -234,7 +242,7 @@ public class EmployeeServiceIT {
 
         //when
         ValidationException exception =
-                assertThrows(ValidationException.class, () -> employeeService.updateEmployee(storeId, employee.getId(), updateEmployeeDTO));
+                assertThrows(ValidationException.class, () -> employeeServiceImpl.updateEmployee(storeId, employee.getId(), updateEmployeeDTO));
 
         //then
         assertEquals("Name cannot contain illegal chars", exception.getMessage());
@@ -256,7 +264,7 @@ public class EmployeeServiceIT {
         Long employeeToDeleteId = employeeToDelete.getId();
 
         //when
-        employeeService.deleteEmployee(storeId,employeeToDeleteId);
+        employeeServiceImpl.deleteEmployee(storeId,employeeToDeleteId);
 
         //then
         assertTrue(employeeRepository.existsById(employeeToStayId));
@@ -271,7 +279,7 @@ public class EmployeeServiceIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(storeId,randomEmployeeId));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.deleteEmployee(storeId,randomEmployeeId));
 
         //then
         assertEquals("Cannot find employee by id " + randomEmployeeId, exception.getMessage());
@@ -284,7 +292,7 @@ public class EmployeeServiceIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.deleteEmployee(storeId, randomEmployeeId));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.deleteEmployee(storeId, randomEmployeeId));
 
         //then
         assertEquals("Cannot find employee by id " + randomEmployeeId,exception.getMessage());
@@ -302,7 +310,7 @@ public class EmployeeServiceIT {
 
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> employeeService.deleteEmployee(notExistingStoreId, employeeId));
+                assertThrows(AccessDeniedException.class, () -> employeeServiceImpl.deleteEmployee(notExistingStoreId, employeeId));
 
         //then
         assertEquals("Employee does not belong to this store", exception.getMessage());
@@ -322,7 +330,7 @@ public class EmployeeServiceIT {
         List<ResponseEmployeeDTO> employeeDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
 
         //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
 
         //then
         assertEquals(3,serviceResponse.size());
@@ -334,11 +342,11 @@ public class EmployeeServiceIT {
         //given
 
         //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeService.findAll();
+        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
 
         //then
         assertEquals(0, serviceResponse.size());
-        assertDoesNotThrow(() -> employeeService.findAll());
+        assertDoesNotThrow(() -> employeeServiceImpl.findAll());
     }
 
     @Test
@@ -349,7 +357,7 @@ public class EmployeeServiceIT {
         Long id = employee.getId();
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeService.findById(id);
+        ResponseEmployeeDTO serviceResponse = employeeServiceImpl.findById(id);
 
         //then
         assertEquals(employee.getFirstName(), serviceResponse.firstName());
@@ -373,7 +381,7 @@ public class EmployeeServiceIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeService.findById(id));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.findById(id));
 
         //then
         assertEquals("Cannot find employee by id " + id, exception.getMessage());
@@ -391,8 +399,8 @@ public class EmployeeServiceIT {
         Long randomId = 12345L;
 
         //when
-        boolean serviceResponse = employeeService.existsById(id);
-        boolean shouldNotExist = employeeService.existsById(randomId);
+        boolean serviceResponse = employeeServiceImpl.existsById(id);
+        boolean shouldNotExist = employeeServiceImpl.existsById(randomId);
 
         //then
         assertTrue(serviceResponse);
@@ -409,8 +417,8 @@ public class EmployeeServiceIT {
         Long randomSap = 11111111L;
 
         //when
-        boolean serviceResponse = employeeService.existsBySap(sap);
-        boolean shouldBeFalse = employeeService.existsBySap(randomSap);
+        boolean serviceResponse = employeeServiceImpl.existsBySap(sap);
+        boolean shouldBeFalse = employeeServiceImpl.existsBySap(randomSap);
 
         //then
         assertTrue(serviceResponse);
@@ -427,8 +435,8 @@ public class EmployeeServiceIT {
         String randomLastName = "RANDOM";
 
         //when
-        boolean serviceResponse = employeeService.existsByLastName(lastName);
-        boolean shouldBeFalse = employeeService.existsByLastName(randomLastName);
+        boolean serviceResponse = employeeServiceImpl.existsByLastName(lastName);
+        boolean shouldBeFalse = employeeServiceImpl.existsByLastName(randomLastName);
 
         //then
         assertTrue(serviceResponse);
@@ -437,18 +445,17 @@ public class EmployeeServiceIT {
 
     private Store getDefaultSavedStore(){
         Region region = new TestRegionBuilder().build();
-        regionServiceImpl.save(region);
+        regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchServiceImpl.save(branch);
-
+        branchService.save(branch);
 
         Store store = new TestStoreBuilder().withBranch(branch).build();
-        return storeServiceImpl.save(store);
+        return storeEntityService.saveEntity(store);
     }
 
     private Position getDefaultSavedPosition(){
         Position position = new TestPositionBuilder().build();
-        return positionServiceImpl.save(position);
+        return positionEntityService.saveEntity(position);
     }
 }

@@ -2,19 +2,23 @@ package online.stworzgrafik.StworzGrafik.store.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.PrePersist;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchServiceImpl;
+import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
+import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.region.RegionServiceImpl;
+import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.store.StoreServiceImpl;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,19 +46,32 @@ class StoreControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private StoreServiceImpl storeServiceImpl;
+    private StoreService storeService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
-    private BranchServiceImpl branchServiceImpl;
+    private BranchService branchService;
 
     @Autowired
-    private RegionServiceImpl regionServiceImpl;
+    private BranchEntityService branchEntityService;
+
+    @Autowired
+    private RegionService regionService;
+
+    @Autowired
+    private RegionEntityService regionEntityService;
 
     @Autowired
     private NameValidatorService nameValidatorService;
+
+    private Region region;
+
+    @PrePersist
+    void setupRegion(){
+        region = regionEntityService.saveEntity(new TestRegionBuilder().build());
+    }
 
     @Test
     void getAllStores_workingTest() throws Exception {
@@ -63,9 +80,9 @@ class StoreControllerTest {
         Store store2 = secondStore();
         Store store3 = thirdStore();
 
-        storeServiceImpl.save(store1);
-        storeServiceImpl.save(store2);
-        storeServiceImpl.save(store3);
+        storeService.save(store1);
+        storeService.save(store2);
+        storeService.save(store3);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores"))
@@ -102,7 +119,7 @@ class StoreControllerTest {
     void getStoreById_workingTest() throws Exception {
         //given
         Store store = firstStoreWithBranch();
-        storeServiceImpl.save(store);
+        storeService.save(store);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + store.getId()))
@@ -134,10 +151,10 @@ class StoreControllerTest {
     void createStore_workingTest() throws Exception{
         //given
         Region region = new TestRegionBuilder().build();
-        regionServiceImpl.save(region);
+        regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withName("TestBRANCH").withRegion(region).build();
-        branchServiceImpl.save(branch);
+        branchService.save(branch);
 
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
 
@@ -158,7 +175,7 @@ class StoreControllerTest {
         assertEquals(createStoreDTO.location(),store.location());
         assertEquals(createStoreDTO.branchId(),store.branchId());
 
-        assertTrue(storeServiceImpl.exists(store.id()));
+        assertTrue(storeService.exists(store.id()));
     }
 
     @Test
@@ -180,9 +197,9 @@ class StoreControllerTest {
         Store secondStore = secondStore();
         Store thirdStore = thirdStore();
 
-        storeServiceImpl.save(firstStore);
-        storeServiceImpl.save(secondStore);
-        storeServiceImpl.save(thirdStore);
+        storeService.save(firstStore);
+        storeService.save(secondStore);
+        storeService.save(thirdStore);
 
         //when
         mockMvc.perform(delete("/api/stores/" + secondStore.getId()))
@@ -190,10 +207,10 @@ class StoreControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(storeServiceImpl.exists(secondStore.getId()));
+        assertFalse(storeService.exists(secondStore.getId()));
 
-        assertTrue(storeServiceImpl.exists(firstStore.getId()));
-        assertTrue(storeServiceImpl.exists(thirdStore.getId()));
+        assertTrue(storeService.exists(firstStore.getId()));
+        assertTrue(storeService.exists(thirdStore.getId()));
     }
 
     @Test
@@ -212,7 +229,7 @@ class StoreControllerTest {
     void updateStore_workingTest() throws Exception{
         //given
         Store store = firstStoreWithBranch();
-        storeServiceImpl.save(store);
+        storeService.save(store);
 
         String storeNameBeforeUpdate = store.getName();
 
@@ -278,7 +295,7 @@ class StoreControllerTest {
     void updateStore_requestBodyIsMissingThrowsException() throws Exception{
         //given
         Store store = firstStoreWithBranch();
-        storeServiceImpl.save(store);
+        storeService.save(store);
 
         //when
         mockMvc.perform(patch("/api/stores/" + store.getId()))
@@ -289,40 +306,20 @@ class StoreControllerTest {
     }
 
     private Store firstStoreWithBranch(){
-        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
+        Branch firstBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("FIRSTBRANCH").withRegion(region).build());
 
-        Branch firstBranch = branchRepository.save(new TestBranchBuilder().withName("FirstBranch").withRegion(region).build());
-
-        return storeBuilder.createStore(
-                "11",
-                "NameTest1",
-                "LocationTest1",
-                firstBranch);
+        return new TestStoreBuilder().withName("FIRST").withBranch(firstBranch).build();
     }
 
     private Store secondStore(){
-        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
+        Branch secondBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
 
-        Branch secondBranch = branchRepository.save(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
-
-        return storeBuilder.createStore(
-                "22",
-                "NameTest2",
-                "LocationTest2",
-                secondBranch
-        );
+        return new TestStoreBuilder().withName("FIRST").withBranch(secondBranch).build();
     }
 
     private Store thirdStore(){
-        Region region = regionServiceImpl.save(new TestRegionBuilder().build());
+        Branch thirdBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
 
-        Branch thirdBranch = branchRepository.save(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
-
-        return storeBuilder.createStore(
-                "33",
-                "NameTest3",
-                "LocationTest3",
-                thirdBranch
-        );
+        return new TestStoreBuilder().withName("FIRST").withBranch(thirdBranch).build();
     }
 }

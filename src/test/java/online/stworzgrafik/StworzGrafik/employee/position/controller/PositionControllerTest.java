@@ -226,7 +226,7 @@ class PositionControllerTest {
     @Test
     void updatePosition_cannotFindEntityByIdThrowsException() throws Exception{
         //given
-        Long randomId = 1234L;
+        long randomId = 1234L;
 
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
 
@@ -243,7 +243,7 @@ class PositionControllerTest {
     @Test
     void updatePosition_dtoIsNullThrowsException() throws Exception{
         //given
-        Long randomId = 1112233L;
+        long randomId = 1112233L;
         UpdatePositionDTO updatePositionDTO = null;
 
         //when
@@ -284,7 +284,7 @@ class PositionControllerTest {
     @Test
     void deletePosition_entityToDeleteNotFoundThrowsException() throws Exception{
         //given
-        Long randomId = 12345L;
+        long randomId = 12345L;
 
         //when
         MvcResult mvcResult = mockMvc.perform(delete("/api/positions/" + randomId))

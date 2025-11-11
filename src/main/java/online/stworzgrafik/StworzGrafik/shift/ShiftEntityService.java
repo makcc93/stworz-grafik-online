@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 

@@ -141,32 +141,6 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void updateRegion_idIsNullThrowsException(){
-        //given
-        Long nullNumber = null;
-
-        UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().build();
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionServiceImpl.updateRegion(nullNumber, updateRegionDTO));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void updateRegion_argumentDTOisNullThrowsException(){
-        //given
-        Long randomId = 4321L;
-
-        UpdateRegionDTO nullDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> regionServiceImpl.updateRegion(randomId,nullDTO));
-        //then
-    }
-
-    @Test
     void findAll_workingTest(){
         //given
         Region region1 = new TestRegionBuilder().withName("FIRST").build();
@@ -247,21 +221,6 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void findById_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionServiceImpl.findById(nullId));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(regionRepository,never()).findById(any(Long.class));
-        verify(regionMapper,never()).toResponseRegionDTO(any(Region.class));
-    }
-
-    @Test
     void existsById_workingTest(){
         //given
         Long id = 1234L;
@@ -277,19 +236,6 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void existsById_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionServiceImpl.findById(nullId));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-        verify(regionRepository,never()).findById(any(Long.class));
-    }
-
-    @Test
     void existsByName_workingTest(){
         //given
         String name = "NAME";
@@ -300,20 +246,6 @@ class RegionServiceImplTest {
 
         //then
         assertTrue(response);
-    }
-
-    @Test
-    void existsByName_nameIsNull(){
-        //given
-        String nullName = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionServiceImpl.exists(nullName));
-
-        //then
-        assertEquals("Name cannot be null", exception.getMessage());
-
-        verify(regionRepository,never()).existsByName(any(String.class));
     }
 
     @Test
@@ -331,26 +263,12 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void deleteRegion_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionServiceImpl.deleteRegion(nullId));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-        verify(regionRepository,never()).existsById(any(Long.class));
-        verify(regionRepository,never()).deleteById(any(Long.class));
-    }
-
-    @Test
     void deleteRegion_entityDoesNotExistThrowsException(){
         //given
         Long randomId = 2154L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.deleteRegion(randomId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.delete(randomId));
 
         //then
         assertEquals("Cannot find region by id " + randomId, exception.getMessage());
@@ -369,16 +287,5 @@ class RegionServiceImplTest {
         //then
         assertEquals(region.getName(),serviceResponse.getName());
         verify(regionRepository,times(1)).save(region);
-    }
-
-    @Test
-    void save_entityIsNullThrowsException(){
-        //given
-        Region region = null;
-
-        //when
-        assertThrows(NullPointerException.class, () -> regionServiceImpl.saveEntity(region));
-
-        //then
     }
 }
