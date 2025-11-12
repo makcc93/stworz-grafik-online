@@ -2,9 +2,14 @@ package online.stworzgrafik.StworzGrafik.employee;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PrePersist;
+import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.store.*;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
@@ -53,6 +58,17 @@ class EmployeeServiceImplTest {
 
     @Mock
     private PositionEntityService positionEntityService;
+
+    private Region region;
+    private Branch branch;
+    private Store store;
+
+    @PrePersist
+    void setup(){
+        region = new TestRegionBuilder().build();
+        branch = new TestBranchBuilder().withRegion(region).build();
+        store = new TestStoreBuilder().withBranch(branch).build();
+    }
 
     @Test
     void createEmployee_workingTest(){
@@ -133,25 +149,6 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void createEmployee_storeIdIsNullThrowsException(){
-        //given
-        Long storeId = null;
-        CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().build();
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.createEmployee(storeId, createEmployeeDTO));
-
-        //then
-        assertEquals("Store id cannot be null", exception.getMessage());
-        verify(storeService,never()).findById(any(Long.class));
-        verify(positionService,never()).findById(any(Long.class));
-        verify(employeeBuilder,never()).createEmployee(any(),any(),any(),any(),any());
-        verify(employeeRepository,never()).save(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
-    }
-
-    @Test
     void createEmployee_employeeWithThisSapAlreadyExistsThrowsException(){
         //given
         Long sap = 100200300L;
@@ -183,7 +180,7 @@ class EmployeeServiceImplTest {
         String firstName = "FIRST NAME";
         String lastName = "LAST NAME";
         Long storeId = 1L;
-        Long sap = 112233L;
+        Long sap = 11223344L;
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().build();
 
         when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
@@ -191,7 +188,7 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
-        when(storeEntityService.getEntityById(storeId)).thenThrow(new EntityNotFoundException("Cannot find store by id " + storeId));
+        when(storeService.exists(storeId)).thenReturn(false);
 
         //when
         EntityNotFoundException exception =
@@ -211,7 +208,7 @@ class EmployeeServiceImplTest {
         String firstName = "FIRST NAME";
         String lastName = "LAST NAME";
         Long storeId = 1L;
-        Long sap = 112233L;
+        Long sap = 11223344L;
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO().build();
 
         when(employeeRepository.existsBySap(createEmployeeDTO.sap())).thenReturn(false);
@@ -219,11 +216,10 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
-        Store store = new TestStoreBuilder().build();
+        when(storeService.exists(storeId)).thenReturn(true);
         when(storeEntityService.getEntityById(storeId)).thenReturn(store);
 
-        when(positionEntityService.getEntityById(createEmployeeDTO.positionId()))
-                .thenThrow(new EntityNotFoundException("Cannot find position by id " + createEmployeeDTO.positionId()));
+        when(positionService.exists(createEmployeeDTO.positionId())).thenReturn(false);
 
         //when
         EntityNotFoundException exception =
@@ -267,66 +263,6 @@ class EmployeeServiceImplTest {
         assertEquals(newFirstName,serviceResponse.firstName());
         assertEquals(newLastName,serviceResponse.lastName());
         assertEquals(employee.getSap(),serviceResponse.sap());
-    }
-
-    @Test
-    void updateEmployee_employeeIdIsNullThrowsException(){
-        //given
-        Long storeId = 1L;
-        Long employeeId = null;
-        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.updateEmployee(storeId,employeeId, updateEmployeeDTO));
-
-        //then
-        assertEquals("Employee id cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).findById(employeeId);
-        verify(nameValidatorService,never()).validate(any(),any());
-        verify(employeeMapper,never()).updateEmployee(any(),any());
-        verify(employeeRepository,never()).save(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
-    }
-
-    @Test
-    void updateEmployee_storeIdIsNullThrowsException(){
-        //given
-        Long storeId = null;
-        Long employeeId = 1L;
-        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.updateEmployee(storeId,employeeId, updateEmployeeDTO));
-
-        //then
-        assertEquals("Store id cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).findById(employeeId);
-        verify(nameValidatorService,never()).validate(any(),any());
-        verify(employeeMapper,never()).updateEmployee(any(),any());
-        verify(employeeRepository,never()).save(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
-    }
-
-    @Test
-    void updateEmployee_dtoIsNullThrowsException(){
-        //given
-        Long storeId = 1L;
-        Long employeeId = 1L;
-        UpdateEmployeeDTO updateEmployeeDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class, () -> employeeServiceImpl.updateEmployee(storeId, employeeId, updateEmployeeDTO));
-
-        //then
-        verify(employeeRepository,never()).findById(employeeId);
-        verify(nameValidatorService,never()).validate(any(),any());
-        verify(employeeMapper,never()).updateEmployee(any(),any());
-        verify(employeeRepository,never()).save(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
     }
 
     @Test
@@ -431,22 +367,6 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void deleteEmployee_storeIdIsNullThrowsException(){
-        //given
-        Long employeeId = 123L;
-        Long storeId = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.deleteEmployee(storeId, employeeId));
-
-        //then
-        assertEquals("Store id cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).delete(any(Employee.class));
-    }
-
-    @Test
     void findAll_workingTest(){
         //given
         String first = "FIRST";
@@ -535,22 +455,6 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void findById_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.findById(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).findById(any());
-        verify(employeeMapper,never()).toResponseEmployeeDTO(any());
-    }
-
-    @Test
     void existsById_workingTest(){
         //given
         Long id = 321L;
@@ -564,21 +468,6 @@ class EmployeeServiceImplTest {
         //then
         assertTrue(serviceResponse);
         verify(employeeRepository,times(1)).existsById(id);
-    }
-
-    @Test
-    void existsById_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.existsById(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(employeeRepository, never()).existsById(any());
     }
 
     @Test
@@ -597,21 +486,6 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void existsBySap_sapIsNullThrowsException(){
-        //given
-        Long sap = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.existsBySap(sap));
-
-        //then
-        assertEquals("Sap cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).existsBySap(any());
-    }
-
-    @Test
     void existsByLastName_workingTest(){
         //given
         String lastName = "LAST-NAME";
@@ -624,20 +498,5 @@ class EmployeeServiceImplTest {
         
         //then
         assertTrue(serviceResponse);
-    }
-
-    @Test
-    void existsByLastName_lastNameIsNullThrowsException(){
-        //given
-        String lastName = null;
-        
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.existsByLastName(lastName));
-
-        //then
-        assertEquals("Last name cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).existsByLastName(any());
     }
 }

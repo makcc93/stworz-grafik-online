@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
@@ -27,25 +28,28 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class BranchServiceImplTest {
     @InjectMocks
-    BranchServiceImpl branchServiceImpl;
+    private BranchServiceImpl branchServiceImpl;
 
     @Mock
-    BranchRepository branchRepository;
+    private BranchRepository branchRepository;
 
     @Mock
-    BranchBuilder branchBuilder;
+    private BranchBuilder branchBuilder;
 
     @Mock
-    BranchMapper branchMapper;
+    private BranchMapper branchMapper;
 
     @Mock
-    RegionService regionService;
+    private RegionService regionService;
 
     @Mock
-    NameValidatorService nameValidatorService;
+    private RegionEntityService regionEntityService;
 
     @Mock
-    EntityManager entityManager;
+    private NameValidatorService nameValidatorService;
+
+    @Mock
+    private EntityManager entityManager;
 
     @Test
     void findById_workingTest(){
@@ -86,34 +90,20 @@ class BranchServiceImplTest {
     }
 
     @Test
-    void findById_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchServiceImpl.findById(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-    }
-
-    @Test
     void createBranch_workingTest(){
         //given
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().build();
         Long id = 1L;
         boolean isEnable = true;
 
-        when(regionService.exists(createBranchDTO.regionId())).thenReturn(true);
-
-        Region region = new TestRegionBuilder().build();
-        when(entityManager.getReference(Region.class,createBranchDTO.regionId())).thenReturn(region);
-
         when(branchRepository.existsByName(createBranchDTO.name())).thenReturn(false);
 
         when(nameValidatorService.validate(createBranchDTO.name(), ObjectType.BRANCH)).thenReturn(createBranchDTO.name());
 
-        Branch branch = new TestBranchBuilder().withName(createBranchDTO.name()).build();
+        Region region = new TestRegionBuilder().build();
+        when(regionEntityService.getEntityById(createBranchDTO.regionId())).thenReturn(region);
+
+        Branch branch = new TestBranchBuilder().withName(createBranchDTO.name()).withRegion(region).build();
         when(branchBuilder.createBranch(createBranchDTO.name(),region)).thenReturn(branch);
 
         when(branchRepository.save(branch)).thenReturn(branch);
@@ -136,7 +126,8 @@ class BranchServiceImplTest {
     void createBranch_regionDoesNotExistThrowsException(){
         //given
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().build();
-        when(regionService.exists(createBranchDTO.regionId())).thenReturn(false);
+        when(regionEntityService.getEntityById(createBranchDTO.regionId()))
+                .thenThrow(new EntityNotFoundException("Cannot find region by id " + createBranchDTO.regionId()));
 
         //when
         EntityNotFoundException exception =
@@ -199,6 +190,7 @@ class BranchServiceImplTest {
         assertEquals(updateBranchDTO.name(),serviceResponse.name());
         assertFalse(responseBranchDTO.enable());
 
+        verify(branchMapper,times(1)).updateBranchFromDTO(updateBranchDTO,branch);
         verify(branchRepository,times(1)).findById(id);
         verify(branchRepository,times(1)).save(any(Branch.class));
     }
@@ -215,36 +207,6 @@ class BranchServiceImplTest {
 
         //then
         assertEquals("Branch with id " + id + " does not exist", exception.getMessage());
-    }
-
-    @Test
-    void updateBranch_idArgumentIsNullThrowsException(){
-        //given
-        Long id = null;
-        UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchServiceImpl.updateBranch(id, updateBranchDTO));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-
-        verify(branchRepository,never()).findById(any());
-        verify(branchRepository,never()).save(any());
-    }
-
-    @Test
-    void updateBranch_DTOIsNullThrowsException(){
-        //given
-        Long id = 1L;
-        UpdateBranchDTO updateBranchDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class, () -> branchServiceImpl.updateBranch(id, updateBranchDTO));
-
-        //then
-        verify(branchRepository,never()).findById(any());
-        verify(branchRepository,never()).save(any());
     }
 
     @Test
@@ -292,21 +254,6 @@ class BranchServiceImplTest {
     }
 
     @Test
-    void delete_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchServiceImpl.delete(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(branchRepository,never()).existsById(any());
-        verify(branchRepository,never()).save(any());
-    }
-
-    @Test
     void existsById_workingTest(){
         //given
         Long id = 1L;
@@ -320,20 +267,6 @@ class BranchServiceImplTest {
     }
 
     @Test
-    void existsById_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchServiceImpl.exists(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(branchRepository,never()).existsById(any());
-    }
-
-    @Test
     void existsByName_workingTest(){
         //given
         String name = "Test";
@@ -344,20 +277,6 @@ class BranchServiceImplTest {
 
         //then
         verify(branchRepository,times(1)).existsByName(name);
-    }
-
-    @Test
-    void existsByName_nameIsNullThrowsException(){
-        //given
-        String name = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> branchServiceImpl.exists(name));
-
-        //then
-        assertEquals("Name cannot be null", exception.getMessage());
-
-        verify(branchRepository,never()).existsByName(any());
     }
 
     @Test

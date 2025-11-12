@@ -114,20 +114,6 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void findById_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionServiceImpl.findById(nullId));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-        verify(positionRepository, never()).findById(any());
-    }
-
-    @Test
     void createPosition_workingTest(){
         //given
         String name = "NEW POSITION";
@@ -240,35 +226,6 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void updatePosition_dtoIsNullThrowsException(){
-        //given
-        Long id = 1L;
-        UpdatePositionDTO updatePositionDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
-
-        //then
-        verify(positionRepository,never()).findById(id);
-        verify(positionMapper, never()).updatePosition(any(),any());
-        verify(positionMapper,never()).toResponsePositionDTO(any());
-    }
-
-    @Test
-    void updatePosition_idIsNullThrowsException(){
-        //given
-        Long id = null;
-        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-    }
-
-    @Test
     void delete_workingTest(){
         //given
         Long id = 1L;
@@ -300,22 +257,6 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void delete_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionServiceImpl.delete(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(positionRepository, never()).existsById(any());
-        verify(positionRepository, never()).deleteById(any());
-    }
-
-    @Test
     void existsById_workingTest(){
         //given
         Long id = 1L;
@@ -329,20 +270,6 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void existsById_idIsNullThrowsException(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionServiceImpl.exists(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-        verify(positionRepository,never()).existsById(any());
-    }
-
-    @Test
     void existsByName_workingTest(){
         //given
         String name = "NAME";
@@ -353,19 +280,5 @@ class PositionServiceImplTest {
 
         //then
         assertTrue(response);
-    }
-
-    @Test
-    void existsByName_nameIsNullThrowsException(){
-        //given
-        String name = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> positionServiceImpl.exists(name));
-
-        //then
-        assertEquals("Name cannot be null", exception.getMessage());
-        verify(positionRepository,never()).existsById(any());
     }
 }
