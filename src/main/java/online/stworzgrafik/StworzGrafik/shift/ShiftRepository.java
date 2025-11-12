@@ -9,7 +9,7 @@ import java.time.LocalTime;
 import java.util.Optional;
 
 @Repository
-public interface ShiftRepository extends JpaRepository<Shift, Long>, JpaSpecificationExecutor<Shift> {
+interface ShiftRepository extends JpaRepository<Shift, Long>, JpaSpecificationExecutor<Shift> {
     boolean existsByStartHourAndEndHour(LocalTime startHour, LocalTime endHour);
     Optional<Shift> findByStartHourAndEndHour(LocalTime startHour, LocalTime endHour);
 }

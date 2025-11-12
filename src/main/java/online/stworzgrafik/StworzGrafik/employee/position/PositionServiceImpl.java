@@ -2,6 +2,8 @@ package online.stworzgrafik.StworzGrafik.employee.position;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
@@ -11,22 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
-@Validated
-public class PositionServiceImpl implements PositionService{
+@RequiredArgsConstructor
+class PositionServiceImpl implements PositionService, PositionEntityService{
     private final PositionRepository positionRepository;
     private final PositionMapper positionMapper;
     private final PositionBuilder positionBuilder;
     private final NameValidatorService nameValidatorService;
-
-    public PositionServiceImpl(PositionRepository positionRepository, PositionMapper positionMapper, PositionBuilder positionBuilder, NameValidatorService nameValidatorService) {
-        this.positionRepository = positionRepository;
-        this.positionMapper = positionMapper;
-        this.positionBuilder = positionBuilder;
-        this.nameValidatorService = nameValidatorService;
-    }
 
     @Override
     public List<ResponsePositionDTO> findAll() {
@@ -37,8 +31,6 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO findById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
@@ -47,8 +39,6 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public ResponsePositionDTO createPosition(CreatePositionDTO createPositionDTO) {
-        Objects.requireNonNull(createPositionDTO);
-
         if (positionRepository.existsByName(createPositionDTO.name())){
             throw new EntityExistsException("Position with name " + createPositionDTO.name() + " already exists");
         }
@@ -62,10 +52,7 @@ public class PositionServiceImpl implements PositionService{
     }
 
     @Override
-    public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
-        Objects.requireNonNull(id, "Id cannot be null");
-        Objects.requireNonNull(updatePositionDTO);
-
+    public ResponsePositionDTO updatePosition(Long id,  UpdatePositionDTO updatePositionDTO) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
@@ -80,9 +67,14 @@ public class PositionServiceImpl implements PositionService{
     }
 
     @Override
-    public void deletePosition(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
+    public ResponsePositionDTO save(Position position){
+        Position savedPosition = positionRepository.save(position);
 
+        return positionMapper.toResponsePositionDTO(savedPosition);
+    }
+
+    @Override
+    public void delete(Long id) {
         if (!positionRepository.existsById(id)){
             throw new EntityNotFoundException("Position with id " + id + " does not exist");
         }
@@ -92,15 +84,22 @@ public class PositionServiceImpl implements PositionService{
 
     @Override
     public boolean exists(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         return positionRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        Objects.requireNonNull(name,"Name cannot be null");
-
         return positionRepository.existsByName(name);
+    }
+
+    @Override
+    public Position saveEntity(Position position) {
+        return positionRepository.save(position);
+    }
+
+    @Override
+    public Position getEntityById(Long id) {
+        return positionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
     }
 }

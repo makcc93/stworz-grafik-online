@@ -2,9 +2,9 @@ package online.stworzgrafik.StworzGrafik.region.controller;
 
 import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/regions")
-public class RegionController {
+class RegionController {
     private final RegionService regionService;
 
-    public RegionController(RegionService regionService) {
-        this.regionService = regionService;
+    public RegionController(RegionService regionServiceImpl) {
+        this.regionService = regionServiceImpl;
     }
 
     @GetMapping
@@ -37,7 +37,7 @@ public class RegionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteRegion(@PathVariable Long id){
-        regionService.deleteRegion(id);
+        regionService.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

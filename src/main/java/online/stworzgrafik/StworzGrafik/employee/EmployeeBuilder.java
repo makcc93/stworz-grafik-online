@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class EmployeeBuilder {
+final class EmployeeBuilder {
     public Employee createEmployee(
             String firstName,
             String lastName,

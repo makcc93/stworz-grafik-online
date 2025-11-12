@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class StoreBuilder {
+final class StoreBuilder {
 
     public Store createStore(
             String name,

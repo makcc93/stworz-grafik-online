@@ -1,13 +1,10 @@
 package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.shift.shiftTypeConfig.TestShiftTypeConfigBuilder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;

@@ -4,9 +4,6 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
@@ -24,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PositionServiceImplIT {
 
     @Autowired
-    private PositionService service;
+    private PositionServiceImpl service;
 
     @Autowired
     private PositionMapper mapper;
@@ -189,7 +186,7 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void deletePosition_workingTest(){
+    void delete_workingTest(){
         //given
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position positionToDelete = new TestPositionBuilder().withName("SECOND").build();
@@ -197,7 +194,7 @@ public class PositionServiceImplIT {
         repository.saveAll(List.of(position1,positionToDelete,position2));
 
         //when
-        service.deletePosition(positionToDelete.getId());
+        service.delete(positionToDelete.getId());
 
         //then
         assertFalse(repository.existsById(positionToDelete.getId()));
@@ -206,13 +203,13 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void deletePosition_entityDoesNotExistThrowsException(){
+    void delete_entityDoesNotExistThrowsException(){
         //given
         Long randomId = 12345L;
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> service.deletePosition(randomId));
+                assertThrows(EntityNotFoundException.class, () -> service.delete(randomId));
 
         //then
         assertEquals("Position with id " + randomId + " does not exist", exception.getMessage());

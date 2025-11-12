@@ -3,15 +3,10 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.branch.BranchBuilder;
-import online.stworzgrafik.StworzGrafik.branch.BranchRepository;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestCreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.branch.*;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -33,22 +28,22 @@ class StoreServiceImplIT {
     private StoreService storeService;
 
     @Autowired
+    private StoreEntityService storeEntityService;
+
+    @Autowired
     private StoreRepository storeRepository;
 
     @Autowired
     private StoreMapper storeMapper;
 
     @Autowired
-    private BranchRepository branchRepository;
+    private BranchService branchService;
 
     @Autowired
     private StoreBuilder storeBuilder;
 
     @Autowired
-    private BranchBuilder branchBuilder;
-
-    @Autowired
-    private RegionRepository regionRepository;
+    private RegionService regionService;
 
     @Test
     void findAll_workingTest(){
@@ -251,7 +246,7 @@ class StoreServiceImplIT {
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.update(randomId, updateStoreDTO));
 
         //then
-        assertEquals("Cannot find store to update by id " + randomId,exception.getMessage());
+        assertEquals("Cannot find store by id " + randomId,exception.getMessage());
     }
 
     @Test
@@ -328,6 +323,21 @@ class StoreServiceImplIT {
     }
 
     @Test
+    void save_workingTest(){
+        //given
+        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
+
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+
+        //when
+        ResponseStoreDTO serviceResponse = storeService.save(store);
+
+        //then
+        assertEquals(store.getName(), serviceResponse.name());
+        assertTrue(storeRepository.existsById(store.getId()));
+    }
+
+    @Test
     void saveEntity_workingTest(){
         //given
         Branch branch = buildAndSaveDefaultBranchWithRegionInside();
@@ -335,33 +345,18 @@ class StoreServiceImplIT {
         Store store = new TestStoreBuilder().withBranch(branch).build();
 
         //when
-        storeService.saveEntity(store);
+        storeEntityService.saveEntity(store);
 
         //then
         assertTrue(storeRepository.existsById(store.getId()));
     }
 
-    @Test
-    void saveDto_workingTest(){
-        //given
-        Branch branch = buildAndSaveDefaultBranchWithRegionInside();
-        Store store = new TestStoreBuilder().withBranch(branch).build();
-        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO(store.getName(), store.getStoreCode());
-
-        //when
-        storeService.saveDto(storeNameAndCodeDTO);
-
-        //then
-        assertTrue(storeRepository.existsByNameAndStoreCode(store.getName(),store.getStoreCode()));
-        assertTrue(storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode()));
-    }
-
     private Branch buildAndSaveDefaultBranchWithRegionInside() {
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch branch = new TestBranchBuilder().withRegion(region).build();
-        branchRepository.save(branch);
+        branchService.save(branch);
 
         return branch;
     }

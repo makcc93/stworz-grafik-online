@@ -1,12 +1,15 @@
 package online.stworzgrafik.StworzGrafik.validator;
 
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Validated
 public class NameValidatorService {
     private final Map<ObjectType, NameValidatorStrategy> validators = new EnumMap<>(ObjectType.class);
 
@@ -16,7 +19,7 @@ public class NameValidatorService {
         }
     }
 
-    public String validate(String name, ObjectType objectType){
+    public String validate(@Valid String name, @Valid ObjectType objectType){
         NameValidatorStrategy validator = validators.get(objectType);
 
         if (validator == null) {

@@ -2,13 +2,11 @@ package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 
 @Service
-@Validated
 public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
     private final ShiftTypeConfigRepository shiftTypeConfigRepository;
     private final String nullMessageForShiftCode = "Shift code cannot be null";

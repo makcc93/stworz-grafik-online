@@ -2,10 +2,6 @@ package online.stworzgrafik.StworzGrafik.region;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestCreateRegionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestResponseRegionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestUpdateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
@@ -27,7 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RegionServiceImplTest {
     @InjectMocks
-    private RegionServiceImpl regionService;
+    private RegionServiceImpl regionServiceImpl;
 
     @Mock
     private RegionRepository regionRepository;
@@ -60,7 +56,7 @@ class RegionServiceImplTest {
         when(regionMapper.toResponseRegionDTO(region)).thenReturn(responseRegionDTO);
 
         //when
-        ResponseRegionDTO serviceResponse = regionService.createRegion(createRegionDTO);
+        ResponseRegionDTO serviceResponse = regionServiceImpl.createRegion(createRegionDTO);
 
         //then
         assertEquals(name,serviceResponse.name());
@@ -79,7 +75,7 @@ class RegionServiceImplTest {
         when(regionRepository.existsByName(name)).thenReturn(true);
 
         //when
-        EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionService.createRegion(createRegionDTO));
+        EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionServiceImpl.createRegion(createRegionDTO));
 
         //then
         assertEquals("Region with name " + name + " already exist", exception.getMessage());
@@ -91,7 +87,7 @@ class RegionServiceImplTest {
         CreateRegionDTO createRegionDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> regionService.createRegion(createRegionDTO));
+        assertThrows(NullPointerException.class, () -> regionServiceImpl.createRegion(createRegionDTO));
         //then
     }
 
@@ -118,7 +114,7 @@ class RegionServiceImplTest {
         when(regionMapper.toResponseRegionDTO(any(Region.class))).thenReturn(responseRegionDTO);
 
         //when
-        ResponseRegionDTO serviceResponse = regionService.updateRegion(id, updateRegionDTO);
+        ResponseRegionDTO serviceResponse = regionServiceImpl.updateRegion(id, updateRegionDTO);
 
         //then
         assertEquals(updatedName,serviceResponse.name());
@@ -138,36 +134,10 @@ class RegionServiceImplTest {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> regionService.updateRegion(randomId, updateRegionDTO));
+                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.updateRegion(randomId, updateRegionDTO));
 
         //then
         assertEquals("Cannot find region by id " + randomId, exception.getMessage());
-    }
-
-    @Test
-    void updateRegion_idIsNullThrowsException(){
-        //given
-        Long nullNumber = null;
-
-        UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().build();
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.updateRegion(nullNumber, updateRegionDTO));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void updateRegion_argumentDTOisNullThrowsException(){
-        //given
-        Long randomId = 4321L;
-
-        UpdateRegionDTO nullDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> regionService.updateRegion(randomId,nullDTO));
-        //then
     }
 
     @Test
@@ -189,7 +159,7 @@ class RegionServiceImplTest {
         when(regionMapper.toResponseRegionDTO(region3)).thenReturn(responseRegionDTO3);
 
         //when
-        List<ResponseRegionDTO> serviceResponse = regionService.findAll();
+        List<ResponseRegionDTO> serviceResponse = regionServiceImpl.findAll();
 
         //then
         assertTrue(serviceResponse.contains(responseRegionDTO1));
@@ -204,7 +174,7 @@ class RegionServiceImplTest {
         when(regionRepository.findAll()).thenReturn(new ArrayList<>());
 
         //when
-        List<ResponseRegionDTO> serviceResponse = regionService.findAll();
+        List<ResponseRegionDTO> serviceResponse = regionServiceImpl.findAll();
 
         //then
         assertEquals(0,serviceResponse.size());
@@ -225,7 +195,7 @@ class RegionServiceImplTest {
         when(regionMapper.toResponseRegionDTO(region1)).thenReturn(responseRegionDTO1);
 
         //when
-        ResponseRegionDTO serviceResponse = regionService.findById(region1Id);
+        ResponseRegionDTO serviceResponse = regionServiceImpl.findById(region1Id);
 
         //then
         assertEquals(first,serviceResponse.name());
@@ -243,7 +213,7 @@ class RegionServiceImplTest {
         Long notExistingEntityId = 1231232L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionService.findById(notExistingEntityId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.findById(notExistingEntityId));
 
         //then
         assertEquals("Cannot find region by id " + notExistingEntityId, exception.getMessage());
@@ -251,20 +221,22 @@ class RegionServiceImplTest {
     }
 
     @Test
-    void findById_idIsNullThrowsException(){
+    void save_workingTest(){
         //given
-        Long nullId = null;
+        Region region = new TestRegionBuilder().build();
+        when(regionRepository.save(region)).thenReturn(region);
+
+        ResponseRegionDTO responseRegionDTO = new TestResponseRegionDTO().withName(region.getName()).build();
+        when(regionMapper.toResponseRegionDTO(region)).thenReturn(responseRegionDTO);
 
         //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.findById(nullId));
+        ResponseRegionDTO serviceResponse = regionServiceImpl.save(region);
 
         //then
-        assertEquals("Id cannot be null", exception.getMessage());
+        assertEquals(region.getName(),serviceResponse.name());
 
-        verify(regionRepository,never()).findById(any(Long.class));
-        verify(regionMapper,never()).toResponseRegionDTO(any(Region.class));
+        verify(regionRepository,times(1)).save(region);
     }
-
     @Test
     void existsById_workingTest(){
         //given
@@ -273,24 +245,11 @@ class RegionServiceImplTest {
         when(regionRepository.existsById(id)).thenReturn(true);
 
         //when
-        boolean response = regionService.exists(id);
+        boolean response = regionServiceImpl.exists(id);
 
         //then
         assertTrue(response);
         verify(regionRepository,times(1)).existsById(id);
-    }
-
-    @Test
-    void existsById_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.findById(nullId));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-        verify(regionRepository,never()).findById(any(Long.class));
     }
 
     @Test
@@ -300,24 +259,10 @@ class RegionServiceImplTest {
         when(regionRepository.existsByName(name)).thenReturn(true);
 
         //when
-        boolean response = regionService.exists(name);
+        boolean response = regionServiceImpl.exists(name);
 
         //then
         assertTrue(response);
-    }
-
-    @Test
-    void existsByName_nameIsNull(){
-        //given
-        String nullName = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.exists(nullName));
-
-        //then
-        assertEquals("Name cannot be null", exception.getMessage());
-
-        verify(regionRepository,never()).existsByName(any(String.class));
     }
 
     @Test
@@ -328,24 +273,10 @@ class RegionServiceImplTest {
         when(regionRepository.existsById(id)).thenReturn(true);
 
         //when
-        regionService.deleteRegion(id);
+        regionServiceImpl.delete(id);
 
         //then
         verify(regionRepository,times(1)).deleteById(id);
-    }
-
-    @Test
-    void deleteRegion_idIsNullThrowsException(){
-        //given
-        Long nullId = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> regionService.deleteRegion(nullId));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-        verify(regionRepository,never()).existsById(any(Long.class));
-        verify(regionRepository,never()).deleteById(any(Long.class));
     }
 
     @Test
@@ -354,10 +285,59 @@ class RegionServiceImplTest {
         Long randomId = 2154L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionService.deleteRegion(randomId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.delete(randomId));
 
         //then
         assertEquals("Cannot find region by id " + randomId, exception.getMessage());
         verify(regionRepository,never()).deleteById(any(Long.class));
+    }
+
+    @Test
+    void saveEntity_workingTest(){
+        //given
+        Region region = new TestRegionBuilder().build();
+        when(regionRepository.save(region)).thenReturn(region);
+
+        //when
+        Region serviceResponse = regionServiceImpl.saveEntity(region);
+
+        //then
+        assertEquals(region.getName(),serviceResponse.getName());
+        verify(regionRepository,times(1)).save(region);
+    }
+
+    @Test
+    void getEntityById_workingTest(){
+        //given
+        Long id = 123L;
+        Region region = new TestRegionBuilder().build();
+        region.setId(id);
+
+        when(regionRepository.findById(id)).thenReturn(Optional.ofNullable(region));
+
+        //when
+        Region serviceResponse = regionServiceImpl.getEntityById(id);
+
+        //then
+        assertEquals(id, serviceResponse.getId());
+        assertEquals(region.getName(), serviceResponse.getName());
+
+        verify(regionRepository,times(1)).findById(id);
+    }
+
+    @Test
+    void getEntityById_cannotFindByIdThrowsException(){
+        //given
+        long id = 54321L;
+        when(regionRepository.findById(id)).thenReturn(Optional.empty());
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.getEntityById(id));
+
+        //then
+        assertEquals("Cannot find region by id " + id, exception.getMessage());
+
+        verify(regionRepository,times(1)).findById(id);
     }
 }

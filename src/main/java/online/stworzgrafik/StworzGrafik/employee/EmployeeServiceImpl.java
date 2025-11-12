@@ -2,13 +2,16 @@ package online.stworzgrafik.StworzGrafik.employee;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionRepository;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import online.stworzgrafik.StworzGrafik.store.StoreRepository;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,32 +19,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Validated
-public class EmployeeServiceImpl implements EmployeeService{
+@RequiredArgsConstructor
+class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     private final EmployeeRepository employeeRepository;
     private final EmployeeBuilder employeeBuilder;
-    private final NameValidatorService nameValidatorService;
     private final EmployeeMapper employeeMapper;
-    private final StoreRepository storeRepository;
-    private final PositionRepository positionRepository;
-
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, EmployeeBuilder employeeBuilder, NameValidatorService nameValidatorService, EmployeeMapper employeeMapper, StoreRepository storeRepository, PositionRepository positionRepository) {
-        this.employeeRepository = employeeRepository;
-        this.employeeBuilder = employeeBuilder;
-        this.nameValidatorService = nameValidatorService;
-        this.employeeMapper = employeeMapper;
-        this.storeRepository = storeRepository;
-        this.positionRepository = positionRepository;
-    }
+    private final NameValidatorService nameValidatorService;
+    private final StoreService storeService;
+    private final StoreEntityService storeEntityService;
+    private final PositionService positionService;
+    private final PositionEntityService positionEntityService;
 
     @Override
     public ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
-        Objects.requireNonNull(storeId, "Store id cannot be null");
-        Objects.requireNonNull(createEmployeeDTO);
-
         if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
             throw new EntityExistsException("Employee with sap " + createEmployeeDTO.sap() + " already exists");
         }
@@ -49,10 +42,8 @@ public class EmployeeServiceImpl implements EmployeeService{
         String validatedFirstName = nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON);
         String validatedLastName = nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON);
 
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
-        Position position = positionRepository.findById(createEmployeeDTO.positionId())
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + createEmployeeDTO.positionId()));
+        Store store = getStore(storeId);
+        Position position = getPosition(createEmployeeDTO);
 
         Employee employee = employeeBuilder.createEmployee(
                 validatedFirstName,
@@ -69,10 +60,6 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public ResponseEmployeeDTO updateEmployee(Long storeId, Long employeeId, UpdateEmployeeDTO updateEmployeeDTO) {
-        Objects.requireNonNull(storeId, "Store id cannot be null");
-        Objects.requireNonNull(employeeId,"Employee id cannot be null");
-        Objects.requireNonNull(updateEmployeeDTO);
-
         Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
         if (updateEmployeeDTO.firstName() != null){
@@ -96,12 +83,16 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public void deleteEmployee(Long storeId, Long employeeId) {
-        Objects.requireNonNull(storeId,"Store id cannot be null");
-        Objects.requireNonNull(employeeId,"Employee id cannot be null");
-
         Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
         employeeRepository.delete(employee);
+    }
+
+    @Override
+    public ResponseEmployeeDTO save(Employee employee) {
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        return employeeMapper.toResponseEmployeeDTO(savedEmployee);
     }
 
     @Override
@@ -113,8 +104,6 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public ResponseEmployeeDTO findById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
 
@@ -123,23 +112,27 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public boolean existsById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         return employeeRepository.existsById(id);
     }
 
     @Override
     public boolean existsBySap(Long sap) {
-        Objects.requireNonNull(sap,"Sap cannot be null");
-
         return employeeRepository.existsBySap(sap);
     }
 
     @Override
     public boolean existsByLastName(String lastName) {
-        Objects.requireNonNull(lastName,"Last name cannot be null");
-
         return employeeRepository.existsByLastName(lastName);
+    }
+
+    @Override
+    public Employee saveEntity(Employee employee){
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee getEntityById(Long id) {
+        return null;
     }
 
     private Employee getEmployeeIfBelongsToStore(Long storeId, Long employeeId) {
@@ -151,5 +144,21 @@ public class EmployeeServiceImpl implements EmployeeService{
         }
 
         return employee;
+    }
+
+    private Store getStore(Long storeId){
+        if (!storeService.exists(storeId)){
+            throw new EntityNotFoundException("Cannot find store by id " + storeId);
+        }
+
+        return storeEntityService.getEntityById(storeId);
+    }
+
+    private Position getPosition(CreateEmployeeDTO createEmployeeDTO){
+        if (!positionService.exists(createEmployeeDTO.positionId())){
+            throw new EntityNotFoundException("Cannot find position by id " + createEmployeeDTO.positionId());
+        }
+
+        return positionEntityService.getEntityById(createEmployeeDTO.positionId());
     }
 }

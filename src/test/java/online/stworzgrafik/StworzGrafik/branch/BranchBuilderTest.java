@@ -1,7 +1,6 @@
 package online.stworzgrafik.StworzGrafik.branch;
 
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import org.junit.jupiter.api.Test;
 

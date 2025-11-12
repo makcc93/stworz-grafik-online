@@ -3,12 +3,12 @@ package online.stworzgrafik.StworzGrafik.employee.position.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestCreatePositionDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import online.stworzgrafik.StworzGrafik.employee.position.TestCreatePositionDTO;
+import online.stworzgrafik.StworzGrafik.employee.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -226,7 +226,7 @@ class PositionControllerTest {
     @Test
     void updatePosition_cannotFindEntityByIdThrowsException() throws Exception{
         //given
-        Long randomId = 1234L;
+        long randomId = 1234L;
 
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
 
@@ -243,7 +243,7 @@ class PositionControllerTest {
     @Test
     void updatePosition_dtoIsNullThrowsException() throws Exception{
         //given
-        Long randomId = 1112233L;
+        long randomId = 1112233L;
         UpdatePositionDTO updatePositionDTO = null;
 
         //when
@@ -284,7 +284,7 @@ class PositionControllerTest {
     @Test
     void deletePosition_entityToDeleteNotFoundThrowsException() throws Exception{
         //given
-        Long randomId = 12345L;
+        long randomId = 12345L;
 
         //when
         MvcResult mvcResult = mockMvc.perform(delete("/api/positions/" + randomId))

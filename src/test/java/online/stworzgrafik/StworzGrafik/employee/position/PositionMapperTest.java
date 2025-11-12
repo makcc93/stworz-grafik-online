@@ -1,7 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.position;
 
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.position.TestUpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import org.junit.jupiter.api.Test;

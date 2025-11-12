@@ -4,7 +4,7 @@ import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PositionBuilder {
+class PositionBuilder {
     public Position createPosition(
             String name,
             @Nullable String description){

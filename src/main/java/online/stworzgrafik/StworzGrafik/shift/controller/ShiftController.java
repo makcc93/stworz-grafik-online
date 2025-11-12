@@ -4,8 +4,6 @@ import jakarta.validation.Valid;
 import online.stworzgrafik.StworzGrafik.schedule.shiftCreator.ShiftGeneratorAlgorithm;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
-import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftMapper;
 import online.stworzgrafik.StworzGrafik.shift.ShiftService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +13,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/shifts")
-public class ShiftController {
+class ShiftController {
     private final ShiftService shiftService;
-    private final ShiftMapper shiftMapper;
     private final ShiftGeneratorAlgorithm shiftGeneratorAlgorithm;
 
-    public ShiftController(ShiftService shiftService, ShiftMapper shiftMapper, ShiftGeneratorAlgorithm shiftGeneratorAlgorithm) {
+    public ShiftController(ShiftService shiftService, ShiftGeneratorAlgorithm shiftGeneratorAlgorithm) {
         this.shiftService = shiftService;
-        this.shiftMapper = shiftMapper;
         this.shiftGeneratorAlgorithm = shiftGeneratorAlgorithm;
     }
 
@@ -49,14 +45,8 @@ public class ShiftController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseShiftDTO> updateShift(@RequestBody @Valid ShiftHoursDTO shiftHoursDTO,@PathVariable Long id) {
-            Shift shift = shiftService.findEntityById(id);
-            shift.setStartHour(shiftHoursDTO.startHour());
-            shift.setEndHour(shiftHoursDTO.endHour());
-
-            Shift savedEntity = shiftService.saveEntity(shift);
-
-            return ResponseEntity.ok().body(shiftMapper.toShiftDto(savedEntity));
+    public ResponseEntity<ResponseShiftDTO> updateShift(@PathVariable Long id, @RequestBody @Valid ShiftHoursDTO shiftHoursDTO) {
+        return ResponseEntity.ok().body(shiftService.updateShift(id,shiftHoursDTO));
     }
 
     @PostMapping("/test")

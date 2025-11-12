@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalTime;
 
 @Component
-public final class ShiftBuilder {
+final class ShiftBuilder {
     public Shift createShift(
             LocalTime startHour,
             LocalTime endHour

@@ -1,61 +1,40 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
-@Validated
-public class ShiftServiceImpl implements ShiftService{
+@RequiredArgsConstructor
+class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     private final ShiftRepository shiftRepository;
     private final ShiftBuilder shiftBuilder;
     private final ShiftMapper shiftMapper;
 
-    public ShiftServiceImpl(ShiftRepository shiftRepository, ShiftBuilder shiftBuilder, ShiftMapper shiftMapper) {
-        this.shiftRepository = shiftRepository;
-        this.shiftBuilder = shiftBuilder;
-        this.shiftMapper = shiftMapper;
-    }
-
     @Override
-    public ResponseShiftDTO saveDto(ShiftHoursDTO shiftHoursDTO) {
-        Objects.requireNonNull(shiftHoursDTO);
+    public ResponseShiftDTO save(Shift shift) {
+        validateHours(shift.startHour,shift.endHour);
 
-        validateHour(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+        if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
+            return shiftMapper.toShiftDto(shift);
+        }
 
-        Shift shift = shiftMapper.toEntity(shiftHoursDTO);
-
-        Shift savedShift = saveEntity(shift);
+        Shift savedShift = shiftRepository.save(shift);
 
         return shiftMapper.toShiftDto(savedShift);
     }
 
     @Override
-    public Shift saveEntity(Shift shift) {
-       Objects.requireNonNull(shift,"Shift cannot be null");
-
-       if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
-           return shift;
-       }
-
-       validateHour(shift.startHour,shift.endHour);
-
-       return shiftRepository.save(shift);
-    }
-
-
-    @Override
     public ResponseShiftDTO create(ShiftHoursDTO shiftHoursDTO) {
-        Objects.requireNonNull(shiftHoursDTO);
-
         LocalTime startHour = shiftHoursDTO.startHour();
         LocalTime endHour = shiftHoursDTO.endHour();
+
+        validateHours(startHour, endHour);
 
         if (shiftRepository.existsByStartHourAndEndHour(startHour, endHour)){
             return shiftMapper.toShiftDto(
@@ -64,8 +43,6 @@ public class ShiftServiceImpl implements ShiftService{
                             endHour)
                     .orElseThrow());
         }
-
-        validateHour(startHour, endHour);
 
         Shift shift = shiftBuilder.createShift(
                 startHour,
@@ -78,16 +55,18 @@ public class ShiftServiceImpl implements ShiftService{
     }
 
     @Override
-    public Shift findEntityById(Long id) {
-       Objects.requireNonNull(id,"Id cannot be null");
+    public ResponseShiftDTO updateShift(Long shiftId, ShiftHoursDTO shiftHoursDTO){
+        Shift shift = shiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id " + shiftId));
 
-        return shiftRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
+        shiftMapper.updateShift(shiftHoursDTO,shift);
+        shiftRepository.save(shift);
+
+        return shiftMapper.toShiftDto(shift);
     }
 
     @Override
     public void delete(Long id) {
-        Objects.requireNonNull(id, "Id cannot be null");
-
         if (!shiftRepository.existsById(id)){
             throw new EntityNotFoundException("Shift with id " + id +" does not exist");
         }
@@ -104,8 +83,6 @@ public class ShiftServiceImpl implements ShiftService{
 
     @Override
     public ResponseShiftDTO findById(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         Shift shift = shiftRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
 
         return shiftMapper.toShiftDto(shift);
@@ -113,9 +90,6 @@ public class ShiftServiceImpl implements ShiftService{
 
     @Override
     public boolean exists(LocalTime startHour, LocalTime endHour) {
-        Objects.requireNonNull(startHour,"Start hour cannot be null");
-        Objects.requireNonNull(endHour,"End hour cannot be null");
-
         if (endHour.isBefore(startHour)){
             throw new IllegalArgumentException("End hour cannot be before start hour");
         }
@@ -125,12 +99,27 @@ public class ShiftServiceImpl implements ShiftService{
 
     @Override
     public boolean exists(Long id) {
-        Objects.requireNonNull(id,"Id cannot be null");
-
         return shiftRepository.existsById(id);
     }
 
-    private void validateHour(LocalTime startHour, LocalTime endHour){
+    @Override
+    public Shift saveEntity(Shift shift) {
+        if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
+            return shift;
+        }
+
+        validateHours(shift.startHour,shift.endHour);
+
+        return shiftRepository.save(shift);
+    }
+
+    @Override
+    public Shift getEntityById(Long id) {
+        return shiftRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
+    }
+
+    private void validateHours(LocalTime startHour, LocalTime endHour){
         if (endHour.isBefore(startHour)){
             throw new IllegalArgumentException("End hour cannot be before start hour");
         }

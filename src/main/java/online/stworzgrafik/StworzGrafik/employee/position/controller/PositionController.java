@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/positions")
-public class PositionController {
+class PositionController {
 
     private final PositionService service;
 
@@ -43,7 +43,7 @@ public class PositionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deletePosition(@PathVariable Long id){
-        service.deletePosition(id);
+        service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

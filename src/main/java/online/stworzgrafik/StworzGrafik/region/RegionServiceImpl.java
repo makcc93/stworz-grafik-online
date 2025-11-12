@@ -2,6 +2,8 @@ package online.stworzgrafik.StworzGrafik.region;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
@@ -11,27 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
-@Validated
-class RegionServiceImpl implements RegionService{
+@RequiredArgsConstructor
+class RegionServiceImpl implements RegionService, RegionEntityService {
     private final RegionRepository regionRepository;
     private final RegionBuilder regionBuilder;
     private final RegionMapper regionMapper;
     private final NameValidatorService nameValidatorService;
 
-    public RegionServiceImpl(RegionRepository regionRepository, RegionBuilder regionBuilder, RegionMapper regionMapper, NameValidatorService nameValidatorService) {
-        this.regionRepository = regionRepository;
-        this.regionBuilder = regionBuilder;
-        this.regionMapper = regionMapper;
-        this.nameValidatorService = nameValidatorService;
-    }
-
     @Override
     public ResponseRegionDTO createRegion(CreateRegionDTO createRegionDTO) {
-        Objects.requireNonNull(createRegionDTO);
-
         if (regionRepository.existsByName(createRegionDTO.name())){
             throw new EntityExistsException("Region with name " + createRegionDTO.name() + " already exist");
         }
@@ -47,9 +39,6 @@ class RegionServiceImpl implements RegionService{
 
     @Override
     public ResponseRegionDTO updateRegion(Long id, UpdateRegionDTO updateRegionDTO) {
-        Objects.requireNonNull(id, "Id cannot be null");
-        Objects.requireNonNull(updateRegionDTO);
-
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 
@@ -74,8 +63,6 @@ class RegionServiceImpl implements RegionService{
 
     @Override
     public ResponseRegionDTO findById(Long id) {
-        Objects.requireNonNull(id, "Id cannot be null");
-
         Region region = regionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 
@@ -83,27 +70,39 @@ class RegionServiceImpl implements RegionService{
     }
 
     @Override
-    public boolean exists(Long id) {
-        Objects.requireNonNull(id, "Id cannot be null");
+    public ResponseRegionDTO save(Region region) {
+        Region savedRegion = regionRepository.save(region);
 
+        return regionMapper.toResponseRegionDTO(savedRegion);
+    }
+
+    @Override
+    public boolean exists(Long id) {
         return regionRepository.existsById(id);
     }
 
     @Override
     public boolean exists(String name) {
-        Objects.requireNonNull(name, "Name cannot be null");
-
         return regionRepository.existsByName(name);
     }
 
     @Override
-    public void deleteRegion(Long id) {
-        Objects.requireNonNull(id, "Id cannot be null");
-
+    public void delete(Long id) {
         if (!regionRepository.existsById(id)){
             throw new EntityNotFoundException("Cannot find region by id " + id);
         }
 
         regionRepository.deleteById(id);
+    }
+
+    @Override
+    public Region saveEntity(Region region) {
+        return regionRepository.save(region);
+    }
+
+    @Override
+    public Region getEntityById(Long id) {
+        return regionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
     }
 }

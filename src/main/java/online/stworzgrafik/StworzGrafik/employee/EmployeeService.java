@@ -1,21 +1,23 @@
 package online.stworzgrafik.StworzGrafik.employee;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
-import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
-@Service
+@Validated
 public interface EmployeeService {
-    ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull CreateEmployeeDTO createEmployeeDTO);
-    ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull UpdateEmployeeDTO updateEmployeeDTO);
-    void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
-    List<ResponseEmployeeDTO> findAll();
-    ResponseEmployeeDTO findById(@NotNull Long id);
-    boolean existsById(@NotNull Long id);
-    boolean existsBySap(@NotNull Long sap);
-    boolean existsByLastName(@NotNull String lastName);
+    public ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull @Valid CreateEmployeeDTO createEmployeeDTO);
+    public ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull @Valid UpdateEmployeeDTO updateEmployeeDTO);
+    public void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
+    public ResponseEmployeeDTO save(@NotNull Employee employee);
+    public List<ResponseEmployeeDTO> findAll();
+    public ResponseEmployeeDTO findById(@NotNull Long id);
+    public boolean existsById(@NotNull Long id);
+    public boolean existsBySap(@NotNull Long sap);
+    public boolean existsByLastName(@NotNull String lastName);
 }

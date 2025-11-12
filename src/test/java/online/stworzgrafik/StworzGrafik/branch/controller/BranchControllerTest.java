@@ -7,12 +7,12 @@ import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestCreateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.branch.TestUpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.dataBuilderForTests.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.branch.TestCreateBranchDTO;
+import online.stworzgrafik.StworzGrafik.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
-import online.stworzgrafik.StworzGrafik.region.RegionRepository;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +43,7 @@ class BranchControllerTest {
     private BranchService branchService;
 
     @Autowired
-    private BranchRepository branchRepository;
-
-    @Autowired
-    private BranchMapper branchMapper;
-
-    @Autowired
-    private RegionRepository regionRepository;
+    private RegionService regionService;
 
     @Autowired
     private NameValidatorService nameValidatorService;
@@ -58,20 +52,16 @@ class BranchControllerTest {
     void findAll_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withRegion(region).withName("FIRST").build();
+        ResponseBranchDTO responseFirstBranch = branchService.save(firstBranch);
+
         Branch secondBranch = new TestBranchBuilder().withRegion(region).withName("SECOND").build();
+        ResponseBranchDTO responseSecondBranch = branchService.save(secondBranch);
+
         Branch thirdBranch = new TestBranchBuilder().withRegion(region).withName("THIRD").build();
-        branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
-
-        ResponseBranchDTO responseFirstBranch = branchMapper.toResponseBranchDTO(firstBranch);
-        ResponseBranchDTO responseSecondBranch = branchMapper.toResponseBranchDTO(secondBranch);
-        ResponseBranchDTO responseThirdBranch = branchMapper.toResponseBranchDTO(thirdBranch);
-
-        Branch notSavedBranch = new TestBranchBuilder().withName("NOTSAVED").build();
-        ResponseBranchDTO responseNotSavedBranch = branchMapper.toResponseBranchDTO(notSavedBranch);
-
+        ResponseBranchDTO responseThirdBranch =branchService.save(thirdBranch);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/branches"))
@@ -85,8 +75,6 @@ class BranchControllerTest {
         //then
         assertEquals(3,responseBranchDTOS.size());
         assertTrue(responseBranchDTOS.containsAll(List.of(responseFirstBranch,responseSecondBranch,responseThirdBranch)));
-
-        assertFalse(responseBranchDTOS.contains(responseNotSavedBranch));
     }
 
     @Test
@@ -110,12 +98,14 @@ class BranchControllerTest {
     void findById_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
+        branchService.save(firstBranch);
         Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
+        branchService.save(secondBranch);
         Branch thirdBranch = new TestBranchBuilder().withName("THIRD").withRegion(region).build();
-        branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
+        branchService.save(thirdBranch);
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/branches/" + firstBranch.getId()))
@@ -147,7 +137,7 @@ class BranchControllerTest {
     void createBranch_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withRegionId(region.getId()).build();
 
@@ -163,17 +153,17 @@ class BranchControllerTest {
 
         //then
         assertEquals(createBranchDTO.name(),responseBranchDTO.name());
-        assertTrue(branchRepository.existsByName(createBranchDTO.name()));
+        assertTrue(branchService.exists(createBranchDTO.name()));
     }
 
     @Test
     void createBranch_entityWithThisNameAlreadyExistThrowsException() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
-        branchRepository.save(firstBranch);
+        branchService.save(firstBranch);
 
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withName(firstBranch.getName()).build();
 
@@ -209,12 +199,14 @@ class BranchControllerTest {
     void deleteBranchById_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
+        branchService.save(firstBranch);
         Branch secondBranch = new TestBranchBuilder().withName("SECOND").withRegion(region).build();
+        branchService.save(secondBranch);
         Branch thirdBranch = new TestBranchBuilder().withName("THIRD").withRegion(region).build();
-        branchRepository.saveAll(List.of(firstBranch,secondBranch,thirdBranch));
+        branchService.save(thirdBranch);
 
         //when
         mockMvc.perform(delete("/api/branches/" + secondBranch.getId()))
@@ -222,10 +214,10 @@ class BranchControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(branchRepository.existsByName(secondBranch.getName()));
+        assertFalse(branchService.exists(secondBranch.getName()));
 
-        assertTrue(branchRepository.existsByName(firstBranch.getName()));
-        assertTrue(branchRepository.existsByName(thirdBranch.getName()));
+        assertTrue(branchService.exists(firstBranch.getName()));
+        assertTrue(branchService.exists(thirdBranch.getName()));
     }
 
     @Test
@@ -244,10 +236,10 @@ class BranchControllerTest {
     void updateBranch_workingTest() throws Exception {
         //given
         Region region = new TestRegionBuilder().build();
-        regionRepository.save(region);
+        regionService.save(region);
 
         Branch firstBranch = new TestBranchBuilder().withName("FIRST").withRegion(region).build();
-        branchRepository.save(firstBranch);
+        branchService.save(firstBranch);
 
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 

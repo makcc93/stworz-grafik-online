@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.schedule.shiftCreator;
 
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftService;
+import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -12,10 +12,10 @@ import java.util.List;
 public class ShiftGeneratorAlgorithm {
 
     int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 5, 0, 0, 0};
-    private final ShiftService shiftService;
+    private final ShiftEntityService shiftEntityService;
 
-    public ShiftGeneratorAlgorithm(ShiftService shiftService) {
-        this.shiftService = shiftService;
+    public ShiftGeneratorAlgorithm(ShiftEntityService shiftEntityService) {
+        this.shiftEntityService = shiftEntityService;
     }
 
     public List<Shift> generate() {
@@ -30,7 +30,7 @@ public class ShiftGeneratorAlgorithm {
         List<Shift> startEndHoursShifts = generateShiftEndHours(shiftsSortedDesc);
 
         for (Shift shift : startEndHoursShifts) {
-            shiftService.saveEntity(shift);
+            shiftEntityService.saveEntity(shift);
         }
 
         return startEndHoursShifts;
