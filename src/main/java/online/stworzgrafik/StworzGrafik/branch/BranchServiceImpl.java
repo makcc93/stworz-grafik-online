@@ -33,6 +33,7 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
         return branchMapper.toResponseBranchDTO(branch);
     }
 
+    @Override
     public List<ResponseBranchDTO> findAll() {
         return branchRepository.findAll().stream()
                 .map(branchMapper::toResponseBranchDTO)
