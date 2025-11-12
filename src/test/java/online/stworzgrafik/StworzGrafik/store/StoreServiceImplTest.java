@@ -2,10 +2,14 @@ package online.stworzgrafik.StworzGrafik.store;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PrePersist;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
+import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -44,10 +48,13 @@ class StoreServiceImplTest {
     private BranchService branchService;
 
     @Mock
-    private NameValidatorService nameValidatorService;
+    private BranchEntityService branchEntityService;
 
     @Mock
-    private EntityManager entityManager;
+    private NameValidatorService nameValidatorService;
+
+    private Region region = new TestRegionBuilder().build();
+    private Branch branch = new TestBranchBuilder().withRegion(region).build();
 
     @Test
     void findAll_workingTest(){
@@ -102,35 +109,20 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void findById_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findById(id));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-
-        verify(repository,never()).findById(any());
-        verify(storeMapper,never()).toResponseStoreDto(any());
-    }
-
-    @Test
     void createStore_workingTest(){
         //given
-        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
+        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
+        Long branchId = createStoreDTO.branchId();
 
         String name = createStoreDTO.name();
         when(repository.existsByName(name)).thenReturn(false);
         String storeCode = createStoreDTO.storeCode();
         when(repository.existsByStoreCode(storeCode)).thenReturn(false);
 
-        when(branchService.exists(createStoreDTO.branchId())).thenReturn(true);
-        Branch branch = new TestBranchBuilder().build();
-        when(entityManager.getReference(Branch.class, createStoreDTO.branchId())).thenReturn(branch);
+        when(branchEntityService.getEntityById(branchId)).thenReturn(branch);
 
         when(nameValidatorService.validate(name,ObjectType.STORE)).thenReturn(name);
+
 
         String location = createStoreDTO.location();
         Store store = new TestStoreBuilder()
@@ -188,12 +180,15 @@ class StoreServiceImplTest {
         when(repository.existsByName(createStoreDTO.name())).thenReturn(false);
         when(repository.existsByStoreCode(createStoreDTO.storeCode())).thenReturn(false);
 
-        when(branchService.findById(createStoreDTO.branchId())).thenThrow(EntityNotFoundException.class);
+        when(branchEntityService.getEntityById(createStoreDTO.branchId()))
+                .thenThrow(new EntityNotFoundException("Cannot find branch by id " + createStoreDTO.branchId()));
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> service.createStore(createStoreDTO));
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> service.createStore(createStoreDTO));
 
         //then
+        assertEquals("Cannot find branch by id " + createStoreDTO.branchId(), exception.getMessage());
         verify(nameValidatorService,never()).validate(any(),any());
         verify(storeBuilder,never()).createStore(any(),any(),any(),any());
         verify(repository,never()).save(any());
@@ -216,18 +211,6 @@ class StoreServiceImplTest {
         //then
         assertTrue(exists);
         assertFalse(shouldNotExist);
-    }
-
-    @Test
-    void existsById_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(id));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
     }
 
     @Test
@@ -274,18 +257,6 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void delete_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> service.delete(id));
-
-        //then
-        verify(repository,never()).deleteById(any());
-    }
-
-    @Test
     void delete_entityDoesNotExistById(){
         //given
         Long id = 200L;
@@ -318,58 +289,23 @@ class StoreServiceImplTest {
     }
 
     @Test
-    void saveEntity_argumentIsNull(){
-        //given
-        Store store = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> service.save(store));
-
-        //then
-        verify(repository,never()).save(any(Store.class));
-    }
-
-    @Test
     void save_workingTest(){
         //given
-        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Name","a1");
-        Store entityFromDTO = new TestStoreBuilder().build();
-        entityFromDTO.setName(storeNameAndCodeDTO.name());
-        entityFromDTO.setStoreCode(storeNameAndCodeDTO.storeCode());
+        Store store = new TestStoreBuilder().withBranch(branch).build();
 
-        when(storeMapper.toEntity(storeNameAndCodeDTO)).thenReturn(entityFromDTO);
+        when(repository.save(store)).thenReturn(store);
 
-        String changedName = "New name before save";
-        entityFromDTO.setName(changedName);
-
-        when(repository.save(entityFromDTO)).thenReturn(entityFromDTO);
-
-        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(entityFromDTO);
-        when(storeMapper.toResponseStoreDto(entityFromDTO)).thenReturn(responseStoreDTO);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
+        when (storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
 
         //when
-        ResponseStoreDTO returnedDto = service.save(entityFromDTO);
+        ResponseStoreDTO returnedDto = service.save(store);
 
         //then
-        assertEquals(changedName,returnedDto.name());
-        assertEquals(entityFromDTO.getId(),returnedDto.id());
-        assertEquals(entityFromDTO.getLocation(),returnedDto.location());
+        assertEquals(store.getId(),returnedDto.id());
+        assertEquals(store.getLocation(),returnedDto.location());
 
         verify(repository,times(1)).save(any(Store.class));
-    }
-
-
-
-    @Test
-    void save_argumentIsNull(){
-        //given
-        Store store = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> service.save(store));
-
-        //then
-        verify(repository,never()).save(any(Store.class));
     }
 
     @Test
@@ -398,35 +334,6 @@ class StoreServiceImplTest {
         verify(repository,times(1)).findById(id);
         verify(storeMapper,times(1)).toResponseStoreDto(store);
         verify(repository,times(1)).save(any(Store.class));
-    }
-
-    @Test
-    void update_idIsNull(){
-        //given
-        Long id = null;
-        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.update(id, updateStoreDTO));
-
-        //then
-        assertEquals("Id cannot be null", exception.getMessage());
-
-        verify(repository,never()).findById(any(Long.class));
-        verify(repository,never()).save(any(Store.class));
-    }
-
-    @Test
-    void update_dtoIsNull(){
-        Long id = 90L;
-        UpdateStoreDTO updateStoreDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class, () -> service.update(id, updateStoreDTO));
-
-        //then
-        verify(repository,never()).findById(any(Long.class));
-        verify(repository,never()).save(any(Store.class));
     }
 
     @Test

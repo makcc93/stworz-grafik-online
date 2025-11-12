@@ -89,9 +89,11 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
         Store store = new TestStoreBuilder().build();
+        when(storeService.exists(storeId)).thenReturn(true);
         when(storeEntityService.getEntityById(storeId)).thenReturn(store);
 
         Position position = new TestPositionBuilder().build();
+        when(positionService.exists(createEmployeeDTO.positionId())).thenReturn(true);
         when(positionEntityService.getEntityById(createEmployeeDTO.positionId())).thenReturn(position);
 
         Employee employee = new TestEmployeeBuilder()
@@ -345,24 +347,6 @@ class EmployeeServiceImplTest {
         //then
         assertEquals("Employee does not belong to this store", exception.getMessage());
 
-        verify(employeeRepository,never()).delete(any(Employee.class));
-    }
-
-    @Test
-    void deleteEmployee_employeeIdIsNullThrowsException(){
-        //given
-        Long employeeId = null;
-        Long storeId = 1L;
-        Store store = mock(Store.class);
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> employeeServiceImpl.deleteEmployee(storeId,employeeId));
-
-        //then
-        assertEquals("Employee id cannot be null", exception.getMessage());
-
-        verify(employeeRepository,never()).findById(any());
         verify(employeeRepository,never()).delete(any(Employee.class));
     }
 

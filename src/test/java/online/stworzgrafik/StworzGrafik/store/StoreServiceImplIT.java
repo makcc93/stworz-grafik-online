@@ -246,7 +246,7 @@ class StoreServiceImplIT {
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> storeService.update(randomId, updateStoreDTO));
 
         //then
-        assertEquals("Cannot find store to update by id " + randomId,exception.getMessage());
+        assertEquals("Cannot find store by id " + randomId,exception.getMessage());
     }
 
     @Test

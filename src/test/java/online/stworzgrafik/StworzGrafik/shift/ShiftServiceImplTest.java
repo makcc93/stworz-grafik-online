@@ -22,13 +22,13 @@ class ShiftServiceImplTest {
     ShiftMapper shiftMapper;
 
     @Mock
-    ShiftRepository repository;
+    ShiftRepository shiftRepository;
 
     @Mock
     ShiftBuilder shiftBuilderMock;
 
     @InjectMocks
-    ShiftServiceImpl service;
+    ShiftServiceImpl shiftServiceImpl;
 
     @Test
     void save_WorkingTest(){
@@ -37,12 +37,13 @@ class ShiftServiceImplTest {
         LocalTime endHour = LocalTime.of(20,0);
 
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
+        when(shiftRepository.save(shift)).thenReturn(shift);
+
         ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.id).withStartHour(startHour).withEndHour(endHour).build();
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
-        when(repository.save(shift)).thenReturn(shift);
 
         //when
-        ResponseShiftDTO serviceResponse = service.save(shift);
+        ResponseShiftDTO serviceResponse = shiftServiceImpl.save(shift);
 
         //then
         assertEquals(startHour,serviceResponse.startHour());
@@ -50,7 +51,7 @@ class ShiftServiceImplTest {
         assertEquals(shift.startHour,serviceResponse.startHour());
         assertEquals(shift.endHour,serviceResponse.endHour());
 
-        verify(repository,times(1)).save(shift);
+        verify(shiftRepository,times(1)).save(shift);
     }
 
     @Test
@@ -58,22 +59,21 @@ class ShiftServiceImplTest {
         //given
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
+        when(shiftRepository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
 
-        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
-        Shift entity = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
-        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(entity.id).withStartHour(startHour).withEndHour(endHour).build();
+        Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
+        when(shiftRepository.save(shift)).thenReturn(shift);
 
-
-        when(shiftMapper.toEntity(shiftHoursDTO)).thenReturn(entity);
-        when(shiftMapper.toShiftDto(entity)).thenReturn(responseShiftDTO);
-        when(repository.save(entity)).thenReturn(entity);
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.id).withStartHour(startHour).withEndHour(endHour).build();
+        when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
 
         //when
-        service.save(entity);
+        shiftServiceImpl.save(shift);
 
         //then
-        verify(shiftMapper).toEntity(shiftHoursDTO);
-        verify(shiftMapper).toShiftDto(entity);
+        verify(shiftRepository,times(1)).existsByStartHourAndEndHour(startHour,endHour);
+        verify(shiftRepository,times(1)).save(shift);
+        verify(shiftMapper).toShiftDto(shift);
     }
 
     @Test
@@ -81,10 +81,10 @@ class ShiftServiceImplTest {
         //given
         Shift shift = null;
         //when
-        assertThrows(NullPointerException.class,() -> service.save(shift));
+        assertThrows(NullPointerException.class,() -> shiftServiceImpl.save(shift));
 
         //then
-        verify(repository,never()).save(any());
+        verify(shiftRepository,never()).save(any());
     }
 
     @Test
@@ -94,14 +94,14 @@ class ShiftServiceImplTest {
         LocalTime endHour = LocalTime.of(20,0);
         int hoursDifference = endHour.getHour() - startHour.getHour();
 
-        when(repository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
+        when(shiftRepository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
 
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
-        when(repository.save(shift)).thenReturn(shift);
+        when(shiftRepository.save(shift)).thenReturn(shift);
 
         //when
-        Shift saved = service.saveEntity(shift);
+        Shift saved = shiftServiceImpl.saveEntity(shift);
 
         //then
         assertEquals(saved.startHour,shift.startHour);
@@ -119,11 +119,11 @@ class ShiftServiceImplTest {
         Shift shift = null;
 
         //when
-        assertThrows(NullPointerException.class,() -> service.saveEntity(shift));
+        assertThrows(NullPointerException.class,() -> shiftServiceImpl.saveEntity(shift));
 
 
         //then
-        verify(repository,never()).save(any(Shift.class));
+        verify(shiftRepository,never()).save(any(Shift.class));
     }
 
     @Test
@@ -132,33 +132,22 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(9, 0);
         LocalTime endHour = LocalTime.of(20, 0);
 
-        when(repository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
+        when(shiftRepository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(false);
 
         ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
         ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withStartHour(startHour).withEndHour(endHour).build();
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
-        when(repository.save(shift)).thenReturn(shift);
+        when(shiftRepository.save(shift)).thenReturn(shift);
         when(shiftMapper.toShiftDto(any(Shift.class))).thenReturn(responseShiftDTO);
         when(shiftBuilderMock.createShift(any(),any())).thenReturn(shift);
 
         //when
-        ResponseShiftDTO serviceResponse = service.create(shiftHoursDTO);
+        ResponseShiftDTO serviceResponse = shiftServiceImpl.create(shiftHoursDTO);
 
         // then
         assertEquals(9,serviceResponse.startHour().getHour());
         assertEquals(11,serviceResponse.length());
-    }
-
-    @Test
-    void create_shiftHoursDtoIsNull(){
-        //given
-        ShiftHoursDTO shiftHoursDTO = null;
-
-        //when
-        assertThrows(NullPointerException.class,() -> service.create(shiftHoursDTO));
-
-        //then
     }
 
     @Test
@@ -170,10 +159,10 @@ class ShiftServiceImplTest {
         ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
-        assertThrows(IllegalArgumentException.class,() -> service.create(shiftHoursDTO));
+        assertThrows(IllegalArgumentException.class,() -> shiftServiceImpl.create(shiftHoursDTO));
 
         //then
-        verify(repository,never()).save(any());
+        verify(shiftRepository,never()).save(any());
     }
 
     @Test
@@ -181,15 +170,15 @@ class ShiftServiceImplTest {
         //given
         Long id = 1L;
 
-        when(repository.existsById(id)).thenReturn(true);
+        when(shiftRepository.existsById(id)).thenReturn(true);
 
         //when
-        boolean exists = service.exists(id);
+        boolean exists = shiftServiceImpl.exists(id);
 
 
         //then
         assertTrue(exists);
-        verify(repository,times(1)).existsById(id);
+        verify(shiftRepository,times(1)).existsById(id);
     }
 
     @Test
@@ -197,27 +186,14 @@ class ShiftServiceImplTest {
         //given
         Long id = 1L;
 
-        when(repository.existsById(id)).thenReturn(false);
+        when(shiftRepository.existsById(id)).thenReturn(false);
 
         //when
-        boolean exists = service.exists(id);
+        boolean exists = shiftServiceImpl.exists(id);
 
         //then
         assertFalse(exists);
-        verify(repository,times(1)).existsById(id);
-    }
-
-    @Test
-    void existsById_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(id));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-        verify(repository,never()).existsById(any());
+        verify(shiftRepository,times(1)).existsById(id);
     }
 
     @Test
@@ -226,42 +202,14 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(10,0);
         LocalTime endHour = LocalTime.of(15,0);
 
-        when(repository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(true);
+        when(shiftRepository.existsByStartHourAndEndHour(startHour,endHour)).thenReturn(true);
 
         //when
-        boolean exists = service.exists(startHour, endHour);
+        boolean exists = shiftServiceImpl.exists(startHour, endHour);
 
         //then
         assertTrue(exists);
-        verify(repository,times(1)).existsByStartHourAndEndHour(startHour,endHour);
-    }
-
-    @Test
-    void existsByLocalTime_startHourIsNull(){
-        //given
-        LocalTime startHour = null;
-        LocalTime endHour = LocalTime.of(15,0);
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(startHour,endHour));
-
-        //then
-        assertEquals("Start hour cannot be null",exception.getMessage());
-        verify(repository,never()).existsByStartHourAndEndHour(any(LocalTime.class),any(LocalTime.class));
-    }
-
-    @Test
-    void existsByLocalTime_endHourIsNull(){
-        //given
-        LocalTime startHour = LocalTime.of(15,0);
-        LocalTime endHour = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.exists(startHour,endHour));
-
-        //then
-        assertEquals("End hour cannot be null",exception.getMessage());
-        verify(repository,never()).existsByStartHourAndEndHour(startHour,endHour);
+        verify(shiftRepository,times(1)).existsByStartHourAndEndHour(startHour,endHour);
     }
 
     @Test
@@ -271,52 +219,39 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(15,0);
 
         //when
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> service.exists(startHour, endHour));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.exists(startHour, endHour));
 
 
         //then
         assertEquals("End hour cannot be before start hour",exception.getMessage());
-        verify(repository,never()).existsByStartHourAndEndHour(startHour,endHour);
+        verify(shiftRepository,never()).existsByStartHourAndEndHour(startHour,endHour);
     }
 
     @Test
-    void delete_workingTest(){
+    void delete_workingTest() {
         //given
         Long id = 1L;
-        when(repository.existsById(id)).thenReturn(true);
+        when(shiftRepository.existsById(id)).thenReturn(true);
 
         //when
-        service.delete(id);
+        shiftServiceImpl.delete(id);
 
         //then
-        verify(repository,times(1)).deleteById(id);
-    }
-
-    @Test
-    void delete_idIsNull(){
-        //given
-        Long id = null;
-
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.delete(id));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
+        verify(shiftRepository, times(1)).deleteById(id);
     }
 
     @Test
     void delete_shiftDoesNotExistsException(){
         //given
         Long id = 2L;
-        when(repository.existsById(id)).thenReturn(false);
+        when(shiftRepository.existsById(id)).thenReturn(false);
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.delete(id));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> shiftServiceImpl.delete(id));
 
         //then
         assertEquals("Shift with id " + id + " does not exist",exception.getMessage());
-        verify(repository,never()).deleteById(id);
+        verify(shiftRepository,never()).deleteById(id);
     }
 
     @Test
@@ -326,15 +261,15 @@ class ShiftServiceImplTest {
         Shift shift2 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(19, 0)).build();
         Shift shift3 = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build();
 
-        when(repository.findAll()).thenReturn(List.of(shift1,shift2,shift3));
+        when(shiftRepository.findAll()).thenReturn(List.of(shift1,shift2,shift3));
 
         //when
-        List<ResponseShiftDTO> shiftList = service.findAll();
+        List<ResponseShiftDTO> shiftList = shiftServiceImpl.findAll();
 
         //then
         assertEquals(3,shiftList.size());
 
-        verify(repository,times(1)).findAll();
+        verify(shiftRepository,times(1)).findAll();
     }
 
     @Test
@@ -348,88 +283,67 @@ class ShiftServiceImplTest {
         ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
-        when(repository.findById(id)).thenReturn(Optional.ofNullable(shift));
+        when(shiftRepository.findById(id)).thenReturn(Optional.ofNullable(shift));
 
         //when
-        ResponseShiftDTO responseDto = service.findById(id);
+        ResponseShiftDTO responseDto = shiftServiceImpl.findById(id);
 
         //then
         assertEquals(startHour.getHour(),responseDto.startHour().getHour());
         assertEquals(endHour.getHour(),responseDto.endHour().getHour());
         assertEquals(shift.getLength(),responseDto.length());
 
-        verify(repository,times(1)).findById(id);
+        verify(shiftRepository,times(1)).findById(id);
         verify(shiftMapper).toShiftDto(any(Shift.class));
-    }
-
-    @Test
-    void findById_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findById(id));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-        verify(repository,never()).findById(any(Long.class));
     }
 
     @Test
     void findById_shiftWithIdDoesNotExistException(){
         //given
         Long id = 1L;
-        when(repository.findById(id)).thenThrow(new IllegalArgumentException());
+        when(shiftRepository.findById(id)).thenThrow(new IllegalArgumentException());
 
         //when
-        assertThrows(IllegalArgumentException.class, () -> service.findById(id));
+        assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.findById(id));
 
         //then
         verify(shiftMapper,never()).toShiftDto(any(Shift.class));
     }
 
     @Test
-    void findEntityById_workingTest(){
+    void getEntityById_workingTest(){
         //given
-        Long id = 1L;
-        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
-        shift.setId(id);
+        Long id = 123L;
+        Shift shift = new TestShiftBuilder().build();
+        LocalTime startHour = shift.startHour;
+        LocalTime endHour = shift.endHour;
 
-        when(repository.findById(id)).thenReturn(Optional.of(shift));
+        when(shiftRepository.findById(id)).thenReturn(Optional.ofNullable(shift));
 
         //when
-        ResponseShiftDTO serviceResponse = service.findById(id);
+        Shift serviceResponse = shiftServiceImpl.getEntityById(id);
 
         //then
-        assertEquals(1, serviceResponse.id());
-        verify(repository,times(1)).findById(id);
+        assertEquals(startHour,serviceResponse.startHour);
+        assertEquals(endHour,serviceResponse.endHour);
+        assertEquals(shift.getLength(),serviceResponse.getLength());
+        verify(shiftRepository,times(1)).findById(id);
     }
 
     @Test
-    void findEntityById_idIsNull(){
-        //given
-        Long id = null;
-
-        //when
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.findById(id));
-
-        //then
-        assertEquals("Id cannot be null",exception.getMessage());
-        verify(repository,never()).findById(any());
-    }
-
-    @Test
-    void findEntityById_cannotFindEntityException(){
+    void getEntityById_cannotFindEntityException(){
         //given
         Long id = 1L;
-        Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
-        shift.setId(id);
 
-        when(repository.findById(id)).thenThrow(new IllegalArgumentException());
+        when(shiftRepository.findById(id))
+                .thenThrow(new EntityNotFoundException("Cannot find shift by id: " + id));
 
         //when
-        assertThrows(IllegalArgumentException.class,() -> service.findById(id));
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> shiftServiceImpl.getEntityById(id));
 
         //then
+        assertEquals("Cannot find shift by id: " + id, exception.getMessage());
+        verify(shiftRepository,times(1)).findById(id);
     }
 }

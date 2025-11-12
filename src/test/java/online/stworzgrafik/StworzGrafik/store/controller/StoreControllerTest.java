@@ -67,16 +67,21 @@ class StoreControllerTest {
     private NameValidatorService nameValidatorService;
 
     private Region region;
+    private Branch branch;
 
     @PrePersist
     void setupRegion(){
-        region = regionEntityService.saveEntity(new TestRegionBuilder().build());
+        region = new TestRegionBuilder().build();
+        regionService.save(region);
+
+        branch = new TestBranchBuilder().withRegion(region).build();
+        branchService.save(branch);
     }
 
     @Test
     void getAllStores_workingTest() throws Exception {
         //given
-        Store store1 = firstStoreWithBranch();
+        Store store1 = firstStore();
         Store store2 = secondStore();
         Store store3 = thirdStore();
 
@@ -118,7 +123,7 @@ class StoreControllerTest {
     @Test
     void getStoreById_workingTest() throws Exception {
         //given
-        Store store = firstStoreWithBranch();
+        Store store = firstStore();
         storeService.save(store);
 
         //when
@@ -193,7 +198,7 @@ class StoreControllerTest {
     @Test
     void deleteById_workingTest() throws Exception{
         //given
-        Store firstStore = firstStoreWithBranch();
+        Store firstStore = firstStore();
         Store secondStore = secondStore();
         Store thirdStore = thirdStore();
 
@@ -225,10 +230,13 @@ class StoreControllerTest {
         //then
     }
 
+    //koncze na tym zeby ogarnac STORECONTROLERTEST
+    //POTEM ZLACZ APLIKACJE MERGE Z MASTER
+    //DALEJ DODAJ NULL TESTY DO INTEGRATED TESTS
     @Test
     void updateStore_workingTest() throws Exception{
         //given
-        Store store = firstStoreWithBranch();
+        Store store = firstStore();
         storeService.save(store);
 
         String storeNameBeforeUpdate = store.getName();
@@ -294,7 +302,7 @@ class StoreControllerTest {
     @Test
     void updateStore_requestBodyIsMissingThrowsException() throws Exception{
         //given
-        Store store = firstStoreWithBranch();
+        Store store = firstStore();
         storeService.save(store);
 
         //when
@@ -305,21 +313,16 @@ class StoreControllerTest {
         //then
     }
 
-    private Store firstStoreWithBranch(){
-        Branch firstBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("FIRSTBRANCH").withRegion(region).build());
+    private Store firstStore(){
 
-        return new TestStoreBuilder().withName("FIRST").withBranch(firstBranch).build();
+        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
     }
 
     private Store secondStore(){
-        Branch secondBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("SECONDBRANCH").withRegion(region).build());
-
-        return new TestStoreBuilder().withName("FIRST").withBranch(secondBranch).build();
+        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
     }
 
     private Store thirdStore(){
-        Branch thirdBranch = branchEntityService.saveEntity(new TestBranchBuilder().withName("THIRDBRANCH").withRegion(region).build());
-
-        return new TestStoreBuilder().withName("FIRST").withBranch(thirdBranch).build();
+        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
     }
 }
