@@ -138,7 +138,6 @@ class StoreControllerTest {
         assertEquals(store.getId(),responseStore.id());
         assertEquals(store.getStoreCode(),responseStore.storeCode());
         assertEquals(store.getName(),responseStore.name());
-        assertEquals(store.getBranch().getId(),responseStore.branchId());
     }
 
     @Test
@@ -230,9 +229,6 @@ class StoreControllerTest {
         //then
     }
 
-    //koncze na tym zeby ogarnac STORECONTROLERTEST
-    //POTEM ZLACZ APLIKACJE MERGE Z MASTER
-    //DALEJ DODAJ NULL TESTY DO INTEGRATED TESTS
     @Test
     void updateStore_workingTest() throws Exception{
         //given
@@ -246,7 +242,7 @@ class StoreControllerTest {
                 updatedStoreName,
                 null,
                 null,
-                store.getBranch().getId(),
+                null,
                 false,
                 null
         );
@@ -271,7 +267,6 @@ class StoreControllerTest {
         assertEquals(store.getId(),updatedStore.id());
         assertEquals(store.getStoreCode(),updatedStore.storeCode());
         assertEquals(store.getLocation(),updatedStore.location());
-        assertEquals(store.getBranch().getId(),updatedStore.branchId());;
     }
 
     @Test

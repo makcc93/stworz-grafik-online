@@ -7,7 +7,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 interface EmployeeMapper {
 
-
     @Mapping(source = "store.id" ,target = "storeId")
     @Mapping(source = "position.id", target = "positionId")
     ResponseEmployeeDTO toResponseEmployeeDTO(Employee employee);
