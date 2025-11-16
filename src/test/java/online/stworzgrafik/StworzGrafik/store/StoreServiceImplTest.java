@@ -205,8 +205,8 @@ class StoreServiceImplTest {
         when(repository.existsById(notExistingEntityId)).thenReturn(false);
 
         //when
-        boolean exists = service.exists(id);
-        boolean shouldNotExist = service.exists(notExistingEntityId);
+        boolean exists = service.existsById(id);
+        boolean shouldNotExist = service.existsById(notExistingEntityId);
 
         //then
         assertTrue(exists);
@@ -223,8 +223,8 @@ class StoreServiceImplTest {
         when(repository.existsByNameAndStoreCode(notExistingStore.name(),notExistingStore.storeCode())).thenReturn(false);
 
         //when
-        boolean exists = service.exists(storeNameAndCodeDTO);
-        boolean shouldNotExist = service.exists(notExistingStore);
+        boolean exists = service.existsByNameAndCode(storeNameAndCodeDTO);
+        boolean shouldNotExist = service.existsByNameAndCode(notExistingStore);
 
         //then
         assertTrue(exists);
@@ -237,7 +237,7 @@ class StoreServiceImplTest {
         StoreNameAndCodeDTO storeNameAndCodeDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> service.exists(storeNameAndCodeDTO));
+        assertThrows(NullPointerException.class, () -> service.existsByNameAndCode(storeNameAndCodeDTO));
 
         //then
         verify(repository,never()).save(any(Store.class));

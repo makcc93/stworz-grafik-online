@@ -326,7 +326,7 @@ class StoreServiceImplIT {
     void updateStore_invalidNameInDTOthrowsException(){
         //given
         Store store = new TestStoreBuilder().withBranch(branch).build();
-        storeService.save(store);
+        storeRepository.save(store);
         Long id = store.getId();
 
         String invalidName = "INV@LID";
@@ -344,7 +344,7 @@ class StoreServiceImplIT {
     void updateStore_updateWithNotExistingBranchThrowsException(){
         //given
         Store store = new TestStoreBuilder().withBranch(branch).build();
-        storeService.save(store);
+        storeRepository.save(store);
         Long id = store.getId();
 
         Branch newBranch = new TestBranchBuilder().withRegion(region).build();
@@ -364,19 +364,47 @@ class StoreServiceImplIT {
     }
 
     @Test
+    void updateStore_updatedBranchIdDoesNotExistThrowsException(){
+        //given
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+        storeRepository.save(store);
+        Long id = store.getId();
+
+        UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().withBranch(branch).build();
+
+        Long branchId = branch.getId();
+        branchService.delete(branchId);
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> storeService.update(id, updateStoreDTO));
+
+        //then
+        assertEquals("Cannot find branch by id " + branchId, exception.getMessage());
+    }
+
+    @Test
     void existsById_workingTest(){
         //given
         Store store = new TestStoreBuilder().withBranch(branch).build();
         storeRepository.save(store);
 
         //when
-        boolean exists = storeService.exists(store.getId());
-        boolean shouldNotExist = storeService.exists(123456L);
+        boolean exists = storeService.existsById(store.getId());
+        boolean shouldNotExist = storeService.existsById(123456L);
 
         //then
         assertTrue(exists);
 
         assertFalse(shouldNotExist);
+    }
+
+    @Test
+    void existsById_idIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeService.existsById(null));
+        //then
     }
 
     @Test
@@ -390,14 +418,45 @@ class StoreServiceImplIT {
         StoreNameAndCodeDTO notExisting = new StoreNameAndCodeDTO("RANDOMNAME","AA");
 
         //when
-        boolean exists = storeService.exists(storeNameAndCodeDTO);
+        boolean exists = storeService.existsByNameAndCode(storeNameAndCodeDTO);
 
-        boolean shouldBeFalse = storeService.exists(notExisting);
+        boolean shouldBeFalse = storeService.existsByNameAndCode(notExisting);
 
         //then
         assertTrue(exists);
 
         assertFalse(shouldBeFalse);
+    }
+
+    @Test
+    void existsByNameAndStoreCode_dtoIsNullThrowsException(){
+        //given
+        StoreNameAndCodeDTO storeNameAndCodeDTO = null;
+
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeService.existsByNameAndCode(storeNameAndCodeDTO));
+
+        //then
+    }
+
+    @Test
+    void existsByNameAndStoreCode_invalidNameInsideDTOthrowsException(){
+        //given
+        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("AAA!@", "AA");
+
+        //when
+        assertThrows(ValidationException.class, () -> storeService.existsByNameAndCode(storeNameAndCodeDTO));
+        //then
+    }
+
+    @Test
+    void existsByNameAndStoreCode_invalidCodeInsideDTOthrowsException(){
+        //given
+        StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("NAME", "TOOLONG");
+
+        //when
+        assertThrows(ValidationException.class, () -> storeService.existsByNameAndCode(storeNameAndCodeDTO));
+        //then
     }
 
     @Test
@@ -413,9 +472,9 @@ class StoreServiceImplIT {
         storeService.delete(storeToDelete.getId());
 
         //then
-        assertTrue(storeService.exists(storeToStay.getId()));
+        assertTrue(storeService.existsById(storeToStay.getId()));
 
-        assertFalse(storeService.exists(storeToDelete.getId()));
+        assertFalse(storeService.existsById(storeToDelete.getId()));
     }
 
     @Test
@@ -428,6 +487,14 @@ class StoreServiceImplIT {
 
         //then
         assertEquals("Store with id " + notExistingEntityId +" does not exist",exception.getMessage());
+    }
+
+    @Test
+    void delete_idIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeService.delete(null));
+        //then
     }
 
     @Test
@@ -444,6 +511,14 @@ class StoreServiceImplIT {
     }
 
     @Test
+    void save_entityIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeService.save(null));
+        //then
+    }
+
+    @Test
     void saveEntity_workingTest(){
         //given
         Store store = new TestStoreBuilder().withBranch(branch).build();
@@ -453,5 +528,50 @@ class StoreServiceImplIT {
 
         //then
         assertTrue(storeRepository.existsById(store.getId()));
+    }
+
+    @Test
+    void saveEntity_entityIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeEntityService.saveEntity(null));
+        //then
+    }
+
+    @Test
+    void getEntityById_workingTest(){
+        //given
+        Store store = new TestStoreBuilder().withBranch(branch).build();
+        storeRepository.save(store);
+        Long id = store.getId();
+
+        //when
+        Store serviceResponse = storeEntityService.getEntityById(id);
+
+        //then
+        assertEquals(id, serviceResponse.getId());
+        assertEquals(store.getName(), serviceResponse.getName());
+        assertEquals(store.getStoreCode(), serviceResponse.getStoreCode());
+    }
+
+    @Test
+    void getEntityById_cannotFindEntityThrowsException(){
+        //given
+        Long randomId = 1234L;
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> storeEntityService.getEntityById(randomId));
+
+        //then
+        assertEquals("Cannot find store by id " + randomId, exception.getMessage());
+    }
+
+    @Test
+    void getEntityById_idIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> storeEntityService.getEntityById(null));
+        //then
     }
 }

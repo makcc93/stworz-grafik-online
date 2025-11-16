@@ -179,7 +179,7 @@ class StoreControllerTest {
         assertEquals(createStoreDTO.location(),store.location());
         assertEquals(createStoreDTO.branchId(),store.branchId());
 
-        assertTrue(storeService.exists(store.id()));
+        assertTrue(storeService.existsById(store.id()));
     }
 
     @Test
@@ -211,10 +211,10 @@ class StoreControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertFalse(storeService.exists(secondStore.getId()));
+        assertFalse(storeService.existsById(secondStore.getId()));
 
-        assertTrue(storeService.exists(firstStore.getId()));
-        assertTrue(storeService.exists(thirdStore.getId()));
+        assertTrue(storeService.existsById(firstStore.getId()));
+        assertTrue(storeService.existsById(thirdStore.getId()));
     }
 
     @Test
