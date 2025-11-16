@@ -309,15 +309,14 @@ class StoreControllerTest {
     }
 
     private Store firstStore(){
-
-        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
+        return new TestStoreBuilder().withName("FIRST").withStoreCode("01").withBranch(branch).build();
     }
 
     private Store secondStore(){
-        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
+        return new TestStoreBuilder().withName("SECOND").withStoreCode("02").withBranch(branch).build();
     }
 
     private Store thirdStore(){
-        return new TestStoreBuilder().withName("FIRST").withBranch(branch).build();
+        return new TestStoreBuilder().withName("THIRD").withStoreCode("03").withBranch(branch).build();
     }
 }
