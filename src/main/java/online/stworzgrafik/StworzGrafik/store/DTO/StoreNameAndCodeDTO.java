@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 public record StoreNameAndCodeDTO(
         @NotBlank(message = "Name is required")
         @Size(min = 3,max = 50,message = "Store name must be between three and fifty chars")
+        @Pattern(regexp = "^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")
         String name,
 
         @NotBlank(message = "Store code is required")

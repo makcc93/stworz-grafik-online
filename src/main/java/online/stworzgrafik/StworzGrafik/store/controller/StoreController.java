@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.store.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
@@ -26,7 +27,7 @@ class StoreController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseStoreDTO> getStoreById(@PathVariable Long id){
+    public ResponseEntity<ResponseStoreDTO> getStoreById(@PathVariable @NotNull Long id){
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -36,7 +37,7 @@ class StoreController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteById(@PathVariable Long id){
+    public ResponseEntity<HttpStatus> deleteById(@PathVariable @NotNull Long id){
         service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

@@ -89,7 +89,7 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
         Store store = new TestStoreBuilder().build();
-        when(storeService.exists(storeId)).thenReturn(true);
+        when(storeService.existsById(storeId)).thenReturn(true);
         when(storeEntityService.getEntityById(storeId)).thenReturn(store);
 
         Position position = new TestPositionBuilder().build();
@@ -190,7 +190,7 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
-        when(storeService.exists(storeId)).thenReturn(false);
+        when(storeService.existsById(storeId)).thenReturn(false);
 
         //when
         EntityNotFoundException exception =
@@ -218,7 +218,7 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON)).thenReturn(firstName);
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
-        when(storeService.exists(storeId)).thenReturn(true);
+        when(storeService.existsById(storeId)).thenReturn(true);
         when(storeEntityService.getEntityById(storeId)).thenReturn(store);
 
         when(positionService.exists(createEmployeeDTO.positionId())).thenReturn(false);

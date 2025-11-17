@@ -83,18 +83,18 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public boolean exists(Long id){
+    public boolean existsById(Long id){
         return storeRepository.existsById(id);
     }
 
     @Override
-    public boolean exists(StoreNameAndCodeDTO storeNameAndCodeDTO){
+    public boolean existsByNameAndCode(StoreNameAndCodeDTO storeNameAndCodeDTO){
         return storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode());
     }
 
     @Override
     public void delete(Long id) {
-        if (!exists(id)){
+        if (!storeRepository.existsById(id)){
             throw new EntityNotFoundException("Store with id " + id +" does not exist");
         }
 
@@ -131,7 +131,7 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
         }
     }
 
-    private void updateBranchIfNeeded(UpdateStoreDTO updateStoreDTO, Store store) {
+    private void updateBranchIfNeeded(UpdateStoreDTO updateStoreDTO,Store store) {
         if (updateStoreDTO.branchId() != null){
             Branch branch = branchEntityService.getEntityById(updateStoreDTO.branchId());
 

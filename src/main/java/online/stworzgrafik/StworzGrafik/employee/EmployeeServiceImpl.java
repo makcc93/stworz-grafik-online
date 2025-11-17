@@ -147,7 +147,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     private Store getStore(Long storeId){
-        if (!storeService.exists(storeId)){
+        if (!storeService.existsById(storeId)){
             throw new EntityNotFoundException("Cannot find store by id " + storeId);
         }
 
