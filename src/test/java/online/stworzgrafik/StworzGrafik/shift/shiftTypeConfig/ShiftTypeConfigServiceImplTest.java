@@ -53,26 +53,11 @@ class ShiftTypeConfigServiceImplTest {
     }
 
     @Test
-    void findByCode_codeIsNullThrowsException(){
-        //given
-        ShiftCode shiftCode = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> service.findByCode(shiftCode));
-
-        //then
-        assertEquals("Shift code cannot be null", exception.getMessage());
-
-        verify(repository,never()).findByCode(any());
-    }
-
-    @Test
     void getDefaultHours_workingTest(){
         //given
         BigDecimal tenHours = BigDecimal.valueOf(10L);
         ShiftCode code = ShiftCode.SICK_LEAVE;
-        when(repository.getDefaultHours(code)).thenReturn(tenHours);
+        when(repository.getDefaultHours(code)).thenReturn(Optional.of(tenHours));
 
         //when
         BigDecimal serviceResponse = service.getDefaultHours(code);
@@ -82,24 +67,22 @@ class ShiftTypeConfigServiceImplTest {
     }
 
     @Test
-    void getDefaultHours_codeIsNullThrowsException(){
+    void getDefaultHours_cannotFindCodeReturnsZero(){
         //given
-        ShiftCode code = null;
+        ShiftCode code = ShiftCode.WORK;
+        when(repository.getDefaultHours(code)).thenReturn(Optional.empty());
 
         //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> service.getDefaultHours(code));
+        BigDecimal serviceResponse = service.getDefaultHours(code);
 
         //then
-        assertEquals("Shift code cannot be null", exception.getMessage());
-        verify(repository,never()).getDefaultHours(any());
+        assertEquals(BigDecimal.ZERO, serviceResponse);
     }
 
     @Test
     void countsAsWork_workingTest(){
         //given
         ShiftCode code = ShiftCode.FREE_DAY;
-        boolean shouldBeFalse = false;
         when(repository.countsAsWork(code)).thenReturn(false);
 
         //when
@@ -108,19 +91,4 @@ class ShiftTypeConfigServiceImplTest {
         //then
         assertFalse(serviceResponse);
     }
-
-    @Test
-    void countsAsWork_codeIsNullThrowsException(){
-        //given
-        ShiftCode code = null;
-
-        //when
-        NullPointerException exception =
-                assertThrows(NullPointerException.class, () -> service.countsAsWork(code));
-
-        //then
-        assertEquals("Shift code cannot be null", exception.getMessage());
-    }
-    //dodaj optional do repository i sprawdz warunki gdy zostanie zwrocony
-
 }

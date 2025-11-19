@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.demand;
+package online.stworzgrafik.StworzGrafik.demandDraft;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

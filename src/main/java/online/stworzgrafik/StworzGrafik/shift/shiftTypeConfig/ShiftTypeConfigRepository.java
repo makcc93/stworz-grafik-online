@@ -11,7 +11,7 @@ public interface ShiftTypeConfigRepository extends JpaRepository<ShiftTypeConfig
     Optional<ShiftTypeConfig> findByCode(ShiftCode code);
 
     @Query("SELECT s.defaultHours FROM ShiftTypeConfig s WHERE s.code = :code")
-    BigDecimal getDefaultHours(ShiftCode code);
+    Optional<BigDecimal> getDefaultHours(ShiftCode code);
 
     @Query("SELECT s.countsAsWork FROM ShiftTypeConfig s WHERE s.code = :code")
     Boolean countsAsWork(ShiftCode code);

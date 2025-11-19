@@ -3,7 +3,7 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.demand.DemandDraft;
+import online.stworzgrafik.StworzGrafik.demandDraft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 
 import java.time.LocalDateTime;

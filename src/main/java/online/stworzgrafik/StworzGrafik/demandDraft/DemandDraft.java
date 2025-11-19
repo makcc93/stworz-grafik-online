@@ -1,7 +1,8 @@
-package online.stworzgrafik.StworzGrafik.demand;
+package online.stworzgrafik.StworzGrafik.demandDraft;
 
 import jakarta.persistence.*;
 import lombok.*;
+import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.LocalTime;
@@ -28,6 +29,8 @@ public class DemandDraft {
 
     private Integer day;
 
+    @Column(nullable = true)
+    @Convert(converter = IntArrayJsonConverter.class)
     private int[] hourlyDemand;
 
     @Column(nullable = false)
