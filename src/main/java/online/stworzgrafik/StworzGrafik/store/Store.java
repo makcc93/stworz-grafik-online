@@ -5,14 +5,17 @@ import lombok.*;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.demandDraft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
+import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 @Builder
@@ -45,6 +48,15 @@ public class Store {
     private boolean enable;
 
     private Long storeManagerId;
+
+    @OneToMany(mappedBy = "store")
+    private List<EmployeeVacation> employeeVacations;
+
+    @OneToMany(mappedBy = "store")
+    private List<EmployeeProposalDaysOff> employeeProposalDaysOff;
+
+    @OneToMany(mappedBy = "store")
+    private List<EmployeeProposalShifts> employeeProposalShifts;
 
     @PrePersist
     void onCreate(){

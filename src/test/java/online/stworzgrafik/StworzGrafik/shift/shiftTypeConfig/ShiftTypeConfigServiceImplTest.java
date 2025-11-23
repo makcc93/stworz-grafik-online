@@ -82,7 +82,7 @@ class ShiftTypeConfigServiceImplTest {
     @Test
     void countsAsWork_workingTest(){
         //given
-        ShiftCode code = ShiftCode.FREE_DAY;
+        ShiftCode code = ShiftCode.DAY_OFF;
         when(repository.countsAsWork(code)).thenReturn(false);
 
         //when

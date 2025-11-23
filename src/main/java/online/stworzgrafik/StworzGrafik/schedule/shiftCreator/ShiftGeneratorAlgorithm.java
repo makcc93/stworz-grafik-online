@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 @Service
@@ -65,5 +66,19 @@ public class ShiftGeneratorAlgorithm {
         }
         return shifts;
     }
+
+    private int[] shiftAsArray(){
+        LocalTime startHour = LocalTime.of(8,0);
+        LocalTime endHour = LocalTime.of(20,0);
+        int[] shiftAsArray = new int[24];
+
+        for (int hour = startHour.getHour(); hour < endHour.getHour(); hour++){
+            shiftAsArray[hour] = 1;
+        }
+
+        return shiftAsArray;
+    }
+    //rozmnina co robic z shift w ogole, tu wyzej zamina shift na int[]
+    //zastanow sie nad tym, moze popraw algorytm
 }
 

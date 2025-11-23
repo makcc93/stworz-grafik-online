@@ -1,19 +1,20 @@
-package online.stworzgrafik.StworzGrafik.demandDraft;
+package online.stworzgrafik.StworzGrafik.employee.proposal.shifts;
 
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
 @Getter
 @Setter
-public class DemandDraft {
+@Builder
+public class EmployeeProposalShifts {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,28 +23,31 @@ public class DemandDraft {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @ManyToOne
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
     private Integer year;
 
     private Integer month;
 
     private Integer day;
 
-    @Column(nullable = true)
     @Convert(converter = IntArrayJsonConverter.class)
-    private int[] hourlyDemand;
+    private int[] dailyProposalShift;
 
-    @Column(nullable = false)
-    private LocalTime created_at;
+    private LocalDateTime createdAt;
 
-    private LocalTime updated_at;
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
 
     @PrePersist
     void onCreate(){
-        this.created_at = LocalTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
     void onUpdate(){
-        this.updated_at = LocalTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

@@ -3,6 +3,6 @@ package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 public enum ShiftCode {
     WORK,
     VACATION,
-    FREE_DAY,
+    DAY_OFF,
     SICK_LEAVE
 }

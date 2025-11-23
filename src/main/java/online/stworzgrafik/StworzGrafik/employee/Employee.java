@@ -3,13 +3,17 @@ package online.stworzgrafik.StworzGrafik.employee;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
+import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 @Builder
@@ -50,6 +54,15 @@ public class Employee {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "employee")
+    private List<EmployeeVacation> employeeVacations;
+
+    @OneToMany(mappedBy = "employee")
+    private List<EmployeeProposalDaysOff> employeeProposalDaysOff;
+
+    @OneToMany(mappedBy = "employee")
+    private List<EmployeeProposalShifts> employeeProposalShifts;
 
     @PrePersist
     void onCreate(){
