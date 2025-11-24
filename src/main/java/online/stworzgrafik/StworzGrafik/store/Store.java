@@ -3,7 +3,7 @@ package online.stworzgrafik.StworzGrafik.store;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
-import online.stworzgrafik.StworzGrafik.demandDraft.DemandDraft;
+import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;

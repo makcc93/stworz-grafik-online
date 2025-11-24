@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.demandDraft;
+package online.stworzgrafik.StworzGrafik.draft;
 
 import jakarta.persistence.*;
 import lombok.*;
