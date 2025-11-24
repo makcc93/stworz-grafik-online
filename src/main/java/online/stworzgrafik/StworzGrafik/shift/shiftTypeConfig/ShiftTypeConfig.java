@@ -5,8 +5,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Getter
@@ -27,4 +29,7 @@ public class ShiftTypeConfig {
     private BigDecimal defaultHours;
 
     private Boolean countsAsWork;
+
+    @OneToMany(mappedBy = "shiftTypeConfig")
+    private List<ScheduleDetails> scheduleDetails;
 }

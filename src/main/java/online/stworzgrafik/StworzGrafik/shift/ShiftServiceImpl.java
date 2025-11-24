@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -18,9 +19,9 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
     @Override
     public ResponseShiftDTO save(Shift shift) {
-        validateHours(shift.startHour,shift.endHour);
+        validateHours(shift.getStartHour(), shift.getEndHour());
 
-        if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
+        if (shiftRepository.existsByStartHourAndEndHour(shift.getStartHour(), shift.getEndHour())){
             return shiftMapper.toShiftDto(shift);
         }
 
@@ -103,12 +104,37 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     @Override
+    public Integer getLength(ShiftHoursDTO shiftHoursDTO) {
+        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+
+        return shiftHoursDTO.startHour().getHour() - shiftHoursDTO.endHour().getHour();
+    }
+
+    @Override
+    public BigDecimal getDurationHours(ShiftHoursDTO shiftHoursDTO) {
+        return BigDecimal.valueOf(getLength(shiftHoursDTO));
+    }
+
+    @Override
+    public int[] getShiftAsArray(ShiftHoursDTO shiftHoursDTO) {
+        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+
+        int[] array = new int[24];
+
+        for (int hour = shiftHoursDTO.startHour().getHour(); hour <= shiftHoursDTO.endHour().getHour(); hour++){
+            array[hour] = 1;
+        }
+
+        return array;
+    }
+
+    @Override
     public Shift saveEntity(Shift shift) {
-        if (shiftRepository.existsByStartHourAndEndHour(shift.startHour,shift.endHour)){
+        if (shiftRepository.existsByStartHourAndEndHour(shift.getStartHour(), shift.getEndHour())){
             return shift;
         }
 
-        validateHours(shift.startHour,shift.endHour);
+        validateHours(shift.getStartHour(), shift.getEndHour());
 
         return shiftRepository.save(shift);
     }
@@ -120,8 +146,17 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     private void validateHours(LocalTime startHour, LocalTime endHour){
+        if (startHour == null || endHour == null){
+            throw new IllegalArgumentException("Start or end hour cannot be null");
+        }
+
+        if (startHour.getHour() == endHour.getHour()){
+            throw new IllegalArgumentException("End hour cannot equals start hour");
+        }
+
         if (endHour.isBefore(startHour)){
             throw new IllegalArgumentException("End hour cannot be before start hour");
         }
+
     }
 }

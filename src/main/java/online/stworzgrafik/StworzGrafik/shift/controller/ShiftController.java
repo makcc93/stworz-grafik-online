@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.shift.controller;
 
 import jakarta.validation.Valid;
-import online.stworzgrafik.StworzGrafik.schedule.shiftCreator.ShiftGeneratorAlgorithm;
+import online.stworzgrafik.StworzGrafik.algorithm.ShiftGeneratorAlgorithm;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.ShiftService;
