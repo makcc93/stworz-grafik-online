@@ -15,8 +15,8 @@ class ShiftBuilderTest {
 
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
 
-        assertEquals(10,shift.startHour.getHour());
-        assertEquals(15,shift.endHour.getHour());
+        assertEquals(10, shift.getStartHour().getHour());
+        assertEquals(15, shift.getEndHour().getHour());
     }
 
     @Test

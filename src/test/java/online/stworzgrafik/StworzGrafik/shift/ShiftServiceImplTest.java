@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,7 @@ class ShiftServiceImplTest {
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         when(shiftRepository.save(shift)).thenReturn(shift);
 
-        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.id).withStartHour(startHour).withEndHour(endHour).build();
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.getId()).withStartHour(startHour).withEndHour(endHour).build();
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
 
         //when
@@ -48,8 +49,8 @@ class ShiftServiceImplTest {
         //then
         assertEquals(startHour,serviceResponse.startHour());
         assertEquals(endHour, serviceResponse.endHour());
-        assertEquals(shift.startHour,serviceResponse.startHour());
-        assertEquals(shift.endHour,serviceResponse.endHour());
+        assertEquals(shift.getStartHour(),serviceResponse.startHour());
+        assertEquals(shift.getEndHour(),serviceResponse.endHour());
 
         verify(shiftRepository,times(1)).save(shift);
     }
@@ -64,7 +65,7 @@ class ShiftServiceImplTest {
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         when(shiftRepository.save(shift)).thenReturn(shift);
 
-        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.id).withStartHour(startHour).withEndHour(endHour).build();
+        ResponseShiftDTO responseShiftDTO = new TestResponseShiftDTO().withId(shift.getId()).withStartHour(startHour).withEndHour(endHour).build();
         when(shiftMapper.toShiftDto(shift)).thenReturn(responseShiftDTO);
 
         //when
@@ -104,13 +105,11 @@ class ShiftServiceImplTest {
         Shift saved = shiftServiceImpl.saveEntity(shift);
 
         //then
-        assertEquals(saved.startHour,shift.startHour);
-        assertEquals(saved.endHour,shift.endHour);
-        assertEquals(saved.getLength(),shift.getLength());
+        assertEquals(saved.getStartHour(), shift.getStartHour());
+        assertEquals(saved.getEndHour(), shift.getEndHour());
 
-        assertEquals(startHour.getHour(),saved.startHour.getHour());
-        assertEquals(endHour.getHour(),saved.endHour.getHour());
-        assertEquals(hoursDifference,saved.getLength());
+        assertEquals(startHour.getHour(), saved.getStartHour().getHour());
+        assertEquals(endHour.getHour(), saved.getEndHour().getHour());
     }
 
     @Test
@@ -291,7 +290,6 @@ class ShiftServiceImplTest {
         //then
         assertEquals(startHour.getHour(),responseDto.startHour().getHour());
         assertEquals(endHour.getHour(),responseDto.endHour().getHour());
-        assertEquals(shift.getLength(),responseDto.length());
 
         verify(shiftRepository,times(1)).findById(id);
         verify(shiftMapper).toShiftDto(any(Shift.class));
@@ -315,8 +313,8 @@ class ShiftServiceImplTest {
         //given
         Long id = 123L;
         Shift shift = new TestShiftBuilder().build();
-        LocalTime startHour = shift.startHour;
-        LocalTime endHour = shift.endHour;
+        LocalTime startHour = shift.getStartHour();
+        LocalTime endHour = shift.getEndHour();
 
         when(shiftRepository.findById(id)).thenReturn(Optional.ofNullable(shift));
 
@@ -324,9 +322,8 @@ class ShiftServiceImplTest {
         Shift serviceResponse = shiftServiceImpl.getEntityById(id);
 
         //then
-        assertEquals(startHour,serviceResponse.startHour);
-        assertEquals(endHour,serviceResponse.endHour);
-        assertEquals(shift.getLength(),serviceResponse.getLength());
+        assertEquals(startHour, serviceResponse.getStartHour());
+        assertEquals(endHour, serviceResponse.getEndHour());
         verify(shiftRepository,times(1)).findById(id);
     }
 
@@ -345,5 +342,149 @@ class ShiftServiceImplTest {
         //then
         assertEquals("Cannot find shift by id: " + id, exception.getMessage());
         verify(shiftRepository,times(1)).findById(id);
+    }
+
+    @Test
+    void getLength_workingTest(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime endHour = LocalTime.of(21,0);
+        int length = 11;
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        Integer serviceResponse = shiftServiceImpl.getLength(shiftHoursDTO);
+
+        //then
+        assertEquals(length,serviceResponse);
+    }
+
+    @Test
+    void getLength_endHourIsBeforeStartHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime endHour = LocalTime.of(8,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot be before start hour", exception.getMessage());
+    }
+
+    @Test
+    void getLength_startHourEqualsEndHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(15,0);
+        LocalTime endHour = LocalTime.of(15,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot equals start hour", exception.getMessage());
+    }
+
+    @Test
+    void getDurationHours_workingTest(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime endHour = LocalTime.of(21,0);
+        BigDecimal length = BigDecimal.valueOf(11L);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        BigDecimal serviceResponse = shiftServiceImpl.getDurationHours(shiftHoursDTO);
+
+        //then
+        assertEquals(length,serviceResponse);
+    }
+
+    @Test
+    void getDurationHours_endHourIsBeforeStartHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime endHour = LocalTime.of(8,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getDurationHours(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot be before start hour", exception.getMessage());
+    }
+
+    @Test
+    void getDurationHours_startHourEqualsEndHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(15,0);
+        LocalTime endHour = LocalTime.of(15,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getDurationHours(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot equals start hour", exception.getMessage());
+    }
+
+    @Test
+    void getShiftAsArray_workingTest(){
+        //given
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(15, 0);
+        int[] expectedArray = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0};
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        int[] serviceResponse = shiftServiceImpl.getShiftAsArray(shiftHoursDTO);
+
+        //then
+        assertArrayEquals(expectedArray,serviceResponse);
+    }
+
+    @Test
+    void getShiftAsArray_endHourIsBeforeStartHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime endHour = LocalTime.of(8,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getShiftAsArray(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot be before start hour", exception.getMessage());
+    }
+
+    @Test
+    void getShiftAsArray_startHourEqualsEndHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(15,0);
+        LocalTime endHour = LocalTime.of(15,0);
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getShiftAsArray(shiftHoursDTO));
+
+        //then
+        assertEquals("End hour cannot equals start hour", exception.getMessage());
     }
 }

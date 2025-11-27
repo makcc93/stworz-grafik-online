@@ -61,7 +61,6 @@ class ShiftControllerTest {
 
         assertEquals(startHour.getHour(), resultAsEntity.getStartHour().getHour());
         assertEquals(endHour.getHour(), resultAsEntity.getEndHour().getHour());
-        assertEquals(hoursDifference, resultAsEntity.getLength());
         assertEquals(shift.getId(),resultAsEntity.getId());
 
         assertTrue(shiftService.exists(resultAsEntity.getId()));
@@ -138,7 +137,6 @@ class ShiftControllerTest {
 
         assertEquals(startHour,shift.getStartHour());
         assertEquals(endHour,shift.getEndHour());
-        assertEquals(length,shift.getLength());
 
         assertTrue(shiftService.exists(shift.getId()));
     }
@@ -209,7 +207,6 @@ class ShiftControllerTest {
         assertEquals(updatedShift.getId(), originalShift.getId());
         assertEquals(newStartHour.getHour(),updatedShift.getStartHour().getHour());
         assertEquals(newEndHour.getHour(),updatedShift.getEndHour().getHour());
-        assertEquals(length,updatedShift.getLength());
 
         assertTrue(shiftService.exists(updatedShift.getId()));
     }

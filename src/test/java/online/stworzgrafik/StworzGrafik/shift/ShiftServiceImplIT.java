@@ -68,9 +68,8 @@ class ShiftServiceImplIT {
         Shift savedEntity = shiftServiceImpl.saveEntity(shift);
 
         //then
-        assertEquals(startHour.getHour(),savedEntity.startHour.getHour());
-        assertEquals(endHour.getHour(),savedEntity.endHour.getHour());
-        assertEquals(hoursDifference,savedEntity.getLength());
+        assertEquals(startHour.getHour(), savedEntity.getStartHour().getHour());
+        assertEquals(endHour.getHour(), savedEntity.getEndHour().getHour());
 
         assertTrue(shiftRepository.existsById(savedEntity.getId()));
     }
@@ -282,9 +281,9 @@ class ShiftServiceImplIT {
         shiftRepository.save(shift3);
 
         //when
-        boolean response1 = shiftServiceImpl.exists(shift1.id);
-        boolean response2 = shiftServiceImpl.exists(shift2.id);
-        boolean response3 = shiftServiceImpl.exists(shift3.id);
+        boolean response1 = shiftServiceImpl.exists(shift1.getId());
+        boolean response2 = shiftServiceImpl.exists(shift2.getId());
+        boolean response3 = shiftServiceImpl.exists(shift3.getId());
         boolean shouldNotExist = shiftServiceImpl.exists(555L);
 
         //then
@@ -293,5 +292,14 @@ class ShiftServiceImplIT {
         assertTrue(response3);
 
         assertFalse(shouldNotExist);
+    }
+
+    @Test
+    void getLength_workingTest(){
+        //given
+
+        //when
+
+        //then
     }
 }

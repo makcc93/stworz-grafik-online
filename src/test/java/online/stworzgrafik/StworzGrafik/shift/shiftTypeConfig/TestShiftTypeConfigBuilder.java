@@ -3,16 +3,10 @@ package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 import java.math.BigDecimal;
 
 public class TestShiftTypeConfigBuilder {
-    private Long id = 1L;
     private ShiftCode code = ShiftCode.WORK;
     private String namePl = "PRACA";
     private BigDecimal defaultHours = BigDecimal.valueOf(8L);
     private Boolean countsAsWork = true;
-
-    public TestShiftTypeConfigBuilder withId(Long id){
-        this.id = id;
-        return this;
-    }
 
     public TestShiftTypeConfigBuilder withCode(ShiftCode code){
         this.code = code;
@@ -35,13 +29,11 @@ public class TestShiftTypeConfigBuilder {
     }
 
     public ShiftTypeConfig build(){
-        return new ShiftTypeConfig(
-                id,
+        return new ShiftTypeConfigBuilder().createShiftTypeConfig(
                 code,
                 namePl,
                 defaultHours,
                 countsAsWork
         );
     }
-
 }
