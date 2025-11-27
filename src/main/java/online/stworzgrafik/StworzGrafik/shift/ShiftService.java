@@ -15,14 +15,11 @@ public interface ShiftService {
     ResponseShiftDTO save(@NotNull Shift shift);
     ResponseShiftDTO create(@NotNull ShiftHoursDTO shiftHoursDTO);
     ResponseShiftDTO updateShift(@NotNull Long shiftId, @NotNull ShiftHoursDTO shiftHoursDTO);
-
     void delete(@NotNull Long id);
     List<ResponseShiftDTO> findAll();
     ResponseShiftDTO findById(@NotNull Long id);
     boolean exists(@NotNull LocalTime startHour, @NotNull LocalTime endHour);
     boolean exists(@NotNull Long id);
-
-    //test methods below
     Integer getLength(@NotNull @Valid ShiftHoursDTO shiftHoursDTO);
     BigDecimal getDurationHours(@NotNull @Valid ShiftHoursDTO shiftHoursDTO);
     int[] getShiftAsArray(@NotNull @Valid ShiftHoursDTO shiftHoursDTO);

@@ -107,7 +107,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     public Integer getLength(ShiftHoursDTO shiftHoursDTO) {
         validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
 
-        return shiftHoursDTO.startHour().getHour() - shiftHoursDTO.endHour().getHour();
+        return shiftHoursDTO.endHour().getHour() - shiftHoursDTO.startHour().getHour();
     }
 
     @Override
