@@ -8,7 +8,9 @@ import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cglib.core.Local;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -297,9 +299,96 @@ class ShiftServiceImplIT {
     @Test
     void getLength_workingTest(){
         //given
+        LocalTime startHour = LocalTime.of(8,0);
+        LocalTime endHour = LocalTime.of(14,0);
+        int expectedLength = 6;
+
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
 
         //when
+        Integer serviceResponse = shiftServiceImpl.getLength(shiftHoursDTO);
 
+        //then
+        assertEquals(expectedLength,serviceResponse);
+    }
+
+    @Test
+    void getLength_dtoIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> shiftServiceImpl.getLength(null));
+        //then
+    }
+
+    @Test
+    void getLength_argumentInsideDtoIsNullThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(10,0);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(null).build();
+
+        //when
+        assertThrows(ConstraintViolationException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
+        //then
+    }
+
+    @Test
+    void getLength_endHourIsBeforeStartHourThrowsException(){
+        //given
+        LocalTime startHour = LocalTime.of(20,0);
+        LocalTime endHour = LocalTime.of(10,0);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        //when
+        assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
+
+        //then
+    }
+
+    @Test
+    void getDurationHours_workingTest(){
+        //given
+        LocalTime startHour = LocalTime.of(12,0);
+        LocalTime endHour = LocalTime.of(22,0);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        BigDecimal expectedDuration = BigDecimal.valueOf(10L);
+
+        //when
+        BigDecimal serviceResponse = shiftServiceImpl.getDurationHours(shiftHoursDTO);
+
+        //then
+        assertEquals(expectedDuration,serviceResponse);
+    }
+
+    @Test
+    void getDuration_dtoIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> shiftServiceImpl.getLength(null));
+        //then
+    }
+
+    @Test
+    void getShiftAsArray_workingTest(){
+        //given
+        LocalTime startHour = LocalTime.of(12,0);
+        LocalTime endHour = LocalTime.of(22,0);
+        ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(endHour).build();
+
+        int[] expectedArray = {0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0};
+
+        //when
+        int[] serviceResponse = shiftServiceImpl.getShiftAsArray(shiftHoursDTO);
+
+        //then
+        assertArrayEquals(expectedArray,serviceResponse);
+    }
+
+    @Test
+    void getShiftAsArray_dtoIsNullThrowsException(){
+        //given
+        //when
+        assertThrows(ConstraintViolationException.class, () -> shiftServiceImpl.getLength(null));
         //then
     }
 }
