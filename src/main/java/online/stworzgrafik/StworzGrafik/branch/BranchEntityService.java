@@ -6,6 +6,6 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 public interface BranchEntityService {
-    public Branch saveEntity(@NotNull Branch branch);
-    public Branch getEntityById(@NotNull Long id);
+     Branch saveEntity(@NotNull Branch branch);
+     Branch getEntityById(@NotNull Long id);
 }
