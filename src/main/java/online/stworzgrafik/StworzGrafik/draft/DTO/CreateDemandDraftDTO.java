@@ -4,20 +4,22 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-public record UpdateDemandDraftDTO(
-        @NotNull
-        Long storeId,
+public record CreateDemandDraftDTO(
+        @NotNull Long storeId,
 
         @NotNull
-        @Min(1900) @Max(2100)
+        @Min(1900)
+        @Max(2100)
         Integer year,
 
         @NotNull
-        @Min(1) @Max(12)
+        @Min(1)
+        @Max(12)
         Integer month,
 
         @NotNull
-        @Min(1) @Max(31)
+        @Min(1)
+        @Max(31)
         Integer day,
 
         @NotNull int[] hourlyDemand
