@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 public record ResponseDemandDraftDTO(
         Long id,
         Store store,
-        Employee employee,
         Integer year,
         Integer month,
         Integer day,
