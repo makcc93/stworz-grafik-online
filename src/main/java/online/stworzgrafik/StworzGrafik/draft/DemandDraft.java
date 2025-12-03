@@ -5,6 +5,7 @@ import lombok.*;
 import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -33,17 +34,17 @@ public class DemandDraft {
     private int[] hourlyDemand;
 
     @Column(nullable = false)
-    private LocalTime created_at;
+    private LocalDateTime created_at;
 
-    private LocalTime updated_at;
+    private LocalDateTime updated_at;
 
     @PrePersist
     void onCreate(){
-        this.created_at = LocalTime.now();
+        this.created_at = LocalDateTime.now();
     }
 
     @PreUpdate
     void onUpdate(){
-        this.updated_at = LocalTime.now();
+        this.updated_at = LocalDateTime.now();
     }
 }
