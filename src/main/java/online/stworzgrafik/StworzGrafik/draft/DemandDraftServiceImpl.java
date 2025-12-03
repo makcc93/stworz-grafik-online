@@ -1,9 +1,11 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 
@@ -21,13 +23,46 @@ public class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEn
         Integer day = createDemandDraftDTO.day();
         int[] hourlyDemand = createDemandDraftDTO.hourlyDemand();
 
-        DemandDraft demandDraft = new DemandDraftBuilder().createDemandDraft(
-                store,
-                year,
-                month,
-                day,
-                hourlyDemand
-        );
+        DemandDraft demandDraft = demandDraftRepository.findByStoreAndYearAndMonthAndDay(store, year, month, day)
+                    .orElseGet(() ->
+                            new DemandDraftBuilder().createDemandDraft(
+                                store,
+                                year,
+                                month,
+                                day,
+                                hourlyDemand
+                            )
+                    );
+
+        if (demandDraft.getId() != null){
+            demandDraft.setHourlyDemand(hourlyDemand);
+        }
+
+        DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
+
+        return demandDraftMapper.toResponseDemandDraftDTO(savedDemandDraft);
+    }
+
+    @Override
+    public ResponseDemandDraftDTO updateDemandDraft(UpdateDemandDraftDTO updateDemandDraftDTO) {
+        Store store = storeEntityService.getEntityById(updateDemandDraftDTO.storeId());
+        Integer year = updateDemandDraftDTO.year();
+        Integer month = updateDemandDraftDTO.month();
+        Integer day = updateDemandDraftDTO.day();
+        int[] hourlyDemand = updateDemandDraftDTO.hourlyDemand();
+
+        DemandDraft demandDraft = demandDraftRepository.findByStoreAndYearAndMonthAndDay(store, year, month, day)
+                .orElseGet(() ->
+                        new DemandDraftBuilder().createDemandDraft(
+                                store,
+                                year,
+                                month,
+                                day,
+                                hourlyDemand
+                        )
+                );
+
+        demandDraftMapper.updateDemandDraft(updateDemandDraftDTO,demandDraft);
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 
@@ -36,11 +71,12 @@ public class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEn
 
     @Override
     public DemandDraft saveEntity(DemandDraft demandDraft) {
-        return null;
+        return demandDraftRepository.save(demandDraft);
     }
 
     @Override
     public DemandDraft getEntityById(Long id) {
-        return null;
+        return demandDraftRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + id));
     }
 }
