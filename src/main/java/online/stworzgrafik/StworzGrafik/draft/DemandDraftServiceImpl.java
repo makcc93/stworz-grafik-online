@@ -5,12 +5,15 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 
+import java.util.List;
+
 @RequiredArgsConstructor
-public class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntityService{
+class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntityService{
     private final DemandDraftRepository demandDraftRepository;
     private final StoreEntityService storeEntityService;
     private final DemandDraftMapper demandDraftMapper;
@@ -67,6 +70,47 @@ public class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEn
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 
         return demandDraftMapper.toResponseDemandDraftDTO(savedDemandDraft);
+    }
+
+    @Override
+    public void deleteDemandDraft(Long id) {
+        if (!demandDraftRepository.existsById(id)){
+            throw new EntityNotFoundException("Cannot find demand draft by id " + id);
+        }
+
+        demandDraftRepository.deleteById(id);
+    }
+
+    @Override
+    public List<ResponseDemandDraftDTO> findAll() {
+        return demandDraftRepository.findAll().stream()
+                .map(demandDraftMapper::toResponseDemandDraftDTO)
+                .toList();
+    }
+
+    @Override
+    public ResponseDemandDraftDTO findById(Long id) {
+        DemandDraft demandDraft = demandDraftRepository.findById(id).
+                orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + id));
+
+        return demandDraftMapper.toResponseDemandDraftDTO(demandDraft);
+    }
+
+    @Override
+    public boolean exists(Long id) {
+        return demandDraftRepository.existsById(id);
+    }
+
+    @Override
+    public boolean exists(StoreAccurateDayDemandDraftDTO dto) {
+        Store store = storeEntityService.getEntityById(dto.storeId());
+
+        return demandDraftRepository.existsByStoreAndYeahAndMonthAndDay(
+                store,
+                dto.year(),
+                dto.month(),
+                dto.day()
+        );
     }
 
     @Override
