@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
@@ -65,7 +66,7 @@ class DemandDraftServiceImplTest {
                 .withDay(day)
                 .withHourlyDemand(hourlyDemand)
                 .build();
-        
+
         DemandDraft demandDraft = new TestDemandDraftBuilder().withStore(store).withHourlyDemand(hourlyDemand).build();
         when(demandDraftRepository.findByStoreAndYearAndMonthAndDay(store,year,month,day)).thenReturn(Optional.ofNullable(demandDraft));
 
@@ -94,6 +95,18 @@ class DemandDraftServiceImplTest {
         verify(demandDraftRepository,times(1)).findByStoreAndYearAndMonthAndDay(store,year,month,day);
         verify(demandDraftRepository,times(1)).save(demandDraft);
         verify(demandDraftMapper,times(1)).toResponseDemandDraftDTO(demandDraft);
+    }
+
+    @Test
+    void createDemandDraft_storeDoesNotExistThrowsException(){
+        //given
+        when(storeEntityService.getEntityById(any())).thenThrow(EntityNotFoundException.class);
+
+        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO().build();
+
+        //when
+        assertThrows(EntityNotFoundException.class, () -> demandDraftServiceImpl.createDemandDraft(createDemandDraftDTO));
+        //then
     }
 
 }
