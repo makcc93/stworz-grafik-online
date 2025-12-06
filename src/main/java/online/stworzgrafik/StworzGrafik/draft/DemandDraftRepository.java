@@ -8,6 +8,5 @@ import java.util.Optional;
 
 interface DemandDraftRepository extends JpaRepository<DemandDraft,Long>, JpaSpecificationExecutor<DemandDraft> {
     boolean existsByStoreAndYeahAndMonthAndDay(Store store, Integer year, Integer month, Integer day);
-
     Optional<DemandDraft> findByStoreAndYearAndMonthAndDay(Store store, Integer year, Integer month, Integer day);
 }
