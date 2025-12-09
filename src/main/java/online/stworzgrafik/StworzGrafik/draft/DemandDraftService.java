@@ -12,9 +12,9 @@ import java.util.List;
 
 @Validated
 public interface DemandDraftService {
-    ResponseDemandDraftDTO createDemandDraft(@NotNull @Valid CreateDemandDraftDTO createDemandDraftDTO);
-    ResponseDemandDraftDTO updateDemandDraft(@NotNull @Valid UpdateDemandDraftDTO updateDemandDraftDTO);
-    void deleteDemandDraft(@NotNull Long id);
+    ResponseDemandDraftDTO createDemandDraft(@NotNull Long storeId, @NotNull @Valid CreateDemandDraftDTO createDemandDraftDTO);
+    ResponseDemandDraftDTO updateDemandDraft(@NotNull Long storeId, @NotNull @Valid UpdateDemandDraftDTO updateDemandDraftDTO);
+    void deleteDemandDraft(@NotNull Long storeId);
     List<ResponseDemandDraftDTO> findAll();
     ResponseDemandDraftDTO findById(@NotNull Long id);
     boolean exists(@NotNull Long id);
