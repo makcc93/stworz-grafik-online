@@ -3,10 +3,9 @@ package online.stworzgrafik.StworzGrafik.draft.DTO;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record CreateDemandDraftDTO(
-        @NotNull Long storeId,
-
         @NotNull
         @Min(1900)
         @Max(2100)
@@ -22,6 +21,8 @@ public record CreateDemandDraftDTO(
         @Max(31)
         Integer day,
 
-        @NotNull int[] hourlyDemand
+        @NotNull
+        @Size(min = 24, max = 24, message = "Daily employee demand draft must have exactly 24 elements")
+        int[] hourlyDemand
 ) {
 }

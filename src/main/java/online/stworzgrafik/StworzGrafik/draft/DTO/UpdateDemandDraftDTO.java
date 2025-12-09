@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotNull;
 
 public record UpdateDemandDraftDTO(
         @NotNull
-        Long storeId,
-
-        @NotNull
         @Min(1900) @Max(2100)
         Integer year,
 
