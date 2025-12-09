@@ -10,18 +10,17 @@ import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.store.TestResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +59,6 @@ class DemandDraftServiceImplTest {
         when(storeEntityService.getEntityById(any())).thenReturn(store);
 
         CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO()
-                .withStoreId(storeId)
                 .withYear(year)
                 .withMonth(month)
                 .withDay(day)

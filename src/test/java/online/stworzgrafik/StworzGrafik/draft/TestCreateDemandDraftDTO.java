@@ -3,16 +3,10 @@ package online.stworzgrafik.StworzGrafik.draft;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 
 public class TestCreateDemandDraftDTO {
-    private Long storeId = 1L;
     private Integer year = 2025;
     private Integer month = 1;
     private Integer day = 1;
     private int[] hourlyDemand = {0,0,0,0,0,0,0,0,2,4,6,6,6,6,8,8,8,8,8,8,6,0,0,0};
-
-    public TestCreateDemandDraftDTO withStoreId(Long storeId){
-        this.storeId = storeId;
-        return this;
-    }
 
     public TestCreateDemandDraftDTO withYear(Integer year){
         this.year = year;
@@ -36,7 +30,6 @@ public class TestCreateDemandDraftDTO {
 
     public CreateDemandDraftDTO build(){
         return new CreateDemandDraftDTO(
-                storeId,
                 year,
                 month,
                 day,
