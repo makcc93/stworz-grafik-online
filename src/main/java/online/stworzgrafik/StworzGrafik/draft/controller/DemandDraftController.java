@@ -1,22 +1,39 @@
 package online.stworzgrafik.StworzGrafik.draft.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/stores")
+@RequestMapping("/api/drafts")
 @RequiredArgsConstructor
 public class DemandDraftController {
     private final DemandDraftService demandDraftService;
 
-    @GetMapping("/:storeId/drafts/:draftId")
-    public ResponseEntity<?> findDraft()
-        //pomysl o tym jak powinien wygladac endpoint i skad ma sie wziac storeId
-    //czy to nie powinno brac z sesji, a jesli logouje sie np dyrektor to wybiera on sklep z listy
-    //czy storeId powinno byc zapisane w endpoint czy nie, czy bedzie zaczytane z zalgoowanego uzytkownika
-    //czy bedzie wybrane z listy
+    @GetMapping("/:draftId")
+    public ResponseEntity<ResponseDemandDraftDTO> findById(@PathVariable @NotNull Long draftId){
+        return ResponseEntity.ok().body(demandDraftService.findById(draftId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ResponseDemandDraftDTO>> findAll(){
+        return ResponseEntity.ok().body(demandDraftService.findAll());
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseDemandDraftDTO> createDraft(
+            @RequestParam(required = false) @NotNull Long storeId,
+            @RequestBody @NotNull @Valid CreateDemandDraftDTO createDemandDraftDTO){
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(demandDraftService.createDemandDraft(storeId,createDemandDraftDTO));
+    }
 }
