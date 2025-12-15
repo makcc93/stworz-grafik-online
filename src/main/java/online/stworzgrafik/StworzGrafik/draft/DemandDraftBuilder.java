@@ -3,19 +3,17 @@ package online.stworzgrafik.StworzGrafik.draft;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 class DemandDraftBuilder {
     public DemandDraft createDemandDraft(
             Store store,
-            Integer year,
-            Integer month,
-            Integer day,
+            LocalDate draftDate,
             int[] hourlyDemand) {
         return DemandDraft.builder()
                 .store(store)
-                .year(year)
-                .month(month)
-                .day(day)
+                .draftDate(draftDate)
                 .hourlyDemand(hourlyDemand)
                 .build();
     }

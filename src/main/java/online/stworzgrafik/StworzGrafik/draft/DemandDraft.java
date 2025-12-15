@@ -5,6 +5,7 @@ import lombok.*;
 import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -23,11 +24,7 @@ public class DemandDraft {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    private Integer year;
-
-    private Integer month;
-
-    private Integer day;
+    private LocalDate draftDate;
 
     @Column(nullable = true)
     @Convert(converter = IntArrayJsonConverter.class)

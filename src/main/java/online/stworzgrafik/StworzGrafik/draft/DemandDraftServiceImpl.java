@@ -1,16 +1,24 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.controller.DraftSearchCriteria;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.CurrentUser;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
+import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -19,29 +27,24 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final DemandDraftRepository demandDraftRepository;
     private final StoreEntityService storeEntityService;
     private final DemandDraftMapper demandDraftMapper;
+    private final UserContext userContext;
+    private final UserAuthorizationService userAuthorizationService;
 
     @Override
-    public ResponseDemandDraftDTO createDemandDraft(Long storeId, CreateDemandDraftDTO dto) {
-        Store store = storeEntityService.getEntityById(storeId);
-        Integer year = dto.year();
-        Integer month = dto.month();
-        Integer day = dto.day();
-        int[] hourlyDemand = dto.hourlyDemand();
+    public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
+        Long validatedStoreId = userAuthorizationService.getUserAccessibleStoreId(storeId);
 
-        DemandDraft demandDraft = demandDraftRepository.findByStoreAndYearAndMonthAndDay(store, year, month, day)
-                    .orElseGet(() ->
-                            new DemandDraftBuilder().createDemandDraft(
-                                store,
-                                year,
-                                month,
-                                day,
-                                hourlyDemand
-                            )
-                    );
+        Store store = storeEntityService.getEntityById(validatedStoreId);
 
-        if (demandDraft.getId() != null){
-            demandDraft.setHourlyDemand(hourlyDemand);
+        if (demandDraftRepository.existsByStoreIdAndDate(storeId,dto.draftDate())){
+            throw new EntityExistsException("Store id " + storeId + " demand draft on date " + dto.draftDate() + " already exists");
         }
+
+        DemandDraft demandDraft = new DemandDraftBuilder().createDemandDraft(
+                store,
+                dto.draftDate(),
+                dto.hourlyDemand()
+        );
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 
@@ -49,30 +52,13 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     }
 
     @Override
-    public ResponseDemandDraftDTO updateDemandDraft(Long storeId, UpdateDemandDraftDTO dto) {
-        CurrentUser
-                //potrzebuje chwilowo zrobic fake usera zeby go uzywac wewnatrz serwisu
-        //potem pewnie strategy lub cos takiego zeby w zaleznosci od usera dobrac to czy storeId bedzie ten podany w endpoincie czy ten pobrany
-        //z sesji logowania usera
+    public ResponseDemandDraftDTO updateDemandDraft(Long storeId,Long draftId, UpdateDemandDraftDTO dto) {
+        Long validatedStoreId = userAuthorizationService.getUserAccessibleStoreId(storeId);
 
-        //potem zmiana currentUser na user-service jako mikroserwis
-
-        Store store = storeEntityService.getEntityById(storeId);
-        Integer year = dto.year();
-        Integer month = dto.month();
-        Integer day = dto.day();
-        int[] hourlyDemand = dto.hourlyDemand();
-
-        DemandDraft demandDraft = demandDraftRepository.findByStoreAndYearAndMonthAndDay(store, year, month, day)
-                .orElseGet(() ->
-                        new DemandDraftBuilder().createDemandDraft(
-                                store,
-                                year,
-                                month,
-                                day,
-                                hourlyDemand
-                        )
-                );
+        DemandDraft demandDraft = demandDraftRepository.findByStoreIdAndDate(validatedStoreId,dto.draftDate())
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Store id " + validatedStoreId + " demand draft on date " + dto.draftDate() + " does not exist")
+                        );
 
         demandDraftMapper.updateDemandDraft(dto,demandDraft);
 
@@ -82,12 +68,16 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     }
 
     @Override
-    public void deleteDemandDraft(Long id) {
-        if (!demandDraftRepository.existsById(id)){
-            throw new EntityNotFoundException("Cannot find demand draft by id " + id);
+    public void deleteDemandDraft(Long storeId, Long draftId) {
+        if (!demandDraftRepository.existsById(draftId)){
+            throw new EntityNotFoundException("Cannot find demand draft by id " + draftId);
         }
 
-        demandDraftRepository.deleteById(id);
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        demandDraftRepository.deleteById(draftId);
     }
 
     @Override
@@ -98,27 +88,48 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     }
 
     @Override
-    public ResponseDemandDraftDTO findById(Long id) {
-        DemandDraft demandDraft = demandDraftRepository.findById(id).
-                orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + id));
+    public ResponseDemandDraftDTO findById(Long storeId, Long draftId) {
+        DemandDraft demandDraft = demandDraftRepository.findById(draftId).
+                orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + draftId));
+
+        if (demandDraft.getStore().getId().equals(storeId)){
+            throw new EntityNotFoundException("Demand draft does not belong to this store");
+        }
 
         return demandDraftMapper.toResponseDemandDraftDTO(demandDraft);
     }
 
     @Override
-    public boolean exists(Long id) {
-        return demandDraftRepository.existsById(id);
+    public List<ResponseDemandDraftDTO> findFilteredDrafts(Long storeId, LocalDate startDate, LocalDate endDate) {
+        if (startDate == null && endDate == null){
+            LocalDate now = LocalDate.now();
+            startDate = now.withDayOfMonth(1);
+            endDate = now.withDayOfMonth(now.lengthOfMonth());
+        }
+        else if (startDate != null && endDate == null){
+            endDate = startDate;
+        }
+        else if (startDate == null && endDate != null){
+            throw new IllegalArgumentException("Must provide start day when providing end day");
+        }
+
+        List<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDateBetween(storeId, startDate, endDate);
+
+        return drafts.stream()
+                .map(demandDraftMapper::toResponseDemandDraftDTO)
+                .toList();
+    }
+
+    @Override
+    public boolean exists(Long draftId) {
+        return demandDraftRepository.existsById(draftId);
     }
 
     @Override
     public boolean exists(StoreAccurateDayDemandDraftDTO dto) {
-        Store store = storeEntityService.getEntityById(dto.storeId());
-
-        return demandDraftRepository.existsByStoreAndYeahAndMonthAndDay(
-                store,
-                dto.year(),
-                dto.month(),
-                dto.day()
+        return demandDraftRepository.existsByStoreIdAndDate(
+                dto.storeId(),
+                dto.draftDate()
         );
     }
 
