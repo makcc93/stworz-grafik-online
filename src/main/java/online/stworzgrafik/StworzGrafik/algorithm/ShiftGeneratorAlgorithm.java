@@ -77,7 +77,5 @@ public class ShiftGeneratorAlgorithm {
 
         return shiftAsArray;
     }
-    //rozmnina co robic z shift w ogole, tu wyzej zamina shift na int[]
-    //zastanow sie nad tym, moze popraw algorytm
 }
 
