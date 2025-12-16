@@ -2,24 +2,14 @@ package online.stworzgrafik.StworzGrafik.draft;
 
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 
+import java.time.LocalDate;
+
 public class TestCreateDemandDraftDTO {
-    private Integer year = 2025;
-    private Integer month = 1;
-    private Integer day = 1;
+    private LocalDate draftDate = LocalDate.of(2020,10,5);
     private int[] hourlyDemand = {0,0,0,0,0,0,0,0,2,4,6,6,6,6,8,8,8,8,8,8,6,0,0,0};
 
-    public TestCreateDemandDraftDTO withYear(Integer year){
-        this.year = year;
-        return this;
-    }
-
-    public TestCreateDemandDraftDTO withMonth(Integer month){
-        this.month = month;
-        return this;
-    }
-
-    public TestCreateDemandDraftDTO withDay(Integer day){
-        this.day = day;
+    public TestCreateDemandDraftDTO withDraftDate(LocalDate draftDate){
+        this.draftDate = draftDate;
         return this;
     }
 
@@ -30,11 +20,8 @@ public class TestCreateDemandDraftDTO {
 
     public CreateDemandDraftDTO build(){
         return new CreateDemandDraftDTO(
-                year,
-                month,
-                day,
+                draftDate,
                 hourlyDemand
         );
     }
-
 }

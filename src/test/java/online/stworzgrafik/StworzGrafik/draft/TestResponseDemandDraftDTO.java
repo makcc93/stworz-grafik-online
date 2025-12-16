@@ -5,14 +5,13 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.springframework.cglib.core.Local;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class TestResponseDemandDraftDTO {
     private Long id = 1L;
     private Store store = new TestStoreBuilder().build();
-    private Integer year = 2025;
-    private Integer month = 1;
-    private Integer day = 1;
+    private LocalDate draftDate = LocalDate.of(2001,1,11);
     private int[] hourlyDemand = {0,0,0,0,0,0,0,0,4,8,9,9,9,9,11,11,11,11,11,11,7,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2000,12,12,20,0);
     private LocalDateTime updatedAt = null;
@@ -27,18 +26,8 @@ public class TestResponseDemandDraftDTO {
         return this;
     }
 
-    public TestResponseDemandDraftDTO withYear(Integer year){
-        this.year = year;
-        return this;
-    }
-
-    public TestResponseDemandDraftDTO withMonth(Integer month){
-        this.month = month;
-        return this;
-    }
-
-    public TestResponseDemandDraftDTO withDay(Integer day){
-        this.day = day;
+    public TestResponseDemandDraftDTO withDraftDate(LocalDate draftDate){
+        this.draftDate = draftDate;
         return this;
     }
 
@@ -61,9 +50,7 @@ public class TestResponseDemandDraftDTO {
         return new ResponseDemandDraftDTO(
                 id,
                 store,
-                year,
-                month,
-                day,
+                draftDate,
                 hourlyDemand,
                 createdAt,
                 updatedAt
