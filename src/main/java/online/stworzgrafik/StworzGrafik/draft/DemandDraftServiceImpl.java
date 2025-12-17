@@ -89,6 +89,10 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
     @Override
     public ResponseDemandDraftDTO findById(Long storeId, Long draftId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
         DemandDraft demandDraft = demandDraftRepository.findById(draftId).
                 orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + draftId));
 
