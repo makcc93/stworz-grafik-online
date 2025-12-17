@@ -221,10 +221,51 @@ class DemandDraftServiceImplTest {
     void deleteDemandDraft_workingTest(){
         //given
         Long draftId = 123L;
-        
+
+        when(demandDraftRepository.existsById(draftId)).thenReturn(true);
+
+        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
+
         //when
+        demandDraftServiceImpl.deleteDemandDraft(storeId,draftId);
 
         //then
+        verify(demandDraftRepository,times(1)).existsById(draftId);
+        verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
+        verify(demandDraftRepository,times(1)).deleteById(draftId);
     }
 
+    @Test
+    void deleteDemandDraft_draftNotExistThrowsException(){
+        //given
+        Long notExistingDraftId = 12345656L;
+        when(demandDraftRepository.existsById(notExistingDraftId)).thenReturn(false);
+
+        //when
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> demandDraftServiceImpl.deleteDemandDraft(storeId, notExistingDraftId));
+
+        //then
+        assertEquals("Cannot find demand draft by id " + notExistingDraftId, exception.getMessage());
+        verify(userAuthorizationService,never()).hasAccessToStore(storeId);
+        verify(demandDraftRepository,never()).deleteById(notExistingDraftId);
+    }
+
+    @Test
+    void deleteDemandDraft_loggedUserHasNotAccessToStoreThrowsException(){
+        //given
+        Long draftId = 1L;
+        when(demandDraftRepository.existsById(draftId)).thenReturn(true);
+
+        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
+
+        //when
+        AccessDeniedException exception =
+                assertThrows(AccessDeniedException.class, () -> demandDraftServiceImpl.deleteDemandDraft(storeId, draftId));
+
+        //then
+        assertEquals("Access denied for store with id " + storeId, exception.getMessage());
+        verify(demandDraftRepository,times(1)).existsById(draftId);
+        verify(demandDraftRepository,never()).deleteById(draftId);
+    }
 }
