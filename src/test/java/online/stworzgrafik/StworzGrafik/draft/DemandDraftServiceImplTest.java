@@ -70,7 +70,7 @@ class DemandDraftServiceImplTest {
                 .withHourlyDemand(hourlyDemand)
                 .build();
 
-        when(demandDraftRepository.existsByStoreIdAndDate(storeId,createDemandDraftDTO.draftDate())).thenReturn(false);
+        when(demandDraftRepository.existsByStoreIdAndDraftDate(storeId,createDemandDraftDTO.draftDate())).thenReturn(false);
 
         DemandDraft demandDraft = new TestDemandDraftBuilder()
                 .withStore(store)
@@ -94,7 +94,7 @@ class DemandDraftServiceImplTest {
         assertEquals(draftDate,serviceResponse.draftDate());
         assertEquals(hourlyDemand,serviceResponse.hourlyDemand());
 
-        verify(demandDraftRepository,times(1)).existsByStoreIdAndDate(storeId,draftDate);
+        verify(demandDraftRepository,times(1)).existsByStoreIdAndDraftDate(storeId,draftDate);
         verify(demandDraftRepository,times(1)).save(any());
         verify(demandDraftMapper,times(1)).toResponseDemandDraftDTO(demandDraft);
     }
@@ -118,7 +118,7 @@ class DemandDraftServiceImplTest {
 
         when(storeEntityService.getEntityById(any())).thenReturn(store);
 
-        when(demandDraftRepository.existsByStoreIdAndDate(any(),any())).thenReturn(true);
+        when(demandDraftRepository.existsByStoreIdAndDraftDate(any(),any())).thenReturn(true);
 
         CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO().build();
 

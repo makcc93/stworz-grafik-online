@@ -11,14 +11,14 @@ import java.util.List;
 @Service
 public class ShiftGeneratorAlgorithm {
 
-    int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 5, 0, 0, 0};
+    int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 5, 0, 0, 0};
     private final ShiftEntityService shiftEntityService;
 
     public ShiftGeneratorAlgorithm(ShiftEntityService shiftEntityService) {
         this.shiftEntityService = shiftEntityService;
     }
 
-    public List<Shift> generate() {
+    public List<Shift> generateShiftsWithoutMorningShifts() {
         List<Shift> shifts = new ArrayList<>();
 
         List<Shift> startHoursShifts = generateShiftStartHours(shifts);

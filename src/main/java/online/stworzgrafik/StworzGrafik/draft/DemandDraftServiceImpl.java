@@ -7,7 +7,6 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.controller.DraftSearchCriteria;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -16,9 +15,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -36,7 +32,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
         Store store = storeEntityService.getEntityById(validatedStoreId);
 
-        if (demandDraftRepository.existsByStoreIdAndDate(storeId,dto.draftDate())){
+        if (demandDraftRepository.existsByStoreIdAndDraftDate(storeId,dto.draftDate())){
             throw new EntityExistsException("Store id " + storeId + " demand draft on date " + dto.draftDate() + " already exists");
         }
 
@@ -117,7 +113,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new IllegalArgumentException("Must provide start day when providing end day");
         }
 
-        List<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDateBetween(storeId, startDate, endDate);
+        List<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate);
 
         return drafts.stream()
                 .map(demandDraftMapper::toResponseDemandDraftDTO)
@@ -131,7 +127,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
     @Override
     public boolean exists(StoreAccurateDayDemandDraftDTO dto) {
-        return demandDraftRepository.existsByStoreIdAndDate(
+        return demandDraftRepository.existsByStoreIdAndDraftDate(
                 dto.storeId(),
                 dto.draftDate()
         );
