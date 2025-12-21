@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 
 public record ResponseEmployeeProposalDaysOffDTO(
         Long id,
-        Store store,
-        Employee employee,
+        Long storeId,
+        Long employeeId,
         Integer year,
         Integer month,
         int[] monthlyDaysOff,

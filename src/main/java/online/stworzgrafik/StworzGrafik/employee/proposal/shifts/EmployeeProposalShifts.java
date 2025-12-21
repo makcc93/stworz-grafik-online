@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,11 +28,8 @@ public class EmployeeProposalShifts {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    private Integer year;
-
-    private Integer month;
-
-    private Integer day;
+    @Column(nullable = false)
+    private LocalDate date;
 
     @Convert(converter = IntArrayJsonConverter.class)
     private int[] dailyProposalShift;

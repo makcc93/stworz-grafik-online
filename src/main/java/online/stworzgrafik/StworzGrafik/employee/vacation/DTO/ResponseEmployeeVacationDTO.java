@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 public record ResponseEmployeeVacationDTO(
         Long id,
-        Store store,
-        Employee employee,
+        Long storeId,
+        Long employeeId,
         Integer year,
         Integer month,
         int[] monthlyVacation,

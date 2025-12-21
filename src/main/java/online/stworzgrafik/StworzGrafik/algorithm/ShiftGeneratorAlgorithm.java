@@ -11,6 +11,8 @@ import java.util.List;
 @Service
 public class ShiftGeneratorAlgorithm {
 
+    int[] employeesProposalShifts = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
     int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 5, 0, 0, 0};
     private final ShiftEntityService shiftEntityService;
 
@@ -34,6 +36,10 @@ public class ShiftGeneratorAlgorithm {
         }
 
         return startEndHoursShifts;
+    }
+
+    private List<Shift> generateEmployeesProposalShifts(){
+
     }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc) {

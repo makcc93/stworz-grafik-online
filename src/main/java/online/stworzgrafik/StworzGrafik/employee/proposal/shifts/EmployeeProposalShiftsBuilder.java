@@ -4,21 +4,19 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 class EmployeeProposalShiftsBuilder {
     public EmployeeProposalShifts createEmployeeProposalShifts(
             Store store,
             Employee employee,
-            Integer year,
-            Integer month,
-            Integer day,
+            LocalDate date,
             int[] dailyProposalShift) {
         return EmployeeProposalShifts.builder()
                 .store(store)
                 .employee(employee)
-                .year(year)
-                .month(month)
-                .day(day)
+                .date(date)
                 .dailyProposalShift(dailyProposalShift)
                 .build();
     }
