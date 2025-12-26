@@ -17,7 +17,27 @@ public class TestEmployeeProposalDaysOffBuilder {
         this.store = store;
         return this;
     }
-    
+
+    public TestEmployeeProposalDaysOffBuilder withEmployee(Employee employee){
+        this.employee = employee;
+        return this;
+    }
+
+    public TestEmployeeProposalDaysOffBuilder withYear(Integer year){
+        this.year = year;
+        return this;
+    }
+
+    public TestEmployeeProposalDaysOffBuilder withMonth(Integer month){
+        this.month = month;
+        return this;
+    }
+
+    public TestEmployeeProposalDaysOffBuilder withMontlyDaysOff(int[] monthlyDaysOff){
+        this.monthlyDaysOff = monthlyDaysOff;
+        return this;
+    }
+
     public EmployeeProposalDaysOff build(){
         return new EmployeeProposalDaysOffBuilder().createEmployeeProposalDaysOff(
                 store,
