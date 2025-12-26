@@ -29,7 +29,7 @@ public interface EmployeeProposalDaysOffService {
             @NotNull Long employeeProposalDaysOffId
     );
 
-    ResponseDemandDraftDTO findById(
+    ResponseEmployeeProposalDaysOffDTO findById(
             @NotNull Long storeId,
             @NotNull Long employeeId,
             @NotNull Long employeeProposalDaysOffId
