@@ -39,7 +39,7 @@ public class ShiftGeneratorAlgorithm {
     }
 
     private List<Shift> generateEmployeesProposalShifts(){
-
+        return null;
     }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc) {
