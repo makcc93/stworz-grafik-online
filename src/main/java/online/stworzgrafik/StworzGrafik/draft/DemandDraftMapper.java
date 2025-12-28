@@ -2,13 +2,11 @@ package online.stworzgrafik.StworzGrafik.draft;
 
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 interface DemandDraftMapper {
+    @Mapping(source = "store.id", target = "store_id")
     ResponseDemandDraftDTO toResponseDemandDraftDTO(DemandDraft demandDraft);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
