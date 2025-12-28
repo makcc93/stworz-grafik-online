@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public record ResponseDemandDraftDTO(
         Long id,
-        Store store,
+        Long storeId,
         LocalDate draftDate,
         int[] hourlyDemand,
         LocalDateTime createdAt,

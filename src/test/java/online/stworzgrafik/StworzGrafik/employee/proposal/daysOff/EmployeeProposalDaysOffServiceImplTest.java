@@ -50,6 +50,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
     private Long storeId = 1L;
     private Long employeeId = 9L;
+    private Long employeeProposalDaysOffId = 21L;
     private Store store;
     private Employee employee;
 
@@ -228,7 +229,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month))
+        when(repository.findById(employeeProposalDaysOffId))
                 .thenReturn(Optional.of(employeeProposalDaysOff));
 
         when(storeService.getEntityById(storeId)).thenReturn(store);
@@ -253,7 +254,7 @@ class EmployeeProposalDaysOffServiceImplTest {
                         .withMonthlyDaysOff(monthlyDaysOff)
                         .build();
         //when
-        ResponseEmployeeProposalDaysOffDTO serviceResponse = service.updateEmployeeProposalDaysOff(storeId, employeeId, dto);
+        ResponseEmployeeProposalDaysOffDTO serviceResponse = service.updateEmployeeProposalDaysOff(storeId, employeeId,employeeProposalDaysOffId, dto);
 
         //then
         assertEquals(storeId,serviceResponse.storeId());
@@ -274,12 +275,12 @@ class EmployeeProposalDaysOffServiceImplTest {
         UpdateEmployeeProposalDaysOffDTO dto = new TestUpdateEmployeeProposalDaysOffDTO().build();
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, dto));
+                assertThrows(AccessDeniedException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId,employeeProposalDaysOffId, dto));
 
         //then
         assertEquals("Access denied for store with id " + storeId,exception.getMessage());
 
-        verify(repository,never()).findByStoreIdAndEmployeeIdAndYearAndMonth(any(),any(),any(),any());
+        verify(repository,never()).findById(any());
         verify(storeService,never()).getEntityById(any());
         verify(employeeService,never()).getEntityById(any());
         verify(mapper,never()).updateEmployeeProposalDaysOff(any(),any());
@@ -295,7 +296,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month))
+        when(repository.findById(employeeProposalDaysOffId))
                 .thenReturn(Optional.empty());
 
         UpdateEmployeeProposalDaysOffDTO dto = new TestUpdateEmployeeProposalDaysOffDTO()
@@ -305,10 +306,10 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, dto));
+                assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, employeeProposalDaysOffId,dto));
 
         //then
-        assertEquals("Cannot find employee proposal days off for year " + year + " and month " + month,exception.getMessage());
+        assertEquals("Cannot find employee proposal days off with id " + employeeProposalDaysOffId,exception.getMessage());
 
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
         verify(storeService,never()).getEntityById(any());
@@ -331,7 +332,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month))
+        when(repository.findById(employeeProposalDaysOffId))
                 .thenReturn(Optional.of(employeeProposalDaysOff));
 
         when(storeService.getEntityById(storeId)).thenThrow(EntityNotFoundException.class);
@@ -342,11 +343,11 @@ class EmployeeProposalDaysOffServiceImplTest {
                 .build();
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, dto));
+        assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, employeeProposalDaysOffId, dto));
 
         //then
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
-        verify(repository,times(1)).findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month);
+        verify(repository,times(1)).findById(employeeProposalDaysOffId);
         verify(employeeService,never()).getEntityById(any());
         verify(mapper,never()).updateEmployeeProposalDaysOff(any(),any());
         verify(repository,never()).save(any());
@@ -368,7 +369,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month))
+        when(repository.findById(employeeProposalDaysOffId))
                 .thenReturn(Optional.of(employeeProposalDaysOff));
 
         when(storeService.getEntityById(storeId)).thenReturn(store);
@@ -381,11 +382,11 @@ class EmployeeProposalDaysOffServiceImplTest {
                 .build();
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, dto));
+        assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, employeeProposalDaysOffId, dto));
 
         //then
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
-        verify(repository,times(1)).findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month);
+        verify(repository,times(1)).findById(employeeProposalDaysOffId);
         verify(storeService,times(1)).getEntityById(storeId);
         verify(mapper,never()).updateEmployeeProposalDaysOff(any(),any());
         verify(repository,never()).save(any());
@@ -410,7 +411,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month))
+        when(repository.findById(employeeProposalDaysOffId))
                 .thenReturn(Optional.of(employeeProposalDaysOff));
 
         when(storeService.getEntityById(storeId)).thenReturn(store);
@@ -424,13 +425,13 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, dto));
+                assertThrows(AccessDeniedException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, employeeProposalDaysOffId, dto));
 
         //then
         assertEquals("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId(),exception.getMessage());
 
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
-        verify(repository,times(1)).findByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month);
+        verify(repository,times(1)).findById(employeeProposalDaysOffId);
         verify(storeService,times(1)).getEntityById(storeId);
         verify(employeeService,times(1)).getEntityById(employeeId);
         verify(mapper,never()).updateEmployeeProposalDaysOff(any(),any());

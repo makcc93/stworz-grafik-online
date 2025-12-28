@@ -6,7 +6,10 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
+import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
 
 @Validated
 public interface EmployeeProposalDaysOffService {
@@ -18,6 +21,7 @@ public interface EmployeeProposalDaysOffService {
     ResponseEmployeeProposalDaysOffDTO updateEmployeeProposalDaysOff(
             @NotNull Long storeId,
             @NotNull Long employeeId,
+            @NotNull Long employeeProposalDaysOffId,
             @NotNull @Valid UpdateEmployeeProposalDaysOffDTO dto);
 
     ResponseEmployeeProposalDaysOffDTO save(
@@ -34,6 +38,8 @@ public interface EmployeeProposalDaysOffService {
             @NotNull Long employeeId,
             @NotNull Long employeeProposalDaysOffId
     );
+
+    List<ResponseEmployeeProposalDaysOffDTO> findAll();
 
     boolean exists(@NotNull Long employeeProposalDaysOffId);
 }

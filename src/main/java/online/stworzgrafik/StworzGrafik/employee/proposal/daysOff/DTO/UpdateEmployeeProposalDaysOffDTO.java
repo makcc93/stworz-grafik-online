@@ -9,8 +9,6 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import java.time.LocalDateTime;
 
 public record UpdateEmployeeProposalDaysOffDTO(
-        @NotNull Long storeId,
-        @NotNull Long employeeId,
         @NotNull Integer year,
         @NotNull Integer month,
 

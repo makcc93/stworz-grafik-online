@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 
 public record ResponseEmployeeProposalShiftsDTO(
         Long id,
-        Store store,
-        Employee employee,
+        Long storeId,
+        Long employeeId,
         LocalDate date,
         int[] dailyProposalShift,
         LocalDateTime createdAt,

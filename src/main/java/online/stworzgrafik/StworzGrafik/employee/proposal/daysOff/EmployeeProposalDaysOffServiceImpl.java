@@ -3,7 +3,6 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.daysOff;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
@@ -15,9 +14,11 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffService{
+class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffService{
     private final EmployeeProposalDaysOffRepository repository;
     private final EmployeeProposalDaysOffMapper mapper;
     private final EmployeeProposalDaysOffBuilder builder;
@@ -26,7 +27,9 @@ public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysO
     private final EmployeeEntityService employeeService;
 
     @Override
-    public ResponseEmployeeProposalDaysOffDTO createEmployeeProposalDaysOff(Long storeId, Long employeeId, CreateEmployeeProposalDaysOffDTO dto) {
+    public ResponseEmployeeProposalDaysOffDTO createEmployeeProposalDaysOff(Long storeId,
+                                                                            Long employeeId,
+                                                                            CreateEmployeeProposalDaysOffDTO dto) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -51,17 +54,22 @@ public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysO
                 dto.monthlyDaysOff()
         );
 
-        return mapper.toResponseEmployeeProposalDaysOffDTO(employeeProposalDaysOff);
+        EmployeeProposalDaysOff saved = repository.save(employeeProposalDaysOff);
+
+        return mapper.toResponseEmployeeProposalDaysOffDTO(saved);
     }
 
     @Override
-    public ResponseEmployeeProposalDaysOffDTO updateEmployeeProposalDaysOff(Long storeId, Long employeeId, UpdateEmployeeProposalDaysOffDTO dto) {
+    public ResponseEmployeeProposalDaysOffDTO updateEmployeeProposalDaysOff(Long storeId,
+                                                                            Long employeeId,
+                                                                            Long employeeProposalDaysOffId,
+                                                                            UpdateEmployeeProposalDaysOffDTO dto) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        EmployeeProposalDaysOff employeeProposalDaysOff = repository.findByStoreIdAndEmployeeIdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off for year " + dto.year() + " and month " + dto.month()));
+        EmployeeProposalDaysOff employeeProposalDaysOff = repository.findById(employeeProposalDaysOffId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off with id " + employeeProposalDaysOffId));
 
         Store store = storeService.getEntityById(storeId);
 
@@ -86,7 +94,9 @@ public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysO
     }
 
     @Override
-    public void delete(Long storeId, Long employeeId, Long employeeProposalDaysOffId) {
+    public void delete(Long storeId,
+                       Long employeeId,
+                       Long employeeProposalDaysOffId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -98,7 +108,9 @@ public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysO
     }
 
     @Override
-    public ResponseEmployeeProposalDaysOffDTO findById(Long storeId, Long employeeId, Long employeeProposalDaysOffId) {
+    public ResponseEmployeeProposalDaysOffDTO findById(Long storeId,
+                                                       Long employeeId,
+                                                       Long employeeProposalDaysOffId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -107,6 +119,13 @@ public class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysO
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off by id " + employeeProposalDaysOffId));
 
         return mapper.toResponseEmployeeProposalDaysOffDTO(employeeProposalDaysOff);
+    }
+
+    @Override
+    public List<ResponseEmployeeProposalDaysOffDTO> findAll() {
+        return repository.findAll().stream()
+                .map(mapper::toResponseEmployeeProposalDaysOffDTO)
+                .toList();
     }
 
     @Override
