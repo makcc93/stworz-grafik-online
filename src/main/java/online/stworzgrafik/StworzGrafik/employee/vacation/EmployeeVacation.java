@@ -27,8 +27,10 @@ public class EmployeeVacation {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    @Column(name = "year_number")
     private Integer year;
 
+    @Column(name = "month_number")
     private Integer month;
 
     @Convert(converter = IntArrayJsonConverter.class)

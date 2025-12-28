@@ -23,8 +23,10 @@ public class Schedule {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @Column(name = "year_number")
     private Integer year;
 
+    @Column(name = "month_number")
     private Integer month;
 
     @Column(nullable = true)

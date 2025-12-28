@@ -29,10 +29,13 @@ public class ScheduleDetails {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    @Column(name = "year_number")
     private Integer year;
 
+    @Column(name = "month_number")
     private Integer month;
 
+    @Column(name = "day_number")
     private Integer day;
 
     @ManyToOne
