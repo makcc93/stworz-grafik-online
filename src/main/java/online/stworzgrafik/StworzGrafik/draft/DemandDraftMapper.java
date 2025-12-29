@@ -6,7 +6,7 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 interface DemandDraftMapper {
-    @Mapping(source = "store.id", target = "store_id")
+    @Mapping(source = "store.id", target = "storeId")
     ResponseDemandDraftDTO toResponseDemandDraftDTO(DemandDraft demandDraft);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

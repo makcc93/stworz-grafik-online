@@ -80,7 +80,7 @@ class DemandDraftServiceImplTest {
         when(demandDraftRepository.save(any(DemandDraft.class))).thenReturn(demandDraft);
 
         ResponseDemandDraftDTO responseDemandDraftDTO = new TestResponseDemandDraftDTO()
-                .withStore(store)
+                .withStoreId(storeId)
                 .withDraftDate(draftDate)
                 .withHourlyDemand(hourlyDemand)
                 .build();

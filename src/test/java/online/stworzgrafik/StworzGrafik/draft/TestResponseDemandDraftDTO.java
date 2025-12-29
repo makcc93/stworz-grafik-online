@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 public class TestResponseDemandDraftDTO {
     private Long id = 1L;
-    private Store store = new TestStoreBuilder().build();
+    private Long storeId = 5L;
     private LocalDate draftDate = LocalDate.of(2001,1,11);
     private int[] hourlyDemand = {0,0,0,0,0,0,0,0,4,8,9,9,9,9,11,11,11,11,11,11,7,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2000,12,12,20,0);
@@ -21,8 +21,8 @@ public class TestResponseDemandDraftDTO {
         return this;
     }
 
-    public TestResponseDemandDraftDTO withStore(Store store){
-        this.store = store;
+    public TestResponseDemandDraftDTO withStoreId(Long storeId){
+        this.storeId = storeId;
         return this;
     }
 
@@ -49,7 +49,7 @@ public class TestResponseDemandDraftDTO {
     public ResponseDemandDraftDTO build(){
         return new ResponseDemandDraftDTO(
                 id,
-                store,
+                storeId,
                 draftDate,
                 hourlyDemand,
                 createdAt,
