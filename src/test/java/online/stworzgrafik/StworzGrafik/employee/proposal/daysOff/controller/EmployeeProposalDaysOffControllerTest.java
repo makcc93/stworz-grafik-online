@@ -18,7 +18,6 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmpl
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.TestCreateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.TestUpdateEmployeeProposalDaysOffDTO;
-import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsRepository;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
@@ -26,7 +25,6 @@ import online.stworzgrafik.StworzGrafik.security.JwtService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,9 +60,6 @@ class EmployeeProposalDaysOffControllerTest {
 
     @Autowired
     private EmployeeProposalDaysOffService service;
-
-    @Autowired
-    private EmployeeProposalShiftsRepository repository;
 
     @Autowired
     private RegionService regionService;
@@ -287,6 +282,6 @@ class EmployeeProposalDaysOffControllerTest {
                 .andExpect(status().isNoContent());
 
         //then
-        assertThrows(Exception.class, () -> service.findById(storeId, employeeId, proposalId));
+        assertThrows(Exception.class, () -> service.getById(storeId, employeeId, proposalId));
     }
 }

@@ -75,7 +75,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(employeeService.getEntityById(employeeId)).thenReturn(employee);
 
-        when(repository.existsByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month)).thenReturn(false);
+        when(repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId,employeeId,year,month)).thenReturn(false);
 
         EmployeeProposalDaysOff employeeProposalDaysOff = new TestEmployeeProposalDaysOffBuilder()
                 .withStore(store)
@@ -92,6 +92,8 @@ class EmployeeProposalDaysOffServiceImplTest {
                 .withMonthlyDaysOff(monthlyDaysOff)
                 .withYear(year)
                 .withMonth(month).build();
+
+        when(repository.save(employeeProposalDaysOff)).thenReturn(employeeProposalDaysOff);
 
         when(mapper.toResponseEmployeeProposalDaysOffDTO(employeeProposalDaysOff)).thenReturn(responseEmployeeProposalDaysOffDTO);
 
@@ -127,7 +129,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         verify(storeService,never()).getEntityById(any());
         verify(employeeService,never()).getEntityById(any());
-        verify(repository,never()).existsByStoreIdAndEmployeeIdAndYearAndMonth(any(),any(),any(),any());
+        verify(repository,never()).existsByStore_IdAndEmployee_IdAndYearAndMonth(any(),any(),any(),any());
         verify(builder,never()).createEmployeeProposalDaysOff(any(),any(),any(),any(),any());
         verify(mapper,never()).toResponseEmployeeProposalDaysOffDTO(any());
     }
@@ -147,7 +149,7 @@ class EmployeeProposalDaysOffServiceImplTest {
         //then
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
         verify(employeeService,never()).getEntityById(storeId);
-        verify(repository,never()).existsByStoreIdAndEmployeeIdAndYearAndMonth(any(),any(),any(),any());
+        verify(repository,never()).existsByStore_IdAndEmployee_IdAndYearAndMonth(any(),any(),any(),any());
         verify(builder,never()).createEmployeeProposalDaysOff(any(),any(),any(),any(),any());
         verify(mapper,never()).toResponseEmployeeProposalDaysOffDTO(any());
     }
@@ -171,7 +173,7 @@ class EmployeeProposalDaysOffServiceImplTest {
         //then
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
         verify(storeService,times(1)).getEntityById(storeId);
-        verify(repository,never()).existsByStoreIdAndEmployeeIdAndYearAndMonth(any(),any(),any(),any());
+        verify(repository,never()).existsByStore_IdAndEmployee_IdAndYearAndMonth(any(),any(),any(),any());
         verify(builder,never()).createEmployeeProposalDaysOff(any(),any(),any(),any(),any());
         verify(mapper,never()).toResponseEmployeeProposalDaysOffDTO(any());
     }
@@ -190,7 +192,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         when(employeeService.getEntityById(employeeId)).thenReturn(employee);
 
-        when(repository.existsByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month)).thenReturn(true);
+        when(repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId,employeeId,year,month)).thenReturn(true);
 
         CreateEmployeeProposalDaysOffDTO dto = new TestCreateEmployeeProposalDaysOffDTO()
                 .withYear(year)
@@ -540,7 +542,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     }
 
     @Test
-    void findById_workingTest(){
+    void getById_workingTest(){
         //given
         Long employeeProposalDaysOffId = 5L;
         Integer year = 2025;
@@ -566,7 +568,7 @@ class EmployeeProposalDaysOffServiceImplTest {
         when(mapper.toResponseEmployeeProposalDaysOffDTO(employeeProposalDaysOff)).thenReturn(responseEmployeeProposalDaysOffDTO);
 
         //when
-        ResponseEmployeeProposalDaysOffDTO serviceResponse = service.findById(storeId, employeeId, employeeProposalDaysOffId);
+        ResponseEmployeeProposalDaysOffDTO serviceResponse = service.getById(storeId, employeeId, employeeProposalDaysOffId);
 
         //then
         assertEquals(storeId,serviceResponse.storeId());
@@ -581,7 +583,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     }
 
     @Test
-    void findById_loggedUserHasNotAccessToStoreThrowsException(){
+    void getById_loggedUserHasNotAccessToStoreThrowsException(){
         //given
         Long employeeProposalDaysOffId = 5L;
 
@@ -589,7 +591,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> service.findById(storeId, employeeId, employeeProposalDaysOffId));
+                assertThrows(AccessDeniedException.class, () -> service.getById(storeId, employeeId, employeeProposalDaysOffId));
 
         //then
         assertEquals("Access denied for store with id " + storeId,exception.getMessage());
@@ -599,7 +601,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     }
 
     @Test
-    void findById_employeeProposalDaysOffDoesNotExistThrowsException(){
+    void getById_employeeProposalDaysOffDoesNotExistThrowsException(){
         //given
         Long employeeProposalDaysOffId = 5L;
 
@@ -609,7 +611,7 @@ class EmployeeProposalDaysOffServiceImplTest {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> service.findById(storeId, employeeId, employeeProposalDaysOffId));
+                assertThrows(EntityNotFoundException.class, () -> service.getById(storeId, employeeId, employeeProposalDaysOffId));
 
         //then
         assertEquals("Cannot find employee proposal days off by id " + employeeProposalDaysOffId,exception.getMessage());
