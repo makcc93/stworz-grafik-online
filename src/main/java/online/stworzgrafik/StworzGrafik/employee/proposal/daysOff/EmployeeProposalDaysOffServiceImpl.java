@@ -42,7 +42,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
             throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
         }
 
-        if (repository.existsByStoreIdAndEmployeeIdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())){
+        if (repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())){
             throw new EntityExistsException("Employee proposal days off in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
@@ -108,9 +108,9 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     }
 
     @Override
-    public ResponseEmployeeProposalDaysOffDTO findById(Long storeId,
-                                                       Long employeeId,
-                                                       Long employeeProposalDaysOffId) {
+    public ResponseEmployeeProposalDaysOffDTO getById(Long storeId,
+                                                      Long employeeId,
+                                                      Long employeeProposalDaysOffId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -122,7 +122,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     }
 
     @Override
-    public List<ResponseEmployeeProposalDaysOffDTO> findAll() {
+    public List<ResponseEmployeeProposalDaysOffDTO> getAll() {
         return repository.findAll().stream()
                 .map(mapper::toResponseEmployeeProposalDaysOffDTO)
                 .toList();

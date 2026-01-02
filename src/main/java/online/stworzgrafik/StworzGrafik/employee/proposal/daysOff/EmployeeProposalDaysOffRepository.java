@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.Optional;
 
 interface EmployeeProposalDaysOffRepository extends JpaRepository<EmployeeProposalDaysOff,Long>, JpaSpecificationExecutor<EmployeeProposalDaysOff> {
-    boolean existsByStoreIdAndEmployeeIdAndYearAndMonth(Long storeId, Long employeeId, Integer year, Integer month);
-    Optional<EmployeeProposalDaysOff> findByStoreIdAndEmployeeIdAndYearAndMonth(Long storeId, Long employeeId, Integer year, Integer month);
+    boolean existsByStore_IdAndEmployee_IdAndYearAndMonth(Long storeId, Long employeeId, Integer year, Integer month);
+    Optional<EmployeeProposalDaysOff> findByStore_IdAndEmployee_IdAndYearAndMonth(Long storeId, Long employeeId, Integer year, Integer month);
 }

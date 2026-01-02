@@ -25,13 +25,13 @@ public class EmployeeProposalDaysOffController {
     public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> getProposalDaysOff(@PathVariable Long storeId,
                                                                                  @PathVariable Long employeeId,
                                                                                  @PathVariable Long proposalId){
-        return ResponseEntity.ok(service.findById(storeId,employeeId,proposalId));
+        return ResponseEntity.ok(service.getById(storeId,employeeId,proposalId));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/stores/proposalsDaysOff")
     public ResponseEntity<List<ResponseEmployeeProposalDaysOffDTO>> getAll(){
-        return ResponseEntity.ok(service.findAll());
+        return ResponseEntity.ok(service.getAll());
     }
 
     @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
