@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmpl
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,8 +20,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeProposalDaysOffController {
     private final EmployeeProposalDaysOffService service;
+    private final UserAuthorizationService userAuthorizationService;
 
-    @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff/{proposalId}")
     public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> getProposalDaysOff(@PathVariable Long storeId,
                                                                                  @PathVariable Long employeeId,
@@ -29,12 +31,12 @@ public class EmployeeProposalDaysOffController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/stores/proposalsDaysOff")
+    @GetMapping("/proposalsDaysOff")
     public ResponseEntity<List<ResponseEmployeeProposalDaysOffDTO>> getAll(){
         return ResponseEntity.ok(service.getAll());
     }
 
-    @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @PutMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff")
     public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> createProposal(@PathVariable Long storeId,
                                                                              @PathVariable Long employeeId,
@@ -42,7 +44,7 @@ public class EmployeeProposalDaysOffController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createEmployeeProposalDaysOff(storeId,employeeId,dto));
     }
 
-    @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @PatchMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff/{proposalId}")
     public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> updateProposal(@PathVariable Long storeId,
                                                                              @PathVariable Long employeeId,
@@ -51,7 +53,7 @@ public class EmployeeProposalDaysOffController {
         return ResponseEntity.ok(service.updateEmployeeProposalDaysOff(storeId,employeeId,proposalId,dto));
     }
 
-    @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @DeleteMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff/{proposalId}")
     public ResponseEntity<HttpStatus> deleteProposal(@PathVariable Long storeId,
                                                      @PathVariable Long employeeId,

@@ -8,38 +8,37 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmp
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Validated
 public interface EmployeeProposalShiftsService {
-    ResponseEmployeeProposalShiftsDTO createEmployeeProposalShift(
-            @NotNull Long storeId,
-            @NotNull Long employeeId,
-            @NotNull @Valid CreateEmployeeProposalShiftsDTO dto
-    );
+    ResponseEmployeeProposalShiftsDTO createEmployeeProposalShift(@NotNull Long storeId,
+                                                                  @NotNull Long employeeId,
+                                                                  @NotNull @Valid CreateEmployeeProposalShiftsDTO dto);
 
-    ResponseEmployeeProposalShiftsDTO updateEmployeeProposalShift(
-            @NotNull Long storeId,
-            @NotNull Long employeeId,
-            @NotNull Long employeeProposalShiftId,
-            @NotNull @Valid UpdateEmployeeProposalShiftsDTO dto
-    );
+    ResponseEmployeeProposalShiftsDTO updateEmployeeProposalShift(@NotNull Long storeId,
+                                                                  @NotNull Long employeeId,
+                                                                  @NotNull Long employeeProposalShiftId,
+                                                                  @NotNull @Valid UpdateEmployeeProposalShiftsDTO dto);
 
     ResponseEmployeeProposalShiftsDTO save(@NotNull EmployeeProposalShifts employeeProposalShifts);
 
-    void delete(
-            @NotNull Long storeId,
-            @NotNull Long employeeId,
-            @NotNull Long employeeProposalShiftId
+    void delete(@NotNull Long storeId,
+                @NotNull Long employeeId,
+                @NotNull Long employeeProposalShiftId
     );
 
-    ResponseEmployeeProposalShiftsDTO getById(
-            @NotNull Long storeId,
-            @NotNull Long employeeId,
-            @NotNull Long employeeProposalShiftId
-    );
+    ResponseEmployeeProposalShiftsDTO getById(@NotNull Long storeId,
+                                              @NotNull Long employeeId,
+                                              @NotNull Long employeeProposalShiftId);
 
     List<ResponseEmployeeProposalShiftsDTO> getAll();
 
     boolean exists(@NotNull Long employeeProposalShiftId);
+
+    List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@NotNull Long storeId,
+                                                          @NotNull LocalDate startDate,
+                                                          @NotNull LocalDate endDate,
+                                                          @NotNull Long employeeId);
 }
