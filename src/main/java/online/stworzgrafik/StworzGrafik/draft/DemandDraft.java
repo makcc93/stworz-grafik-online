@@ -7,7 +7,6 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,18 +29,19 @@ public class DemandDraft {
     @Convert(converter = IntArrayJsonConverter.class)
     private int[] hourlyDemand;
 
-    @Column(nullable = false)
-    private LocalDateTime created_at;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    private LocalDateTime updated_at;
+    @Column(name = "updated_at", nullable = true)
+    private LocalDateTime updatedAt;
 
     @PrePersist
     void onCreate(){
-        this.created_at = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
     void onUpdate(){
-        this.updated_at = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }
