@@ -6,7 +6,7 @@ import online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy.UserRoleStrat
 import online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy.UserRoleStrategyFactory;
 import org.springframework.stereotype.Service;
 
-@Service("userSecurityService")
+@Service("userAuthorizationService")
 @RequiredArgsConstructor
 public class UserAuthorizationService {
     private final UserRoleStrategyFactory factory;
