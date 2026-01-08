@@ -24,17 +24,21 @@ public class EmployeeProposalDaysOffController {
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff/{proposalId}")
-    public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> getProposalDaysOff(@PathVariable Long storeId,
-                                                                                 @PathVariable Long employeeId,
-                                                                                 @PathVariable Long proposalId){
+    public ResponseEntity<ResponseEmployeeProposalDaysOffDTO> getProposalDaysOffById(@PathVariable Long storeId,
+                                                                                     @PathVariable Long employeeId,
+                                                                                     @PathVariable Long proposalId){
         return ResponseEntity.ok(service.getById(storeId,employeeId,proposalId));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/proposalsDaysOff")
-    public ResponseEntity<List<ResponseEmployeeProposalDaysOffDTO>> getAll(){
-        return ResponseEntity.ok(service.getAll());
-    }
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/proposalDaysOff")
+    public ResponseEntity<List<ResponseEmployeeProposalDaysOffDTO>> getByCriteria(@PathVariable Long storeId,
+                                                                                  @RequestParam(required = false) Long employeeId,
+                                                                                  @RequestParam(required = false) Integer year,
+                                                                                  @RequestParam(required = false) Integer month){
+        return ResponseEntity.ok(service.getByCriteria(storeId,employeeId,year,month));
+    };
+
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @PutMapping("/stores/{storeId}/employees/{employeeId}/proposalsDaysOff")
