@@ -11,10 +11,13 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmpl
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffSpecification.*;
 
 @Service
 @RequiredArgsConstructor
@@ -122,8 +125,19 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     }
 
     @Override
-    public List<ResponseEmployeeProposalDaysOffDTO> getAll() {
-        return repository.findAll().stream()
+    public List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(Long storeId, Long employeeId, Integer year, Integer month) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Specification<EmployeeProposalDaysOff> specification = Specification.allOf(
+                hasStoreId(storeId),
+                hasEmployeeId(employeeId),
+                hasYear(year),
+                hasMonth(month)
+        );
+
+        return repository.findAll(specification).stream()
                 .map(mapper::toResponseEmployeeProposalDaysOffDTO)
                 .toList();
     }

@@ -38,7 +38,10 @@ public interface EmployeeProposalDaysOffService {
             @NotNull Long employeeProposalDaysOffId
     );
 
-    List<ResponseEmployeeProposalDaysOffDTO> getAll();
+    List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(@NotNull Long storeId,
+                                                           @NotNull Long employeeId,
+                                                           @NotNull Integer year,
+                                                           @NotNull Integer month);
 
     boolean exists(@NotNull Long employeeProposalDaysOffId);
 }

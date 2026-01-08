@@ -11,11 +11,14 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmplo
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsSpecification.*;
 
 @Service
 @RequiredArgsConstructor
@@ -125,35 +128,18 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        if (startDate == null && endDate == null && employeeId != null){
-            return repository.findByStoreIdAndEmployeeId(storeId,employeeId).stream()
-                    .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                    .toList();
-        }
-        else if (startDate != null && endDate == null && employeeId != null){
-            return repository.findByStoreIdAndEmployeeIdAndDateBetween(storeId,startDate,startDate,employeeId).stream()
-                    .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                    .toList();
-        }
-        else if (startDate != null && endDate != null && employeeId !=null){
-            return repository.findByStoreIdAndEmployeeIdAndDateBetween(storeId,startDate,endDate,employeeId).stream()
-                    .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                    .toList();
-        }
-        else if (startDate != null && endDate == null && employeeId == null){
-            return repository.findByStoreIdAndDateBetween(storeId,startDate,startDate).stream()
-                    .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                    .toList();
-        }
-        else if (startDate != null && endDate != null && employeeId == null){
-            return repository.findByStoreIdAndDateBetween(storeId,startDate,endDate).stream()
-                    .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                    .toList();
-        }
-        else {
-            throw new IllegalArgumentException("Must provide start day when providing end day");
+        if (startDate == null && endDate != null){
+            throw new IllegalArgumentException("Start date is required when end date is provided");
         }
 
-        //replace if else with multiple auto Specification query
+        Specification<EmployeeProposalShifts> specification = Specification.allOf(
+                hasStoreId(storeId),
+                hasEmployeeId(employeeId),
+                isBetweenDates(startDate,endDate)
+        );
+
+        return repository.findAll(specification).stream()
+                .map(mapper::toResponseEmployeeProposalShiftsDTO)
+                .toList();
     }
 }
