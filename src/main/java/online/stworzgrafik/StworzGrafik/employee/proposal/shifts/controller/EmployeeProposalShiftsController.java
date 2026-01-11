@@ -34,17 +34,18 @@ public class EmployeeProposalShiftsController {
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/proposalShifts")
     public ResponseEntity<List<ResponseEmployeeProposalShiftsDTO>> getByCriteria(@PathVariable Long storeId,
+                                                                                 @RequestParam(required = false) Long employeeId,
                                                                                  @RequestParam(required = false) LocalDate startDate,
-                                                                                 @RequestParam(required = false) LocalDate endDate,
-                                                                                 @RequestParam(required = false) Long employeeId){
-        return ResponseEntity.ok(service.getByCriteria(storeId, startDate, endDate, employeeId));
+                                                                                 @RequestParam(required = false) LocalDate endDate
+                                                                                ){
+        return ResponseEntity.ok(service.getByCriteria(storeId, employeeId, startDate, endDate));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @PutMapping("/stores/{storeId}/employees/{employeeId}/proposalShifts")
     public ResponseEntity<ResponseEmployeeProposalShiftsDTO> createProposalShift(@PathVariable Long storeId,
                                                                                  @PathVariable Long employeeId,
-                                                                                 CreateEmployeeProposalShiftsDTO dto){
+                                                                                 @RequestBody CreateEmployeeProposalShiftsDTO dto){
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createEmployeeProposalShift(storeId,employeeId,dto));
     }
 

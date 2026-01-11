@@ -39,7 +39,7 @@ public interface EmployeeProposalShiftsService {
     boolean exists(@NotNull Long employeeProposalShiftId);
 
     List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@Nullable Long storeId,
+                                                          @Nullable Long employeeId,
                                                           @Nullable  LocalDate startDate,
-                                                          @Nullable  LocalDate endDate,
-                                                          @Nullable Long employeeId);
+                                                          @Nullable  LocalDate endDate);
 }

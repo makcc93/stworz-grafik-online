@@ -123,7 +123,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
     }
 
     @Override
-    public List<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, LocalDate startDate, LocalDate endDate, Long employeeId) {
+    public List<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
