@@ -137,7 +137,7 @@ class EmployeeProposalDaysOffControllerTest {
     }
 
     @Test
-    void getProposalDaysOff_workingTest() throws Exception{
+    void getProposalDaysOffById_workingTest() throws Exception{
         //given
         Long storeId = store.getId();
         Long employeeId = employee.getId();
@@ -175,37 +175,221 @@ class EmployeeProposalDaysOffControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "ADMIN")
-    void getAll_workingTest() throws Exception{
+    void getByCriteria_allRecordsInSingleStore() throws Exception{
         //given
         Long storeId = store.getId();
         Long employeeId = employee.getId();
-        Integer year = 2022;
-        Integer month = 1;
-        int[] monthlyDaysOff = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+        int months = 24;
 
-        CreateEmployeeProposalDaysOffDTO createDto =
-                new TestCreateEmployeeProposalDaysOffDTO()
-                        .withYear(year)
-                        .withMonth(month)
-                        .withMonthlyDaysOff(monthlyDaysOff)
-                        .build();
+        for (int i = 1; i <= 12; i++) {
+            Integer year = 2025;
+            int[] monthlyDaysOff = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-        service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(year)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+        }
+
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        employeeService.save(employee);
+        Long secondEmployeeId = employee.getId();
+
+        for (int i = 1; i <= 12; i++) {
+            Integer year = 2026;
+            int[] monthlyDaysOff = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(year)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, secondEmployeeId, createDto);
+        }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/proposalsDaysOff")
-                        .contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
 
         //then
-        List<ResponseEmployeeProposalDaysOffDTO> dtos =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {});
+        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
+        });
 
-        assertFalse(dtos.isEmpty());
-        assertTrue(dtos.stream().anyMatch(dto -> dto.employeeId().equals(employeeId) && dto.year().equals(year) && dto.month().equals(month)));
+        assertEquals(months, responseEmployeeProposalDaysOffDTOS.size());
+    }
+
+    @Test
+    void getByCriteria_onlySingleEmployeeData() throws Exception{
+        //given
+        Long storeId = store.getId();
+        Long employeeId = employee.getId();
+        int months = 12;
+
+        for (int i = 1; i <= months; i++) {
+            Integer year = 2025;
+            int[] monthlyDaysOff = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(year)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+        }
+
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        employeeService.save(employee);
+        Long secondEmployeeId = employee.getId();
+
+        for (int i = 1; i <= months; i++) {
+            Integer year = 2026;
+            int[] monthlyDaysOff = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(year)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, secondEmployeeId, createDto);
+        }
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + secondEmployeeId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //then
+        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
+                });
+
+        //then
+        assertEquals(months,responseEmployeeProposalDaysOffDTOS.size());
+        for (int i = 0; i < months; i++) {
+            assertEquals(secondEmployeeId, responseEmployeeProposalDaysOffDTOS.get(i).employeeId());
+            assertNotEquals(employeeId,responseEmployeeProposalDaysOffDTOS.get(i).employeeId());
+        }
+    }
+
+    @Test
+    void getByCriteria_onlyOneYearWorkingTest() throws Exception{
+        //given
+        Long storeId = store.getId();
+        Long employeeId = employee.getId();
+        int months = 12;
+        Integer randomYear = 2000;
+        Integer checkedYear = 2026;
+
+        for (int i = 1; i <= months; i++) {
+            int[] monthlyDaysOff = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(randomYear)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+        }
+
+        for (int i = 1; i <= months; i++) {
+            int[] monthlyDaysOff = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(checkedYear)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(monthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+        }
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get(
+                "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + checkedYear))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //then
+        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
+                });
+
+        assertEquals(months,responseEmployeeProposalDaysOffDTOS.size());
+        for (int i = 0; i < months; i++) {
+            assertEquals(checkedYear, responseEmployeeProposalDaysOffDTOS.get(i).year());
+            assertNotEquals(randomYear,responseEmployeeProposalDaysOffDTOS.get(i).year());
+        }
+    }
+
+    @Test
+    void getByCriteria_onlySingleMonthWorkingTest() throws Exception{
+        //given
+        Long storeId = store.getId();
+        Long employeeId = employee.getId();
+        int year = 2020;
+        int[] normalMonthlyDaysOff = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] juneMonthlyDaysOff = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+
+        int months = 12;
+        int june = 6;
+
+        for (int i = 1; i <= months; i++) {
+
+            if (i == june){
+                CreateEmployeeProposalDaysOffDTO createDto =
+                        new TestCreateEmployeeProposalDaysOffDTO()
+                                .withYear(year)
+                                .withMonth(i)
+                                .withMonthlyDaysOff(juneMonthlyDaysOff)
+                                .build();
+
+                service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+                continue;
+            }
+
+            CreateEmployeeProposalDaysOffDTO createDto =
+                    new TestCreateEmployeeProposalDaysOffDTO()
+                            .withYear(year)
+                            .withMonth(i)
+                            .withMonthlyDaysOff(normalMonthlyDaysOff)
+                            .build();
+
+            service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
+        }
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(get(
+                        "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + year + "&month=" + june))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //then
+        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
+                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
+                });
+
+        assertEquals(1,responseEmployeeProposalDaysOffDTOS.size());
+        assertArrayEquals(juneMonthlyDaysOff, responseEmployeeProposalDaysOffDTOS.getFirst().monthlyDaysOff());
+        assertEquals(june, responseEmployeeProposalDaysOffDTOS.getFirst().month());
     }
 
     @Test
