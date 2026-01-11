@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.employee.proposal.daysOff;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
@@ -38,10 +39,10 @@ public interface EmployeeProposalDaysOffService {
             @NotNull Long employeeProposalDaysOffId
     );
 
-    List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(@NotNull Long storeId,
-                                                           @NotNull Long employeeId,
-                                                           @NotNull Integer year,
-                                                           @NotNull Integer month);
+    List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(@Nullable Long storeId,
+                                                           @Nullable Long employeeId,
+                                                           @Nullable Integer year,
+                                                           @Nullable Integer month);
 
     boolean exists(@NotNull Long employeeProposalDaysOffId);
 }

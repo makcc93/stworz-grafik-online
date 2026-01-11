@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.employee.proposal.shifts;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
@@ -37,8 +38,8 @@ public interface EmployeeProposalShiftsService {
 
     boolean exists(@NotNull Long employeeProposalShiftId);
 
-    List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@NotNull Long storeId,
-                                                          @NotNull LocalDate startDate,
-                                                          @NotNull LocalDate endDate,
-                                                          @NotNull Long employeeId);
+    List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@Nullable Long storeId,
+                                                          @Nullable  LocalDate startDate,
+                                                          @Nullable  LocalDate endDate,
+                                                          @Nullable Long employeeId);
 }
