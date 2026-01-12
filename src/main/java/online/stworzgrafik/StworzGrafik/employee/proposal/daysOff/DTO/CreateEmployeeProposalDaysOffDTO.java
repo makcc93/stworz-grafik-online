@@ -21,5 +21,4 @@ public record CreateEmployeeProposalDaysOffDTO(
         @NotNull
         @Size(min=31, max = 31, message = "Employee monthly proposal days off array must have exactly 31 elements")
         int[] monthlyDaysOff
-        ) {
-}
+        ) {}
