@@ -5,12 +5,14 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -24,6 +26,7 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     private final StoreMapper storeMapper;
     private final BranchEntityService branchEntityService;
     private final NameValidatorService nameValidatorService;
+    private final UserAuthorizationService userAuthorizationService;
 
     @Override
     public List<ResponseStoreDTO> findAll() {
@@ -36,9 +39,13 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public ResponseStoreDTO findById(Long id) {
-        Store store = storeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + id));
+    public ResponseStoreDTO findById(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
 
         return storeMapper.toResponseStoreDto(store);
     }
@@ -64,9 +71,13 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public ResponseStoreDTO update(Long id, UpdateStoreDTO updateStoreDTO) {
-        Store store = storeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + id));
+    public ResponseStoreDTO update(Long storeId, UpdateStoreDTO updateStoreDTO) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
 
         if (updateStoreDTO.name() != null){
             String validatedName = nameValidatorService.validate(updateStoreDTO.name(), ObjectType.STORE);
@@ -83,8 +94,8 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public boolean existsById(Long id){
-        return storeRepository.existsById(id);
+    public boolean existsById(Long storeId){
+        return storeRepository.existsById(storeId);
     }
 
     @Override
@@ -93,12 +104,16 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public void delete(Long id) {
-        if (!storeRepository.existsById(id)){
-            throw new EntityNotFoundException("Store with id " + id +" does not exist");
+    public void delete(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        storeRepository.deleteById(id);
+        if (!storeRepository.existsById(storeId)){
+            throw new EntityNotFoundException("Store with id " + storeId +" does not exist");
+        }
+
+        storeRepository.deleteById(storeId);
     }
 
     @Override
@@ -114,9 +129,14 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public Store getEntityById(Long id) {
-        return storeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + id));
+    public Store getEntityById(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+
+        return storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
     }
 
     private void ifStoreAlreadyExist(CreateStoreDTO createStoreDTO) {

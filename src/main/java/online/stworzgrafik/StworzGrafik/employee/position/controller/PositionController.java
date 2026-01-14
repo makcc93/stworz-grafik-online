@@ -1,25 +1,24 @@
 package online.stworzgrafik.StworzGrafik.employee.position.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/positions")
+@RequiredArgsConstructor
+@PreAuthorize("hasAuthority('ADMIN')")
 class PositionController {
-
     private final PositionService service;
-
-    public PositionController(PositionService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public ResponseEntity<List<ResponsePositionDTO>> findAll(){

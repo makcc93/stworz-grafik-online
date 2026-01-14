@@ -13,12 +13,15 @@ import online.stworzgrafik.StworzGrafik.branch.TestUpdateBranchDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -29,12 +32,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc(addFilters = false)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@WithMockUser(authorities = "ADMIN")
 class BranchControllerTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserAuthorizationService userAuthorizationService;
 
     @Autowired
     private ObjectMapper objectMapper;

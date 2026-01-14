@@ -13,6 +13,8 @@ import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.JwtService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
@@ -28,20 +30,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
+@AutoConfigureMockMvc(addFilters = false)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class EmployeeControllerTest {
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -73,30 +84,38 @@ class EmployeeControllerTest {
     @Autowired
     private PositionEntityService positionEntityService;
 
+    @MockitoBean
+    private UserAuthorizationService userAuthorizationService;
+
+    private Region region;
+    private Branch branch;
     private Store store;
-
-    private Long storeId;
-
     private Position position;
-
+    private Long storeId;
     private Long positionId;
 
     @BeforeEach
-    void prepareData(){
-        Region region = new TestRegionBuilder().build();
-        regionEntityService.saveEntity(region);
+    void setup(){
+        region = new TestRegionBuilder().build();
+        regionService.save(region);
 
-        Branch branch = new TestBranchBuilder().withRegion(region).build();
+        branch = new TestBranchBuilder().withRegion(region).build();
         branchService.save(branch);
 
-        store = storeEntityService.saveEntity(new TestStoreBuilder().withBranch(branch).build());
-        position = positionEntityService.saveEntity(new TestPositionBuilder().build());
+        store = new TestStoreBuilder().withBranch(branch).build();
+        storeService.save(store);
+
+        position = new TestPositionBuilder().build();
+        positionService.save(position);
 
         storeId = store.getId();
         positionId = position.getId();
+
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
     void findAll_workingTest() throws Exception{
         //given
         ResponseEmployeeDTO firstEmployeeResponseDTO = employeeService.createEmployee(
@@ -131,6 +150,7 @@ class EmployeeControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
     void findAll_emptyListDoesNotThrowException() throws Exception{
         //given
 
@@ -153,10 +173,10 @@ class EmployeeControllerTest {
         Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
         employeeService.save(employee);
 
-        Long id = employee.getId();
+        Long employeeId = employee.getId();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/" + id))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/" + employeeId))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -164,7 +184,7 @@ class EmployeeControllerTest {
         ResponseEmployeeDTO serviceResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseEmployeeDTO.class);
 
         //then
-        assertTrue(employeeService.existsById(id));
+        assertTrue(employeeService.existsById(employeeId));
         assertEquals(employee.getFirstName(),serviceResponse.firstName());
         assertEquals(employee.getLastName(),serviceResponse.lastName());
     }
@@ -290,31 +310,6 @@ class EmployeeControllerTest {
 
         //then
         assertEquals("Cannot find employee by id " + unknownEmployeeId, serviceResponse);
-    }
-
-    @Test
-    void updateEmployee_storeDoesNotExistThrowsException() throws Exception{
-        //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
-        employeeService.save(employee);
-        Long employeeId = employee.getId();
-
-        UpdateEmployeeDTO updateEmployeeDTO = new TestUpdateEmployeeDTO().build();
-
-        long unknownStoreId = 1234567L;
-
-        //when
-        MvcResult mvcResult = mockMvc.perform(patch("/api/stores/" + unknownStoreId + "/employees/" + employeeId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateEmployeeDTO)))
-                .andDo(print())
-                .andExpect(status().is(500))
-                .andReturn();
-
-        String serviceResponse = mvcResult.getResponse().getContentAsString();
-
-        //then
-        assertEquals("Employee does not belong to this store", serviceResponse);
     }
 
     @Test

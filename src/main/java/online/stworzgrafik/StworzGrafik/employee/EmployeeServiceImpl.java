@@ -9,6 +9,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
@@ -32,6 +33,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     private final StoreEntityService storeEntityService;
     private final PositionService positionService;
     private final PositionEntityService positionEntityService;
+    private final UserAuthorizationService userAuthorizationService;
 
     @Override
     public ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
@@ -103,9 +105,13 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     @Override
-    public ResponseEmployeeDTO findById(Long id) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
+    public ResponseEmployeeDTO findById(Long storeId, Long employeeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));
 
         return employeeMapper.toResponseEmployeeDTO(employee);
     }

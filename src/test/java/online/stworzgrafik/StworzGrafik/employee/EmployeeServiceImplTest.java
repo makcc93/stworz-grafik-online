@@ -10,6 +10,7 @@ import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.*;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
@@ -59,15 +60,21 @@ class EmployeeServiceImplTest {
     @Mock
     private PositionEntityService positionEntityService;
 
+    @Mock
+    private UserAuthorizationService userAuthorizationService;
+
     private Region region;
     private Branch branch;
     private Store store;
+    private Long storeId;
 
     @PrePersist
     void setup(){
         region = new TestRegionBuilder().build();
         branch = new TestBranchBuilder().withRegion(region).build();
         store = new TestStoreBuilder().withBranch(branch).build();
+
+        storeId = store.getId();
     }
 
     @Test
@@ -396,6 +403,8 @@ class EmployeeServiceImplTest {
     @Test
     void findById_workingTest(){
         //given
+        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
+
         Long id = 6988L;
         Employee employee = new TestEmployeeBuilder().build();
 
@@ -405,7 +414,7 @@ class EmployeeServiceImplTest {
         when(employeeMapper.toResponseEmployeeDTO(employee)).thenReturn(responseEmployeeDTO);
 
         //when
-        ResponseEmployeeDTO serviceResponse = employeeServiceImpl.findById(id);
+        ResponseEmployeeDTO serviceResponse = employeeServiceImpl.findById(storeId, id);
 
         //then
         assertEquals(responseEmployeeDTO.firstName(), serviceResponse.firstName());
@@ -425,13 +434,15 @@ class EmployeeServiceImplTest {
     @Test
     void findById_cannotFindEmployeeThrowsException(){
         //given
+        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
+
         Long randomId = 1234L;
 
         when(employeeRepository.findById(randomId)).thenReturn(Optional.empty());
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.findById(randomId));
+                assertThrows(EntityNotFoundException.class, () -> employeeServiceImpl.findById(storeId,randomId));
 
         //then
         assertEquals("Cannot find employee by id " + randomId, exception.getMessage());

@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.region.Region;
@@ -20,26 +21,33 @@ import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-@WithMockUser
 @Transactional
+@AutoConfigureMockMvc(addFilters = false)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@WithMockUser(authorities = "ADMIN")
 class StoreControllerTest {
 
     @Autowired
@@ -66,16 +74,21 @@ class StoreControllerTest {
     @Autowired
     private NameValidatorService nameValidatorService;
 
+    @MockitoBean
+    private UserAuthorizationService userAuthorizationService;
+
     private Region region;
     private Branch branch;
 
-    @PrePersist
+    @BeforeEach
     void setupRegion(){
         region = new TestRegionBuilder().build();
         regionService.save(region);
 
         branch = new TestBranchBuilder().withRegion(region).build();
         branchService.save(branch);
+
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }
 
     @Test

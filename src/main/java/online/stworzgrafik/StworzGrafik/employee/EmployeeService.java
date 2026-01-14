@@ -16,7 +16,7 @@ public interface EmployeeService {
     public void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
     public ResponseEmployeeDTO save(@NotNull Employee employee);
     public List<ResponseEmployeeDTO> findAll();
-    public ResponseEmployeeDTO findById(@NotNull Long id);
+    public ResponseEmployeeDTO findById(@NotNull Long storeId, @NotNull Long employeeId);
     public boolean existsById(@NotNull Long id);
     public boolean existsBySap(@NotNull Long sap);
     public boolean existsByLastName(@NotNull String lastName);

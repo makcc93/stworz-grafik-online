@@ -7,7 +7,6 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.controller.DraftSearchCriteria;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;

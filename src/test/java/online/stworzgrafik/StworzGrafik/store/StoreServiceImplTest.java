@@ -10,6 +10,7 @@ import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -53,6 +54,9 @@ class StoreServiceImplTest {
     @Mock
     private NameValidatorService nameValidatorService;
 
+    @Mock
+    private UserAuthorizationService userAuthorizationService;
+
     private Region region = new TestRegionBuilder().build();
     private Branch branch = new TestBranchBuilder().withRegion(region).build();
 
@@ -91,6 +95,7 @@ class StoreServiceImplTest {
         Long id = 1L;
         Store store = new TestStoreBuilder().build();
 
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
 
         when(repository.findById(id)).thenReturn(Optional.of(store));
@@ -246,6 +251,8 @@ class StoreServiceImplTest {
     @Test
     void delete_workingTest(){
         //given
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
+
         Long id = 1L;
         when(repository.existsById(id)).thenReturn(true);
 
@@ -259,6 +266,8 @@ class StoreServiceImplTest {
     @Test
     void delete_entityDoesNotExistById(){
         //given
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
+
         Long id = 200L;
 
         when(repository.existsById(id)).thenReturn(false);
@@ -311,6 +320,8 @@ class StoreServiceImplTest {
     @Test
     void update_workingTest(){
         //given
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
+
         Long id = 1L;
         Store store = new TestStoreBuilder().build();
         when(repository.findById(id)).thenReturn(Optional.of(store));
@@ -339,6 +350,8 @@ class StoreServiceImplTest {
     @Test
     void update_entityNotFoundByIdThrowsException(){
         //given
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
+
         Long id = 100L;
         UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 

@@ -13,11 +13,11 @@ import java.util.List;
 @Validated
 public interface StoreService {
     List<ResponseStoreDTO> findAll();
-    ResponseStoreDTO findById(@NotNull Long id);
+    ResponseStoreDTO findById(@NotNull Long storeId);
     ResponseStoreDTO createStore(@NotNull @Valid CreateStoreDTO createStoreDTO);
-    ResponseStoreDTO update(@NotNull Long id,@NotNull @Valid UpdateStoreDTO updateStoreDTO);
-    boolean existsById(@NotNull Long id);
+    ResponseStoreDTO update(@NotNull Long storeId,@NotNull @Valid UpdateStoreDTO updateStoreDTO);
+    boolean existsById(@NotNull Long storeId);
     boolean existsByNameAndCode(@NotNull @Valid StoreNameAndCodeDTO storeNameAndCodeDTO);
-    void delete(@NotNull Long id);
+    void delete(@NotNull Long storeId);
     ResponseStoreDTO save(@NotNull @Valid Store store);
 }

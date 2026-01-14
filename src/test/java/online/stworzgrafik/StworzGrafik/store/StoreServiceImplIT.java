@@ -9,6 +9,7 @@ import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
@@ -17,12 +18,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
@@ -49,6 +53,9 @@ class StoreServiceImplIT {
     @Autowired
     private RegionService regionService;
 
+    @MockitoBean
+    private UserAuthorizationService userAuthorizationService;
+
     private Region region;
     private Branch branch;
 
@@ -59,6 +66,8 @@ class StoreServiceImplIT {
 
         branch = new TestBranchBuilder().withRegion(region).build();
         branchService.save(branch);
+
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }
 
     @Test
