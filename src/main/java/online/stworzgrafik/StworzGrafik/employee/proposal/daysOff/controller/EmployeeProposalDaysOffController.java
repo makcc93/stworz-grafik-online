@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.controller;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.EmployeeProposalDaysOffSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
@@ -33,10 +34,8 @@ public class EmployeeProposalDaysOffController {
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/proposalDaysOff")
     public ResponseEntity<List<ResponseEmployeeProposalDaysOffDTO>> getByCriteria(@PathVariable Long storeId,
-                                                                                  @RequestParam(required = false) Long employeeId,
-                                                                                  @RequestParam(required = false) Integer year,
-                                                                                  @RequestParam(required = false) Integer month){
-        return ResponseEntity.ok(service.getByCriteria(storeId,employeeId,year,month));
+                                                                                  EmployeeProposalDaysOffSpecificationDTO dto){
+        return ResponseEntity.ok(service.getByCriteria(storeId,dto));
     };
 
 

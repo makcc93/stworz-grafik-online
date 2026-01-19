@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.employee.vacation.controller;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationService;
@@ -33,10 +34,8 @@ public class EmployeeVacationController {
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/vacations")
     public ResponseEntity<List<ResponseEmployeeVacationDTO>> getByCriteria(@PathVariable Long storeId,
-                                                                          @RequestParam(required = false) Long employeeId,
-                                                                          @RequestParam(required = false) Integer year,
-                                                                          @RequestParam(required = false) Integer month){
-        return ResponseEntity.ok(service.getByCriteria(storeId,employeeId,year,month));
+                                                                          EmployeeVacationSpecificationDTO dto){
+        return ResponseEntity.ok(service.getByCriteria(storeId,dto));
     };
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

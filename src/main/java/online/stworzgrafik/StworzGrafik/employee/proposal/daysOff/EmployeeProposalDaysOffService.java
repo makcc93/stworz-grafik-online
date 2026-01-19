@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.EmployeeProposalDaysOffSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
 import org.springframework.validation.annotation.Validated;
@@ -39,10 +40,7 @@ public interface EmployeeProposalDaysOffService {
             @NotNull Long employeeProposalDaysOffId
     );
 
-    List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(@Nullable Long storeId,
-                                                           @Nullable Long employeeId,
-                                                           @Nullable Integer year,
-                                                           @Nullable Integer month);
+    List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(@NotNull Long storeId, @Nullable EmployeeProposalDaysOffSpecificationDTO dto);
 
     boolean exists(@NotNull Long employeeProposalDaysOffId);
 }

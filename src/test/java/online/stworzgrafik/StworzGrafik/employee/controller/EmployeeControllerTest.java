@@ -136,7 +136,7 @@ class EmployeeControllerTest {
         List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -155,7 +155,7 @@ class EmployeeControllerTest {
         //given
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();

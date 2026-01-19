@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.EmployeeProposalDaysOffSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -125,16 +126,16 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     }
 
     @Override
-    public List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(Long storeId, Long employeeId, Integer year, Integer month) {
+    public List<ResponseEmployeeProposalDaysOffDTO> getByCriteria(Long storeId, EmployeeProposalDaysOffSpecificationDTO dto) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
         Specification<EmployeeProposalDaysOff> specification = Specification.allOf(
                 hasStoreId(storeId),
-                hasEmployeeId(employeeId),
-                hasYear(year),
-                hasMonth(month)
+                hasEmployeeId(dto.employeeId()),
+                hasYear(dto.year()),
+                hasMonth(dto.month())
         );
 
         return repository.findAll(specification).stream()

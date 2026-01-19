@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.EmployeeProposalShiftsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import org.springframework.validation.annotation.Validated;
@@ -39,7 +40,5 @@ public interface EmployeeProposalShiftsService {
     boolean exists(@NotNull Long employeeProposalShiftId);
 
     List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@Nullable Long storeId,
-                                                          @Nullable Long employeeId,
-                                                          @Nullable  LocalDate startDate,
-                                                          @Nullable  LocalDate endDate);
+                                                          EmployeeProposalShiftsSpecificationDTO dto);
 }

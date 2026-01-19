@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.StoreSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +23,7 @@ class StoreController {
     private final StoreService storeService;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/stores")
+    @GetMapping("/stores/getAll")
     public ResponseEntity<List<ResponseStoreDTO>> getAllStores(){
         return ResponseEntity.ok(storeService.findAll());
     }
@@ -30,6 +32,11 @@ class StoreController {
     @GetMapping("/stores/{storeId}")
     public ResponseEntity<ResponseStoreDTO> getStoreById(@PathVariable @NotNull Long storeId){
         return ResponseEntity.ok(storeService.findById(storeId));
+    }
+
+    @GetMapping("/stores")
+    public ResponseEntity<List<ResponseStoreDTO>> getByCriteria(StoreSpecificationDTO dto){
+        return ResponseEntity.ok(storeService.findByCriteria(dto));
     }
 
     @PostMapping("/stores")

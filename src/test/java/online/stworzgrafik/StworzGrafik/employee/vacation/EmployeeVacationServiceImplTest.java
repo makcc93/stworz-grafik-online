@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -695,8 +696,10 @@ class EmployeeVacationServiceImplTest {
         when(mapper.toResponseEmployeeVacationDTO(vacation1)).thenReturn(response1);
         when(mapper.toResponseEmployeeVacationDTO(vacation2)).thenReturn(response2);
 
+        EmployeeVacationSpecificationDTO dto = new TestEmployeeVacationSpecificationDTO().withEmployeeId(employeeId).withYear(year).withMonth(month).build();
+
         //when
-        List<ResponseEmployeeVacationDTO> result = service.getByCriteria(storeId, employeeId, year, month);
+        List<ResponseEmployeeVacationDTO> result = service.getByCriteria(storeId, dto);
 
         //then
         assertEquals(2, result.size());
@@ -713,9 +716,11 @@ class EmployeeVacationServiceImplTest {
         //given
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
 
+        EmployeeVacationSpecificationDTO dto = new TestEmployeeVacationSpecificationDTO().withEmployeeId(employeeId).withYear(2025).withMonth(12).build();
+
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> service.getByCriteria(storeId, employeeId, 2025, 12));
+                assertThrows(AccessDeniedException.class, () -> service.getByCriteria(storeId, dto));
 
         //then
         assertEquals("Access denied for store with id " + storeId, exception.getMessage());

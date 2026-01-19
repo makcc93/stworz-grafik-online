@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.shifts.controller;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.EmployeeProposalShiftsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsService;
@@ -34,11 +35,9 @@ public class EmployeeProposalShiftsController {
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/proposalShifts")
     public ResponseEntity<List<ResponseEmployeeProposalShiftsDTO>> getByCriteria(@PathVariable Long storeId,
-                                                                                 @RequestParam(required = false) Long employeeId,
-                                                                                 @RequestParam(required = false) LocalDate startDate,
-                                                                                 @RequestParam(required = false) LocalDate endDate
+                                                                                 EmployeeProposalShiftsSpecificationDTO dto
                                                                                 ){
-        return ResponseEntity.ok(service.getByCriteria(storeId, employeeId, startDate, endDate));
+        return ResponseEntity.ok(service.getByCriteria(storeId, dto));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

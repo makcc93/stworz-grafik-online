@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -126,16 +127,16 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     }
 
     @Override
-    public List<ResponseEmployeeVacationDTO> getByCriteria(Long storeId, Long employeeId, Integer year, Integer month) {
+    public List<ResponseEmployeeVacationDTO> getByCriteria(Long storeId, EmployeeVacationSpecificationDTO dto) {
         if (!userAuthorizationService.hasAccessToStore(storeId)) {
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
         Specification<EmployeeVacation> specification = Specification.allOf(
                 hasStoreId(storeId),
-                hasEmployeeId(employeeId),
-                hasYear(year),
-                hasMonth(month)
+                hasEmployeeId(dto.employeeId()),
+                hasYear(dto.year()),
+                hasMonth(dto.month())
         );
 
         return repository.findAll(specification).stream()

@@ -1,20 +1,20 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.*;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -48,6 +48,24 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
 
         return storeMapper.toResponseStoreDto(store);
+    }
+
+    @Override
+    public List<ResponseStoreDTO> findByCriteria(@Nullable StoreSpecificationDTO dto) {
+        if (dto == null) return Collections.emptyList();
+
+        Specification<Store> specification = Specification.allOf(
+                StoreSpecification.hasStoreCode(dto.storeCode()),
+                StoreSpecification.hasNameLike(dto.name()),
+                StoreSpecification.hasLocationLike(dto.location()),
+                StoreSpecification.hasBranchId(dto.branchId()),
+                StoreSpecification.hasStoreManagerId(dto.storeManagerId()),
+                StoreSpecification.isEnable(dto.enable())
+        );
+
+        return storeRepository.findAll(specification).stream()
+                .map(storeMapper::toResponseStoreDto)
+                .toList();
     }
 
     @Override

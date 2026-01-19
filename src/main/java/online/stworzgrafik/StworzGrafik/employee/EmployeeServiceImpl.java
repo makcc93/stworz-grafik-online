@@ -1,9 +1,11 @@
 package online.stworzgrafik.StworzGrafik.employee;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.EmployeeSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
@@ -15,11 +17,14 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+
+import static online.stworzgrafik.StworzGrafik.employee.EmployeeSpecification.*;
 
 @Service
 @Validated
@@ -114,6 +119,35 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));
 
         return employeeMapper.toResponseEmployeeDTO(employee);
+    }
+
+    @Override
+    public List<ResponseEmployeeDTO> findByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Specification<Employee> specification = hasStoreId(storeId);
+
+       if (dto != null) {
+           specification =
+                   specification.and(hasStoreId(storeId))
+                           .and(hasId(dto.id()))
+                           .and(hasFirstNameLike(dto.firstName()))
+                           .and(hasLastNameLike(dto.lastName()))
+                           .and(hasSap(dto.sap()))
+                           .and(hasPositionId(dto.positionId()))
+                           .and(isEnable(dto.enable()))
+                           .and(canOperateCheckout(dto.canOperateCheckout()))
+                           .and(canOperateCredit(dto.canOperateCredit()))
+                           .and(canOpenCloseStore(dto.canOpenCloseStore()))
+                           .and(isSeller(dto.seller()))
+                           .and(isManager(dto.manager()));
+       }
+
+        return employeeRepository.findAll(specification).stream()
+                .map(employeeMapper::toResponseEmployeeDTO)
+                .toList();
     }
 
     @Override

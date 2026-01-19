@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.EmployeeProposalShiftsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -123,19 +124,19 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
     }
 
     @Override
-    public List<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate) {
+    public List<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        if (startDate == null && endDate != null){
+        if (dto.startDate() == null && dto.endDate() != null){
             throw new IllegalArgumentException("Start date is required when end date is provided");
         }
 
         Specification<EmployeeProposalShifts> specification = Specification.allOf(
                 hasStoreId(storeId),
-                hasEmployeeId(employeeId),
-                isBetweenDates(startDate,endDate)
+                hasEmployeeId(dto.employeeId()),
+                isBetweenDates(dto.startDate(),dto.endDate())
         );
 
         return repository.findAll(specification).stream()

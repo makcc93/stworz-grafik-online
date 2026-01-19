@@ -33,8 +33,8 @@ public class DemandDraftController {
     @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/drafts")
     public ResponseEntity<List<ResponseDemandDraftDTO>> findByDate(@PathVariable @NotNull Long storeId,
-                                                                       @RequestParam(required = false)LocalDate startDate,
-                                                                       @RequestParam(required = false) LocalDate endDate){
+                                                                   @RequestParam(required = false)LocalDate startDate,
+                                                                   @RequestParam(required = false) LocalDate endDate){
         return ResponseEntity.ok(demandDraftService.findFilteredDrafts(storeId,startDate,endDate));
     }
 

@@ -103,7 +103,7 @@ class StoreControllerTest {
         storeService.save(store3);
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -122,7 +122,7 @@ class StoreControllerTest {
         //given
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/stores/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();

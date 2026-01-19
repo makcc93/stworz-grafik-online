@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.EmployeeSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
@@ -21,7 +22,7 @@ class EmployeeController {
     private final EmployeeService employeeService;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/stores/{storeId}/employees")
+    @GetMapping("/stores/{storeId}/employees/getAll")
     public ResponseEntity<List<ResponseEmployeeDTO>> findAll(){
         return ResponseEntity.ok(employeeService.findAll());
     }
@@ -31,6 +32,13 @@ class EmployeeController {
     public ResponseEntity<ResponseEmployeeDTO> findById(@NotNull @PathVariable Long storeId,
                                                         @NotNull @PathVariable Long employeeId){
         return ResponseEntity.ok(employeeService.findById(storeId, employeeId));
+    }
+
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/employees")
+    public ResponseEntity<List<ResponseEmployeeDTO>> findById(@NotNull @PathVariable Long storeId,
+                                                        EmployeeSpecificationDTO dto){
+        return ResponseEntity.ok(employeeService.findByCriteria(storeId, dto));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import org.springframework.validation.annotation.Validated;
@@ -41,9 +42,7 @@ public interface EmployeeVacationService {
     );
 
     List<ResponseEmployeeVacationDTO> getByCriteria(@Nullable Long storeId,
-                                                   @Nullable Long employeeId,
-                                                   @Nullable Integer year,
-                                                   @Nullable Integer month);
+                                                   EmployeeVacationSpecificationDTO dto);
 
     boolean exists(@NotNull Long employeeVacationId);
 }

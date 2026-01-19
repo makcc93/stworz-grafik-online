@@ -1,11 +1,9 @@
 package online.stworzgrafik.StworzGrafik.store;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.*;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
@@ -14,6 +12,7 @@ import java.util.List;
 public interface StoreService {
     List<ResponseStoreDTO> findAll();
     ResponseStoreDTO findById(@NotNull Long storeId);
+    List<ResponseStoreDTO> findByCriteria(@Nullable StoreSpecificationDTO dto);
     ResponseStoreDTO createStore(@NotNull @Valid CreateStoreDTO createStoreDTO);
     ResponseStoreDTO update(@NotNull Long storeId,@NotNull @Valid UpdateStoreDTO updateStoreDTO);
     boolean existsById(@NotNull Long storeId);
