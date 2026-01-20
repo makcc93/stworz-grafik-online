@@ -1,17 +1,22 @@
 package online.stworzgrafik.StworzGrafik.region;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.DTO.RegionSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -67,6 +72,21 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find region by id " + id));
 
         return regionMapper.toResponseRegionDTO(region);
+    }
+
+    @Override
+    public List<ResponseRegionDTO> findByCriteria(@Nullable RegionSpecificationDTO dto) {
+        if (dto == null) return Collections.emptyList();
+
+        Specification<Region> specification = Specification.allOf(
+                RegionSpecification.hasId(dto.id()),
+                RegionSpecification.hasNameLike(dto.name()),
+                RegionSpecification.isEnable(dto.enable())
+        );
+
+        return regionRepository.findAll(specification).stream()
+                .map(regionMapper::toResponseRegionDTO)
+                .toList();
     }
 
     @Override

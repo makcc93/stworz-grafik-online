@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.region.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.DTO.RegionSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
@@ -20,7 +21,7 @@ class RegionController {
     private final RegionService regionService;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/regions")
+    @GetMapping("/regions/getAll")
     public ResponseEntity<List<ResponseRegionDTO>> getAll(){
         return ResponseEntity.ok(regionService.findAll());
     }
@@ -29,6 +30,12 @@ class RegionController {
     @GetMapping("/regions/{id}")
     public ResponseEntity<ResponseRegionDTO> getById(@PathVariable Long id){
         return ResponseEntity.ok(regionService.findById(id));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/regions")
+    public ResponseEntity<List<ResponseRegionDTO>> getByCriteria(RegionSpecificationDTO dto){
+        return ResponseEntity.ok(regionService.findByCriteria(dto));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

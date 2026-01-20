@@ -1,8 +1,10 @@
 package online.stworzgrafik.StworzGrafik.region;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
+import online.stworzgrafik.StworzGrafik.region.DTO.RegionSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import org.springframework.validation.annotation.Validated;
@@ -11,13 +13,14 @@ import java.util.List;
 
 @Validated
 public interface RegionService {
-    public ResponseRegionDTO createRegion(@NotNull @Valid CreateRegionDTO createRegionDTO);
-    public ResponseRegionDTO updateRegion(@NotNull Long id, @NotNull @Valid UpdateRegionDTO updateRegionDTO);
-    public List<ResponseRegionDTO> findAll();
-    public ResponseRegionDTO findById(@NotNull Long id);
-    public ResponseRegionDTO save(@NotNull Region region);
-    public boolean exists(@NotNull Long id);
-    public boolean exists(@NotNull String name);
-    public void delete(@NotNull Long id);
+     ResponseRegionDTO createRegion(@NotNull @Valid CreateRegionDTO createRegionDTO);
+     ResponseRegionDTO updateRegion(@NotNull Long id, @NotNull @Valid UpdateRegionDTO updateRegionDTO);
+     List<ResponseRegionDTO> findAll();
+     ResponseRegionDTO findById(@NotNull Long id);
+     List<ResponseRegionDTO> findByCriteria(@Nullable RegionSpecificationDTO dto);
+     ResponseRegionDTO save(@NotNull Region region);
+     boolean exists(@NotNull Long id);
+     boolean exists(@NotNull String name);
+     void delete(@NotNull Long id);
 
 }
