@@ -112,7 +112,11 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
     @Override
     public BigDecimal getDurationHours(ShiftHoursDTO shiftHoursDTO) {
-        return BigDecimal.valueOf(getLength(shiftHoursDTO));
+        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+
+        int length = shiftHoursDTO.endHour().getHour() - shiftHoursDTO.startHour().getHour();
+
+        return BigDecimal.valueOf(length);
     }
 
     @Override

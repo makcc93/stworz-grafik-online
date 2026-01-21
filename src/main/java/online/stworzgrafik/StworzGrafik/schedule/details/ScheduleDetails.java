@@ -8,6 +8,7 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,14 +30,7 @@ public class ScheduleDetails {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(name = "year_number")
-    private Integer year;
-
-    @Column(name = "month_number")
-    private Integer month;
-
-    @Column(name = "day_number")
-    private Integer day;
+    private LocalDate date;
 
     @ManyToOne
     @JoinColumn(name = "shift_id", nullable = false)

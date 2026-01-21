@@ -114,8 +114,6 @@ class RegionControllerTest {
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/regions?name=" + dto.name()))
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(dto)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
