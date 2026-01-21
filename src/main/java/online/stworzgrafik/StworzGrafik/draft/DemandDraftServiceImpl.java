@@ -11,6 +11,8 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -77,10 +79,9 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     }
 
     @Override
-    public List<ResponseDemandDraftDTO> findAll() {
-        return demandDraftRepository.findAll().stream()
-                .map(demandDraftMapper::toResponseDemandDraftDTO)
-                .toList();
+    public Page<ResponseDemandDraftDTO> findAll(Pageable pageable) {
+        return demandDraftRepository.findAll(pageable)
+                .map(demandDraftMapper::toResponseDemandDraftDTO);
     }
 
     @Override
@@ -100,7 +101,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     }
 
     @Override
-    public List<ResponseDemandDraftDTO> findFilteredDrafts(Long storeId, LocalDate startDate, LocalDate endDate) {
+    public Page<ResponseDemandDraftDTO> findFilteredDrafts(Long storeId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         if (startDate == null && endDate == null){
             LocalDate now = LocalDate.now();
             startDate = now.withDayOfMonth(1);
@@ -113,11 +114,9 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new IllegalArgumentException("Must provide start day when providing end day");
         }
 
-        List<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate);
+        Page<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate,pageable);
 
-        return drafts.stream()
-                .map(demandDraftMapper::toResponseDemandDraftDTO)
-                .toList();
+        return drafts.map(demandDraftMapper::toResponseDemandDraftDTO);
     }
 
     @Override

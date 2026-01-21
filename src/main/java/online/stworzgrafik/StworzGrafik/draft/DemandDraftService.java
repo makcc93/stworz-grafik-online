@@ -7,6 +7,8 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
@@ -17,9 +19,9 @@ public interface DemandDraftService {
     ResponseDemandDraftDTO createDemandDraft(@NotNull Long storeId, @NotNull @Valid CreateDemandDraftDTO dto);
     ResponseDemandDraftDTO updateDemandDraft(@NotNull Long storeId, @NotNull Long draftId, @NotNull @Valid UpdateDemandDraftDTO dto);
     void deleteDemandDraft(@NotNull Long storeId, @NotNull Long draftId);
-    List<ResponseDemandDraftDTO> findAll();
+    Page<ResponseDemandDraftDTO> findAll(Pageable pageable);
     ResponseDemandDraftDTO findById(@NotNull Long storeId, @NotNull Long draftId);
-    List<ResponseDemandDraftDTO> findFilteredDrafts(@NotNull Long storeId, @Nullable LocalDate startDate, @Nullable LocalDate endDate);
+    Page<ResponseDemandDraftDTO> findFilteredDrafts(@NotNull Long storeId, @Nullable LocalDate startDate, @Nullable LocalDate endDate,Pageable pageable);
     boolean exists(@NotNull Long draftId);
     boolean exists(@NotNull @Valid StoreAccurateDayDemandDraftDTO dto);
 }

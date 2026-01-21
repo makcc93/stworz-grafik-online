@@ -8,6 +8,10 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,16 +36,19 @@ public class DemandDraftController {
 
     @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/drafts")
-    public ResponseEntity<List<ResponseDemandDraftDTO>> findByDate(@PathVariable @NotNull Long storeId,
+    public ResponseEntity<Page<ResponseDemandDraftDTO>> findByDate(@PathVariable @NotNull Long storeId,
                                                                    @RequestParam(required = false)LocalDate startDate,
-                                                                   @RequestParam(required = false) LocalDate endDate){
-        return ResponseEntity.ok(demandDraftService.findFilteredDrafts(storeId,startDate,endDate));
+                                                                   @RequestParam(required = false) LocalDate endDate,
+                                                                   @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+                                                                       Pageable pageable){
+        return ResponseEntity.ok(demandDraftService.findFilteredDrafts(storeId,startDate,endDate,pageable));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/drafts")
-    public ResponseEntity<List<ResponseDemandDraftDTO>> findAll(){
-        return ResponseEntity.ok().body(demandDraftService.findAll());
+    public ResponseEntity<Page<ResponseDemandDraftDTO>> findAll(
+            @PageableDefault(size = 10,sort = "createdAt",direction = Sort.Direction.DESC) Pageable pageable){
+        return ResponseEntity.ok().body(demandDraftService.findAll(pageable));
     }
 
     @PreAuthorize("@userSecurityService.hasAccessToStore(#storeId)")
