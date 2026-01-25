@@ -12,6 +12,8 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmplo
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -124,7 +126,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
     }
 
     @Override
-    public List<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto) {
+    public Page<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto, Pageable pageable) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -139,8 +141,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
                 isBetweenDates(dto.startDate(),dto.endDate())
         );
 
-        return repository.findAll(specification).stream()
-                .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                .toList();
+        return repository.findAll(specification,pageable)
+                .map(mapper::toResponseEmployeeProposalShiftsDTO);
     }
 }

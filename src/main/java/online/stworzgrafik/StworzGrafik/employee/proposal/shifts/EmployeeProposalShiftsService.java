@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmplo
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.EmployeeProposalShiftsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
@@ -39,6 +41,7 @@ public interface EmployeeProposalShiftsService {
 
     boolean exists(@NotNull Long employeeProposalShiftId);
 
-    List<ResponseEmployeeProposalShiftsDTO> getByCriteria(@Nullable Long storeId,
-                                                          EmployeeProposalShiftsSpecificationDTO dto);
+    Page<ResponseEmployeeProposalShiftsDTO> getByCriteria(@NotNull Long storeId,
+                                                          @Nullable EmployeeProposalShiftsSpecificationDTO dto,
+                                                          Pageable pageable);
 }

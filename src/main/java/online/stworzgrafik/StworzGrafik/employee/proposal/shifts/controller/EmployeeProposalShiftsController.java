@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmp
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,10 +36,11 @@ public class EmployeeProposalShiftsController {
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/proposalShifts")
-    public ResponseEntity<List<ResponseEmployeeProposalShiftsDTO>> getByCriteria(@PathVariable Long storeId,
-                                                                                 EmployeeProposalShiftsSpecificationDTO dto
+    public ResponseEntity<Page<ResponseEmployeeProposalShiftsDTO>> getByCriteria(@PathVariable Long storeId,
+                                                                                 EmployeeProposalShiftsSpecificationDTO dto,
+                                                                                 Pageable pageable
                                                                                 ){
-        return ResponseEntity.ok(service.getByCriteria(storeId, dto));
+        return ResponseEntity.ok(service.getByCriteria(storeId, dto,pageable));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
