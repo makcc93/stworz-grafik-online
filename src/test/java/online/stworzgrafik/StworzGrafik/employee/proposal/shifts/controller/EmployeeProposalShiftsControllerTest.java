@@ -28,19 +28,26 @@ import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -200,21 +207,20 @@ class EmployeeProposalShiftsControllerTest {
             service.createEmployeeProposalShift(storeId, secondEmployeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts"))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts")
+                        .param("page","0")
+                        .param("size","50"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalShiftsDTO> responseList =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalShiftsDTO>>() {});
-
-        assertEquals(totalDays, responseList.size());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.length()").value(totalDays))
+                .andExpect(jsonPath("$.totalElements").value(totalDays))
+                .andExpect(jsonPath("$.content[0].employeeId").value(employeeId));
     }
 
     @Test
-    void getByCriteria_onlySingleEmployeeData() throws Exception{
+    void getByCriteria_returnOnlySingleEmployeeData() throws Exception{
         //given
         Long storeId = store.getId();
         Long employeeId = employee.getId();
@@ -248,21 +254,13 @@ class EmployeeProposalShiftsControllerTest {
             service.createEmployeeProposalShift(storeId, secondEmployeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts?employeeId=" + secondEmployeeId))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts")
+                        .param("employeeId",secondEmployeeId.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalShiftsDTO> responseList =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalShiftsDTO>>() {});
-
-        assertEquals(days, responseList.size());
-        for (int i = 0; i < days; i++) {
-            assertEquals(secondEmployeeId, responseList.get(i).employeeId());
-            assertNotEquals(employeeId, responseList.get(i).employeeId());
-        }
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content[0].employeeId").value(secondEmployeeId));
     }
 
     @Test
@@ -272,11 +270,13 @@ class EmployeeProposalShiftsControllerTest {
         Long employeeId = employee.getId();
         LocalDate startDate = LocalDate.of(2025, 1, 10);
         LocalDate endDate = LocalDate.of(2025, 1, 20);
+
         int expectedDays = 11;
+        int[] dailyProposalShift = {0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
+        List<Integer> dailyProposalShiftsAsList = Arrays.stream(dailyProposalShift).boxed().toList();
 
         for (int i = 1; i <= 30; i++) {
             LocalDate date = LocalDate.of(2025, 1, i);
-            int[] dailyProposalShift = {0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
 
             CreateEmployeeProposalShiftsDTO createDto = new TestCreateEmployeeProposalShiftsDTO()
                     .withDate(date)
@@ -287,19 +287,15 @@ class EmployeeProposalShiftsControllerTest {
         }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts?employeeId=" + employeeId + "&startDate=" + startDate + "&endDate=" + endDate))
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts")
+                        .param("employeeId",employeeId.toString())
+                        .param("startDate",startDate.toString())
+                        .param("endDate",endDate.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalShiftsDTO> responseList =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalShiftsDTO>>() {});
-
-        assertEquals(expectedDays, responseList.size());
-        for (ResponseEmployeeProposalShiftsDTO dto : responseList) {
-            assertTrue(!dto.date().isBefore(startDate) && !dto.date().isAfter(endDate));
-        }
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content", hasSize(expectedDays)))
+                .andExpect(jsonPath("$.content[10].dailyProposalShift", is(dailyProposalShiftsAsList)));
     }
 
     @Test
@@ -309,7 +305,9 @@ class EmployeeProposalShiftsControllerTest {
         Long employeeId = employee.getId();
         LocalDate dateToCheck = LocalDate.of(2025, 1, 15);
         int[] standardDailyProposalShift = {0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
+
         int[] dateToCheckDailyProposalShift = {0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0};
+        List<Integer> expectedValue = Arrays.stream(dateToCheckDailyProposalShift).boxed().toList();
 
         for (int i = 1; i <= 30; i++) {
             LocalDate date = LocalDate.of(2025, 1, i);
@@ -333,17 +331,14 @@ class EmployeeProposalShiftsControllerTest {
         }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts?employeeId=" + employeeId + "&startDate=" + dateToCheck))
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalShifts")
+                        .param("employeeId",employeeId.toString())
+                        .param("startDate",dateToCheck.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalShiftsDTO> responseList =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalShiftsDTO>>() {});
-
-        assertEquals(1, responseList.size());
-        assertArrayEquals(dateToCheckDailyProposalShift,responseList.getFirst().dailyProposalShift());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].dailyProposalShift", is(expectedValue)));
     }
 
     @Test

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
@@ -54,6 +55,7 @@ class EmployeeProposalShiftsServiceImplTest {
     private Long employeeProposalShiftId = 21L;
     private Store store;
     private Employee employee;
+    private Pageable pageable;
 
     @PrePersist
     void setup(){
