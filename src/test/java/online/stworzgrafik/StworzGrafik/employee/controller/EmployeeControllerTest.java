@@ -39,10 +39,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -147,6 +148,82 @@ class EmployeeControllerTest {
         //then
         assertEquals(3,serviceResponse.size());
         assertTrue(serviceResponse.containsAll(responseDTOS));
+    }
+
+    @Test
+    void findByCriteria_findSingleEmployeeWorkingTest() throws Exception{
+        //given
+        String firstName = "MATEUSZ";
+        String lastName = "KRUK";
+
+        Employee employee = new TestEmployeeBuilder().withFirstName(firstName).withLastName(lastName).withStore(store).withPosition(position).build();
+        employeeService.save(employee);
+
+        Long thisStoreId = store.getId();
+
+        //when&then
+        mockMvc.perform(get("/api/stores/" + thisStoreId + "/employees")
+                    .param("firstName", firstName)
+                    .param("lastName", lastName))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content[0].firstName").value(firstName))
+                .andExpect(jsonPath("$.content[0].lastName").value(lastName));
+    }
+
+    @Test
+    void findByCriteria_findProperEmployeeBySap() throws Exception{
+        //given
+        Long expectedSap = 10005850L;
+        String expectedFirstName = "ADAM";
+        String expectedLastName = "SMITH";
+
+        Employee employee = new TestEmployeeBuilder().withSap(expectedSap)
+                .withFirstName(expectedFirstName)
+                .withLastName(expectedLastName)
+                .withStore(store)
+                .withPosition(position).build();
+        employeeService.save(employee);
+
+        Employee secondEmployee = new TestEmployeeBuilder().withSap(12345678L).withStore(store).withPosition(position).build();
+        employeeService.save(secondEmployee);
+
+        Employee thirdEmployee = new TestEmployeeBuilder().withSap(87654321L).withStore(store).withPosition(position).build();
+        employeeService.save(thirdEmployee);
+
+        Long thisStoreId = store.getId();
+
+        //when&then
+        mockMvc.perform(get("/api/stores/" + thisStoreId + "/employees")
+                        .param("sap", expectedSap.toString()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].sap").value(expectedSap))
+                .andExpect(jsonPath("$.content[0].firstName").value(expectedFirstName))
+                .andExpect(jsonPath("$.content[0].lastName").value(expectedLastName));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void findByCriteria_employeeWhichDoesNotDependToStoreThrowsException() throws Exception{
+        //given
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        employeeService.save(employee);
+
+        Long randomStoreId = 1235L;
+        String firstName = employee.getFirstName();
+        String lastName = employee.getLastName();
+        //when&then
+        mockMvc.perform(get("/api/stores/" + randomStoreId + "/employees")
+                        .param("firstName", firstName)
+                        .param("lastName", lastName))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        //have to implement storeId connection with employee, cuz it works and shouldn't with other storeId in endpoint
     }
 
     @Test
