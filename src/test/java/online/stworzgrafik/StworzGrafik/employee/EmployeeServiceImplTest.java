@@ -23,6 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
@@ -67,6 +69,7 @@ class EmployeeServiceImplTest {
     private Branch branch;
     private Store store;
     private Long storeId;
+    private Pageable pageable;
 
     @PrePersist
     void setup(){
@@ -75,6 +78,7 @@ class EmployeeServiceImplTest {
         store = new TestStoreBuilder().withBranch(branch).build();
 
         storeId = store.getId();
+        pageable = PageRequest.of(1,20);
     }
 
     @Test
@@ -144,10 +148,9 @@ class EmployeeServiceImplTest {
     void createEmployee_dtoIsNullThrowsException(){
         //given
         Long storeId = 1L;
-        CreateEmployeeDTO createEmployeeDTO = null;
 
         //when
-        assertThrows(NullPointerException.class, () -> employeeServiceImpl.createEmployee(storeId,createEmployeeDTO));
+        assertThrows(NullPointerException.class, () -> employeeServiceImpl.createEmployee(storeId,null));
 
         //then
         verify(storeService,never()).findById(any(Long.class));

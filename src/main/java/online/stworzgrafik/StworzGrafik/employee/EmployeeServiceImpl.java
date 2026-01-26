@@ -17,6 +17,8 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -122,16 +124,18 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     @Override
-    public List<ResponseEmployeeDTO> findByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto) {
+    public Page<ResponseEmployeeDTO> findByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
+
+        if ()
 
         Specification<Employee> specification = hasStoreId(storeId);
 
        if (dto != null) {
            specification =
-                   specification.and(hasStoreId(storeId))
+                   specification
                            .and(hasId(dto.id()))
                            .and(hasFirstNameLike(dto.firstName()))
                            .and(hasLastNameLike(dto.lastName()))
@@ -145,9 +149,8 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
                            .and(isManager(dto.manager()));
        }
 
-        return employeeRepository.findAll(specification).stream()
-                .map(employeeMapper::toResponseEmployeeDTO)
-                .toList();
+        return employeeRepository.findAll(specification, pageable)
+                .map(employeeMapper::toResponseEmployeeDTO);
     }
 
     @Override

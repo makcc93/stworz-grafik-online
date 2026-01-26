@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.EmployeeSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,9 +38,10 @@ class EmployeeController {
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/employees")
-    public ResponseEntity<List<ResponseEmployeeDTO>> findById(@NotNull @PathVariable Long storeId,
-                                                        EmployeeSpecificationDTO dto){
-        return ResponseEntity.ok(employeeService.findByCriteria(storeId, dto));
+    public ResponseEntity<Page<ResponseEmployeeDTO>> findByCriteria(@NotNull @PathVariable Long storeId,
+                                                              EmployeeSpecificationDTO dto,
+                                                              Pageable pageable){
+        return ResponseEntity.ok(employeeService.findByCriteria(storeId, dto,pageable));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

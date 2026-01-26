@@ -7,6 +7,8 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.EmployeeSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
@@ -19,7 +21,7 @@ import java.util.List;
      ResponseEmployeeDTO save(@NotNull Employee employee);
      List<ResponseEmployeeDTO> findAll();
      ResponseEmployeeDTO findById(@NotNull Long storeId, @NotNull Long employeeId);
-     List<ResponseEmployeeDTO> findByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto);
+     Page<ResponseEmployeeDTO> findByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable);
      boolean existsById(@NotNull Long id);
      boolean existsBySap(@NotNull Long sap);
      boolean existsByLastName(@NotNull String lastName);

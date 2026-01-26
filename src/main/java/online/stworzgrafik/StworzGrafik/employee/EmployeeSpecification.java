@@ -35,14 +35,14 @@ class EmployeeSpecification {
         if (storeId == null) return null;
 
         return (root,query,criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("storeId"),storeId);
+                criteriaBuilder.equal(root.get("store").get("id"),storeId);
     }
 
     public static Specification<Employee> hasPositionId(Long positionId){
         if (positionId == null) return null;
 
         return (root,query,criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("positionId"),positionId);
+                criteriaBuilder.equal(root.get("position").get("id"),positionId);
     }
 
     public static Specification<Employee> isEnable(Boolean enable){
