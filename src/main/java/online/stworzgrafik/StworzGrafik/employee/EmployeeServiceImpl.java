@@ -105,10 +105,9 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     @Override
-    public List<ResponseEmployeeDTO> findAll() {
-        return employeeRepository.findAll().stream()
-                .map(employeeMapper::toResponseEmployeeDTO)
-                .toList();
+    public Page<ResponseEmployeeDTO> findAll(Pageable pageable) {
+        return employeeRepository.findAll(pageable)
+                .map(employeeMapper::toResponseEmployeeDTO);
     }
 
     @Override
@@ -128,8 +127,6 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
-
-        if ()
 
         Specification<Employee> specification = hasStoreId(storeId);
 

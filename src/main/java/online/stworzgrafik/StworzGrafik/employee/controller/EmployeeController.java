@@ -25,8 +25,8 @@ class EmployeeController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/stores/{storeId}/employees/getAll")
-    public ResponseEntity<List<ResponseEmployeeDTO>> findAll(){
-        return ResponseEntity.ok(employeeService.findAll());
+    public ResponseEntity<Page<ResponseEmployeeDTO>> findAll(Pageable pageable){
+        return ResponseEntity.ok(employeeService.findAll(pageable));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

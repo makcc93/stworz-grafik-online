@@ -19,7 +19,7 @@ import java.util.List;
      ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull @Valid UpdateEmployeeDTO updateEmployeeDTO);
      void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
      ResponseEmployeeDTO save(@NotNull Employee employee);
-     List<ResponseEmployeeDTO> findAll();
+     Page<ResponseEmployeeDTO> findAll(Pageable pageable);
      ResponseEmployeeDTO findById(@NotNull Long storeId, @NotNull Long employeeId);
      Page<ResponseEmployeeDTO> findByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable);
      boolean existsById(@NotNull Long id);

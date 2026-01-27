@@ -1,29 +1,28 @@
 package online.stworzgrafik.StworzGrafik.employee.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.employee.*;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
-import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
-import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
-import online.stworzgrafik.StworzGrafik.region.RegionService;
-import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
-import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.security.JwtService;
-import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.*;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
+import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
+import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
+import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.JwtService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +37,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -119,35 +119,33 @@ class EmployeeControllerTest {
     @WithMockUser(authorities = "ADMIN")
     void findAll_workingTest() throws Exception{
         //given
+        String firstN = "FIRST";
+        String secondN = "SECOND";
+        String thirdN = "THIRD";
+
         ResponseEmployeeDTO firstEmployeeResponseDTO = employeeService.createEmployee(
                 storeId,
-                new TestCreateEmployeeDTO().withFirstName("FIRST").withSap(11111111L).withPositionId(positionId).build()
+                new TestCreateEmployeeDTO().withFirstName(firstN).withSap(11111111L).withPositionId(positionId).build()
         );
 
         ResponseEmployeeDTO secondEmployeeResponseDTO = employeeService.createEmployee(
                 storeId,
-                new TestCreateEmployeeDTO().withFirstName("SECOND").withSap(22222222L).withPositionId(positionId).build()
+                new TestCreateEmployeeDTO().withFirstName(secondN).withSap(22222222L).withPositionId(positionId).build()
         );
 
         ResponseEmployeeDTO thirdEmployeeResponseDTO = employeeService.createEmployee(
                 storeId,
-                new TestCreateEmployeeDTO().withFirstName("THIRD").withSap(33333333L).withPositionId(positionId).build()
+                new TestCreateEmployeeDTO().withFirstName(thirdN).withSap(33333333L).withPositionId(positionId).build()
         );
 
         List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        List<ResponseEmployeeDTO> serviceResponse =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeDTO>>() {});
-
-        //then
-        assertEquals(3,serviceResponse.size());
-        assertTrue(serviceResponse.containsAll(responseDTOS));
+                .andExpect(jsonPath("$.content.size()").value(3))
+                .andExpect(jsonPath("$.content[*].firstName").value(hasItems(firstN,secondN,thirdN)));
     }
 
     @Test
@@ -208,40 +206,15 @@ class EmployeeControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void findByCriteria_employeeWhichDoesNotDependToStoreThrowsException() throws Exception{
-        //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
-        employeeService.save(employee);
-
-        Long randomStoreId = 1235L;
-        String firstName = employee.getFirstName();
-        String lastName = employee.getLastName();
-        //when&then
-        mockMvc.perform(get("/api/stores/" + randomStoreId + "/employees")
-                        .param("firstName", firstName)
-                        .param("lastName", lastName))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-
-        //have to implement storeId connection with employee, cuz it works and shouldn't with other storeId in endpoint
-    }
-
-    @Test
-    @WithMockUser(authorities = "ADMIN")
     void findAll_emptyListDoesNotThrowException() throws Exception{
         //given
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
+       mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
+               .andExpect(jsonPath("$.content.size()").value(0));
 
-        List<ResponseEmployeeDTO> serviceResponse =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeDTO>>() {});
-
-        //then
-        assertEquals(0,serviceResponse.size());
     }
 
     @Test

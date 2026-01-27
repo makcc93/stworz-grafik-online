@@ -23,6 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -78,7 +80,7 @@ class EmployeeServiceImplTest {
         store = new TestStoreBuilder().withBranch(branch).build();
 
         storeId = store.getId();
-        pageable = PageRequest.of(1,20);
+        pageable = PageRequest.of(0,20);
     }
 
     @Test
@@ -366,13 +368,16 @@ class EmployeeServiceImplTest {
         String first = "FIRST";
         String second = "SECOND";
         String third = "THIRD";
+        Pageable pageable = PageRequest.of(1,10);
 
         Employee firstEmployee = new TestEmployeeBuilder().withFirstName(first).build();
         Employee secondEmployee = new TestEmployeeBuilder().withFirstName(second).build();
         Employee thirdEmployee = new TestEmployeeBuilder().withFirstName(third).build();
-        List<Employee> employees = List.of(firstEmployee,secondEmployee,thirdEmployee);
 
-        when(employeeRepository.findAll()).thenReturn(employees);
+        List<Employee> employees = List.of(firstEmployee,secondEmployee,thirdEmployee);
+        Page<Employee> employeesPage = new PageImpl<>(employees,pageable,employees.size());
+
+        when(employeeRepository.findAll(pageable)).thenReturn(employeesPage);
 
         ResponseEmployeeDTO firstResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(firstEmployee).build();
         ResponseEmployeeDTO secondResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(secondEmployee).build();
@@ -385,22 +390,10 @@ class EmployeeServiceImplTest {
         List<ResponseEmployeeDTO> employeesDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
 
         //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
+        Page<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll(pageable);
 
         //then
-        assertTrue(serviceResponse.containsAll(employeesDTOs));
-    }
-
-    @Test
-    void findAll_emptyListDoesNotThrowException(){
-        //given
-
-        //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
-
-        //then
-        assertEquals(0, serviceResponse.size());
-        assertDoesNotThrow(() -> employeeServiceImpl.findAll());
+        assertTrue(serviceResponse.getContent().containsAll(employeesDTOs));
     }
 
     @Test

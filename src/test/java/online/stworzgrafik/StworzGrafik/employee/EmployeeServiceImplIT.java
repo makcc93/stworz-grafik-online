@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -81,6 +84,7 @@ public class EmployeeServiceImplIT {
     private Position position;
 
     private Long storeId;
+    private Pageable pageable;
 
     @BeforeEach
     void setUpStoreAndPosition(){
@@ -97,6 +101,8 @@ public class EmployeeServiceImplIT {
         positionEntityService.saveEntity(position);
 
         storeId = store.getId();
+
+        pageable = PageRequest.of(0,10);
 
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }
@@ -352,11 +358,11 @@ public class EmployeeServiceImplIT {
         List<ResponseEmployeeDTO> employeeDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
 
         //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
+        Page<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll(pageable);
 
         //then
-        assertEquals(3,serviceResponse.size());
-        assertTrue(serviceResponse.containsAll(employeeDTOs));
+        assertEquals(3,serviceResponse.getContent().size());
+        assertTrue(serviceResponse.getContent().containsAll(employeeDTOs));
     }
 
     @Test
@@ -364,11 +370,11 @@ public class EmployeeServiceImplIT {
         //given
 
         //when
-        List<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll();
+        Page<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll(pageable);
 
         //then
-        assertEquals(0, serviceResponse.size());
-        assertDoesNotThrow(() -> employeeServiceImpl.findAll());
+        assertEquals(0, serviceResponse.getContent().size());
+        assertDoesNotThrow(() -> employeeServiceImpl.findAll(pageable));
     }
 
     @Test
