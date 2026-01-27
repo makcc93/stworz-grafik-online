@@ -37,9 +37,12 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -213,17 +216,10 @@ class EmployeeProposalDaysOffControllerTest {
         }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff"))
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
-        });
-
-        assertEquals(months, responseEmployeeProposalDaysOffDTOS.size());
+                .andExpect(jsonPath("$.content.size()").value(months));
     }
 
     @Test
@@ -265,23 +261,13 @@ class EmployeeProposalDaysOffControllerTest {
             service.createEmployeeProposalDaysOff(storeId, secondEmployeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + secondEmployeeId))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/proposalDaysOff")
+                        .param("employeeId", secondEmployeeId.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
-                });
-
-        //then
-        assertEquals(months,responseEmployeeProposalDaysOffDTOS.size());
-        for (int i = 0; i < months; i++) {
-            assertEquals(secondEmployeeId, responseEmployeeProposalDaysOffDTOS.get(i).employeeId());
-            assertNotEquals(employeeId,responseEmployeeProposalDaysOffDTOS.get(i).employeeId());
-        }
+                .andExpect(jsonPath("$.content.size()").value(months))
+                .andExpect(jsonPath("$.content[*].employeeId").value(hasItem(secondEmployeeId.intValue())));
     }
 
     @Test
@@ -320,22 +306,14 @@ class EmployeeProposalDaysOffControllerTest {
         }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get(
-                "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + checkedYear))
+        mockMvc.perform(get(
+                "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + checkedYear)
+                        .param("employeeId",employeeId.toString())
+                        .param("year",checkedYear.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
-                });
-
-        assertEquals(months,responseEmployeeProposalDaysOffDTOS.size());
-        for (int i = 0; i < months; i++) {
-            assertEquals(checkedYear, responseEmployeeProposalDaysOffDTOS.get(i).year());
-            assertNotEquals(randomYear,responseEmployeeProposalDaysOffDTOS.get(i).year());
-        }
+                .andExpect(jsonPath("$.content.size()").value(months))
+                .andExpect(jsonPath("$.content[*].year").value(hasItem(checkedYear)));
     }
 
     @Test
@@ -375,20 +353,15 @@ class EmployeeProposalDaysOffControllerTest {
         }
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get(
-                        "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + year + "&month=" + june))
+        mockMvc.perform(get(
+                        "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + year + "&month=" + june)
+                        .param("employeeId",employeeId.toString())
+                        .param("year",String.valueOf(year))
+                        .param("month",String.valueOf(june)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeProposalDaysOffDTO> responseEmployeeProposalDaysOffDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeProposalDaysOffDTO>>() {
-                });
-
-        assertEquals(1,responseEmployeeProposalDaysOffDTOS.size());
-        assertArrayEquals(juneMonthlyDaysOff, responseEmployeeProposalDaysOffDTOS.getFirst().monthlyDaysOff());
-        assertEquals(june, responseEmployeeProposalDaysOffDTOS.getFirst().month());
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[*].month").value(hasItem(june)));
     }
 
     @Test

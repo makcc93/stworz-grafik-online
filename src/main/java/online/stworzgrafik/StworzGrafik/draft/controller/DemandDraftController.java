@@ -39,7 +39,7 @@ public class DemandDraftController {
     public ResponseEntity<Page<ResponseDemandDraftDTO>> findByDate(@PathVariable @NotNull Long storeId,
                                                                    @RequestParam(required = false)LocalDate startDate,
                                                                    @RequestParam(required = false) LocalDate endDate,
-                                                                   @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+                                                                   @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC)
                                                                        Pageable pageable){
         return ResponseEntity.ok(demandDraftService.findFilteredDrafts(storeId,startDate,endDate,pageable));
     }
@@ -47,7 +47,8 @@ public class DemandDraftController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/drafts")
     public ResponseEntity<Page<ResponseDemandDraftDTO>> findAll(
-            @PageableDefault(size = 10,sort = "createdAt",direction = Sort.Direction.DESC) Pageable pageable){
+            @PageableDefault(size = 25,sort = "createdAt",direction = Sort.Direction.DESC) Pageable pageable){
+
         return ResponseEntity.ok().body(demandDraftService.findAll(pageable));
     }
 
