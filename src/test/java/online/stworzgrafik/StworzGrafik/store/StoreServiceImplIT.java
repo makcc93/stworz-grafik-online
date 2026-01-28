@@ -18,6 +18,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -94,13 +97,14 @@ class StoreServiceImplIT {
     @Test
     void findAll_emptyListDoesNotThrowException(){
         //given
+        Pageable pageable = PageRequest.of(0,50);
 
         //when
-        List<ResponseStoreDTO> dtos = storeService.findAll();
+        Page<ResponseStoreDTO> dtos = storeService.findAll(pageable);
 
         //then
-        assertEquals(0,dtos.size());
-        assertDoesNotThrow(() -> storeService.findAll());
+        assertEquals(0,dtos.getContent().size());
+        assertDoesNotThrow(() -> storeService.findAll(pageable));
     }
 
     @Test

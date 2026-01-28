@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -36,11 +38,14 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -79,6 +84,7 @@ class StoreControllerTest {
 
     private Region region;
     private Branch branch;
+    private Pageable pageable;
 
     @BeforeEach
     void setupRegion(){
@@ -87,6 +93,7 @@ class StoreControllerTest {
 
         branch = new TestBranchBuilder().withRegion(region).build();
         branchService.save(branch);
+        pageable = PageRequest.of(0,25);
 
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }
@@ -102,35 +109,28 @@ class StoreControllerTest {
         storeService.save(store2);
         storeService.save(store3);
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/getAll"))
+        int store1Id = store1.getId().intValue();
+        int store2Id = store2.getId().intValue();
+        int store3Id = store3.getId().intValue();
+
+        //when&then
+        mockMvc.perform(get("/api/stores/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseStoreDTO> responseStoreDTOS = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseStoreDTO>>(){});
-
-        assertEquals(3,responseStoreDTOS.size());
-        assertTrue(responseStoreDTOS.stream().anyMatch(dto -> dto.id().equals(store1.getId())));
-        assertTrue(responseStoreDTOS.stream().anyMatch(dto -> dto.id().equals(store2.getId())));
-        assertTrue(responseStoreDTOS.stream().anyMatch(dto -> dto.id().equals(store3.getId())));
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content[*].id").value(hasItems(store1Id, store2Id, store3Id)));
     }
 
     @Test
     void getAllStores_emptyList() throws Exception {
         //given
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/getAll"))
+        //when&then
+        mockMvc.perform(get("/api/stores/getAll"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseStoreDTO> responseStoreDTOS = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseStoreDTO>>(){});
-
-        assertEquals(0,responseStoreDTOS.size());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
     @Test
@@ -162,6 +162,80 @@ class StoreControllerTest {
                 .andDo(print())
                 .andExpect(status().is(500));
         //then
+    }
+
+    @Test
+    void getByCriteria_findProperStoreWorkingTest() throws Exception{
+        //given
+        Store firstStore = firstStore();
+        storeService.save(firstStore);
+
+        Store secondStore = secondStore();
+        storeService.save(secondStore);
+        String expectedStore = secondStore.getName();
+
+        //when&then
+        mockMvc.perform(get("/api/stores")
+                .param("name",expectedStore))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value(expectedStore));
+    }
+
+    @Test
+    void getByCriteria_findAllStoresWithSameBranch() throws Exception{
+        //given
+        Store aaaStore = new TestStoreBuilder().withBranch(branch).withName("AAA").build();
+        Store bbbStore = new TestStoreBuilder().withBranch(branch).withName("BBB").build();
+        Store cccStore = new TestStoreBuilder().withBranch(branch).withName("CCC").build();
+        Store dddStore = new TestStoreBuilder().withBranch(branch).withName("DDD").build();
+        Store eeeStore = new TestStoreBuilder().withBranch(branch).withName("EEE").build();
+        storeService.save(aaaStore);
+        storeService.save(bbbStore);
+        storeService.save(cccStore);
+        storeService.save(dddStore);
+        storeService.save(eeeStore);
+
+        Long branchId = branch.getId();
+
+        //when&then
+        mockMvc.perform(get("/api/stores")
+                .param("branchId",branchId.toString()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()").value(5))
+                .andExpect(jsonPath("$.content[*].name").value(hasItems("AAA","BBB","CCC","DDD","EEE")));
+    }
+
+    @Test
+    void getByCriteria_findAllStoresWithSameLocation() throws Exception{
+        //given
+        String expectedLocation = "LUBLIN";
+        String randomLocation = "RANDOM";
+
+        Store aaaStore = new TestStoreBuilder().withBranch(branch).withName("AAA").withLocation(expectedLocation).build();
+        Store bbbStore = new TestStoreBuilder().withBranch(branch).withName("BBB").withLocation(expectedLocation).build();
+        Store cccStore = new TestStoreBuilder().withBranch(branch).withName("CCC").withLocation(randomLocation).build();
+        Store dddStore = new TestStoreBuilder().withBranch(branch).withName("DDD").withLocation(randomLocation).build();
+        Store eeeStore = new TestStoreBuilder().withBranch(branch).withName("EEE").withLocation(randomLocation).build();
+        storeService.save(aaaStore);
+        storeService.save(bbbStore);
+        storeService.save(cccStore);
+        storeService.save(dddStore);
+        storeService.save(eeeStore);
+
+        Long branchId = branch.getId();
+
+        //when&then
+        mockMvc.perform(get("/api/stores")
+                        .param("location",expectedLocation))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.content[*].location").value(hasItems(expectedLocation)))
+                .andExpect(jsonPath("$.content[*].name").value(hasItems("AAA","BBB")));
     }
 
     @Test

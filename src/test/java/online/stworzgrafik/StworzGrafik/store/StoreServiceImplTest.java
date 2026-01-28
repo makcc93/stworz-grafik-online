@@ -22,6 +22,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -63,11 +67,15 @@ class StoreServiceImplTest {
     @Test
     void findAll_workingTest(){
         //given
+        Pageable pageable = PageRequest.of(0,50);
+
         Store store1 = new TestStoreBuilder().withStoreCode("00").build();
         Store store2 = new TestStoreBuilder().withStoreCode("11").build();
         Store store3 = new TestStoreBuilder().withStoreCode("22").build();
+        List<Store> stores = List.of(store1, store2, store3);
+        PageImpl<Store> storesPage = new PageImpl<>(stores, pageable, stores.size());
 
-        when(repository.findAll()).thenReturn(List.of(store1,store2,store3));
+        when(repository.findAll(pageable)).thenReturn(storesPage);
 
         ResponseStoreDTO responseOfStore1 = new TestResponseStoreDTO().buildFromEntity(store1);
         when(storeMapper.toResponseStoreDto(store1)).thenReturn(responseOfStore1);
@@ -79,13 +87,13 @@ class StoreServiceImplTest {
         when(storeMapper.toResponseStoreDto(store3)).thenReturn(responseOfStore3);
 
         //when
-        List<ResponseStoreDTO> responseDTOS = service.findAll();
+        Page<ResponseStoreDTO> responseDTOS = service.findAll(pageable);
 
         //then
-        assertEquals(3,responseDTOS.size());
-        assertTrue(responseDTOS.containsAll(List.of(responseOfStore1,responseOfStore2,responseOfStore3)));
+        assertEquals(3,responseDTOS.getContent().size());
+        assertTrue(responseDTOS.getContent().containsAll(List.of(responseOfStore1,responseOfStore2,responseOfStore3)));
 
-        verify(repository,times(1)).findAll();
+        verify(repository,times(1)).findAll(pageable);
         verify(storeMapper,atLeastOnce()).toResponseStoreDto(any(Store.class));
     }
 
