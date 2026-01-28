@@ -4,15 +4,17 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.store.DTO.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @Validated
 public interface StoreService {
-    List<ResponseStoreDTO> findAll();
+    Page<ResponseStoreDTO> findAll(Pageable pageable);
     ResponseStoreDTO findById(@NotNull Long storeId);
-    List<ResponseStoreDTO> findByCriteria(@Nullable StoreSpecificationDTO dto);
+    Page<ResponseStoreDTO> findByCriteria(@Nullable StoreSpecificationDTO dto, Pageable pageable);
     ResponseStoreDTO createStore(@NotNull @Valid CreateStoreDTO createStoreDTO);
     ResponseStoreDTO update(@NotNull Long storeId,@NotNull @Valid UpdateStoreDTO updateStoreDTO);
     boolean existsById(@NotNull Long storeId);

@@ -8,7 +8,11 @@ import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,8 +28,10 @@ class StoreController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/stores/getAll")
-    public ResponseEntity<List<ResponseStoreDTO>> getAllStores(){
-        return ResponseEntity.ok(storeService.findAll());
+    public ResponseEntity<Page<ResponseStoreDTO>> getAllStores(
+            @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ){
+        return ResponseEntity.ok(storeService.findAll(pageable));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
@@ -35,8 +41,10 @@ class StoreController {
     }
 
     @GetMapping("/stores")
-    public ResponseEntity<List<ResponseStoreDTO>> getByCriteria(StoreSpecificationDTO dto){
-        return ResponseEntity.ok(storeService.findByCriteria(dto));
+    public ResponseEntity<Page<ResponseStoreDTO>> getByCriteria(StoreSpecificationDTO dto,
+    @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+
+        return ResponseEntity.ok(storeService.findByCriteria(dto,pageable));
     }
 
     @PostMapping("/stores")

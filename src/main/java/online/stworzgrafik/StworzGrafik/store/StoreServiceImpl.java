@@ -10,6 +10,9 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.*;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -29,13 +32,9 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     private final UserAuthorizationService userAuthorizationService;
 
     @Override
-    public List<ResponseStoreDTO> findAll() {
-        List<Store> stores = storeRepository.findAll();
-
-        return stores.stream()
-                .map(storeMapper::toResponseStoreDto)
-                .sorted(Comparator.comparing(ResponseStoreDTO::storeCode))
-                .toList();
+    public Page<ResponseStoreDTO> findAll(Pageable pageable) {
+        return storeRepository.findAll(pageable)
+                .map(storeMapper::toResponseStoreDto);
     }
 
     @Override
@@ -51,8 +50,8 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
-    public List<ResponseStoreDTO> findByCriteria(@Nullable StoreSpecificationDTO dto) {
-        if (dto == null) return Collections.emptyList();
+    public Page<ResponseStoreDTO> findByCriteria(StoreSpecificationDTO dto, Pageable pageable) {
+        if (dto == null) return Page.empty();
 
         Specification<Store> specification = Specification.allOf(
                 StoreSpecification.hasStoreCode(dto.storeCode()),
@@ -63,9 +62,8 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
                 StoreSpecification.isEnable(dto.enable())
         );
 
-        return storeRepository.findAll(specification).stream()
-                .map(storeMapper::toResponseStoreDto)
-                .toList();
+        return storeRepository.findAll(specification,pageable)
+                .map(storeMapper::toResponseStoreDto);
     }
 
     @Override
