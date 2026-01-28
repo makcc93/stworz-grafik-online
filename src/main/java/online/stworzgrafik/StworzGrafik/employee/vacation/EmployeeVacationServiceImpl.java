@@ -12,6 +12,8 @@ import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVaca
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -127,7 +129,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     }
 
     @Override
-    public List<ResponseEmployeeVacationDTO> getByCriteria(Long storeId, EmployeeVacationSpecificationDTO dto) {
+    public Page<ResponseEmployeeVacationDTO> getByCriteria(Long storeId, EmployeeVacationSpecificationDTO dto, Pageable pageable) {
         if (!userAuthorizationService.hasAccessToStore(storeId)) {
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -139,9 +141,8 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
                 hasMonth(dto.month())
         );
 
-        return repository.findAll(specification).stream()
-                .map(mapper::toResponseEmployeeVacationDTO)
-                .toList();
+        return repository.findAll(specification,pageable)
+                .map(mapper::toResponseEmployeeVacationDTO);
     }
 
     @Override

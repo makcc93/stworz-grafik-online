@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVaca
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
@@ -41,8 +43,9 @@ public interface EmployeeVacationService {
             @NotNull Long employeeVacationId
     );
 
-    List<ResponseEmployeeVacationDTO> getByCriteria(@Nullable Long storeId,
-                                                   EmployeeVacationSpecificationDTO dto);
+    Page<ResponseEmployeeVacationDTO> getByCriteria(@Nullable Long storeId,
+                                                    EmployeeVacationSpecificationDTO dto,
+                                                    Pageable pageable);
 
     boolean exists(@NotNull Long employeeVacationId);
 }
