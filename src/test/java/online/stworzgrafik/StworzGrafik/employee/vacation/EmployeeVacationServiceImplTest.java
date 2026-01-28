@@ -19,6 +19,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -664,6 +668,7 @@ class EmployeeVacationServiceImplTest {
         //given
         Integer year = 2025;
         Integer month = 12;
+        Pageable pageable = PageRequest.of(0,25);
 
         EmployeeVacation vacation1 = new TestEmployeeVacationBuilder()
                 .withYear(year)
@@ -675,9 +680,12 @@ class EmployeeVacationServiceImplTest {
                 .withMonth(month)
                 .build();
 
+        List<EmployeeVacation> vacations = List.of(vacation1, vacation2);
+        Page<EmployeeVacation> vacationsPage = new PageImpl<>(vacations,pageable, vacations.size());
+
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
-        when(repository.findAll(any(Specification.class))).thenReturn(List.of(vacation1, vacation2));
+        when(repository.findAll(any(Specification.class),eq(pageable))).thenReturn(vacationsPage);
 
         ResponseEmployeeVacationDTO response1 = new TestResponseEmployeeVacationDTO()
                 .withStoreId(storeId)
@@ -699,28 +707,29 @@ class EmployeeVacationServiceImplTest {
         EmployeeVacationSpecificationDTO dto = new TestEmployeeVacationSpecificationDTO().withEmployeeId(employeeId).withYear(year).withMonth(month).build();
 
         //when
-        List<ResponseEmployeeVacationDTO> result = service.getByCriteria(storeId, dto);
+        Page<ResponseEmployeeVacationDTO> result = service.getByCriteria(storeId, dto,pageable);
 
         //then
-        assertEquals(2, result.size());
-        assertEquals(response1, result.get(0));
-        assertEquals(response2, result.get(1));
+        assertEquals(2, result.getContent().size());
+        assertEquals(response1, result.getContent().get(0));
+        assertEquals(response2, result.getContent().get(1));
 
         verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(repository, times(1)).findAll(any(Specification.class));
+        verify(repository, times(1)).findAll(any(Specification.class),eq(pageable));
         verify(mapper, times(2)).toResponseEmployeeVacationDTO(any());
     }
 
     @Test
     void getByCriteria_loggedUserHasNotAccessToStoreThrowsException() {
         //given
+        Pageable pageable = PageRequest.of(0,25);
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
 
         EmployeeVacationSpecificationDTO dto = new TestEmployeeVacationSpecificationDTO().withEmployeeId(employeeId).withYear(2025).withMonth(12).build();
 
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> service.getByCriteria(storeId, dto));
+                assertThrows(AccessDeniedException.class, () -> service.getByCriteria(storeId, dto,pageable));
 
         //then
         assertEquals("Access denied for store with id " + storeId, exception.getMessage());

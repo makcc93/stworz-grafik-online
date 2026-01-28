@@ -114,10 +114,9 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
     }
 
     @Override
-    public List<ResponseEmployeeProposalShiftsDTO> getAll() {
-        return repository.findAll().stream()
-                .map(mapper::toResponseEmployeeProposalShiftsDTO)
-                .toList();
+    public Page<ResponseEmployeeProposalShiftsDTO> getAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toResponseEmployeeProposalShiftsDTO);
     }
 
     @Override

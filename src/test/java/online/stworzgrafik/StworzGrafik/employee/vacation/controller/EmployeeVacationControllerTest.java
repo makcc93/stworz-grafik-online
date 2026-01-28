@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.vacation.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -30,16 +29,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import static org.hamcrest.Matchers.is;
 
-import java.util.List;
+import java.util.Arrays;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -47,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class EmployeeVacationControllerTest {
-
+//time for controller test with pageable
     @Autowired
     private JwtService jwtService;
 
@@ -80,6 +84,7 @@ class EmployeeVacationControllerTest {
     private Store store;
     private Position position;
     private Employee employee;
+    private Pageable pageable;
 
     @BeforeEach
     void setup() {
@@ -97,6 +102,8 @@ class EmployeeVacationControllerTest {
 
         employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
         employeeService.save(employee);
+
+        pageable = PageRequest.of(0,25);
     }
 
     @Test
@@ -211,18 +218,12 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, secondEmployeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/vacations"))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/vacations"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeVacationDTO> responseEmployeeVacationDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeVacationDTO>>() {
-                });
-
-        assertEquals(months, responseEmployeeVacationDTOS.size());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.size()").value(months));
     }
 
     @Test
@@ -264,22 +265,14 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, secondEmployeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/vacations?employeeId=" + secondEmployeeId))
+        //when&then
+        mockMvc.perform(get("/api/stores/" + storeId + "/vacations")
+                        .param("employeeId",secondEmployeeId.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeVacationDTO> responseEmployeeVacationDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeVacationDTO>>() {
-                });
-
-        assertEquals(months, responseEmployeeVacationDTOS.size());
-        for (int i = 0; i < months; i++) {
-            assertEquals(secondEmployeeId, responseEmployeeVacationDTOS.get(i).employeeId());
-            assertNotEquals(employeeId, responseEmployeeVacationDTOS.get(i).employeeId());
-        }
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.size()").value(months))
+                .andExpect(jsonPath("$.content[*].employeeId").value(hasItem(secondEmployeeId.intValue())));
     }
 
     @Test
@@ -317,23 +310,16 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get(
-                        "/api/stores/" + storeId + "/vacations?employeeId=" + employeeId + "&year=" + checkedYear))
+        //when&then
+        mockMvc.perform(get(
+                        "/api/stores/" + storeId + "/vacations")
+                        .param("employeeId", employeeId.toString())
+                        .param("year", checkedYear.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeVacationDTO> responseEmployeeVacationDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeVacationDTO>>() {
-                });
-
-        assertEquals(months, responseEmployeeVacationDTOS.size());
-        for (int i = 0; i < months; i++) {
-            assertEquals(checkedYear, responseEmployeeVacationDTOS.get(i).year());
-            assertNotEquals(randomYear, responseEmployeeVacationDTOS.get(i).year());
-        }
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.size()").value(months))
+                .andExpect(jsonPath("$.content[*].year").value(hasItem(checkedYear)));
     }
 
     @Test
@@ -341,12 +327,12 @@ class EmployeeVacationControllerTest {
         //given
         Long storeId = store.getId();
         Long employeeId = employee.getId();
-        int year = 2020;
-        int[] normalmonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        int[] junemonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+        Integer year = 2020;
+        int[] normalMonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] juneMonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
 
-        int months = 12;
-        int june = 6;
+        Integer months = 12;
+        Integer june = 6;
 
         for (int i = 1; i <= months; i++) {
             if (i == june) {
@@ -354,7 +340,7 @@ class EmployeeVacationControllerTest {
                         new TestCreateEmployeeVacationDTO()
                                 .withYear(year)
                                 .withMonth(i)
-                                .withMonthlyVacation(junemonthlyVacation)
+                                .withMonthlyVacation(juneMonthlyVacation)
                                 .build();
 
                 service.createEmployeeProposalVacation(storeId, employeeId, createDto);
@@ -365,27 +351,24 @@ class EmployeeVacationControllerTest {
                     new TestCreateEmployeeVacationDTO()
                             .withYear(year)
                             .withMonth(i)
-                            .withMonthlyVacation(normalmonthlyVacation)
+                            .withMonthlyVacation(normalMonthlyVacation)
                             .build();
 
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        //when
-        MvcResult mvcResult = mockMvc.perform(get(
-                        "/api/stores/" + storeId + "/vacations?employeeId=" + employeeId + "&year=" + year + "&month=" + june))
+        //when&then
+        mockMvc.perform(get(
+                        "/api/stores/" + storeId + "/vacations")
+                        .param("employeeId",employeeId.toString())
+                        .param("year", year.toString())
+                        .param("month",june.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseEmployeeVacationDTO> responseEmployeeVacationDTOS =
-                objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseEmployeeVacationDTO>>() {
-                });
-
-        assertEquals(1, responseEmployeeVacationDTOS.size());
-        assertArrayEquals(junemonthlyVacation, responseEmployeeVacationDTOS.getFirst().monthlyVacation());
-        assertEquals(june, responseEmployeeVacationDTOS.getFirst().month());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content.size()").value(1))
+                .andExpect(jsonPath("$.content[0].month").value(june))
+                .andExpect(jsonPath("$.content[0].monthlyVacation").value(is(Arrays.stream(juneMonthlyVacation).boxed().toList())));
     }
 
     @Test

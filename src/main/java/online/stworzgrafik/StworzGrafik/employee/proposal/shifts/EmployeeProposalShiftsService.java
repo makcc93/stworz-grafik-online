@@ -37,7 +37,7 @@ public interface EmployeeProposalShiftsService {
                                               @NotNull Long employeeId,
                                               @NotNull Long employeeProposalShiftId);
 
-    List<ResponseEmployeeProposalShiftsDTO> getAll();
+    Page<ResponseEmployeeProposalShiftsDTO> getAll(Pageable pageable);
 
     boolean exists(@NotNull Long employeeProposalShiftId);
 
