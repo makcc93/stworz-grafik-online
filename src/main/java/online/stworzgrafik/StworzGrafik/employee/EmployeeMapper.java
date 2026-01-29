@@ -11,10 +11,6 @@ interface EmployeeMapper {
     @Mapping(source = "position.id", target = "positionId")
     ResponseEmployeeDTO toResponseEmployeeDTO(Employee employee);
 
-    @Mapping(source = "storeId", target = "store.id")
-    @Mapping(source = "positionId", target = "position.id")
-    Employee toEmployee(ResponseEmployeeDTO responseEmployeeDTO);
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEmployee(UpdateEmployeeDTO updateEmployeeDTO, @MappingTarget Employee employee);
 }

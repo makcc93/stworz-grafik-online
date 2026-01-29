@@ -3,6 +3,9 @@ package online.stworzgrafik.StworzGrafik.store;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.ResponseStoreDetailsDTO;
+import online.stworzgrafik.StworzGrafik.store.storeDetails.TestResponseStoreDetailsDTO;
+import org.apache.coyote.Response;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +18,8 @@ public class TestResponseStoreDTO {
     private LocalDateTime createdAt = LocalDateTime.now();
     private boolean enable = true;
     private Long storeManagerId = 50L;
+    private String storeManagerFullName = "STEVE JOBS";
+    private ResponseStoreDetailsDTO details = new TestResponseStoreDetailsDTO().build();
 
     public TestResponseStoreDTO withId(Long id){
         this.id = id;
@@ -56,6 +61,16 @@ public class TestResponseStoreDTO {
         return this;
     }
 
+    public TestResponseStoreDTO withStoreManagerFullName(String storeManagerFullName){
+        this.storeManagerFullName = storeManagerFullName;
+        return this;
+    }
+
+    public TestResponseStoreDTO withDetails(ResponseStoreDetailsDTO details){
+        this.details = details;
+        return this;
+    }
+
     public ResponseStoreDTO build(){
         return new ResponseStoreDTO(
                 id,
@@ -66,7 +81,9 @@ public class TestResponseStoreDTO {
                 branch.getName(),
                 createdAt,
                 enable,
-                storeManagerId
+                storeManagerId,
+                storeManagerFullName,
+                details
         );
     }
 
@@ -80,7 +97,9 @@ public class TestResponseStoreDTO {
                 store.getBranch().getName(),
                 store.getCreatedAt(),
                 store.isEnable(),
-                store.getStoreManagerId()
+                store.getStoreManagerId(),
+                store.getStoreManagerId().toString(),
+                new TestResponseStoreDetailsDTO().build()
         );
     }
 }
