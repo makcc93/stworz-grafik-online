@@ -80,7 +80,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         if (updateEmployeeDTO.lastName() != null){
             String validatedLastName = nameValidatorService.validate(updateEmployeeDTO.lastName(),ObjectType.PERSON);
 
-            employee.setFirstName(validatedLastName);
+            employee.setLastName(validatedLastName);
         }
 
         employeeMapper.updateEmployee(updateEmployeeDTO,employee);

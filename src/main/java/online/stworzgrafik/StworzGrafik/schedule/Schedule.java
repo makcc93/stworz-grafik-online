@@ -31,6 +31,7 @@ public class Schedule {
 
     @Column(nullable = true)
     private String name;
+
     private LocalDateTime createdAt;
 
     private Long createdByUserId;
