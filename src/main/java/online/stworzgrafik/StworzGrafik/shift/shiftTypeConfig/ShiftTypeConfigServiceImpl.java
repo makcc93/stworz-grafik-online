@@ -29,4 +29,10 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
     public Boolean countsAsWork(ShiftCode code){
         return shiftTypeConfigRepository.countsAsWork(code);
     }
+
+    @Override
+    public ShiftTypeConfig findById(Long shiftTypeConfigId) {
+        return shiftTypeConfigRepository.findById(shiftTypeConfigId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find shift type config by id" + shiftTypeConfigId));
+    }
 }
