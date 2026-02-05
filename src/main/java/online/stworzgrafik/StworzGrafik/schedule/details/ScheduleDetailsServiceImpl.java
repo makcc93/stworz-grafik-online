@@ -95,7 +95,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
 
         return mapper.toDTO(saved);
     }
-    
+
     @Override
     public ResponseScheduleDetailsDTO findById(Long scheduleId, Long scheduleDetailsId) {
         ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
