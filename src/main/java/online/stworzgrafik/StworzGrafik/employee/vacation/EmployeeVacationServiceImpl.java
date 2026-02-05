@@ -18,8 +18,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 import static online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationSpecification.*;
 
 

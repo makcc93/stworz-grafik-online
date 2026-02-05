@@ -26,29 +26,29 @@ class BranchController {
 
 
     @GetMapping("/branches")
-    public ResponseEntity<List<ResponseBranchDTO>> findAll(){
+    ResponseEntity<List<ResponseBranchDTO>> findAll(){
         return ResponseEntity.ok().body(branchService.findAll());
     }
 
     @GetMapping("/branches/{id}")
-    public ResponseEntity<ResponseBranchDTO> findById(@PathVariable Long id){
+    ResponseEntity<ResponseBranchDTO> findById(@PathVariable Long id){
         return ResponseEntity.ok().body(branchService.findById(id));
     }
 
     @PostMapping("/branches")
-    public ResponseEntity<ResponseBranchDTO> createBranch(@RequestBody @Valid CreateBranchDTO createBranchDTO){
+    ResponseEntity<ResponseBranchDTO> createBranch(@RequestBody @Valid CreateBranchDTO createBranchDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(branchService.createBranch(createBranchDTO));
     }
 
     @DeleteMapping("/branches/{id}")
-    public ResponseEntity<HttpStatus> deleteBranchById(@PathVariable Long id){
+    ResponseEntity<HttpStatus> deleteBranchById(@PathVariable Long id){
         branchService.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PatchMapping("/branches/{id}")
-    public ResponseEntity<ResponseBranchDTO> updateBranch(@PathVariable Long id, @RequestBody @Valid UpdateBranchDTO updateBranchDTO){
+    ResponseEntity<ResponseBranchDTO> updateBranch(@PathVariable Long id, @RequestBody @Valid UpdateBranchDTO updateBranchDTO){
         return ResponseEntity.ok().body(branchService.updateBranch(id,updateBranchDTO));
     }
 }

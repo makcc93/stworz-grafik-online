@@ -7,6 +7,8 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
+import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.ScheduleService;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ResponseScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
@@ -14,7 +16,6 @@ import online.stworzgrafik.StworzGrafik.schedule.details.DTO.UpdateScheduleDetai
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
-import online.stworzgrafik.StworzGrafik.shift.ShiftService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import org.springframework.data.domain.Page;
@@ -22,8 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 import static online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsSpecification.*;
 
@@ -42,14 +41,11 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
 
     @Override
     public ResponseScheduleDetailsDTO createScheduleDetails(Long scheduleId, CreateScheduleDetailsDTO dto) {
-        Schedule schedule = scheduleEntityService.findEntityById(scheduleId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule by id " + scheduleId));
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
 
         Long storeId = schedule.getStore().getId();
 
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyStoreAccess(storeId);
 
         if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
             throw new EntityExistsException("Schedule details for employee id " + dto.employeeId()
@@ -75,16 +71,15 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
         return mapper.toDTO(saved);
     }
 
+
+
     @Override
     public ResponseScheduleDetailsDTO updateScheduleDetails(Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
-        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule by id " + scheduleId));
+        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
 
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyStoreAccess(storeId);
 
         if (!repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
             throw new EntityNotFoundException("Schedule details for employee id " + dto.employeeId()
@@ -92,8 +87,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
                     + " does not exist");
         }
 
-        ScheduleDetails scheduleDetails = repository.findById(scheduleDetailsId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule details by id " + scheduleDetailsId));
+        ScheduleDetails scheduleDetails = getScheduleDetails(scheduleDetailsId);
 
         mapper.updateScheduleDetails(dto,scheduleDetails);
 
@@ -101,34 +95,27 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
 
         return mapper.toDTO(saved);
     }
-
+    
     @Override
     public ResponseScheduleDetailsDTO findById(Long scheduleId, Long scheduleDetailsId) {
-        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule by id " + scheduleId));
+        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
 
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyStoreAccess(storeId);
 
-        ScheduleDetails scheduleDetails = repository.findById(scheduleDetailsId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule details by id " + scheduleDetailsId));
+        ScheduleDetails scheduleDetails = getScheduleDetails(scheduleDetailsId);
 
         return mapper.toDTO(scheduleDetails);
     }
 
     @Override
     public Page<ResponseScheduleDetailsDTO> findByCriteria(Long scheduleId, ScheduleDetailsSpecificationDTO dto, Pageable pageable) {
-        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule by id " + scheduleId));
+        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
 
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyStoreAccess(storeId);
 
         Specification<ScheduleDetails> specification  = Specification.allOf(
                 hasScheduleId(scheduleId),
@@ -145,11 +132,28 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
 
     @Override
     public void deleteScheduleDetails(Long scheduleId, Long scheduleDetailsId) {
+        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
+        Long storeId = responseScheduleDTO.storeId();
+
+        verifyStoreAccess(storeId);
+
+        repository.deleteById(scheduleDetailsId);
     }
 
     @Override
     public ResponseScheduleDetailsDTO saveScheduleDetails(ScheduleDetails scheduleDetails) {
-        return null;
+        return mapper.toDTO(repository.save(scheduleDetails));
+    }
+
+    private void verifyStoreAccess(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+    }
+
+    private ScheduleDetails getScheduleDetails(Long scheduleDetailsId) {
+        return repository.findById(scheduleDetailsId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule details by id " + scheduleDetailsId));
     }
 }

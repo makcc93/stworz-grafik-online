@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.schedule.details;
+package online.stworzgrafik.StworzGrafik.schedule;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,15 +10,15 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 
 @Repository
-interface ScheduleDetailsRepository extends JpaRepository<ScheduleDetails, Long>, JpaSpecificationExecutor<ScheduleDetails> {
+interface ScheduleRepository extends JpaRepository<Schedule,Long>, JpaSpecificationExecutor<Schedule> {
 
     @Override
     @NonNull
-    @EntityGraph(attributePaths = {"employee", "shift", "shiftTypeConfig", "schedule"})
-    Page<ScheduleDetails> findAll(@Nullable Specification<ScheduleDetails> specification, @NonNull Pageable pageable);
+    @EntityGraph(attributePaths = {"store", "scheduleDetails"})
+    Page<Schedule> findAll(@Nullable Specification<Schedule> specification, @NonNull Pageable pageable);
 
-    boolean existsByEmployeeIdAndDate(Long employeeId, LocalDate date);
+    boolean existsByStoreIdAndYearAndMonth(Long storeId, Integer year, Integer month);
+
 }
