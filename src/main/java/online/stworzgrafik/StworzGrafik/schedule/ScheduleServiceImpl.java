@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.schedule;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
@@ -12,10 +11,12 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Pageable;
+
+import static online.stworzgrafik.StworzGrafik.schedule.ScheduleSpecification.*;
 
 @Service
 @RequiredArgsConstructor
@@ -83,18 +84,19 @@ public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityServi
     }
 
     @Override
-    public Page<ResponseScheduleDTO> findByCriteria(ScheduleSpecificationDTO dto, Pageable pageable) {
-        if (dto.storeId() != null) {
-            verifyStoreAccess(dto.storeId());
-        }
+    public Page<ResponseScheduleDTO> findByCriteria(Long storeId, ScheduleSpecificationDTO dto, Pageable pageable) {
+        verifyStoreAccess(storeId);
 
         Specification<Schedule> specification = Specification.allOf(
-                ScheduleSpecification.hasId(dto.scheduleId()),
-                ScheduleSpecification.hasStoreId(dto.storeId()),
-                ScheduleSpecification.hasYear(dto.year()),
-                ScheduleSpecification.hasMonth(dto.month()),
-                ScheduleSpecification.hasName(dto.name()),
-                ScheduleSpecification.hasScheduleStatusName(dto.scheduleStatusName())
+                hasId(dto.scheduleId()),
+                hasYear(dto.year()),
+                hasMonth(dto.month()),
+                hasName(dto.name()),
+                isCreatedAt(dto.createdAt()),
+                isCreatedBy(dto.createdByUserId()),
+                isUpdatedAt(dto.updatedAt()),
+                isUpdatedBy(dto.updatedByUserId()),
+                hasScheduleStatusName(dto.scheduleStatusName())
         );
 
         return repository.findAll(specification,pageable)

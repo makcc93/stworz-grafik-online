@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public record ScheduleSpecificationDTO(
         Long scheduleId,
-        Long storeId,
         Integer year,
         Integer month,
         String name,

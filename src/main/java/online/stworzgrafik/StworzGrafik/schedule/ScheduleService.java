@@ -22,7 +22,8 @@ public interface ScheduleService {
     ResponseScheduleDTO findById(@NotNull Long storeId,
                                  @NotNull Long scheduleId);
 
-    Page<ResponseScheduleDTO> findByCriteria(ScheduleSpecificationDTO dto,
+    Page<ResponseScheduleDTO> findByCriteria(@NotNull Long storeId,
+                                             ScheduleSpecificationDTO dto,
                                              Pageable pageable);
 
     void deleteSchedule(@NotNull Long storeId,

@@ -27,10 +27,12 @@ class ScheduleController {
         return ResponseEntity.ok(scheduleService.findById(storeId, scheduleId));
     }
 
-    @GetMapping("/schedules")
-    ResponseEntity<Page<ResponseScheduleDTO>> getByCriteria(ScheduleSpecificationDTO dto,
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/schedules")
+    ResponseEntity<Page<ResponseScheduleDTO>> getByCriteria(@PathVariable Long storeId,
+                                                            ScheduleSpecificationDTO dto,
                                                             Pageable pageable){
-        return ResponseEntity.ok(scheduleService.findByCriteria(dto,pageable));
+        return ResponseEntity.ok(scheduleService.findByCriteria(storeId,dto,pageable));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
