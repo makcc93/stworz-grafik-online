@@ -15,16 +15,18 @@ public interface ScheduleService {
     ResponseScheduleDTO createSchedule(@NotNull Long storeId,
                                        @NotNull @Valid CreateScheduleDTO dto);
 
-    ResponseScheduleDTO updateSchedule(@NotNull Long scheduleId,
+    ResponseScheduleDTO updateSchedule(@NotNull Long storeId,
+                                       @NotNull Long scheduleId,
                                        @NotNull @Valid UpdateScheduleDTO dto);
 
-    ResponseScheduleDTO findById(@NotNull Long scheduleId);
+    ResponseScheduleDTO findById(@NotNull Long storeId,
+                                 @NotNull Long scheduleId);
 
-    Page<ResponseScheduleDTO> findByCriteria(@NotNull Long scheduleId,
-                                             ScheduleSpecificationDTO dto,
+    Page<ResponseScheduleDTO> findByCriteria(ScheduleSpecificationDTO dto,
                                              Pageable pageable);
 
-    void deleteSchedule(@NotNull Long scheduleId);
+    void deleteSchedule(@NotNull Long storeId,
+                        @NotNull Long scheduleId);
 
     ResponseScheduleDTO saveSchedule(@NotNull Schedule schedule);
 }

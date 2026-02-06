@@ -62,38 +62,34 @@ public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityServi
     }
 
     @Override
-    public ResponseScheduleDTO updateSchedule(Long scheduleId, UpdateScheduleDTO dto) {
-        Schedule schedule = getSchedule(scheduleId);
-
-        Long storeId = schedule.getStore().getId();
+    public ResponseScheduleDTO updateSchedule(Long storeId, Long scheduleId, UpdateScheduleDTO dto) {
         verifyStoreAccess(storeId);
+
+        Schedule schedule = getSchedule(scheduleId);
 
         mapper.updateSchedule(dto,schedule);
 
         Schedule saved = repository.save(schedule);
 
+        return mapper.toDTO(saved);
+    }
+
+    @Override
+    public ResponseScheduleDTO findById(Long storeId, Long scheduleId) {
+        verifyStoreAccess(storeId);
+        Schedule schedule = getSchedule(scheduleId);
+
         return mapper.toDTO(schedule);
     }
 
     @Override
-    public ResponseScheduleDTO findById(Long scheduleId) {
-        Schedule schedule = getSchedule(scheduleId);
-
-        Long storeId = schedule.getStore().getId();
-        verifyStoreAccess(storeId);
-
-        return mapper.toDTO(schedule);
-    }
-
-    @Override
-    public Page<ResponseScheduleDTO> findByCriteria(Long scheduleId, ScheduleSpecificationDTO dto, Pageable pageable) {
-        Schedule schedule = getSchedule(scheduleId);
-
-        Long storeId = schedule.getStore().getId();
-        verifyStoreAccess(storeId);
+    public Page<ResponseScheduleDTO> findByCriteria(ScheduleSpecificationDTO dto, Pageable pageable) {
+        if (dto.storeId() != null) {
+            verifyStoreAccess(dto.storeId());
+        }
 
         Specification<Schedule> specification = Specification.allOf(
-                ScheduleSpecification.hasId(scheduleId),
+                ScheduleSpecification.hasId(dto.scheduleId()),
                 ScheduleSpecification.hasStoreId(dto.storeId()),
                 ScheduleSpecification.hasYear(dto.year()),
                 ScheduleSpecification.hasMonth(dto.month()),
@@ -106,11 +102,10 @@ public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityServi
     }
 
     @Override
-    public void deleteSchedule(Long scheduleId) {
-        Schedule schedule = getSchedule(scheduleId);
-
-        Long storeId = schedule.getStore().getId();
+    public void deleteSchedule(Long storeId, Long scheduleId) {
         verifyStoreAccess(storeId);
+
+        Schedule schedule = getSchedule(scheduleId);
 
         repository.delete(schedule);
     }
