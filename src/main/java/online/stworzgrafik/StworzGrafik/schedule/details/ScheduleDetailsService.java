@@ -12,21 +12,26 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 public interface ScheduleDetailsService {
-    ResponseScheduleDetailsDTO createScheduleDetails(@NotNull Long scheduleId,
+    ResponseScheduleDetailsDTO createScheduleDetails(@NotNull Long storeId,
+                                                     @NotNull Long scheduleId,
                                                      @NotNull @Valid CreateScheduleDetailsDTO dto);
 
-    ResponseScheduleDetailsDTO updateScheduleDetails(@NotNull Long scheduleId,
+    ResponseScheduleDetailsDTO updateScheduleDetails(@NotNull Long storeId,
+                                                     @NotNull Long scheduleId,
                                                      @NotNull Long scheduleDetailsId,
                                                      @NotNull @Valid UpdateScheduleDetailsDTO dto);
 
-    ResponseScheduleDetailsDTO findById(@NotNull Long scheduleId,
+    ResponseScheduleDetailsDTO findById(@NotNull Long storeId,
+                                        @NotNull Long scheduleId,
                                         @NotNull Long scheduleDetailsId);
 
-    Page<ResponseScheduleDetailsDTO> findByCriteria(@NotNull Long scheduleId,
-                                         ScheduleDetailsSpecificationDTO dto,
-                                         Pageable pageable);
+    Page<ResponseScheduleDetailsDTO> findByCriteria(@NotNull Long storeId,
+                                                    @NotNull Long scheduleId,
+                                                    ScheduleDetailsSpecificationDTO dto,
+                                                    Pageable pageable);
 
-    void deleteScheduleDetails(@NotNull Long scheduleId,
+    void deleteScheduleDetails(@NotNull Long storeId,
+                               @NotNull Long scheduleId,
                                @NotNull Long scheduleDetailsId);
 
     ResponseScheduleDetailsDTO saveScheduleDetails(@NotNull ScheduleDetails scheduleDetails);

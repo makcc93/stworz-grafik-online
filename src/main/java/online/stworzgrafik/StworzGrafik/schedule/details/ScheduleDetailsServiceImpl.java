@@ -40,12 +40,11 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
     private final ScheduleDetailsMapper mapper;
 
     @Override
-    public ResponseScheduleDetailsDTO createScheduleDetails(Long scheduleId, CreateScheduleDetailsDTO dto) {
+    public ResponseScheduleDetailsDTO createScheduleDetails(Long storeId, Long scheduleId, CreateScheduleDetailsDTO dto) {
+        verifyStoreAccess(storeId);
+
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
 
-        Long storeId = schedule.getStore().getId();
-
-        verifyStoreAccess(storeId);
 
         if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
             throw new EntityExistsException("Schedule details for employee id " + dto.employeeId()
@@ -53,10 +52,11 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
                     + " already exists");
         }
 
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+
         Employee employee = employeeService.getEntityById(storeId);
         Shift shift = shiftService.getEntityById(dto.shiftId());
         ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
-
 
         ScheduleDetails scheduleDetails = builder.createScheduleDetails(
                 schedule,
@@ -71,14 +71,9 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
         return mapper.toDTO(saved);
     }
 
-
-
+    //TODO continue here and implement storeId into service and then make an controller for scheduleDetails
     @Override
-    public ResponseScheduleDetailsDTO updateScheduleDetails(Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
-        ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
-
-        Long storeId = responseScheduleDTO.storeId();
-
+    public ResponseScheduleDetailsDTO updateScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
         verifyStoreAccess(storeId);
 
         if (!repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
@@ -97,7 +92,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
     }
 
     @Override
-    public ResponseScheduleDetailsDTO findById(Long scheduleId, Long scheduleDetailsId) {
+    public ResponseScheduleDetailsDTO findById(Long storeId, Long scheduleId, Long scheduleDetailsId) {
         ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
@@ -110,7 +105,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
     }
 
     @Override
-    public Page<ResponseScheduleDetailsDTO> findByCriteria(Long scheduleId, ScheduleDetailsSpecificationDTO dto, Pageable pageable) {
+    public Page<ResponseScheduleDetailsDTO> findByCriteria(Long storeId, Long scheduleId, ScheduleDetailsSpecificationDTO dto, Pageable pageable) {
         ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
@@ -131,7 +126,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
     }
 
     @Override
-    public void deleteScheduleDetails(Long scheduleId, Long scheduleDetailsId) {
+    public void deleteScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId) {
         ResponseScheduleDTO responseScheduleDTO = scheduleService.findById(scheduleId);
 
         Long storeId = responseScheduleDTO.storeId();
@@ -155,5 +150,11 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
     private ScheduleDetails getScheduleDetails(Long scheduleDetailsId) {
         return repository.findById(scheduleDetailsId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find schedule details by id " + scheduleDetailsId));
+    }
+
+    private static void verifyScheduleAndStoreMatching(Long storeId, Long scheduleId, Schedule schedule) {
+        if (!schedule.getStore().getId().equals(storeId)){
+            throw new AccessDeniedException("Schedule id " + scheduleId + " does not belong to store with id " + storeId);
+        }
     }
 }
