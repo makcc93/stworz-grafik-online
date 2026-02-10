@@ -7,7 +7,7 @@ public class TestCreateScheduleDTO {
     private Integer month = 5;
     private String name = "Majowy harmonogram 2023";
     private Long createdByUserId = 500L;
-    private String scheduleStatusName = "IN_PROGRESS";
+    private String scheduleStatusName = "done";
 
     public TestCreateScheduleDTO withYear(Integer year) {
         this.year = year;
