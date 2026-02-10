@@ -5,5 +5,5 @@ enum ScheduleStatus {
     IN_PROGRESS,
     DELETED,
     FAILED,
-    ARCHIEVED
+    ARCHIVED
 }

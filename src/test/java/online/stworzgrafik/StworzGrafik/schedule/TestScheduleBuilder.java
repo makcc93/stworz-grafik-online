@@ -13,6 +13,8 @@ public class TestScheduleBuilder {
     private Store store = new TestStoreBuilder().withBranch(branch).build();
     private Integer year = 2020;
     private Integer month = 10;
+    private String name = "RANDOM SCHEDULE NAME";
+    private ScheduleStatus scheduleStatus = ScheduleStatus.IN_PROGRESS;
     private Long createByUserId = 123L;
 
     public TestScheduleBuilder withRegion(Region region){
@@ -40,6 +42,16 @@ public class TestScheduleBuilder {
         return this;
     }
 
+    public TestScheduleBuilder withName(String name){
+        this.name = name;
+        return this;
+    }
+
+    public TestScheduleBuilder withScheduleStatus(ScheduleStatus scheduleStatus){
+        this.scheduleStatus = scheduleStatus;
+        return this;
+    }
+
     public TestScheduleBuilder withCreateByUserId(Long createByUserId){
         this.createByUserId = createByUserId;
         return this;
@@ -50,6 +62,8 @@ public class TestScheduleBuilder {
                 store,
                 year,
                 month,
+                name,
+                scheduleStatus,
                 createByUserId
         );
     }

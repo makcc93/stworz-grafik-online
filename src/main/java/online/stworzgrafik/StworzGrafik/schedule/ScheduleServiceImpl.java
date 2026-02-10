@@ -49,11 +49,14 @@ public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityServi
         }
 
         Store store = storeEntityService.getEntityById(storeId);
+        ScheduleStatus scheduleStatus = mapper.stringToEnum(dto.scheduleStatusName());
 
         Schedule schedule = builder.createSchedule(
                 store,
                 dto.year(),
                 dto.month(),
+                dto.name(),
+                scheduleStatus,
                 dto.createdByUserId()
         );
 

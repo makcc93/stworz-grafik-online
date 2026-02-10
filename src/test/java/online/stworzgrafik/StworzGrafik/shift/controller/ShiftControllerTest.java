@@ -196,7 +196,7 @@ class ShiftControllerTest {
         ShiftHoursDTO dtoForUpdate = new TestShiftHoursDTO().withStartHour(newStartHour).withEndHour(newEndHour).build();
 
         //when
-        MvcResult mvcResult = mockMvc.perform(put("/api/shifts/" + originalShift.getId())
+        MvcResult mvcResult = mockMvc.perform(patch("/api/shifts/" + originalShift.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dtoForUpdate)))
                 .andDo(print())
@@ -221,7 +221,7 @@ class ShiftControllerTest {
         Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
-       mockMvc.perform(put("/api/shifts/" + originalShift.getId()))
+       mockMvc.perform(patch("/api/shifts/" + originalShift.getId()))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
         //then
@@ -235,7 +235,7 @@ class ShiftControllerTest {
         Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
-        mockMvc.perform(put("/api/shifts/" + originalShift.getId())
+        mockMvc.perform(patch("/api/shifts/" + originalShift.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(null)))
                 .andDo(print())
