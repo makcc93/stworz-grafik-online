@@ -21,8 +21,9 @@ class RegionController {
     private final RegionService regionService;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/regions/getAll")
+    @GetMapping("/regions")
     public ResponseEntity<List<ResponseRegionDTO>> getAll(){
+
         return ResponseEntity.ok(regionService.findAll());
     }
 
@@ -30,12 +31,6 @@ class RegionController {
     @GetMapping("/regions/{id}")
     public ResponseEntity<ResponseRegionDTO> getById(@PathVariable Long id){
         return ResponseEntity.ok(regionService.findById(id));
-    }
-
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/regions")
-    public ResponseEntity<List<ResponseRegionDTO>> getByCriteria(RegionSpecificationDTO dto){
-        return ResponseEntity.ok(regionService.findByCriteria(dto));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

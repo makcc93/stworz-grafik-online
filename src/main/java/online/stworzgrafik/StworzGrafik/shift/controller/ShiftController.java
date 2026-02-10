@@ -19,7 +19,6 @@ import java.util.List;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Transactional
-@PreAuthorize("hasAuthority('ADMIN')")
 class ShiftController {
     private final ShiftService shiftService;
     private final ShiftGeneratorAlgorithm shiftGeneratorAlgorithm;
@@ -35,11 +34,13 @@ class ShiftController {
         return ResponseEntity.ok().body(shiftService.findAll());
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/shifts")
     public ResponseEntity<ResponseShiftDTO> createShift(@RequestBody @Valid ShiftHoursDTO shiftHoursDTO){
             return ResponseEntity.status(HttpStatus.CREATED).body(shiftService.create(shiftHoursDTO));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/shifts/{id}")
     public ResponseEntity<HttpStatus> deleteShift(@PathVariable Long id) {
             shiftService.delete(id);
@@ -47,7 +48,8 @@ class ShiftController {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @PutMapping("/shifts/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/shifts/{id}")
     public ResponseEntity<ResponseShiftDTO> updateShift(@PathVariable Long id, @RequestBody @Valid ShiftHoursDTO shiftHoursDTO) {
         return ResponseEntity.ok().body(shiftService.updateShift(id,shiftHoursDTO));
     }
