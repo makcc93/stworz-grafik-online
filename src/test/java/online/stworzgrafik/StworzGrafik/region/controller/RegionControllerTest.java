@@ -54,7 +54,7 @@ class RegionControllerTest {
         ResponseRegionDTO secondExistingRegion = regionService.createRegion(secondCreateDTO);
 
         //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/regions/getAll"))
+        MvcResult mvcResult = mockMvc.perform(get("/api/regions"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -98,31 +98,6 @@ class RegionControllerTest {
                 .andReturn();
 
         //then
-    }
-
-    @Test
-    void getByCriteria_workingTest() throws Exception{
-        //given
-        String warsaw = "WARSAW";
-        CreateRegionDTO firstCreateDTO = new TestCreateRegionDTO().withName(warsaw).build();
-        regionService.createRegion(firstCreateDTO);
-
-        CreateRegionDTO secondCreateDTO = new TestCreateRegionDTO().withName("CRACOW").build();
-        regionService.createRegion(secondCreateDTO);
-
-        RegionSpecificationDTO dto = new TestRegionSpecificationDTO().withName(warsaw).build();
-
-        //when
-        MvcResult mvcResult = mockMvc.perform(get("/api/regions?name=" + dto.name()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        //then
-        List<ResponseRegionDTO> responseRegionDTOS = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseRegionDTO>>() {});
-
-        assertEquals(1,responseRegionDTOS.size());
-        assertEquals(warsaw,responseRegionDTOS.getFirst().name());
     }
 
     @Test

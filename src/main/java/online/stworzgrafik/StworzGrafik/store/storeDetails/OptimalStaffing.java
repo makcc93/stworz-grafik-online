@@ -10,7 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-class OptimalStaffing {
+public class OptimalStaffing {
 
     @Column(name = "optimal_store_managers")
     private Integer storeManagers;

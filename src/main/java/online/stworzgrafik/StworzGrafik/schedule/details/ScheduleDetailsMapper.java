@@ -12,7 +12,7 @@ interface ScheduleDetailsMapper {
     @Mapping(source = "shiftTypeConfig.id", target = "shiftTypeConfigId")
     ResponseScheduleDetailsDTO toDTO(ScheduleDetails scheduleDetails);
 
-    ScheduleDetails toEntity();
+//    ScheduleDetails toEntity();
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateScheduleDetails(UpdateScheduleDetailsDTO dto, @MappingTarget ScheduleDetails scheduleDetails);

@@ -8,10 +8,10 @@ import org.mapstruct.*;
 interface ScheduleMapper {
 
     @Mapping(target = "storeId", source = "store.id")
-    @Mapping(target = "scheduleStatusName", source = "scheduleStatus.name")
+    @Mapping(target = "scheduleStatusName", source = "scheduleStatus")
     ResponseScheduleDTO toDTO(Schedule schedule);
 
-    Schedule toEntity();
+//    Schedule toEntity();
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSchedule(UpdateScheduleDTO dto, @MappingTarget Schedule schedule);

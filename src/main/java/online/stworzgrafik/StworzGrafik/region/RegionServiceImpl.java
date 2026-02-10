@@ -75,21 +75,6 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
-    public List<ResponseRegionDTO> findByCriteria(@Nullable RegionSpecificationDTO dto) {
-        if (dto == null) return Collections.emptyList();
-
-        Specification<Region> specification = Specification.allOf(
-                RegionSpecification.hasId(dto.id()),
-                RegionSpecification.hasNameLike(dto.name()),
-                RegionSpecification.isEnable(dto.enable())
-        );
-
-        return regionRepository.findAll(specification).stream()
-                .map(regionMapper::toResponseRegionDTO)
-                .toList();
-    }
-
-    @Override
     public ResponseRegionDTO save(Region region) {
         Region savedRegion = regionRepository.save(region);
 

@@ -17,7 +17,6 @@ public interface RegionService {
      ResponseRegionDTO updateRegion(@NotNull Long id, @NotNull @Valid UpdateRegionDTO updateRegionDTO);
      List<ResponseRegionDTO> findAll();
      ResponseRegionDTO findById(@NotNull Long id);
-     List<ResponseRegionDTO> findByCriteria(@Nullable RegionSpecificationDTO dto);
      ResponseRegionDTO save(@NotNull Region region);
      boolean exists(@NotNull Long id);
      boolean exists(@NotNull String name);

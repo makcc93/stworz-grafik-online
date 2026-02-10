@@ -77,13 +77,13 @@ class StoreServiceImplTest {
 
         when(repository.findAll(pageable)).thenReturn(storesPage);
 
-        ResponseStoreDTO responseOfStore1 = new TestResponseStoreDTO().buildFromEntity(store1);
+        ResponseStoreDTO responseOfStore1 = new TestResponseStoreDTO().withStoreCode("00").build();
         when(storeMapper.toResponseStoreDto(store1)).thenReturn(responseOfStore1);
 
-        ResponseStoreDTO responseOfStore2 = new TestResponseStoreDTO().buildFromEntity(store2);
+        ResponseStoreDTO responseOfStore2 = new TestResponseStoreDTO().withStoreCode("11").build();
         when(storeMapper.toResponseStoreDto(store2)).thenReturn(responseOfStore2);
 
-        ResponseStoreDTO responseOfStore3 = new TestResponseStoreDTO().buildFromEntity(store3);
+        ResponseStoreDTO responseOfStore3 = new TestResponseStoreDTO().withStoreCode("22").build();
         when(storeMapper.toResponseStoreDto(store3)).thenReturn(responseOfStore3);
 
         //when
@@ -104,7 +104,7 @@ class StoreServiceImplTest {
         Store store = new TestStoreBuilder().build();
 
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
-        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().withName(store.getName()).build();
 
         when(repository.findById(id)).thenReturn(Optional.of(store));
 
@@ -114,8 +114,8 @@ class StoreServiceImplTest {
         ResponseStoreDTO response = service.findById(id);
 
         //then
-        assertEquals(store.getName(),response.name());
-        assertEquals(store.getStoreCode(),response.storeCode());
+        assertEquals(responseStoreDTO.name(),response.name());
+        assertEquals(responseStoreDTO.storeCode(),response.storeCode());
 
         verify(repository,times(1)).findById(id);
         verify(storeMapper).toResponseStoreDto(any(Store.class));
@@ -312,15 +312,15 @@ class StoreServiceImplTest {
 
         when(repository.save(store)).thenReturn(store);
 
-        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().build();
         when (storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
 
         //when
         ResponseStoreDTO returnedDto = service.save(store);
 
         //then
-        assertEquals(store.getId(),returnedDto.id());
-        assertEquals(store.getLocation(),returnedDto.location());
+        assertEquals(responseStoreDTO.id(),returnedDto.id());
+        assertEquals(responseStoreDTO.location(),returnedDto.location());
 
         verify(repository,times(1)).save(any(Store.class));
     }
@@ -338,7 +338,7 @@ class StoreServiceImplTest {
 
         when(nameValidatorService.validate(updateStoreDTO.name(), ObjectType.STORE)).thenReturn(updateStoreDTO.name());
 
-        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().buildFromEntity(store);
+        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().build();
 
         when(repository.findById(id)).thenReturn(Optional.of(store));
         when(repository.save(any(Store.class))).thenReturn(store);

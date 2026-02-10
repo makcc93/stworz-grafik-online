@@ -70,7 +70,6 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
         return mapper.toDTO(saved);
     }
 
-    //TODO continue here and implement storeId into service and then make an controller for scheduleDetails
     @Override
     public ResponseScheduleDetailsDTO updateScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
         verifyUserToStoreAccess(storeId);

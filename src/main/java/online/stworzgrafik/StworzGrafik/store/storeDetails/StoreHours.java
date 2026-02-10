@@ -12,7 +12,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @Builder
-class StoreHours {
+public class StoreHours {
 
     @Column(name = "monday_open")
     private LocalTime mondayOpen;
