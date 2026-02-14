@@ -5,15 +5,15 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import java.time.LocalDateTime;
 
 public class TestScheduleSpecificationDTO {
-    private Long scheduleId = 1234L;
-    private Integer year = 2021;
-    private Integer month = 2;
-    private String name = "RANDOM NAME";
-    private LocalDateTime createdAt = LocalDateTime.of(2020,1,1,12,20);
-    private Long createdByUserId = 20L;
+    private Long scheduleId = null;
+    private Integer year = null;
+    private Integer month = null;
+    private String name = null;
+    private LocalDateTime createdAt = null;
+    private Long createdByUserId = null;
     private LocalDateTime updatedAt = null;
     private Long updatedByUserId = null;
-    private String scheduleStatusName = "DONE";
+    private String scheduleStatusName = null;
 
     public TestScheduleSpecificationDTO withScheduleId(Long scheduleId){
         this.scheduleId = scheduleId;

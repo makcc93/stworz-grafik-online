@@ -23,7 +23,7 @@ class ScheduleController {
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/schedules/{scheduleId}")
     ResponseEntity<ResponseScheduleDTO> getById(@PathVariable Long storeId,
-                                                       @PathVariable Long scheduleId){
+                                                @PathVariable Long scheduleId){
         return ResponseEntity.ok(scheduleService.findById(storeId, scheduleId));
     }
 
