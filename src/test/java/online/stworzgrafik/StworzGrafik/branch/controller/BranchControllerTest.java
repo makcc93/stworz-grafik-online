@@ -180,7 +180,7 @@ class BranchControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createBranchDTO)))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
 
         //then
     }

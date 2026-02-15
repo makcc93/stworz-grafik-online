@@ -1,24 +1,22 @@
 package online.stworzgrafik.StworzGrafik.store.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.PrePersist;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.store.TestCreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,19 +27,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;

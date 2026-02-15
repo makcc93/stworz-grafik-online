@@ -138,8 +138,6 @@ class EmployeeControllerTest {
                 new TestCreateEmployeeDTO().withFirstName(thirdN).withSap(33333333L).withPositionId(positionId).build()
         );
 
-        List<ResponseEmployeeDTO> responseDTOS = List.of(firstEmployeeResponseDTO,secondEmployeeResponseDTO,thirdEmployeeResponseDTO);
-
         //when&then
         mockMvc.perform(get("/api/stores/" + storeId + "/employees/getAll"))
                 .andDo(print())
@@ -307,7 +305,7 @@ class EmployeeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createEmployeeDTO)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andReturn();
 
         String serviceResponse = mvcResult.getResponse().getContentAsString();

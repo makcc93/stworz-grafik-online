@@ -150,7 +150,7 @@ class PositionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(newDTO)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andReturn();
 
         //then

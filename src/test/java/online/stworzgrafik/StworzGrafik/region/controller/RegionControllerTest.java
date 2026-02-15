@@ -133,7 +133,7 @@ class RegionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(nameWithAlreadyExistingEntity)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andReturn();
 
         //then
