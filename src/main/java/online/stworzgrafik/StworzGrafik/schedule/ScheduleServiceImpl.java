@@ -15,12 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import static online.stworzgrafik.StworzGrafik.schedule.ScheduleSpecification.*;
 
 @Service
 @RequiredArgsConstructor
-public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
+class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     private final ScheduleRepository repository;
     private final ScheduleBuilder builder;
     private final ScheduleMapper mapper;
@@ -81,6 +82,7 @@ public class ScheduleServiceImpl implements ScheduleService, ScheduleEntityServi
     @Override
     public ResponseScheduleDTO findById(Long storeId, Long scheduleId) {
         verifyStoreAccess(storeId);
+
         Schedule schedule = getSchedule(scheduleId);
 
         return mapper.toDTO(schedule);

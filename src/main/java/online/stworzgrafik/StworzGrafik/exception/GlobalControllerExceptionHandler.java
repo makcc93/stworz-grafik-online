@@ -9,6 +9,7 @@ import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -40,7 +41,7 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(EntityExistsException.class)
     public ResponseEntity<String> entityAlreadyExist(EntityExistsException e){
-        return ResponseEntity.badRequest().body("Entity with this data already exists");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Entity with this data already exists");
     }
 
     @ExceptionHandler(ValidationException.class)
@@ -70,6 +71,11 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDenied(AccessDeniedException ex){
         return ResponseEntity.badRequest().body("Access denied: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<?> handleAuthorizationDenied(AuthorizationDeniedException ex){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: " + ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
