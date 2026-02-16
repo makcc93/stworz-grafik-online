@@ -1,7 +1,9 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
+import online.stworzgrafik.StworzGrafik.shift.ShiftService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -9,18 +11,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 @Service
+@RequiredArgsConstructor
 public class ShiftGeneratorAlgorithm {
+    private final ShiftService shiftService;
+    private final ShiftEntityService shiftEntityService;
 
     int[] employeesProposalShifts = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 5, 0, 0, 0};
-    private final ShiftEntityService shiftEntityService;
 
-    public ShiftGeneratorAlgorithm(ShiftEntityService shiftEntityService) {
-        this.shiftEntityService = shiftEntityService;
-    }
 
-    public List<Shift> generateShiftsWithoutMorningShifts() {
+    public List<Shift> generateLowestPersonNeededDailyShifts() {
         List<Shift> shifts = new ArrayList<>();
 
         List<Shift> startHoursShifts = generateShiftStartHours(shifts);
@@ -65,6 +66,7 @@ public class ShiftGeneratorAlgorithm {
                 for (int i = demand; i > dailyDemand[hourOfDay - 1]; i--) {
                     Shift shift = new Shift();
                     shift.setStartHour(LocalTime.of(hourOfDay,0));
+
                     shifts.add(shift);
                 }
             }

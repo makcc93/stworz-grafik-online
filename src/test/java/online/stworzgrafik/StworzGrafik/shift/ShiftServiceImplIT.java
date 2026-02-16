@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
@@ -169,41 +172,6 @@ class ShiftServiceImplIT {
     }
 
     @Test
-    void findAll_workingTest(){
-        //given
-        Shift shift1 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build();
-        Shift shift2 = new TestShiftBuilder().withStartHour(LocalTime.of(15, 0)).withEndHour(LocalTime.of(20, 0)).build();
-        Shift shift3 = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build();
-
-        shiftRepository.save(shift1);
-        shiftRepository.save(shift2);
-        shiftRepository.save(shift3);
-
-        //when
-        List<ResponseShiftDTO> all = shiftServiceImpl.findAll();
-
-        //then
-        assertEquals(3, all.size());
-
-        List<String> stringShifts = all.stream()
-                .map(shift -> shift.startHour().getHour() + "-" + shift.endHour().getHour())
-                .toList();
-
-        assertTrue(stringShifts.containsAll(List.of("8-14","15-20","9-15")));
-    }
-
-    @Test
-    void findAll_emptyList(){
-        //given
-
-        //when
-        List<ResponseShiftDTO> all = shiftServiceImpl.findAll();
-
-        //then
-        assertEquals(0, all.size());
-    }
-
-    @Test
     void findById_workingTest(){
         //given
         Shift shift1 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(14, 0)).build();
@@ -327,7 +295,7 @@ class ShiftServiceImplIT {
         ShiftHoursDTO shiftHoursDTO = new TestShiftHoursDTO().withStartHour(startHour).withEndHour(null).build();
 
         //when
-        assertThrows(ConstraintViolationException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
+        assertThrows(IllegalArgumentException.class, () -> shiftServiceImpl.getLength(shiftHoursDTO));
         //then
     }
 

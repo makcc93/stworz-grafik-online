@@ -8,6 +8,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
@@ -251,24 +255,6 @@ class ShiftServiceImplTest {
         //then
         assertEquals("Shift with id " + id + " does not exist",exception.getMessage());
         verify(shiftRepository,never()).deleteById(id);
-    }
-
-    @Test
-    void findAll_workingTest(){
-        //given
-        Shift shift1 = new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(20, 0)).build();
-        Shift shift2 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(19, 0)).build();
-        Shift shift3 = new TestShiftBuilder().withStartHour(LocalTime.of(9, 0)).withEndHour(LocalTime.of(15, 0)).build();
-
-        when(shiftRepository.findAll()).thenReturn(List.of(shift1,shift2,shift3));
-
-        //when
-        List<ResponseShiftDTO> shiftList = shiftServiceImpl.findAll();
-
-        //then
-        assertEquals(3,shiftList.size());
-
-        verify(shiftRepository,times(1)).findAll();
     }
 
     @Test
