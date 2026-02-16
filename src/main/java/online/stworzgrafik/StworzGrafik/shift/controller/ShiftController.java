@@ -5,9 +5,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ShiftGeneratorAlgorithm;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,8 +33,9 @@ class ShiftController {
     }
 
     @GetMapping("/shifts")
-    public ResponseEntity<List<ResponseShiftDTO>> getAllShifts(){
-        return ResponseEntity.ok().body(shiftService.findAll());
+    public ResponseEntity<Page<ResponseShiftDTO>> getByCriteria(ShiftCriteriaDTO dto,
+                                                                Pageable pageable){
+        return ResponseEntity.ok(shiftService.findByCriteria(dto,pageable));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -56,6 +60,6 @@ class ShiftController {
 
     @GetMapping("/shifts/test")
     public List<Shift> testAlgorithm(){
-        return shiftGeneratorAlgorithm.generateShiftsWithoutMorningShifts();
+        return shiftGeneratorAlgorithm.generateLowestPersonNeededDailyShifts();
     }
 }

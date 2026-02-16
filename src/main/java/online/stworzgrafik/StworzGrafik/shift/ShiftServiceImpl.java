@@ -3,7 +3,11 @@ package online.stworzgrafik.StworzGrafik.shift;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -76,17 +80,21 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     @Override
-    public List<ResponseShiftDTO> findAll() {
-        return shiftRepository.findAll().stream()
-                .map(shiftMapper::toShiftDto)
-                .toList();
-    }
-
-    @Override
     public ResponseShiftDTO findById(Long id) {
         Shift shift = shiftRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
 
         return shiftMapper.toShiftDto(shift);
+    }
+
+    @Override
+    public Page<ResponseShiftDTO> findByCriteria(ShiftCriteriaDTO dto, Pageable pageable) {
+        Specification<Shift> specification = Specification.allOf(
+                ShiftSpecification.hasStartHour(dto.startHour()),
+                ShiftSpecification.hasEndHour(dto.endHour())
+        );
+
+        return shiftRepository.findAll(specification,pageable)
+                .map(shiftMapper::toShiftDto);
     }
 
     @Override
