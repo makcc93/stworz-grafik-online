@@ -1,9 +1,13 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.ShiftService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -18,13 +22,12 @@ public class ShiftGeneratorAlgorithm {
 
     int[] employeesProposalShifts = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 5, 0, 0, 0};
+    int[] dailyDemand = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 9, 9, 8, 8, 9, 9, 9, 9, 5, 0, 0, 0};
 
 
     public List<Shift> generateLowestPersonNeededDailyShifts() {
-        List<Shift> shifts = new ArrayList<>();
 
-        List<Shift> startHoursShifts = generateShiftStartHours(shifts);
+        List<Shift> startHoursShifts = generateShiftStartHours();
 
         List<Shift> shiftsSortedDesc = startHoursShifts.stream()
                 .sorted(Comparator.comparing(Shift::getStartHour).reversed())
@@ -32,6 +35,7 @@ public class ShiftGeneratorAlgorithm {
 
         List<Shift> startEndHoursShifts = generateShiftEndHours(shiftsSortedDesc);
 
+        //save only for tests then serviceFind
         for (Shift shift : startEndHoursShifts) {
             shiftEntityService.saveEntity(shift);
         }
@@ -44,34 +48,43 @@ public class ShiftGeneratorAlgorithm {
     }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc) {
-        int nr = 0;
+        int index = 0;
         for (int hourOfDay = 23; hourOfDay >= 0; hourOfDay--) {
             int demand = dailyDemand[hourOfDay];
 
-            if (demand != 0) {
+            if (demand > 0) {
                 for (int i = demand; i > dailyDemand[hourOfDay + 1]; i--) {
-                    shiftsSortedDesc.get(nr).setEndHour(LocalTime.of(hourOfDay,0));
-                    nr++;
+                    if (dailyDemand[hourOfDay+1] < demand){
+                        shiftsSortedDesc.get(index).setEndHour(LocalTime.of(hourOfDay+1,0));
+                        index++;
+
+                        continue;
+                    }
+
+                    shiftsSortedDesc.get(index).setEndHour(LocalTime.of(hourOfDay,0));
+                    index++;
                 }
             }
         }
         return shiftsSortedDesc;
     }
 
-    private List<Shift> generateShiftStartHours(List<Shift> shifts) {
-        for (int hourOfDay = 0; hourOfDay < dailyDemand.length; hourOfDay++) {
-            int demand = dailyDemand[hourOfDay];
+    private List<Shift> generateShiftStartHours() {
+        List<Shift> shifts = new ArrayList<>();
 
-            if (demand != 0) {
-                for (int i = demand; i > dailyDemand[hourOfDay - 1]; i--) {
-                    Shift shift = new Shift();
-                    shift.setStartHour(LocalTime.of(hourOfDay,0));
+            for (int hourOfDay = 0; hourOfDay < dailyDemand.length; hourOfDay++) {
+                int demand = dailyDemand[hourOfDay];
 
-                    shifts.add(shift);
+                if (demand != 0) {
+                    for (int i = demand; i > dailyDemand[hourOfDay - 1]; i--) {
+                        Shift shift = new Shift();
+                        shift.setStartHour(LocalTime.of(hourOfDay,0));
+
+                        shifts.add(shift);
+                    }
                 }
             }
-        }
-        return shifts;
+            return shifts;
     }
 
     private int[] shiftAsArray(){
