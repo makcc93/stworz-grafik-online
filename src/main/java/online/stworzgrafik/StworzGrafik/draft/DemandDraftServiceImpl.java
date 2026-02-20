@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -102,21 +103,8 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
     @Override
     public Page<ResponseDemandDraftDTO> findFilteredDrafts(Long storeId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        if (startDate == null && endDate == null){
-            LocalDate now = LocalDate.now();
-            startDate = now.withDayOfMonth(1);
-            endDate = now.withDayOfMonth(now.lengthOfMonth());
-        }
-        else if (startDate != null && endDate == null){
-            endDate = startDate;
-        }
-        else if (startDate == null && endDate != null){
-            throw new IllegalArgumentException("Must provide start day when providing end day");
-        }
-
-        Page<DemandDraft> drafts = demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate,pageable);
-
-        return drafts.map(demandDraftMapper::toResponseDemandDraftDTO);
+        return findEntityFilteredDrafts(storeId,startDate,endDate,pageable)
+                .map(demandDraftMapper::toResponseDemandDraftDTO);
     }
 
     @Override
@@ -141,5 +129,22 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     public DemandDraft getEntityById(Long id) {
         return demandDraftRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + id));
+    }
+
+    @Override
+    public Page<DemandDraft> findEntityFilteredDrafts(Long storeId, @Nullable LocalDate startDate, @Nullable LocalDate endDate, Pageable pageable) {
+        if (startDate == null && endDate == null){
+            LocalDate now = LocalDate.now();
+            startDate = now.withDayOfMonth(1);
+            endDate = now.withDayOfMonth(now.lengthOfMonth());
+        }
+        else if (startDate != null && endDate == null){
+            endDate = startDate;
+        }
+        else if (startDate == null && endDate != null){
+            throw new IllegalArgumentException("Must provide start day when providing end day");
+        }
+
+        return demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate,pageable);
     }
 }

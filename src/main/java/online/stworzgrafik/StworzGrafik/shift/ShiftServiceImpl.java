@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
@@ -155,6 +156,37 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     public Shift getEntityById(Long id) {
         return shiftRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find shift by id: " + id));
+    }
+
+    @Override
+    public Shift getArrayAsShift(int[] array) {
+        if (array.length != 24){
+            throw new IllegalArgumentException("Shift array must equal 24 elements");
+        }
+
+        int startHour = 0;
+        int endHour = 0;
+
+        for (int i = 0; i < array.length; i++){
+            if (array[i] != 0){
+                startHour = array[i];
+                break;
+            }
+        }
+
+        for (int i = 23; i >= 0; i--){
+            if (array[i] != 0){
+                endHour = array[i];
+                break;
+            }
+        }
+
+        if (startHour == 0 || endHour == 0){
+            throw new IllegalArgumentException("This array: " + array.toString() + " cannot be converted to Shift");
+        }
+
+
+        return shiftMapper.toEntity(create(new ShiftHoursDTO(LocalTime.of(startHour,0),LocalTime.of(endHour,0))));
     }
 
     private void validateHours(LocalTime startHour, LocalTime endHour){

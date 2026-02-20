@@ -3,7 +3,7 @@ package online.stworzgrafik.StworzGrafik.shift.controller;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.algorithm.ShiftGeneratorAlgorithm;
+import online.stworzgrafik.StworzGrafik.algorithm.DailyShiftGeneratorAlgorithm;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
@@ -24,7 +24,7 @@ import java.util.List;
 @Transactional
 class ShiftController {
     private final ShiftService shiftService;
-    private final ShiftGeneratorAlgorithm shiftGeneratorAlgorithm;
+    private final DailyShiftGeneratorAlgorithm dailyShiftGeneratorAlgorithm;
 
 
     @GetMapping("/shifts/{id}")
@@ -60,6 +60,6 @@ class ShiftController {
 
     @GetMapping("/shifts/test")
     public List<Shift> testAlgorithm(){
-        return shiftGeneratorAlgorithm.generateLowestPersonNeededDailyShifts();
+        return dailyShiftGeneratorAlgorithm.generateLowestPersonNeededDailyShifts();
     }
 }

@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import static online.stworzgrafik.StworzGrafik.schedule.ScheduleSpecification.*;
 
@@ -36,6 +35,25 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
         verifyStoreAccess(storeId);
 
         return schedule;
+    }
+
+    @Override
+    public Page<Schedule> findEntityByCriteria(Long storeId, ScheduleSpecificationDTO dto, Pageable pageable) {
+        verifyStoreAccess(storeId);
+
+        Specification<Schedule> specification = Specification.allOf(
+                hasId(dto.scheduleId()),
+                hasYear(dto.year()),
+                hasMonth(dto.month()),
+                hasName(dto.name()),
+                isCreatedAt(dto.createdAt()),
+                isCreatedBy(dto.createdByUserId()),
+                isUpdatedAt(dto.updatedAt()),
+                isUpdatedBy(dto.updatedByUserId()),
+                hasScheduleStatusName(dto.scheduleStatusName())
+        );
+
+        return repository.findAll(specification,pageable);
     }
 
     @Override
@@ -90,21 +108,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
 
     @Override
     public Page<ResponseScheduleDTO> findByCriteria(Long storeId, ScheduleSpecificationDTO dto, Pageable pageable) {
-        verifyStoreAccess(storeId);
-
-        Specification<Schedule> specification = Specification.allOf(
-                hasId(dto.scheduleId()),
-                hasYear(dto.year()),
-                hasMonth(dto.month()),
-                hasName(dto.name()),
-                isCreatedAt(dto.createdAt()),
-                isCreatedBy(dto.createdByUserId()),
-                isUpdatedAt(dto.updatedAt()),
-                isUpdatedBy(dto.updatedByUserId()),
-                hasScheduleStatusName(dto.scheduleStatusName())
-        );
-
-        return repository.findAll(specification,pageable)
+        return findEntityByCriteria(storeId,dto,pageable)
                 .map(mapper::toDTO);
     }
 

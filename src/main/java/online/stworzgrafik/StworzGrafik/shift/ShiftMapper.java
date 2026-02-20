@@ -13,6 +13,8 @@ interface ShiftMapper {
 
     Shift toEntity(ShiftHoursDTO shiftHoursDTO);
 
+    Shift toEntity(ResponseShiftDTO responseShiftDTO);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateShift(ShiftHoursDTO shiftHoursDTO, @MappingTarget Shift shift);
 

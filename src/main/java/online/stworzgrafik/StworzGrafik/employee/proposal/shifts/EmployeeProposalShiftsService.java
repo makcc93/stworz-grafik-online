@@ -44,4 +44,8 @@ public interface EmployeeProposalShiftsService {
     Page<ResponseEmployeeProposalShiftsDTO> getByCriteria(@NotNull Long storeId,
                                                           @Nullable EmployeeProposalShiftsSpecificationDTO dto,
                                                           Pageable pageable);
+
+    Page<EmployeeProposalShifts> getEntityByCriteria(@NotNull Long storeId,
+                                                          @Nullable EmployeeProposalShiftsSpecificationDTO dto,
+                                                          Pageable pageable);
 }

@@ -126,6 +126,13 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public Page<ResponseEmployeeProposalShiftsDTO> getByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto, Pageable pageable) {
+        return getEntityByCriteria(storeId,dto,pageable).map(
+                mapper::toResponseEmployeeProposalShiftsDTO
+        );
+    }
+
+    @Override
+    public Page<EmployeeProposalShifts> getEntityByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto, Pageable pageable) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
@@ -140,7 +147,6 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
                 isBetweenDates(dto.startDate(),dto.endDate())
         );
 
-        return repository.findAll(specification,pageable)
-                .map(mapper::toResponseEmployeeProposalShiftsDTO);
+        return repository.findAll(specification,pageable);
     }
 }

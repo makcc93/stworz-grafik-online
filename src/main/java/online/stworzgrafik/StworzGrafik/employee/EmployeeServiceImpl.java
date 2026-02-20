@@ -124,29 +124,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
 
     @Override
     public Page<ResponseEmployeeDTO> findByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
-
-        Specification<Employee> specification = hasStoreId(storeId);
-
-       if (dto != null) {
-           specification =
-                   specification
-                           .and(hasId(dto.id()))
-                           .and(hasFirstNameLike(dto.firstName()))
-                           .and(hasLastNameLike(dto.lastName()))
-                           .and(hasSap(dto.sap()))
-                           .and(hasPositionId(dto.positionId()))
-                           .and(isEnable(dto.enable()))
-                           .and(canOperateCheckout(dto.canOperateCheckout()))
-                           .and(canOperateCredit(dto.canOperateCredit()))
-                           .and(canOpenCloseStore(dto.canOpenCloseStore()))
-                           .and(isSeller(dto.seller()))
-                           .and(isManager(dto.manager()));
-       }
-
-        return employeeRepository.findAll(specification, pageable)
+        return findEntityByCriteria(storeId,dto,pageable)
                 .map(employeeMapper::toResponseEmployeeDTO);
     }
 
@@ -174,6 +152,33 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     public Employee getEntityById(Long id) {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));
+    }
+
+    @Override
+    public Page<Employee> findEntityByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Specification<Employee> specification = hasStoreId(storeId);
+
+        if (dto != null) {
+            specification =
+                    specification
+                            .and(hasId(dto.id()))
+                            .and(hasFirstNameLike(dto.firstName()))
+                            .and(hasLastNameLike(dto.lastName()))
+                            .and(hasSap(dto.sap()))
+                            .and(hasPositionId(dto.positionId()))
+                            .and(isEnable(dto.enable()))
+                            .and(canOperateCheckout(dto.canOperateCheckout()))
+                            .and(canOperateCredit(dto.canOperateCredit()))
+                            .and(canOpenCloseStore(dto.canOpenCloseStore()))
+                            .and(isSeller(dto.seller()))
+                            .and(isManager(dto.manager()));
+        }
+
+        return employeeRepository.findAll(specification, pageable);
     }
 
     private Employee getEmployeeIfBelongsToStore(Long storeId, Long employeeId) {

@@ -27,7 +27,7 @@ import static online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsS
 
 @Service
 @RequiredArgsConstructor
-public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
+public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, ScheduleDetailsEntityService{
     private final ScheduleDetailsRepository repository;
     private final UserAuthorizationService userAuthorizationService;
     private final ScheduleService scheduleService;
@@ -100,18 +100,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
 
     @Override
     public Page<ResponseScheduleDetailsDTO> findByCriteria(Long storeId, Long scheduleId, ScheduleDetailsSpecificationDTO dto, Pageable pageable) {
-        verifyUserAccessAndData(storeId, scheduleId);
-
-        Specification<ScheduleDetails> specification  = Specification.allOf(
-                hasScheduleId(scheduleId),
-                hasId(dto.scheduleDetailsId()),
-                hasEmployeeId(dto.employeeId()),
-                hasDate(dto.date()),
-                hasShift(dto.shiftId()),
-                hasShiftTypeConfig(dto.shiftTypeConfigId())
-        );
-
-        return repository.findAll(specification, pageable)
+        return findEntityByCriteria(storeId,scheduleId,dto,pageable)
                 .map(mapper::toDTO);
     }
 
@@ -149,5 +138,21 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService{
         if (!schedule.getStore().getId().equals(storeId)){
             throw new AccessDeniedException("Schedule id " + scheduleId + " does not belong to store with id " + storeId);
         }
+    }
+
+    @Override
+    public Page<ScheduleDetails> findEntityByCriteria(Long storeId, Long scheduleId, ScheduleDetailsSpecificationDTO dto, Pageable pageable) {
+        verifyUserAccessAndData(storeId, scheduleId);
+
+        Specification<ScheduleDetails> specification  = Specification.allOf(
+                hasScheduleId(scheduleId),
+                hasId(dto.scheduleDetailsId()),
+                hasEmployeeId(dto.employeeId()),
+                hasDate(dto.date()),
+                hasShift(dto.shiftId()),
+                hasShiftTypeConfig(dto.shiftTypeConfigId())
+        );
+
+        return repository.findAll(specification, pageable);
     }
 }
