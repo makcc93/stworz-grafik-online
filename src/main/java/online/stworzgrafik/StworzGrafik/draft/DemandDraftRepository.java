@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 interface DemandDraftRepository extends JpaRepository<DemandDraft,Long>, JpaSpecificationExecutor<DemandDraft> {
     boolean existsByStoreIdAndDraftDate(Long storeId, LocalDate draftDate);
     Page<DemandDraft> findByStoreIdAndDraftDateBetween(Long storeId, LocalDate startDate, LocalDate endDate, Pageable pageable);
+    List<DemandDraft> findAllByStoreIdAndDateBetween(Long storeId, LocalDate startDay, LocalDate endDay);
 }

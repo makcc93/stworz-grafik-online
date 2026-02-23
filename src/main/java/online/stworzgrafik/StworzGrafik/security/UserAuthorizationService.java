@@ -25,4 +25,8 @@ public class UserAuthorizationService {
     public Long getUserStoreId(){
         return user.getUserStoreId();
     }
+
+    public Long getUserId(){
+        return user.getUserId();
+    }
 }

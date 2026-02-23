@@ -147,4 +147,13 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
         return demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate,pageable);
     }
+
+    @Override
+    public List<DemandDraft> findAllByStoreIdAndDateBetween(Long storeId, LocalDate startDay, LocalDate endDay) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        return demandDraftRepository.findAllByStoreIdAndDateBetween(storeId,startDay,endDay);
+    }
 }

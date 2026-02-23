@@ -8,10 +8,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Validated
 public interface DemandDraftEntityService {
     DemandDraft saveEntity(@NotNull DemandDraft demandDraft);
     DemandDraft getEntityById(@NotNull Long id);
     Page<DemandDraft> findEntityFilteredDrafts(@NotNull Long storeId, @Nullable LocalDate startDate, @Nullable LocalDate endDate, Pageable pageable);
+    List<DemandDraft> findAllByStoreIdAndDateBetween(Long storeId, LocalDate startDay, LocalDate endDay);
 }

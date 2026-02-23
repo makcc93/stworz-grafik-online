@@ -24,6 +24,11 @@ interface ScheduleMapper {
     @Mapping(target = "scheduleStatusName", source = "scheduleStatus")
     ResponseScheduleDTO toDTO(Schedule schedule);
 
+
+    @Mapping(target = "store.id", source = "storeId")
+    @Mapping(target = "scheduleStatus", source = "scheduleStatusName")
+    Schedule toEntity(ResponseScheduleDTO responseScheduleDTO);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSchedule(UpdateScheduleDTO dto, @MappingTarget Schedule schedule);
 }

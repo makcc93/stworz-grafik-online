@@ -5,8 +5,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 interface EmployeeProposalShiftsRepository extends JpaRepository<EmployeeProposalShifts,Long>, JpaSpecificationExecutor<EmployeeProposalShifts> {
     boolean existsByStore_IdAndEmployee_IdAndDate(Long storeId, Long employeeId, LocalDate date);
+    List<EmployeeProposalShifts> findAllByStoreIdAndEmployeeIdAndDateBetween(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate);
+    List<EmployeeProposalShifts> findAllByStoreIdAndDateBetween(Long storeId,LocalDate startDate, LocalDate endDate);
 }

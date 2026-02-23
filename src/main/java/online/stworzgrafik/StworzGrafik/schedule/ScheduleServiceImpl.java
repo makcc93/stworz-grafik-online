@@ -57,6 +57,24 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     }
 
     @Override
+    public Schedule findByStoreIdAndYearAndMonth(Long storeId, Integer year, Integer month) {
+        verifyStoreAccess(storeId);
+
+        return repository.findByStoreIdAndYearAndMonth(storeId,year,month)
+                .orElseGet(() -> mapper.toEntity(
+                        createSchedule(
+                                storeId,
+                                new CreateScheduleDTO(
+                                        year,
+                                        month,
+                                        null,
+                                        userAuthorizationService.getUserId(),
+                                        "IN_PROGRESS")
+                        )
+                ));
+    }
+
+    @Override
     public ResponseScheduleDTO createSchedule(Long storeId, CreateScheduleDTO dto) {
         verifyStoreAccess(storeId);
 

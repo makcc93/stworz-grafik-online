@@ -33,10 +33,10 @@ class DailyShiftGeneratorAlgorithm {
 
 //    final int[] dailyStoreDemandDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 9, 9, 8, 8, 9, 9, 9, 9, 5, 0, 0, 0}; //then demandDraftGet
 
-    List<Shift> getDailyStoreShifts(Long storeId, LocalDate date, Pageable pageable){
+    List<Shift> getDailyStoreShifts(Long storeId, LocalDate date){
 
         // 1. find schedule for this storeId and date
-        Schedule schedule = getSchedule(storeId, date, pageable);
+        Schedule schedule = getSchedule(storeId, date);
 
         // 2. get employee proposal shifts as array
         List<ScheduleDetails> scheduleDetails = getScheduleDetails(storeId, date, pageable, schedule);
@@ -86,15 +86,8 @@ class DailyShiftGeneratorAlgorithm {
         return scheduleDetailsPageByCriteria.getContent();
     }
 
-    private Schedule getSchedule(Long storeId, LocalDate date, Pageable pageable) {
-        ScheduleSpecificationDTO scheduleSpecificationDTO = new ScheduleSpecificationDTO(
-                null,
-                date.getYear(),
-                date.getMonthValue(),
-                null, null, null, null, null, null);
-
-        Page<Schedule> schedulePageByCriteria = scheduleEntityService.findEntityByCriteria(storeId, scheduleSpecificationDTO, pageable);
-        return schedulePageByCriteria.getContent().getFirst();
+    private Schedule getSchedule(Long storeId, LocalDate date) {
+        return scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,date.getYear(),date.getMonth().getValue());
     }
 
     private List<Shift> generateLowestPersonNeededDailyShifts(int[] dailyDemandDraft) {

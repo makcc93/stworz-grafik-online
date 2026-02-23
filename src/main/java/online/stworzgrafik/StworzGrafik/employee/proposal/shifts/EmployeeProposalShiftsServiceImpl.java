@@ -25,7 +25,7 @@ import static online.stworzgrafik.StworzGrafik.employee.proposal.shifts.Employee
 
 @Service
 @RequiredArgsConstructor
-class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService{
+class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService, EmployeeProposalShiftsEntityService{
     private final EmployeeProposalShiftsRepository repository;
     private final EmployeeProposalShiftsMapper mapper;
     private final EmployeeProposalShiftsBuilder builder;
@@ -35,9 +35,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public ResponseEmployeeProposalShiftsDTO createEmployeeProposalShift(Long storeId, Long employeeId, CreateEmployeeProposalShiftsDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        checkLoggedUserAccessToStore(storeId);
 
         Store store = storeService.getEntityById(storeId);
 
@@ -60,9 +58,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public ResponseEmployeeProposalShiftsDTO updateEmployeeProposalShift(Long storeId, Long employeeId, Long employeeProposalShiftId, UpdateEmployeeProposalShiftsDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        checkLoggedUserAccessToStore(storeId);
 
         EmployeeProposalShifts employeeProposalShifts = repository.findById(employeeProposalShiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal shift by id " + employeeProposalShiftId));
@@ -91,9 +87,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public void delete(Long storeId, Long employeeId, Long employeeProposalShiftId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        checkLoggedUserAccessToStore(storeId);
 
         EmployeeProposalShifts employeeProposalShifts = repository.findById(employeeProposalShiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal shift by id " + employeeProposalShiftId));
@@ -103,9 +97,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public ResponseEmployeeProposalShiftsDTO getById(Long storeId, Long employeeId, Long employeeProposalShiftId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        checkLoggedUserAccessToStore(storeId);
 
         EmployeeProposalShifts employeeProposalShifts = repository.findById(employeeProposalShiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal shift by id " + employeeProposalShiftId));
@@ -133,9 +125,7 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
     @Override
     public Page<EmployeeProposalShifts> getEntityByCriteria(Long storeId, EmployeeProposalShiftsSpecificationDTO dto, Pageable pageable) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        checkLoggedUserAccessToStore(storeId);
 
         if (dto.startDate() == null && dto.endDate() != null){
             throw new IllegalArgumentException("Start date is required when end date is provided");
@@ -148,5 +138,25 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
         );
 
         return repository.findAll(specification,pageable);
+    }
+
+    @Override
+    public List<EmployeeProposalShifts> findMonthlyEmployeeProposalShifts(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate) {
+        checkLoggedUserAccessToStore(storeId);
+
+        return repository.findAllByStoreIdAndEmployeeIdAndDateBetween(storeId,employeeId,startDate,endDate);
+    }
+
+    @Override
+    public List<EmployeeProposalShifts> findMonthlyStoreProposalShifts(Long storeId, LocalDate startDate, LocalDate endDate) {
+        checkLoggedUserAccessToStore(storeId);
+
+        return repository.findAllByStoreIdAndDateBetween(storeId,startDate,endDate);
+    }
+
+    private void checkLoggedUserAccessToStore(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
     }
 }
