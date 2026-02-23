@@ -21,4 +21,8 @@ public class UserAuthorizationService {
         UserRoleStrategy strategy = factory.getStrategy(user.getUserRole());
         return strategy.hasAccessToStore(user, storeId);
     }
+
+    public Long getUserStoreId(){
+        return user.getUserStoreId();
+    }
 }

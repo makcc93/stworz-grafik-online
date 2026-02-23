@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.schedule;
 import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessage;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.LocalDateTime;
@@ -46,6 +47,9 @@ public class Schedule {
 
     @OneToMany(mappedBy = "schedule")
     private List<ScheduleDetails> scheduleDetails;
+
+    @OneToMany(mappedBy = "schedule")
+    private List<ScheduleMessage> messages;
 
     @PrePersist
     void onCreate(){

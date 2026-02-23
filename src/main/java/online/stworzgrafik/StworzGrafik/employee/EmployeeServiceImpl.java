@@ -181,6 +181,17 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         return employeeRepository.findAll(specification, pageable);
     }
 
+    @Override
+    public List<Employee> findAllStoreActiveEmployees(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        return employeeRepository.findByStoreId(storeId).stream()
+                .filter(Employee::isEnable)
+                .toList();
+    }
+
     private Employee getEmployeeIfBelongsToStore(Long storeId, Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + employeeId));

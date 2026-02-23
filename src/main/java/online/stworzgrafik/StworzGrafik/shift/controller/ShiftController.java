@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -58,8 +59,11 @@ class ShiftController {
         return ResponseEntity.ok().body(shiftService.updateShift(id,shiftHoursDTO));
     }
 
-    @GetMapping("/shifts/test")
-    public List<Shift> testAlgorithm(){
-        return dailyShiftGeneratorAlgorithm.generateLowestPersonNeededDailyShifts();
+    @GetMapping("/shifts/test/{storeId}/{date}")
+    public List<Shift> testAlgorithm(@PathVariable Long storeId,
+                                     @PathVariable LocalDate date,
+                                     Pageable pageable
+                                     ){
+        return dailyShiftGeneratorAlgorithm.getDailyStoreShifts(storeId, date, pageable);
     }
 }
