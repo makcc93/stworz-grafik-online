@@ -24,7 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 @Service
 @RequiredArgsConstructor
-public class DailyShiftGeneratorAlgorithm {
+class DailyShiftGeneratorAlgorithm {
     private final ShiftService shiftService;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
@@ -33,7 +33,7 @@ public class DailyShiftGeneratorAlgorithm {
 
 //    final int[] dailyStoreDemandDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 9, 9, 8, 8, 9, 9, 9, 9, 5, 0, 0, 0}; //then demandDraftGet
 
-    public List<Shift> getDailyStoreShifts(Long storeId, LocalDate date, Pageable pageable){
+    List<Shift> getDailyStoreShifts(Long storeId, LocalDate date, Pageable pageable){
 
         // 1. find schedule for this storeId and date
         Schedule schedule = getSchedule(storeId, date, pageable);
