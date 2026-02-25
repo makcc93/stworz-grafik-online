@@ -144,14 +144,14 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
     public List<EmployeeProposalShifts> findMonthlyEmployeeProposalShifts(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate) {
         checkLoggedUserAccessToStore(storeId);
 
-        return repository.findAllByStoreIdAndEmployeeIdAndDateBetween(storeId,employeeId,startDate,endDate);
+        return repository.findAllByStore_IdAndEmployee_IdAndDateBetween(storeId,employeeId,startDate,endDate);
     }
 
     @Override
     public List<EmployeeProposalShifts> findMonthlyStoreProposalShifts(Long storeId, LocalDate startDate, LocalDate endDate) {
         checkLoggedUserAccessToStore(storeId);
 
-        return repository.findAllByStoreIdAndDateBetween(storeId,startDate,endDate);
+        return repository.findAllByStore_IdAndDateBetween(storeId,startDate,endDate);
     }
 
     private void checkLoggedUserAccessToStore(Long storeId) {

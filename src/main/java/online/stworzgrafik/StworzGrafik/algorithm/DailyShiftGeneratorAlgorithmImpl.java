@@ -3,7 +3,7 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
@@ -22,14 +22,25 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
-class DailyShiftGeneratorAlgorithm {
+class DailyShiftGeneratorAlgorithmImpl implements DailyShiftGeneratorAlgorithmService{
     private final ShiftService shiftService;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final ScheduleEntityService scheduleEntityService;
     private final DemandDraftEntityService dailyDemand;
+
+
+    @Override
+    public Map<LocalDate, List<Shift>> generateDailyShifts(LocalDate date,
+                                                           Map<LocalDate, int[]> everyDayStoreDemandDraft,
+                                                           Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate) {
+        return Map.of();
+    }
+
 
 //    final int[] dailyStoreDemandDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8, 8, 9, 9, 8, 8, 9, 9, 9, 9, 5, 0, 0, 0}; //then demandDraftGet
 
@@ -150,5 +161,7 @@ class DailyShiftGeneratorAlgorithm {
             }
             return shifts;
     }
+
+
 }
 

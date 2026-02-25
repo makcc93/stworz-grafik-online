@@ -18,11 +18,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffSpecification.*;
 
 @Service
 @RequiredArgsConstructor
-class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffService{
+class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffService,EmployeeProposalDaysOffEntityService {
     private final EmployeeProposalDaysOffRepository repository;
     private final EmployeeProposalDaysOffMapper mapper;
     private final EmployeeProposalDaysOffBuilder builder;
@@ -34,9 +36,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     public ResponseEmployeeProposalDaysOffDTO createEmployeeProposalDaysOff(Long storeId,
                                                                             Long employeeId,
                                                                             CreateEmployeeProposalDaysOffDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         Store store = storeService.getEntityById(storeId);
 
@@ -68,9 +68,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
                                                                             Long employeeId,
                                                                             Long employeeProposalDaysOffId,
                                                                             UpdateEmployeeProposalDaysOffDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeProposalDaysOff employeeProposalDaysOff = repository.findById(employeeProposalDaysOffId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off with id " + employeeProposalDaysOffId));
@@ -101,9 +99,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     public void delete(Long storeId,
                        Long employeeId,
                        Long employeeProposalDaysOffId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeProposalDaysOff employeeProposalDaysOff = repository.findById(employeeProposalDaysOffId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off by id " + employeeProposalDaysOffId));
@@ -115,9 +111,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     public ResponseEmployeeProposalDaysOffDTO getById(Long storeId,
                                                       Long employeeId,
                                                       Long employeeProposalDaysOffId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeProposalDaysOff employeeProposalDaysOff = repository.findById(employeeProposalDaysOffId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off by id " + employeeProposalDaysOffId));
@@ -127,9 +121,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
 
     @Override
     public Page<ResponseEmployeeProposalDaysOffDTO> getByCriteria(Long storeId, EmployeeProposalDaysOffSpecificationDTO dto, Pageable pageable) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         Specification<EmployeeProposalDaysOff> specification = Specification.allOf(
                 hasStoreId(storeId),
@@ -145,5 +137,18 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     @Override
     public boolean exists(Long employeeProposalDaysOffId) {
         return repository.existsById(employeeProposalDaysOffId);
+    }
+
+    @Override
+    public List<EmployeeProposalDaysOff> getEmployeeMonthlyProposalDaysOff(Long storeId, Integer year, Integer month) {
+        verifyLoggedUserAccessToStore(storeId);
+
+        return repository.findAllByStore_IdAndYearAndMonth(storeId,year,month);
+    }
+
+    private void verifyLoggedUserAccessToStore(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
     }
 }

@@ -18,12 +18,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationSpecification.*;
 
 
 @Service
 @RequiredArgsConstructor
-class EmployeeVacationServiceImpl implements EmployeeVacationService{
+class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVacationEntityService{
     private final EmployeeVacationRepository repository;
     private final EmployeeVacationMapper mapper;
     private final EmployeeVacationBuilder builder;
@@ -35,9 +37,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     public ResponseEmployeeVacationDTO createEmployeeProposalVacation(Long storeId,
                                                                       Long employeeId,
                                                                       CreateEmployeeVacationDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)) {
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         Store store = storeService.getEntityById(storeId);
 
@@ -69,9 +69,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
                                                               Long employeeId,
                                                               Long employeeVacationId,
                                                               UpdateEmployeeVacationDTO dto) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)) {
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeVacation employeeVacation = repository.findById(employeeVacationId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation with id " + employeeVacationId));
@@ -102,9 +100,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     public void delete(Long storeId,
                        Long employeeId,
                        Long employeeVacationId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)) {
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeVacation employeeVacation = repository.findById(employeeVacationId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation by id " + employeeVacationId));
@@ -116,9 +112,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     public ResponseEmployeeVacationDTO getById(Long storeId,
                                                Long employeeId,
                                                Long employeeVacationId) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)) {
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         EmployeeVacation employeeVacation = repository.findById(employeeVacationId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation by id " + employeeVacationId));
@@ -128,9 +122,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
 
     @Override
     public Page<ResponseEmployeeVacationDTO> getByCriteria(Long storeId, EmployeeVacationSpecificationDTO dto, Pageable pageable) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)) {
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
+        verifyLoggedUserAccessToStore(storeId);
 
         Specification<EmployeeVacation> specification = Specification.allOf(
                 hasStoreId(storeId),
@@ -146,5 +138,18 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService{
     @Override
     public boolean exists(Long employeeVacationId) {
         return repository.existsById(employeeVacationId);
+    }
+
+    @Override
+    public List<EmployeeVacation> getEmployeeMonthlyVacation(Long storeId, Integer year, Integer month) {
+        verifyLoggedUserAccessToStore(storeId);
+
+        return repository.findAllByStore_IdAndYearAndMonth(storeId,year,month);
+    }
+
+    private void verifyLoggedUserAccessToStore(Long storeId) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)) {
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
     }
 }

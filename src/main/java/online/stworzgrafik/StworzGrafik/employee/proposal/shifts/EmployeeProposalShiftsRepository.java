@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 interface EmployeeProposalShiftsRepository extends JpaRepository<EmployeeProposalShifts,Long>, JpaSpecificationExecutor<EmployeeProposalShifts> {
     boolean existsByStore_IdAndEmployee_IdAndDate(Long storeId, Long employeeId, LocalDate date);
-    List<EmployeeProposalShifts> findAllByStoreIdAndEmployeeIdAndDateBetween(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate);
-    List<EmployeeProposalShifts> findAllByStoreIdAndDateBetween(Long storeId,LocalDate startDate, LocalDate endDate);
+    List<EmployeeProposalShifts> findAllByStore_IdAndEmployee_IdAndDateBetween(Long storeId, Long employeeId, LocalDate startDate, LocalDate endDate);
+    List<EmployeeProposalShifts> findAllByStore_IdAndDateBetween(Long storeId, LocalDate startDate, LocalDate endDate);
 }
