@@ -11,6 +11,7 @@ public record EmployeeSpecificationDTO(
         Boolean canOperateCheckout,
         Boolean canOperateCredit,
         Boolean canOpenCloseStore,
+        Boolean canOperateDelivery,
         Boolean seller,
         Boolean manager
 ) {

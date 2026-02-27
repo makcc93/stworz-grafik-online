@@ -73,6 +73,13 @@ class EmployeeSpecification {
                 criteriaBuilder.equal(root.get("canOpenCloseStore"),canOpenCloseStore);
     }
 
+    static Specification<Employee> canOperateDelivery(Boolean canOperateDelivery){
+        if (canOperateDelivery == null) return null;
+
+        return (root,query,criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("canOperateDelivery"),canOperateDelivery);
+    }
+
     static Specification<Employee> isSeller(Boolean seller){
         if (seller == null) return null;
 

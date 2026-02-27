@@ -16,6 +16,7 @@ public record ResponseEmployeeDTO(
         @NotNull boolean canOperateCheckout,
         @NotNull boolean canOperateCredit,
         @NotNull boolean canOpenCloseStore,
+        @NotNull boolean canOperateDelivery,
         @NotNull boolean seller,
         @NotNull boolean manager,
         @NotNull LocalDateTime createdAt,
