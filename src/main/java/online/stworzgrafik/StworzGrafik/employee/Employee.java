@@ -46,6 +46,8 @@ public class Employee {
 
     private boolean canOpenCloseStore;
 
+    private boolean canOperateDelivery;
+
     private boolean seller;
 
     private boolean manager;
@@ -74,6 +76,7 @@ public class Employee {
         canOperateCheckout = false;
         canOperateCredit = false;
         canOpenCloseStore = false;
+        canOperateDelivery = false;
         seller = false;
         manager = false;
         createdAt = LocalDateTime.now();
