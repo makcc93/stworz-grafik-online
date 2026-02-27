@@ -11,6 +11,7 @@ public class TestUpdateEmployeeDTO {
     private boolean canOperateCheckout = true;
     private boolean canOperateCredit = true;
     private boolean canOpenCloseStore = true;
+    private boolean canOperateDelivery = true;
     private boolean seller = true;
     private boolean manager = true;
 
@@ -54,6 +55,11 @@ public class TestUpdateEmployeeDTO {
         return this;
     }
 
+    public TestUpdateEmployeeDTO withCanOperateDelivery(boolean canOperateDelivery){
+        this.canOperateDelivery = canOperateDelivery;
+        return this;
+    }
+
     public TestUpdateEmployeeDTO withSeller(boolean seller){
         this.seller = seller;
         return this;
@@ -74,6 +80,7 @@ public class TestUpdateEmployeeDTO {
                 canOperateCheckout,
                 canOperateCredit,
                 canOpenCloseStore,
+                canOperateDelivery,
                 seller,
                 manager
         );

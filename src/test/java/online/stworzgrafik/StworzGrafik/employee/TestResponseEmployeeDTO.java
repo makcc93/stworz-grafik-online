@@ -15,6 +15,7 @@ public class TestResponseEmployeeDTO {
     private boolean canOperateCheckout = true;
     private boolean canOperateCredit = true;
     private boolean canOpenCloseStore = true;
+    private boolean canOperateDelivery = true;
     private boolean seller = true;
     private boolean manager = true;
     private LocalDateTime createdAt = LocalDateTime.of(2000,1,1,14,0);
@@ -31,6 +32,7 @@ public class TestResponseEmployeeDTO {
         this.canOperateCheckout = employee.isCanOperateCheckout();
         this.canOperateCredit = employee.isCanOperateCredit();
         this.canOpenCloseStore = employee.isCanOpenCloseStore();
+        this.canOperateDelivery = employee.isCanOperateDelivery();
         this.seller = employee.isSeller();
         this.manager = employee.isManager();
         this.createdAt = employee.getCreatedAt();
@@ -89,6 +91,11 @@ public class TestResponseEmployeeDTO {
         return this;
     }
 
+    public TestResponseEmployeeDTO withCanOperateDelivery(boolean canOperateDelivery){
+        this.canOperateDelivery = canOperateDelivery;
+        return this;
+    }
+
     public TestResponseEmployeeDTO withSeller(boolean seller){
         this.seller = seller;
         return this;
@@ -121,6 +128,7 @@ public class TestResponseEmployeeDTO {
                 canOperateCheckout,
                 canOperateCredit,
                 canOpenCloseStore,
+                canOperateDelivery,
                 seller,
                 manager,
                 createdAt,
