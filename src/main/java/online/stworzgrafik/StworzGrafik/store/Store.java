@@ -8,6 +8,7 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetails;
 
 import java.time.LocalDateTime;
@@ -62,6 +63,9 @@ public class Store {
     @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private StoreDetails details;
 
+    @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StoreDelivery delivery;
+
     public void setDetails(StoreDetails details) {
         if (details == null) {
             if (this.details != null) {
@@ -71,6 +75,17 @@ public class Store {
             details.setStore(this);
         }
         this.details = details;
+    }
+
+    public void setDelivery(StoreDelivery delivery) {
+        if (delivery == null) {
+            if (this.delivery != null) {
+                this.delivery.setStore(null);
+            }
+        } else {
+            delivery.setStore(this);
+        }
+        this.delivery = delivery;
     }
 
     @PrePersist
