@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "store_details")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -22,18 +24,33 @@ public class StoreDetails {
     private Store store;
 
     @Embedded
-    private StoreHours hours;
+    private StoreOpeningHours hours;
 
     @Embedded
     private OptimalStaffing staffing;
 
+    private LocalDateTime createdAt;
+
+    private Long createdByUserId;
+
+    private LocalDateTime updatedAt;
+
+    private Long updatedByUserId;
+
     @PrePersist
     void onCreate() {
+        createdAt = LocalDateTime.now();
+
         if (hours == null) {
-            hours = StoreHours.createDefault();
+            hours = StoreOpeningHours.createDefault();
         }
         if (staffing == null) {
             staffing = OptimalStaffing.createDefault();
         }
+    }
+
+    @PreUpdate
+    void onUpdate(){
+        updatedAt = LocalDateTime.now();
     }
 }

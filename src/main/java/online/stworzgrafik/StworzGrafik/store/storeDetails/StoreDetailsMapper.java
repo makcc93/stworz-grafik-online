@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.store.storeDetails;
 
-import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.*;
 import org.mapstruct.*;
@@ -10,7 +9,7 @@ interface StoreDetailsMapper {
     @Mapping(source = "store.id", target = "storeId")
     ResponseStoreDetailsDTO toDto(StoreDetails storeDetails);
 
-    StoreHoursDTO toDto(StoreHours hours);
+    StoreHoursDTO toDto(StoreOpeningHours hours);
 
     OptimalStaffingDTO toDto(OptimalStaffing staffing);
 
@@ -18,7 +17,7 @@ interface StoreDetailsMapper {
     @Mapping(target = "store", source = "store")
     StoreDetails toEntity(CreateStoreDetailsDTO dto, Store store);
 
-    StoreHours toEntity(StoreHoursDTO dto);
+    StoreOpeningHours toEntity(StoreHoursDTO dto);
 
     OptimalStaffing toEntity(OptimalStaffingDTO dto);
 

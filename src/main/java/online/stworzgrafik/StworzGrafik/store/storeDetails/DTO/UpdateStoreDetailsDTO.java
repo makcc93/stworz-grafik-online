@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.store.storeDetails.DTO;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 
 public record UpdateStoreDetailsDTO(
@@ -7,5 +8,8 @@ public record UpdateStoreDetailsDTO(
         StoreHoursDTO hours,
 
         @Valid
-        OptimalStaffingDTO staffing
+        OptimalStaffingDTO staffing,
+
+        @Nullable
+        Long updatedByUserId
 ) {}

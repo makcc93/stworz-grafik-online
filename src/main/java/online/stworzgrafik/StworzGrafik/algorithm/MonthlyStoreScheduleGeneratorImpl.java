@@ -11,16 +11,18 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposa
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsEntityService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationEntityService;
-import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationService;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
     private final EmployeeEntityService employeeEntityService;
     private final DemandDraftEntityService demandDraftEntityService;
     private final ScheduleEntityService scheduleEntityService;
+    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
     private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
     private final EmployeeVacationEntityService employeeVacationEntityService;
@@ -38,12 +41,27 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
     @Override
     public void generateMonthlySchedule(Long storeId, Integer year, Integer month) {
         Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
+
         final Store store = storeEntityService.getEntityById(storeId);
         final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
         final Map<LocalDate, int[]> everyDayStoreDemandDraft = dayAndDemandDraft(storeId, year, month);
         final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = employeeProposalShifts(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
+
+        saveInScheduleEmployeesVacation();
+        saveInScheduleEmployeesProposalShifts();
+        saveInScheduleEmployeesProposalDaysOff();
+
+        generateWarehousemanSchedule();
+        generateDailyShifts();
+
+        //todo
+        //zastanow sie co po kolei trzeba robic zeby tworzyc grafik
+        //zrob punkty
+        //dodaj oblusge generowanie grafika dla magazyniera (w godzinach gdzie sa dostawy)
+        //dodaj obsluge generowanie grafika dla kasjera (w dni gdzie draft jest najwiekszy w pierwszej kolejnosci ale biorac pod uwage propozycje)
+
 
     }
 

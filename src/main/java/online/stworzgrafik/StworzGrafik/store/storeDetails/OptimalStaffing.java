@@ -35,8 +35,8 @@ public class OptimalStaffing {
                 .storeManagers(1)
                 .salesManagers(2)
                 .sellers(10)
-                .cashiers(3)
-                .storemen(2)
+                .cashiers(1)
+                .storemen(1)
                 .pok(0)
                 .build();
     }

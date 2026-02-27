@@ -12,7 +12,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @Builder
-public class StoreHours {
+class StoreOpeningHours {
 
     @Column(name = "monday_open")
     private LocalTime mondayOpen;
@@ -20,7 +20,6 @@ public class StoreHours {
     @Column(name = "monday_close")
     private LocalTime mondayClose;
 
-    // Tuesday
     @Column(name = "tuesday_open")
     private LocalTime tuesdayOpen;
 
@@ -57,8 +56,8 @@ public class StoreHours {
     @Column(name = "sunday_close")
     private LocalTime sundayClose;
 
-    public static StoreHours createDefault() {
-        return StoreHours.builder()
+    public static StoreOpeningHours createDefault() {
+        return StoreOpeningHours.builder()
                 .mondayOpen(LocalTime.of(8, 0))
                 .mondayClose(LocalTime.of(20, 0))
                 .tuesdayOpen(LocalTime.of(8, 0))
