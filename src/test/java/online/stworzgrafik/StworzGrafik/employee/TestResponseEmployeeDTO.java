@@ -18,6 +18,8 @@ public class TestResponseEmployeeDTO {
     private boolean canOperateDelivery = true;
     private boolean seller = true;
     private boolean manager = true;
+    private boolean cashier = true;
+    private boolean pok = true;
     private LocalDateTime createdAt = LocalDateTime.of(2000,1,1,14,0);
     private LocalDateTime updatedAt = LocalDateTime.of(2019,10,5,14,0);
 
@@ -37,6 +39,8 @@ public class TestResponseEmployeeDTO {
         this.manager = employee.isManager();
         this.createdAt = employee.getCreatedAt();
         this.updatedAt = employee.getUpdatedAt();
+        this.cashier = employee.isCashier();
+        this.pok = employee.isPok();
 
         return this;
     }
@@ -116,6 +120,8 @@ public class TestResponseEmployeeDTO {
         return this;
     }
 
+    public TestResponseEmployeeDTO
+
     public ResponseEmployeeDTO build(){
         return new ResponseEmployeeDTO(
                 id,
@@ -131,6 +137,8 @@ public class TestResponseEmployeeDTO {
                 canOperateDelivery,
                 seller,
                 manager,
+                cashier,
+                pok,
                 createdAt,
                 updatedAt
         );

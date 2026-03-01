@@ -19,6 +19,8 @@ public record ResponseEmployeeDTO(
         @NotNull boolean canOperateDelivery,
         @NotNull boolean seller,
         @NotNull boolean manager,
+        @NotNull boolean cashier,
+        @NotNull boolean pok,
         @NotNull LocalDateTime createdAt,
         @Nullable LocalDateTime updatedAt
 ) {}

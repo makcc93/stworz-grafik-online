@@ -41,6 +41,11 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
     @Override
     public void generateMonthlySchedule(Long storeId, Integer year, Integer month) {
         Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
+        // tutaj dodatkowe mapy do ilosci godzin, do ilosci przepracowanych dni, do ilosci pracujacych np sobot
+
+        Map<Employee, Integer> employeeAmountWorkingHours; //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
+        Map<Employee, Integer> employeeWorkingSaturdays;
+        Map<Employee, Integer> employeeAmountDays;
 
         final Store store = storeEntityService.getEntityById(storeId);
         final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);

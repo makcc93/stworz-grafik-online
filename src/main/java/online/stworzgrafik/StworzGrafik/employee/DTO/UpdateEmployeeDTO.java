@@ -26,5 +26,7 @@ public record UpdateEmployeeDTO(
         boolean canOpenCloseStore,
         boolean canOperateDelivery,
         boolean seller,
-        boolean manager
+        boolean manager,
+        boolean cashier,
+        boolean pok
 ) {}

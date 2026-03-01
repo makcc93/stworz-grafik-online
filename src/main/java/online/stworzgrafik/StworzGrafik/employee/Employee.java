@@ -52,6 +52,10 @@ public class Employee {
 
     private boolean manager;
 
+    private boolean cashier;
+
+    private boolean pok;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -79,6 +83,8 @@ public class Employee {
         canOperateDelivery = false;
         seller = false;
         manager = false;
+        cashier = false;
+        pok = false;
         createdAt = LocalDateTime.now();
     }
 

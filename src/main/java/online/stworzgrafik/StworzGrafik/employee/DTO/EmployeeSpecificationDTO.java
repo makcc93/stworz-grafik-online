@@ -13,6 +13,8 @@ public record EmployeeSpecificationDTO(
         Boolean canOpenCloseStore,
         Boolean canOperateDelivery,
         Boolean seller,
-        Boolean manager
+        Boolean manager,
+        Boolean cashier,
+        Boolean pok
 ) {
 }
