@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.*;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
+import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetails;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.data.domain.Page;
@@ -80,6 +82,9 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
                 createStoreDTO.location(),
                 branch
         );
+
+        store.setDelivery(StoreDelivery.builder().build());
+        store.setDetails(StoreDetails.builder().build());
 
         Store savedStore = storeRepository.save(store);
 

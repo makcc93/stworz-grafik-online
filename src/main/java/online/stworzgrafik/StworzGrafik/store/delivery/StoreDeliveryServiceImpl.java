@@ -1,9 +1,10 @@
 package online.stworzgrafik.StworzGrafik.store.delivery;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.store.delivery.DTO.CreateStoreDeliveryDTO;
+import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.DTO.ResponseStoreDeliveryDTO;
 import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDTO;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,33 +14,42 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StoreDeliveryServiceImpl implements StoreDeliveryService{
     private final UserAuthorizationService userAuthorizationService;
-    private final StoreService storeService;
+    private final StoreEntityService storeEntityService;
     private final StoreDeliveryRepository repository;
+    private final StoreDeliveryMapper mapper;
 
-    //todo
-    //dokoncz seriveImpl
     @Override
-    public ResponseStoreDeliveryDTO create(Long storeId, CreateStoreDeliveryDTO dto) {
+    public ResponseStoreDeliveryDTO findByStoreId(Long storeId) {
         verifyLoggedUserStoreAccess(storeId);
 
-        if (storeService.)
+        Store store = storeEntityService.getEntityById(storeId);
+        StoreDelivery storeDelivery = store.getDelivery();
+
+        return mapper.toDTO(storeDelivery);
     }
 
     @Override
-    public ResponseStoreDeliveryDTO update(Long storeId, UpdateStoreDeliveryDTO dto) {
-        verifyLoggedUserStoreAccess(storeId);
+    public ResponseStoreDeliveryDTO findById(Long storeDeliveryId) {
+        StoreDelivery storeDelivery = repository.findById(storeDeliveryId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find Store Delivery by its id " + storeDeliveryId));
+
+        return mapper.toDTO(storeDelivery);
     }
 
     @Override
-    public void delete(Long storeId, Long storeDeliveryId) {
+    public ResponseStoreDeliveryDTO update(Long storeId,UpdateStoreDeliveryDTO dto) {
         verifyLoggedUserStoreAccess(storeId);
 
+        Store store = storeEntityService.getEntityById(storeId);
 
-    }
+        StoreDelivery storeDelivery = store.getDelivery();
 
-    @Override
-    public ResponseStoreDeliveryDTO save(Long storeId, StoreDelivery storeDelivery) {
-        verifyLoggedUserStoreAccess(storeId);
+        mapper.update(dto,storeDelivery);
+
+        StoreDelivery saved = repository.save(storeDelivery);
+
+        return mapper.toDTO(saved);
+
     }
 
     private void verifyLoggedUserStoreAccess(Long storeId) {
