@@ -20,9 +20,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -43,45 +41,40 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
         Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
         // tutaj dodatkowe mapy do ilosci godzin, do ilosci przepracowanych dni, do ilosci pracujacych np sobot
 
-        Map<Employee, Integer> employeeAmountWorkingHours; //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
+        Map<Employee, Integer> employeeAmountWorkingAndVacationHours; //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
         Map<Employee, Integer> employeeWorkingSaturdays;
-        Map<Employee, Integer> employeeAmountDays;
+        Map<Employee, Integer> employeeWorkingDays;
 
         final Store store = storeEntityService.getEntityById(storeId);
         final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
-        final Map<LocalDate, int[]> everyDayStoreDemandDraft = dayAndDemandDraft(storeId, year, month);
+        final Map<LocalDate, int[]> everyDayStoreDemandDraft = dayAndDemandDraftSorted(storeId, year, month);
         final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = employeeProposalShifts(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
 
-        saveInScheduleEmployeesVacation();
-        saveInScheduleEmployeesProposalShifts();
-        saveInScheduleEmployeesProposalDaysOff();
-
         generateWarehousemanSchedule();
+
+        demandDraftEntityService.
         generateDailyShifts();
-
-        //todo
-        //zastanow sie co po kolei trzeba robic zeby tworzyc grafik
-        //zrob punkty
-        //dodaj oblusge generowanie grafika dla magazyniera (w godzinach gdzie sa dostawy)
-        //dodaj obsluge generowanie grafika dla kasjera (w dni gdzie draft jest najwiekszy w pierwszej kolejnosci ale biorac pod uwage propozycje)
-
-
     }
 
-    private Map<LocalDate, int[]> dayAndDemandDraft(Long storeId, Integer year, Integer month) {
+    private Map<LocalDate, int[]> dayAndDemandDraftSorted(Long storeId, Integer year, Integer month) {
         LocalDate firstDay = LocalDate.of(year,month,1);
         LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
 
         List<DemandDraft> monthlyDrafts = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, firstDay, lastDay);
 
         return monthlyDrafts.stream()
+                .sorted(Comparator.comparingInt(
+                            (DemandDraft demandDraft) -> Arrays.stream(demandDraft.getHourlyDemand()).sum()
+                        )
+                        .reversed()
+                )
                 .collect(Collectors.toMap(
                             DemandDraft::getDraftDate,
                             DemandDraft::getHourlyDemand,
                             (e1, e2) -> {throw new IllegalStateException("Date in store draft cannot be duplicated");},
-                            TreeMap::new
+                            LinkedHashMap::new
                 ));
     }
 

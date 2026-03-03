@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import de.jollyday.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
@@ -32,12 +33,14 @@ class DailyShiftGeneratorAlgorithmImpl implements DailyShiftGeneratorAlgorithmSe
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final ScheduleEntityService scheduleEntityService;
     private final DemandDraftEntityService dailyDemand;
+    private final HolidayManager holidayManager;
 
 
     @Override
     public Map<LocalDate, List<Shift>> generateDailyShifts(LocalDate date,
                                                            Map<LocalDate, int[]> everyDayStoreDemandDraft,
                                                            Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate) {
+
         return Map.of();
     }
 
