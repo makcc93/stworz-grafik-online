@@ -52,6 +52,16 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService{
 
     }
 
+    @Override
+    public boolean hasDedicatedWarehouseman(Long storeId) {
+        verifyLoggedUserStoreAccess(storeId);
+        Store store = storeEntityService.getEntityById(storeId);
+
+        StoreDelivery storeDelivery = store.getDelivery();
+
+        return storeDelivery.getHasDedicatedWarehouseman();
+    }
+
     private void verifyLoggedUserStoreAccess(Long storeId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);

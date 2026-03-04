@@ -10,4 +10,5 @@ public interface StoreDeliveryService {
     ResponseStoreDeliveryDTO findByStoreId(@NotNull Long storeId);
     ResponseStoreDeliveryDTO findById(@NotNull Long storeDeliveryId);
     ResponseStoreDeliveryDTO update(@NotNull Long storeId, UpdateStoreDeliveryDTO dto);
+    boolean hasDedicatedWarehouseman(@NotNull Long storeId);
 }

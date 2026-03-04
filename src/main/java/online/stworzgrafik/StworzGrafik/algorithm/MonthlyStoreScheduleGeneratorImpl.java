@@ -52,7 +52,7 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
         final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
 
-        generateWarehousemanSchedule();
+        generateWarehousemanSchedule(storeId,year, month, schedule, store);
 
         demandDraftEntityService.
         generateDailyShifts();

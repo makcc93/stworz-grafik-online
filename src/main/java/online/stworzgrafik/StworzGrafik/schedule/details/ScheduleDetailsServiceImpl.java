@@ -39,7 +39,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     private final ScheduleDetailsMapper mapper;
 
     @Override
-    public ResponseScheduleDetailsDTO createScheduleDetails(Long storeId, Long scheduleId, CreateScheduleDetailsDTO dto) {
+    public ResponseScheduleDetailsDTO addScheduleDetails(Long storeId, Long scheduleId, CreateScheduleDetailsDTO dto) {
         verifyUserToStoreAccess(storeId);
 
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);

@@ -22,6 +22,8 @@ public class StoreDelivery {
     @JoinColumn(name = "store_id", nullable = false, unique = true)
     private Store store;
 
+    private Boolean hasDedicatedWarehouseman;
+
     @ManyToOne
     @JoinColumn(name = "primary_employee_id", nullable = true)
     private Employee primaryEmployee;

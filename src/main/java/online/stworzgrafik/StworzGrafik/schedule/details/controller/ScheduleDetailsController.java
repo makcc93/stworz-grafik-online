@@ -5,7 +5,6 @@ import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetai
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ResponseScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.UpdateScheduleDetailsDTO;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import org.springframework.http.HttpStatus;
@@ -44,7 +43,7 @@ class ScheduleDetailsController {
     ResponseEntity<ResponseScheduleDetailsDTO> createScheduleDetails(@PathVariable Long storeId,
                                                                      @PathVariable Long scheduleId,
                                                                      CreateScheduleDetailsDTO dto){
-        return ResponseEntity.ok(service.createScheduleDetails(storeId,scheduleId,dto));
+        return ResponseEntity.ok(service.addScheduleDetails(storeId,scheduleId,dto));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

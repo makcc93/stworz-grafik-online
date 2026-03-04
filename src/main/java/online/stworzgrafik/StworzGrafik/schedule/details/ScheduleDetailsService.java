@@ -12,9 +12,9 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 public interface ScheduleDetailsService {
-    ResponseScheduleDetailsDTO createScheduleDetails(@NotNull Long storeId,
-                                                     @NotNull Long scheduleId,
-                                                     @NotNull @Valid CreateScheduleDetailsDTO dto);
+    ResponseScheduleDetailsDTO addScheduleDetails(@NotNull Long storeId,
+                                                  @NotNull Long scheduleId,
+                                                  @NotNull @Valid CreateScheduleDetailsDTO dto);
 
     ResponseScheduleDetailsDTO updateScheduleDetails(@NotNull Long storeId,
                                                      @NotNull Long scheduleId,
