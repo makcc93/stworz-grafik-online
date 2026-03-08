@@ -73,4 +73,39 @@ public class WarehousemanScheduleGenerator {
         //ale trzeba cos pokminic zeby lepiej to robic niz przez ify (7 ifow dla takiej operacji to chyba nie optymalne rozwaizanie????)
     }
 
+    public void generate1(Long storeId, Integer year, Integer month, Schedule schedule,Store store){
+        if (!storeDeliveryService.hasDedicatedWarehouseman(storeId)){
+            return;
+        }
+
+        StoreDelivery storeDelivery = store.getDelivery();
+        Employee primaryEmployee = storeDelivery.getPrimaryEmployee();
+        ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findByCode(ShiftCode.WORK);
+
+        StoreWeeklyDeliverySchedule storeWeeklyDeliverySchedule = storeDelivery.getStoreWeeklyDeliverySchedule();
+
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()){
+            if (dayOfWeek == DayOfWeek.MONDAY && storeWeeklyDeliverySchedule.isMondayDelivery()){
+                int[] mondayShiftAsArray = storeWeeklyDeliverySchedule.getMondayShiftAsArray();
+                Shift mondayShift = shiftEntityService.getArrayAsShift(mondayShiftAsArray);
+
+                List<Integer> mondayDayNumbers = CalendarCalculation.getDayNumbersByDayOfWeek(year, month, DayOfWeek.MONDAY);
+
+                for (int day : mondayDayNumbers){
+                    scheduleDetailsService.addScheduleDetails(
+                            storeId,
+                            schedule.getId(),
+                            new CreateScheduleDetailsDTO(
+                                    primaryEmployee.getId(),
+                                    LocalDate.of(year,month,day),
+                                    mondayShift.getId(),
+                                    shiftTypeConfig.getId()
+                            )
+                    );
+                }
+            }
+        }
+    }
+
+
 }
