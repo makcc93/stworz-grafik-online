@@ -3,82 +3,43 @@ package online.stworzgrafik.StworzGrafik.store.delivery;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
-import lombok.*;
-import online.stworzgrafik.StworzGrafik.converter.IntArrayJsonConverter;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.DayOfWeek;
+import java.util.EnumMap;
+import java.util.Map;
 
 @Embeddable
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class StoreWeeklyDeliverySchedule {
 
-    @Column(name = "monday_delivery")
-    private boolean mondayDelivery;
+    @Convert(converter = WeeklyScheduleConverter.class)
+    @Column(name = "weekly_schedule")
+    private Map<DayOfWeek, DayDeliveryConfig> deliverySchedule;
 
-    @Column(name = "monday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] mondayShiftAsArray;
-
-    @Column(name = "tuesday_delivery")
-    private boolean tuesdayDelivery;
-
-    @Column(name = "tuesday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] tuesdayShiftAsArray;
-
-    @Column(name = "wednesday_delivery")
-    private boolean wednesdayDelivery;
-
-    @Column(name = "wednesday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] wednesdayShiftAsArray;
-
-    @Column(name = "thursday_delivery")
-    private boolean thursdayDelivery;
-
-    @Column(name = "thursday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] thursdayShiftAsArray;
-
-    @Column(name = "friday_delivery")
-    private boolean fridayDelivery;
-
-    @Column(name = "friday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] fridayShiftAsArray;
-
-    @Column(name = "saturday_delivery")
-    private boolean saturdayDelivery;
-
-    @Column(name = "saturday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] saturdayShiftAsArray;
-
-    @Column(name = "sunday_delivery")
-    private boolean sundayDelivery;
-
-    @Column(name = "sunday_shift")
-    @Convert(converter = IntArrayJsonConverter.class)
-    private int[] sundayShiftAsArray;
+    public DayDeliveryConfig getConfigFor(DayOfWeek dayOfWeek){
+        return deliverySchedule.get(dayOfWeek);
+    }
 
     public static StoreWeeklyDeliverySchedule createDefault(){
-        return StoreWeeklyDeliverySchedule.builder()
-                .mondayDelivery(true)
-                .mondayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0})
-                .tuesdayDelivery(true)
-                .tuesdayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0})
-                .wednesdayDelivery(true)
-                .wednesdayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0})
-                .thursdayDelivery(true)
-                .thursdayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0})
-                .fridayDelivery(true)
-                .fridayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0})
-                .saturdayDelivery(false)
-                .saturdayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})
-                .sundayDelivery(false)
-                .sundayShiftAsArray(new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})
-                .build();
+        int[] workday = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0};
+        int[] weekend = new int[24];
+
+        Map<DayOfWeek,DayDeliveryConfig> map = new EnumMap<>(DayOfWeek.class);
+        map.put(DayOfWeek.MONDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.TUESDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.WEDNESDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.THURSDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.FRIDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.SATURDAY, new DayDeliveryConfig(false,weekend));
+        map.put(DayOfWeek.SUNDAY, new DayDeliveryConfig(false,weekend));
+
+        return new StoreWeeklyDeliverySchedule(map);
     }
 }

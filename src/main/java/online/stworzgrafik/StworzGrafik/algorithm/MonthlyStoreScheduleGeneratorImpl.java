@@ -42,8 +42,8 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
         // tutaj dodatkowe mapy do ilosci godzin, do ilosci przepracowanych dni, do ilosci pracujacych np sobot
 
         Map<Employee, Integer> employeeAmountWorkingAndVacationHours; //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
-        Map<Employee, Integer> employeeWorkingSaturdays;
-        Map<Employee, Integer> employeeWorkingDays;
+        Map<Employee, Integer> employeeAmountWorkingSaturdays;
+        Map<Employee, Integer> employeeAmountWorkingDays;
 
         final Store store = storeEntityService.getEntityById(storeId);
         final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
