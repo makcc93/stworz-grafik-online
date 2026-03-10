@@ -12,10 +12,14 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposa
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,8 @@ public class ScheduleGeneratorContextFactory {
     private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
     private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
     private final EmployeeVacationEntityService employeeVacationEntityService;
+    private final ShiftEntityService shiftEntityService;
+    private final ShiftTypeConfigService shiftTypeConfigService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         return ScheduleGeneratorContext.builder()
@@ -45,6 +51,8 @@ public class ScheduleGeneratorContextFactory {
                 .employeeHours(new HashMap<>())
                 .employeeAmountWorkingDays(new HashMap<>())
                 .employeeAmountWorkingOnWeekend(new HashMap<>())
+                .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(12,0),LocalTime.of(20,0)))
+                .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))
                 .build();
     }
 

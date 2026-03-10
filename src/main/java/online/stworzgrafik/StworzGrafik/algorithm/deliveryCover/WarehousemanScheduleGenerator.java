@@ -1,7 +1,8 @@
-package online.stworzgrafik.StworzGrafik.algorithm;
+package online.stworzgrafik.StworzGrafik.algorithm.deliveryCover;
 
 import de.jollyday.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
@@ -36,7 +37,6 @@ public class WarehousemanScheduleGenerator {
     private final ShiftEntityService shiftEntityService;
     private final ShiftTypeConfigService shiftTypeConfigService;
     private final ScheduleMessageService scheduleMessageService;
-    private final Shift defaultVacationShift = Shift.builder().startHour(LocalTime.of(12,0)).endHour(LocalTime.of(20,0)).build();
 
 public void generate(ScheduleGeneratorContext context){
         if (!storeDeliveryService.hasDedicatedWarehouseman(context.getStoreId())){
@@ -69,14 +69,16 @@ public void generate(ScheduleGeneratorContext context){
                 }
 
                 if (context.employeeIsOnVacation(employee,day)){
-                    context.addEmployeeHours(employee,defaultVacationShift);
+                    context.addEmployeeHours(employee,context.getDefaultVacationShift());
 
                     coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
 
                 if (context.employeeHasProposalDayOff(employee,day)){
-                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
+                    ShiftTypeConfig proposalShiftTypeConfig = shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL);
+
+                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,proposalShiftTypeConfig);
                     continue;
                 }
 
@@ -150,12 +152,12 @@ public void generate(ScheduleGeneratorContext context){
 
     }
 
-    private void registerWorkOnSchedule(Long storeId, Schedule schedule, Employee employeeCoveringWarehouseman, LocalDate date, Shift shift, ShiftTypeConfig shiftTypeConfig) {
+    private void registerWorkOnSchedule(Long storeId, Schedule schedule, Employee employee, LocalDate date, Shift shift, ShiftTypeConfig shiftTypeConfig) {
         scheduleDetailsService.addScheduleDetails(
                 storeId,
                 schedule.getId(),
                 new CreateScheduleDetailsDTO(
-                        employeeCoveringWarehouseman.getId(),
+                        employee.getId(),
                         date,
                         shift.getId(),
                         shiftTypeConfig.getId()

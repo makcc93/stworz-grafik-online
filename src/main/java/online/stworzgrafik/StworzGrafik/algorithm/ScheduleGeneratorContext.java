@@ -1,10 +1,12 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.Builder;
 import lombok.Getter;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.DayOfWeek;
@@ -29,18 +31,26 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> employeeHours;
     private final Map<Employee, Integer> employeeAmountWorkingOnWeekend;
     private final Map<Employee, Integer> employeeAmountWorkingDays;
+    private final Shift defaultVacationShift;
+    private final ShiftTypeConfig vacationShiftTypeConfig;
 
-    boolean employeeIsOnVacation(Employee employee, int day){
+    public boolean employeeHasPlannedVacation(Employee employee, Integer year, Integer month){
+        int[] vacations = monthlyEmployeesVacation.get(employee);
+
+        return Arrays.stream(vacations).sum() > 0;
+    }
+
+    public boolean employeeIsOnVacation(Employee employee, int day){
         return monthlyEmployeesVacation.get(employee)[day] == 1;
     }
 
-    void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){
+    public void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){
         addEmployeeHours(employee,shift);
         addEmployeeWorkingDays(employee);
         addEmployeeWorkingOnWeekend(employee,dayOfWeek);
     }
 
-    void addEmployeeHours(Employee employee, Shift shift){
+    public void addEmployeeHours(Employee employee, Shift shift){
         int shiftHours = computeShiftHours(shift.getEndHour().getHour(), shift.getStartHour().getHour());
 
         employeeHours.merge(employee,shiftHours,Integer::sum);
@@ -56,15 +66,15 @@ public class ScheduleGeneratorContext {
         employeeAmountWorkingDays.merge(employee,1,Integer::sum);
     }
 
-    boolean employeeHasProposalDayOff(Employee employee, int day){
+    public boolean employeeHasProposalDayOff(Employee employee, int day){
         return monthlyEmployeesProposalDayOff.get(employee)[day] == 1;
     }
 
-    boolean employeeHasProposalShift(Employee employee, LocalDate date){
+    public boolean employeeHasProposalShift(Employee employee, LocalDate date){
         return Arrays.stream(monthlyEmployeesProposalShiftsByDate.get(date).get(employee)).sum() > 0;
     }
 
-    int[] getEmployeeProposalShift(Employee employee, LocalDate date){
+    public int[] getEmployeeProposalShift(Employee employee, LocalDate date){
         return monthlyEmployeesProposalShiftsByDate.get(date).get(employee);
     }
 
