@@ -159,6 +159,12 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     @Override
+    public Shift getEntityByHours(LocalTime startHour, LocalTime endHour) {
+        return shiftRepository.findByStartHourAndEndHour(startHour,endHour)
+                .orElseGet(() -> shiftMapper.toEntity(create(new ShiftHoursDTO(startHour,endHour))));
+    }
+
+    @Override
     public Shift getArrayAsShift(int[] array) {
         if (array.length != 24){
             throw new IllegalArgumentException("Shift array must equal 24 elements");
@@ -198,9 +204,9 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
             throw new IllegalArgumentException("End hour cannot equals start hour");
         }
 
-        if (endHour.isBefore(startHour)){
-            throw new IllegalArgumentException("End hour cannot be before start hour");
-        }
+//        if (endHour.isBefore(startHour)){
+//            throw new IllegalArgumentException("End hour cannot be before start hour");
+//        }
 
     }
 }
