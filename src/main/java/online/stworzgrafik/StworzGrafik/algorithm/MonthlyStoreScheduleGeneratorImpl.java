@@ -13,6 +13,7 @@ import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
@@ -34,16 +35,16 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
     private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
     private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
     private final EmployeeVacationEntityService employeeVacationEntityService;
+    private final WarehousemanScheduleGenerator warehousemanScheduleGenerator;
 
     @Async
     @Override
     public void generateMonthlySchedule(Long storeId, Integer year, Integer month) {
         Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
-        // tutaj dodatkowe mapy do ilosci godzin, do ilosci przepracowanych dni, do ilosci pracujacych np sobot
 
-        Map<Employee, Integer> employeeAmountWorkingAndVacationHours; //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
-        Map<Employee, Integer> employeeAmountWorkingSaturdays;
-        Map<Employee, Integer> employeeAmountWorkingDays;
+        Map<Employee, Integer> employeeAmountWorkingAndVacationHours = new HashMap<>(); //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
+        Map<Employee, Integer> employeeAmountWorkingOnWeekend = new HashMap<>();
+        Map<Employee, Integer> employeeAmountWorkingDays = new HashMap<>();
 
         final Store store = storeEntityService.getEntityById(storeId);
         final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
@@ -52,7 +53,15 @@ class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator
         final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
         final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
 
-        generateWarehousemanSchedule(storeId,year, month, schedule, store);
+        warehousemanScheduleGenerator.generate(storeId, year, month, schedule, store,
+                employeeAmountWorkingAndVacationHours,
+                employeeAmountWorkingDays,
+                employeeAmountWorkingOnWeekend,
+                storeActiveEmployees,
+                monthlyEmployeesVacationByMonth,
+                monthlyEmployeesProposalDayOffByMonth,
+                monthlyEmployeesProposalShiftsByDate
+                );
 
         demandDraftEntityService.
         generateDailyShifts();
