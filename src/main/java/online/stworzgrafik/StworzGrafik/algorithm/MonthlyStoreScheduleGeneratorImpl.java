@@ -27,41 +27,37 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 class MonthlyStoreScheduleGeneratorImpl implements MonthlyStoreScheduleGenerator{
-    private final StoreEntityService storeEntityService;
-    private final EmployeeEntityService employeeEntityService;
-    private final DemandDraftEntityService demandDraftEntityService;
-    private final ScheduleEntityService scheduleEntityService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
-    private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
-    private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
-    private final EmployeeVacationEntityService employeeVacationEntityService;
-    private final WarehousemanScheduleGenerator warehousemanScheduleGenerator;
+//    private final StoreEntityService storeEntityService;
+//    private final EmployeeEntityService employeeEntityService;
+//    private final DemandDraftEntityService demandDraftEntityService;
+//    private final ScheduleEntityService scheduleEntityService;
+//    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
+//    private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
+//    private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
+//    private final EmployeeVacationEntityService employeeVacationEntityService;
+//    private final WarehousemanScheduleGenerator warehousemanScheduleGenerator;
+        private final ScheduleGeneratorContextFactory contextFactory;
+
+
 
     @Async
     @Override
     public void generateMonthlySchedule(Long storeId, Integer year, Integer month) {
-        Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
+//        Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month);
+//
+//        Map<Employee, Integer> employeeAmountWorkingAndVacationHours = new HashMap<>(); //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
+//        Map<Employee, Integer> employeeAmountWorkingOnWeekend = new HashMap<>();
+//        Map<Employee, Integer> employeeAmountWorkingDays = new HashMap<>();
+//
+//        final Store store = storeEntityService.getEntityById(storeId);
+//        final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
+//        final Map<LocalDate, int[]> everyDayStoreDemandDraft = dayAndDemandDraftSorted(storeId, year, month);
+//        final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = employeeProposalShifts(storeId,year,month);
+//        final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
+//        final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
+        ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
 
-        Map<Employee, Integer> employeeAmountWorkingAndVacationHours = new HashMap<>(); //jesli ma urlop to dodaj mu danego dnia 8 godzin na bieżąco
-        Map<Employee, Integer> employeeAmountWorkingOnWeekend = new HashMap<>();
-        Map<Employee, Integer> employeeAmountWorkingDays = new HashMap<>();
-
-        final Store store = storeEntityService.getEntityById(storeId);
-        final List<Employee> storeActiveEmployees = employeeEntityService.findAllStoreActiveEmployees(storeId);
-        final Map<LocalDate, int[]> everyDayStoreDemandDraft = dayAndDemandDraftSorted(storeId, year, month);
-        final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = employeeProposalShifts(storeId,year,month);
-        final Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth = employeeProposalDaysOff(storeId,year,month);
-        final Map<Employee, int[]> monthlyEmployeesVacationByMonth = monthlyEmployeesVacationMonth(storeId,year,month);
-
-        warehousemanScheduleGenerator.generate(storeId, year, month, schedule, store,
-                employeeAmountWorkingAndVacationHours,
-                employeeAmountWorkingDays,
-                employeeAmountWorkingOnWeekend,
-                storeActiveEmployees,
-                monthlyEmployeesVacationByMonth,
-                monthlyEmployeesProposalDayOffByMonth,
-                monthlyEmployeesProposalShiftsByDate
-                );
+        warehousemanScheduleGenerator.generate(context);
 
         demandDraftEntityService.
         generateDailyShifts();

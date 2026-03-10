@@ -16,7 +16,6 @@ import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
-import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.delivery.DayDeliveryConfig;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
@@ -39,20 +38,13 @@ public class WarehousemanScheduleGenerator {
     private final ScheduleMessageService scheduleMessageService;
     private final Shift defaultVacationShift = Shift.builder().startHour(LocalTime.of(12,0)).endHour(LocalTime.of(20,0)).build();
 
-    public void generate(Long storeId, Integer year, Integer month, Schedule schedule,Store store,
-                         Map<Employee, Integer> employeeAmountWorkingAndVacationHours,
-                         Map<Employee, Integer> employeeAmountWorkingDays,
-                         Map<Employee, Integer> employeeAmountWorkingOnWeekend,
-                         List<Employee> storeActiveEmployees,
-                         Map<Employee, int[]> monthlyEmployeesVacationByMonth,
-                         Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth,
-                         Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate){
-        if (!storeDeliveryService.hasDedicatedWarehouseman(storeId)){
+public void generate(ScheduleGeneratorContext context){
+        if (!storeDeliveryService.hasDedicatedWarehouseman(context.getStoreId())){
             return;
         }
 
-        StoreDelivery storeDelivery = store.getDelivery();
-        Employee warehouseman = storeDelivery.getPrimaryEmployee();
+        StoreDelivery storeDelivery = context.getStore().getDelivery();
+        Employee employee = storeDelivery.getPrimaryEmployee();
         ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findByCode(ShiftCode.WORK);
         StoreWeeklyDeliverySchedule storeWeeklyDeliverySchedule = storeDelivery.getStoreWeeklyDeliverySchedule();
         Map<DayOfWeek, DayDeliveryConfig> deliverySchedule = storeWeeklyDeliverySchedule.getDeliverySchedule();
@@ -65,112 +57,77 @@ public class WarehousemanScheduleGenerator {
                 continue;
             };
 
-            List<Integer> dayNumbersByDayOfWeek = CalendarCalculation.getDayNumbersByDayOfWeek(year, month, dayOfWeek);
+            List<Integer> dayNumbersByDayOfWeek = CalendarCalculation.getDayNumbersByDayOfWeek(context.getYear(), context.getMonth(), dayOfWeek);
             int[] shiftAsArray = dayOfWeekDeliveryConfig.shiftAsArray();
             Shift shift = shiftEntityService.getArrayAsShift(shiftAsArray);
 
             for (int day : dayNumbersByDayOfWeek){
-                LocalDate date = LocalDate.of(year, month, day);
+                LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
                 if (holidayManager.isHoliday(date)){
                     continue;
                 }
 
-                //*** VACATION ***
-                int[] warehousemanVacation = monthlyEmployeesVacationByMonth.get(warehouseman);
-                if (warehousemanVacation[day] == 1) {
-                    addEmployeeWorkingHours(employeeAmountWorkingAndVacationHours,warehouseman, defaultVacationShift);
+                if (context.employeeIsOnVacation(employee,day)){
+                    context.addEmployeeHours(employee,defaultVacationShift);
 
-                    coverDeliveryByOtherEmployee(
-                            storeId,
-                            schedule,
-                            employeeAmountWorkingAndVacationHours, employeeAmountWorkingDays,
-                            employeeAmountWorkingOnWeekend,
-                            storeActiveEmployees,
-                            monthlyEmployeesVacationByMonth,
-                            monthlyEmployeesProposalDayOffByMonth,
-                            monthlyEmployeesProposalShiftsByDate,
-                            dayOfWeek,
-                            day,
-                            warehouseman,
-                            date, shift,
-                            shiftTypeConfig
-                    );
+                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
-                //VACATION ^
 
-                //*** PROPOSAL DAY OFF ***
-                int[] warehousemanProposalDayOff = monthlyEmployeesProposalDayOffByMonth.get(warehouseman);
-                if (warehousemanProposalDayOff[day] == 1){
-                    coverDeliveryByOtherEmployee(
-                            storeId,
-                            schedule,
-                            employeeAmountWorkingAndVacationHours, employeeAmountWorkingDays,
-                            employeeAmountWorkingOnWeekend,
-                            storeActiveEmployees,
-                            monthlyEmployeesVacationByMonth,
-                            monthlyEmployeesProposalDayOffByMonth,
-                            monthlyEmployeesProposalShiftsByDate,
-                            dayOfWeek,
-                            day,
-                            warehouseman,
-                            date, shift,
-                            shiftTypeConfig
-                    );
+                if (context.employeeHasProposalDayOff(employee,day)){
+                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
-                //PROPOSAL DAY OFF ^
 
-                //*** PROPOSAL SHIFT ***
-                int[] warehousemanProposalShift = monthlyEmployeesProposalShiftsByDate.get(date).get(warehouseman);
-                if (Arrays.stream(warehousemanProposalShift).sum() > 0) {
-                    Shift proposalShift = shiftEntityService.getArrayAsShift(warehousemanProposalShift);
+                if (context.employeeHasProposalShift(employee,date)) {
+                    int[] employeeProposalShift = context.getEmployeeProposalShift(employee,date);
+                    Shift proposalShift = shiftEntityService.getArrayAsShift(employeeProposalShift);
+
                     registerWorkOnSchedule(
-                            storeId,
-                            schedule,
-                            warehouseman,
+                            context.getStoreId(),
+                            context.getSchedule(),
+                            employee,
                             date,
                             proposalShift,
                             shiftTypeConfig);
 
-                    addWorkingInformation(employeeAmountWorkingAndVacationHours, employeeAmountWorkingDays, employeeAmountWorkingOnWeekend, warehouseman, proposalShift, dayOfWeek);
+                    context.addWorkingInformation(employee,proposalShift,dayOfWeek);
 
                     continue;
                 }
-                //PROPOSAL SHIFT ^
 
                 registerWorkOnSchedule(
-                        storeId,
-                        schedule,
-                        warehouseman,
+                        context.getStoreId(),
+                        context.getSchedule(),
+                        employee,
                         date,
                         shift,
                         shiftTypeConfig);
 
-                addWorkingInformation(employeeAmountWorkingAndVacationHours,employeeAmountWorkingDays,employeeAmountWorkingOnWeekend,warehouseman,shift,dayOfWeek);
+                context.addWorkingInformation(employee,shift,dayOfWeek);
             }
         }
     }
 
-    private void coverDeliveryByOtherEmployee(Long storeId, Schedule schedule, Map<Employee, Integer> employeeAmountWorkingAndVacationHours, Map<Employee, Integer> employeeAmountWorkingDays, Map<Employee, Integer> employeeAmountWorkingOnWeekend, List<Employee> storeActiveEmployees, Map<Employee, int[]> monthlyEmployeesVacationByMonth, Map<Employee, int[]> monthlyEmployeesProposalDayOffByMonth,Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate, DayOfWeek dayOfWeek, int day, Employee warehouseman, LocalDate date, Shift shift, ShiftTypeConfig shiftTypeConfig) {
-        Optional<Employee> optionalEmployee = storeActiveEmployees.stream()
+    private void coverDeliveryByOtherEmployee(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift, DayOfWeek dayOfWeek,ShiftTypeConfig shiftTypeConfig) {
+        Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(empl -> empl.isCanOperateDelivery())
-                .filter(empl -> monthlyEmployeesVacationByMonth.get(empl)[day] == 0)
-                .filter(empl -> monthlyEmployeesProposalDayOffByMonth.get(empl)[day] == 0)
-                .filter(empl -> Arrays.stream(monthlyEmployeesProposalShiftsByDate.get(date).get(empl)).sum() == 0)
-                .filter(empl -> !empl.getId().equals(warehouseman.getId()))
-                .sorted(Comparator.comparingInt(employeeAmountWorkingAndVacationHours::get))
+                .filter(empl -> !context.employeeIsOnVacation(empl,date.getDayOfMonth()))
+                .filter(empl -> !context.employeeHasProposalDayOff(empl,date.getDayOfMonth()))
+                .filter(empl -> !context.employeeHasProposalShift(empl,date))
+                .filter(empl -> !empl.getId().equals(employee.getId()))
+                .sorted(Comparator.comparingInt(context.getEmployeeHours()::get))
                 .findFirst();
 
         if (optionalEmployee.isEmpty()){
             scheduleMessageService.save(
-                    schedule.getId(),
+                    context.getSchedule().getId(),
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.ERROR,
                             ScheduleMessageCode.NO_EMPLOYEE_TO_COVER_WAREHOUSEMAN,
                             "No employee available to cover warehouseman shift on date " + date,
-                            warehouseman.getId(),
+                            employee.getId(),
                             date
                     )
             );
@@ -181,15 +138,16 @@ public class WarehousemanScheduleGenerator {
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
 
         registerWorkOnSchedule(
-                    storeId,
-                    schedule,
+                    context.getStoreId(),
+                    context.getSchedule(),
                     employeeToCoverWarehouseman,
                     date,
                     shift,
                     shiftTypeConfig
         );
 
-        addWorkingInformation(employeeAmountWorkingAndVacationHours,employeeAmountWorkingDays,employeeAmountWorkingOnWeekend,employeeToCoverWarehouseman,shift,dayOfWeek);
+        context.addWorkingInformation(employeeToCoverWarehouseman,shift,dayOfWeek);
+
     }
 
     private void registerWorkOnSchedule(Long storeId, Schedule schedule, Employee employeeCoveringWarehouseman, LocalDate date, Shift shift, ShiftTypeConfig shiftTypeConfig) {
@@ -203,53 +161,5 @@ public class WarehousemanScheduleGenerator {
                         shiftTypeConfig.getId()
                 )
         );
-    }
-
-    private void addWorkingInformation(Map<Employee, Integer> employeeAmountWorkingAndVacationHours,
-                                       Map<Employee, Integer> employeeAmountWorkingDays,
-                                       Map<Employee, Integer> employeeAmountWorkingOnWeekend,
-                                       Employee employee,
-                                       Shift shift,
-                                       DayOfWeek dayOfWeek){
-        addEmployeeWorkingOnWeekend(employeeAmountWorkingOnWeekend,employee,dayOfWeek);
-        addEmployeeWorkingDays(employeeAmountWorkingDays,employee);
-        addEmployeeWorkingHours(employeeAmountWorkingAndVacationHours,employee,shift);
-
-    };
-    
-    private static void addEmployeeWorkingOnWeekend(Map<Employee, Integer> employeeAmountWorkingOnWeekend, Employee employee, DayOfWeek dayOfWeek){
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            Integer amountOfWorkingOnWeekend = employeeAmountWorkingOnWeekend.getOrDefault(employee, 0);
-            employeeAmountWorkingOnWeekend.put(
-                    employee,
-                    (amountOfWorkingOnWeekend + 1)
-            );
-        }
-    }
-
-    private static void addEmployeeWorkingDays(Map<Employee, Integer> employeeAmountWorkingDays, Employee employee) {
-        Integer amountWorkingDays = employeeAmountWorkingDays.getOrDefault(employee,0);
-        employeeAmountWorkingDays.put(
-                employee,
-                (amountWorkingDays + 1)
-        );
-    }
-
-    private static void addEmployeeWorkingHours(Map<Employee, Integer> employeeAmountWorkingAndVacationHours, Employee employee, Shift shift) {
-        Integer amountWorkingHours = employeeAmountWorkingAndVacationHours.getOrDefault(employee,0);
-        int shiftHours = computeShiftHours(shift.getEndHour().getHour(), shift.getStartHour().getHour());
-
-        employeeAmountWorkingAndVacationHours.put(
-                employee,
-                (amountWorkingHours + shiftHours)
-                );
-    }
-
-    private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){
-        if (shiftEndHour < shiftsStartHour){
-            return (24- shiftsStartHour) + shiftEndHour;
-        }
-
-        return shiftEndHour - shiftsStartHour;
     }
 }
