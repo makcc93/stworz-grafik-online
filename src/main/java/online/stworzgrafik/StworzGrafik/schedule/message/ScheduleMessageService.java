@@ -9,7 +9,7 @@ import java.util.List;
 
 @Validated
 public interface ScheduleMessageService {
-    void save(@NotNull Long scheduleId, @Valid CreateScheduleMessageDTO dto);
+    void addMessage(@NotNull Long scheduleId, @Valid CreateScheduleMessageDTO dto);
     void delete(@NotNull Long scheduleId,@NotNull Long scheduleMessageId);
     List<ScheduleMessage> findAll(@NotNull Long scheduleId);
 }

@@ -21,7 +21,7 @@ class ScheduleMessageServiceImpl implements ScheduleMessageService {
     private final EmployeeEntityService employeeEntityService;
 
     @Override
-    public void save(Long scheduleId, CreateScheduleMessageDTO dto) {
+    public void addMessage(Long scheduleId, CreateScheduleMessageDTO dto) {
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
 
         if (!userAuthorizationService.getUserStoreId().equals(schedule.getStore().getId())){

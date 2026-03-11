@@ -200,9 +200,9 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
             throw new IllegalArgumentException("Start or end hour cannot be null");
         }
 
-        if (startHour.getHour() == endHour.getHour()){
-            throw new IllegalArgumentException("End hour cannot equals start hour");
-        }
+//        if (startHour.getHour() == endHour.getHour()){
+//            throw new IllegalArgumentException("End hour cannot equals start hour");
+//        }
 
 //        if (endHour.isBefore(startHour)){
 //            throw new IllegalArgumentException("End hour cannot be before start hour");

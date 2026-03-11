@@ -121,10 +121,6 @@ class DailyShiftGeneratorAlgorithmImpl implements DailyShiftGeneratorAlgorithmSe
         return startEndHoursShifts;
     }
 
-    private List<Shift> generateEmployeesProposalShifts(){
-        return null;
-    }
-
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc, int[] dailyDemandDraft) {
         int index = 0;
         for (int hourOfDay = 23; hourOfDay >= 0; hourOfDay--) {

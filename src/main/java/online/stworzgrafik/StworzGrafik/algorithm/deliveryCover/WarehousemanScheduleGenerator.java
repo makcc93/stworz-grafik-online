@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -25,8 +24,10 @@ import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -68,44 +69,21 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(employee,day)){
-                    context.addEmployeeHours(employee,context.getDefaultVacationShift());
-
+                if (context.employeeIsOnVacation(employee,day) || context.employeeIsOnDayOff(employee,day)){
                     coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
 
-                if (context.employeeHasProposalDayOff(employee,day)){
-                    ShiftTypeConfig proposalShiftTypeConfig = shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL);
-
-                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,proposalShiftTypeConfig);
-                    continue;
-                }
-
                 if (context.employeeHasProposalShift(employee,date)) {
-                    int[] employeeProposalShift = context.getEmployeeProposalShift(employee,date);
+                    int[] employeeProposalShift = context.employeeProposalShiftAsArray(employee,date);
                     Shift proposalShift = shiftEntityService.getArrayAsShift(employeeProposalShift);
 
-                    registerWorkOnSchedule(
-                            context.getStoreId(),
-                            context.getSchedule(),
-                            employee,
-                            date,
-                            proposalShift,
-                            shiftTypeConfig);
-
+                    registerWorkOnSchedule(context, employee, date, proposalShift);
                     context.addWorkingInformation(employee,proposalShift,dayOfWeek);
-
                     continue;
                 }
 
-                registerWorkOnSchedule(
-                        context.getStoreId(),
-                        context.getSchedule(),
-                        employee,
-                        date,
-                        shift,
-                        shiftTypeConfig);
+                registerWorkOnSchedule(context, employee, date, shift);
 
                 context.addWorkingInformation(employee,shift,dayOfWeek);
             }
@@ -116,14 +94,14 @@ public void generate(ScheduleGeneratorContext context){
         Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(empl -> empl.isCanOperateDelivery())
                 .filter(empl -> !context.employeeIsOnVacation(empl,date.getDayOfMonth()))
-                .filter(empl -> !context.employeeHasProposalDayOff(empl,date.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnDayOff(empl,date.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl,date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
                 .sorted(Comparator.comparingInt(context.getEmployeeHours()::get))
                 .findFirst();
 
         if (optionalEmployee.isEmpty()){
-            scheduleMessageService.save(
+            scheduleMessageService.addMessage(
                     context.getSchedule().getId(),
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.ERROR,
@@ -138,29 +116,19 @@ public void generate(ScheduleGeneratorContext context){
         }
 
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
-
-        registerWorkOnSchedule(
-                    context.getStoreId(),
-                    context.getSchedule(),
-                    employeeToCoverWarehouseman,
-                    date,
-                    shift,
-                    shiftTypeConfig
-        );
-
+        registerWorkOnSchedule(context, employeeToCoverWarehouseman, date, shift);
         context.addWorkingInformation(employeeToCoverWarehouseman,shift,dayOfWeek);
-
     }
 
-    private void registerWorkOnSchedule(Long storeId, Schedule schedule, Employee employee, LocalDate date, Shift shift, ShiftTypeConfig shiftTypeConfig) {
+    private void registerWorkOnSchedule(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift) {
         scheduleDetailsService.addScheduleDetails(
-                storeId,
-                schedule.getId(),
+                context.getStoreId(),
+                context.getSchedule().getId(),
                 new CreateScheduleDetailsDTO(
                         employee.getId(),
                         date,
                         shift.getId(),
-                        shiftTypeConfig.getId()
+                        context.getStandardShiftTypeConfig().getId()
                 )
         );
     }

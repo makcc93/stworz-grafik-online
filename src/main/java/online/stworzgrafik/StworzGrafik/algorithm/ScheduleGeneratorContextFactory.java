@@ -47,16 +47,21 @@ public class ScheduleGeneratorContextFactory {
                 .everyDayStoreDemandDraft(dayAndDemandDraftSorted(storeId, year, month))
                 .monthlyEmployeesProposalShiftsByDate(employeeProposalShifts(storeId,year,month))
                 .monthlyEmployeesProposalDayOff(employeeProposalDaysOff(storeId,year,month))
-                .monthlyEmployeesVacation(monthlyEmployeesVacationMonth(storeId,year,month))
+                .monthlyEmployeesVacation(monthlyEmployeesVacation(storeId,year,month))
                 .employeeHours(new HashMap<>())
-                .employeeAmountWorkingDays(new HashMap<>())
-                .employeeAmountWorkingOnWeekend(new HashMap<>())
+                .workingDaysCount(new HashMap<>())
+                .workingOnWeekendCount(new HashMap<>())
+                .vacationDaysCount(new HashMap<>())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(12,0),LocalTime.of(20,0)))
+                .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
                 .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))
+                .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
+                .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
+                .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
                 .build();
     }
 
-    private Map<Employee, int[]> monthlyEmployeesVacationMonth(Long storeId, Integer year, Integer month){
+    private Map<Employee, int[]> monthlyEmployeesVacation(Long storeId, Integer year, Integer month){
         List<EmployeeVacation> employeesMonthlyVacation = employeeVacationEntityService.getEmployeeMonthlyVacation(storeId,year,month);
 
         return employeesMonthlyVacation.stream()
