@@ -33,12 +33,21 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
     private final Map<LocalDate, List<Shift>> generatedShiftsByDate;
+    private final Map<LocalDate, Employee> employeeReplacingWarehouseman;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
     private final ShiftTypeConfig vacationShiftTypeConfig;
     private final ShiftTypeConfig daysOffShiftTypeConfig;
     private final ShiftTypeConfig proposalShiftTypeConfig;
     private final ShiftTypeConfig standardShiftTypeConfig;
+
+    public boolean employeeIsOnReplacementOnWarehouse(LocalDate date, Employee employee){
+        return employeeReplacingWarehouseman.get(date) == employee;
+    }
+
+    public void addEmployeeReplacingWarehouseman(LocalDate date, Employee employee){
+        employeeReplacingWarehouseman.put(date,employee);
+    }
 
     public void addShiftsToDate(LocalDate date, List<Shift> shifts){
         getGeneratedShiftsByDate().put(date,shifts);
