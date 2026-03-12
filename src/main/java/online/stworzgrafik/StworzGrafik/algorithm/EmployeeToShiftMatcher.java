@@ -106,7 +106,9 @@ public class EmployeeToShiftMatcher {
                 //**
 
                 //**CASHIER IF AVAILABLE
-                for (Employee employee : availableEmployees) {
+                Iterator<Employee> iterator = availableEmployees.iterator();
+                while (iterator.hasNext()) {
+                    Employee employee = iterator.next();
                     if (employee.isCashier()) {
                         Shift longestEndingShift = shiftsSorted.stream()
                                 .max(Comparator.comparingInt(
@@ -119,7 +121,7 @@ public class EmployeeToShiftMatcher {
 
                         registerShiftToSchedule(context, employee, day, longestEndingShift);
                         shiftsSorted.remove(longestEndingShift);
-                        availableEmployees.remove(employee);
+                        iterator.remove();
                         context.addWorkingInformation(employee, longestEndingShift, day.getDayOfWeek());
                     }
                 }
