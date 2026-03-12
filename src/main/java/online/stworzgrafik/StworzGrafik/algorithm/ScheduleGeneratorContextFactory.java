@@ -53,6 +53,7 @@ public class ScheduleGeneratorContextFactory {
                 .workingOnWeekendCount(new HashMap<>())
                 .vacationDaysCount(new HashMap<>())
                 .generatedShiftsByDate(new HashMap<>())
+                .employeeReplacingWarehouseman(new HashMap<>())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(12,0),LocalTime.of(20,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
                 .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))

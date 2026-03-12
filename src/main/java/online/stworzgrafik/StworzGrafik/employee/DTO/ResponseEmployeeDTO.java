@@ -20,6 +20,7 @@ public record ResponseEmployeeDTO(
         @NotNull boolean seller,
         @NotNull boolean manager,
         @NotNull boolean cashier,
+        @NotNull boolean warehouseman,
         @NotNull boolean pok,
         @NotNull LocalDateTime createdAt,
         @Nullable LocalDateTime updatedAt

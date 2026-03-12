@@ -15,6 +15,7 @@ public record EmployeeSpecificationDTO(
         Boolean seller,
         Boolean manager,
         Boolean cashier,
+        Boolean warehouseman,
         Boolean pok
 ) {
 }

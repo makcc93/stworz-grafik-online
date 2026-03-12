@@ -28,5 +28,6 @@ public record UpdateEmployeeDTO(
         boolean seller,
         boolean manager,
         boolean cashier,
+        boolean warehouseman,
         boolean pok
 ) {}
