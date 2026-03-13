@@ -28,7 +28,7 @@ class MonthlyStoreScheduleGenerator {
 
         warehousemanScheduleGenerator.generate(context);
 
-        dailyShiftGeneratorAlgorithm.generateShiftsToDates(context);
+        dailyShiftGeneratorAlgorithm.generateShiftsToDays(context);
 
         matchEmployeesToShifts(context);
     }

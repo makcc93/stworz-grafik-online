@@ -24,7 +24,8 @@ public class ScheduleGeneratorContext {
     private final Schedule schedule;
     private final Store store;
     private final List<Employee> storeActiveEmployees;
-    private final Map<LocalDate, int[]> everyDayStoreDemandDraftSorted;
+    private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
+    private final Map<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
     private final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate;
     private final Map<Employee, int[]> monthlyEmployeesProposalDayOff;
     private final Map<Employee, int[]> monthlyEmployeesVacation;
@@ -32,7 +33,7 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> workingOnWeekendCount;
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
-    private final Map<LocalDate, List<Shift>> generatedShiftsByDate;
+    private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
     private final Map<LocalDate, Employee> employeeReplacingWarehouseman;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -49,8 +50,8 @@ public class ScheduleGeneratorContext {
         employeeReplacingWarehouseman.put(date,employee);
     }
 
-    public void addShiftsToDate(LocalDate date, List<Shift> shifts){
-        getGeneratedShiftsByDate().put(date,shifts);
+    public void addShiftsToDay(LocalDate date, List<Shift> shifts){
+        getGeneratedShiftsByDay().put(date,shifts);
     }
 
     public int[] employeeProposalShiftAsArray(Employee employee, LocalDate date){

@@ -44,7 +44,8 @@ public class ScheduleGeneratorContextFactory {
                 .schedule(scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month))
                 .store(storeEntityService.getEntityById(storeId))
                 .storeActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
-                .everyDayStoreDemandDraftSorted(dayAndDemandDraftSorted(storeId, year, month))
+                .uneditedOriginalDateStoreDraft(getOriginalStoreDraft(storeId,year,month))
+                .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
                 .monthlyEmployeesProposalShiftsByDate(employeeProposalShifts(storeId,year,month))
                 .monthlyEmployeesProposalDayOff(employeeProposalDaysOff(storeId,year,month))
                 .monthlyEmployeesVacation(monthlyEmployeesVacation(storeId,year,month))
@@ -52,7 +53,7 @@ public class ScheduleGeneratorContextFactory {
                 .workingDaysCount(new HashMap<>())
                 .workingOnWeekendCount(new HashMap<>())
                 .vacationDaysCount(new HashMap<>())
-                .generatedShiftsByDate(new HashMap<>())
+                .generatedShiftsByDay(new HashMap<>())
                 .employeeReplacingWarehouseman(new HashMap<>())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(12,0),LocalTime.of(20,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
@@ -119,6 +120,17 @@ public class ScheduleGeneratorContextFactory {
                         DemandDraft::getHourlyDemand,
                         (e1, e2) -> {throw new IllegalStateException("Date in store draft cannot be duplicated");},
                         LinkedHashMap::new
+                ));
+    }
+
+    private Map<LocalDate,int[]> getOriginalStoreDraft(Long storeId, Integer year, Integer month){
+        LocalDate firstDay = LocalDate.of(year,month,1);
+        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
+
+        return demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, firstDay, lastDay).stream()
+                .collect(Collectors.toMap(
+                        DemandDraft::getDraftDate,
+                        DemandDraft::getHourlyDemand
                 ));
     }
 }

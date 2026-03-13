@@ -10,7 +10,6 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.ShiftService;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -26,8 +25,8 @@ class DailyShiftGeneratorAlgorithm {
     private final DemandDraftEntityService dailyDemand;
     private final HolidayManager holidayManager;
 
-    public void generateShiftsToDates(ScheduleGeneratorContext context) {
-        Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getEveryDayStoreDemandDraftSorted();
+    public void generateShiftsToDays(ScheduleGeneratorContext context) {
+        Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getEveryDayStoreDemandDraftWorkingOn();
         List<Employee> employees = context.getStoreActiveEmployees();
 
         for (Map.Entry<LocalDate, int[]> entry : everyDayStoreDemandDraft.entrySet()) {
@@ -48,7 +47,7 @@ class DailyShiftGeneratorAlgorithm {
 
             List<Shift> shifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
-            context.addShiftsToDate(date,shifts);
+            context.addShiftsToDay(date,shifts);
         }
     }
 
