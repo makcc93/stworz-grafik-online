@@ -13,5 +13,6 @@ public interface ShiftEntityService {
     Shift getEntityById(@NotNull Long id);
     Shift getEntityByHours(@NotNull LocalTime startHour, @NotNull LocalTime endHour);
     Shift getArrayAsShift(@NotNull int[] array);
+    int[] getShiftAsArray(@NotNull Shift shift);
     Shift updateShift(ShiftHoursDTO dto, Shift shift);
 }

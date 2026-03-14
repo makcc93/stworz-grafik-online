@@ -10,10 +10,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @Builder
@@ -65,6 +62,12 @@ public class ScheduleGeneratorContext {
         return Arrays.stream(shift).sum() > 0;
     }
 
+    public void updateEmployeeDailyProposal(Employee employee, LocalDate date, int[] updatedProposal){
+        monthlyEmployeesProposalShiftsByDate
+                .computeIfAbsent(date, k -> new HashMap<>())
+                .put(employee,updatedProposal);
+    }
+
     public boolean employeeIsOnDayOff(Employee employee, int day){
         int[] daysOff = monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
         return daysOff[day-1] == 1;
@@ -96,6 +99,15 @@ public class ScheduleGeneratorContext {
 
     public void addEmployeeVacationDay(Employee employee, Integer numberOfDays){
         vacationDaysCount.merge(employee, numberOfDays, Integer::sum);
+    }
+
+    public void updateEmployeeHours(Employee employee, Shift oldShift, Shift newShift){
+        int oldShiftLengthHours = computeShiftHours(oldShift.getEndHour().getHour(), oldShift.getStartHour().getHour());
+        int newShiftLengthHours = computeShiftHours(newShift.getEndHour().getHour(), newShift.getStartHour().getHour());
+
+        int shiftHoursDifference = newShiftLengthHours - oldShiftLengthHours;
+
+        employeeHours.merge(employee,shiftHoursDifference,Integer::sum);
     }
 
     public void addEmployeeHours(Employee employee, Shift shift){
