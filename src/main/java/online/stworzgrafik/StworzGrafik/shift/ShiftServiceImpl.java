@@ -195,6 +195,12 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         return shiftMapper.toEntity(create(new ShiftHoursDTO(LocalTime.of(startHour,0),LocalTime.of(endHour,0))));
     }
 
+    @Override
+    public Shift updateShift(ShiftHoursDTO dto,Shift shift) {
+        shiftMapper.updateShift(dto,shift);
+        return  shiftRepository.save(shift);
+    }
+
     private void validateHours(LocalTime startHour, LocalTime endHour){
         if (startHour == null || endHour == null){
             throw new IllegalArgumentException("Start or end hour cannot be null");

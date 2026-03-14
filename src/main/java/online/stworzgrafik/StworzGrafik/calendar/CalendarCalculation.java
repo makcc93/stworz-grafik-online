@@ -38,7 +38,6 @@ public class CalendarCalculation {
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate date = yearMonth.atDay(1);
-        int monthLength = yearMonth.lengthOfMonth();
 
         while (date.getMonthValue() == month) {
             if (date.getDayOfWeek() != DayOfWeek.SATURDAY &&
