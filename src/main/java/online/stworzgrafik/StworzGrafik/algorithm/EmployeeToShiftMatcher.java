@@ -5,11 +5,15 @@ import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
+import online.stworzgrafik.StworzGrafik.schedule.details.DTO.UpdateScheduleDetailsDTO;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Component;
@@ -22,6 +26,7 @@ import java.util.*;
 public class EmployeeToShiftMatcher {
     private final HolidayManager holidayManager;
     private final ScheduleDetailsService scheduleDetailsService;
+    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final ScheduleMessageService scheduleMessageService;
     private final CalendarCalculation calendarCalculation;
     private final ShiftEntityService shiftEntityService;
@@ -62,6 +67,74 @@ public class EmployeeToShiftMatcher {
             //** IF NUMBER OF SHIFTS IS BIGGER THAN NUMBER OF EMPLOYEES SAVE ERROR MESSAGE TO SCHEDULE
             employeesCountIsLessThanShiftCount(context, day, availableEmployees, shiftsSorted);
             //**
+
+
+            int firstWorkingHour = 0;
+            for (int i = 0; i < originalStoreDrafts.get(day).length; i++){
+                if (originalStoreDrafts.get(day)[i] > 0){
+                    firstWorkingHour = i;
+                    break;
+                }
+            }
+
+            int openingHourDemandDraftValue = originalStoreDrafts.get(day)[firstWorkingHour];
+
+            int[] sumOfDailyProposal = new int[24];
+            int proposalEmployeesCanOpenStoreCount = 0;
+            Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+            List<Employee> employeesWithOpenStoreProposals = new ArrayList<>();
+            for (Map.Entry<Employee, int[]> proposalEntry : dailyProposals.entrySet()){
+                Employee employee = proposalEntry.getKey();
+
+                if (employee.isCanOpenCloseStore()){
+                    proposalEmployeesCanOpenStoreCount++;
+                }
+
+                int[] singleEmployeeProposal = proposalEntry.getValue();
+                for (int i = 0; i < sumOfDailyProposal.length; i++){
+                    sumOfDailyProposal[i] = sumOfDailyProposal[i] + singleEmployeeProposal[i];
+                }
+
+
+                if (singleEmployeeProposal[firstWorkingHour] > 0){
+                    employeesWithOpenStoreProposals.add(employee);
+                }
+            }
+
+            int openingHourProposalsCount = sumOfDailyProposal[firstWorkingHour];
+
+            if (openingHourDemandDraftValue <= openingHourProposalsCount && proposalEmployeesCanOpenStoreCount < 1){
+                Employee employeeWithHighestMonthlyWorkingHours = employeesWithOpenStoreProposals.stream()
+                        .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
+                                .reversed())
+                        .toList()
+                        .getFirst();
+
+                Shift originalProposalShift = shiftEntityService.getArrayAsShift(dailyProposals.get(employeeWithHighestMonthlyWorkingHours));
+                Shift startHourIncrementShift = shiftEntityService.getEntityByHours(originalProposalShift.getStartHour().plusHours(1), originalProposalShift.getEndHour());
+
+                ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeShiftByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours, day);
+
+                scheduleDetailsService.updateScheduleDetails(context.getStoreId(),context.getSchedule().getId(),employeeOldShiftInSchedule.getId(),
+                        new UpdateScheduleDetailsDTO(
+                                null,
+                                null,
+                                startHourIncrementShift.getId(),
+                                null
+                        )
+                );
+
+                Shift shiftToChangeStartHour = shiftsSorted.stream()
+                        .sorted(longestOpenStoreShift())
+                        .toList()
+                        .getFirst();
+
+                shiftEntityService.updateShift(new ShiftHoursDTO(shiftToChangeStartHour.getStartHour().minusHours(1),null),shiftToChangeStartHour);
+
+            }
+
+
+
 
             while (!shiftsSorted.isEmpty()) {
                 //TODO Z TABLICY KORKOWEJ CZYLI SPRAWDZENIE CZY PROPOSAL NIE BLOKUJE KIEROWNIKA DO OTWARCIA SKLEPU NP 3X 8-14 I NIE MA ZMIANY NA OTWARCIE DLA KIERO
@@ -135,17 +208,12 @@ public class EmployeeToShiftMatcher {
     private void applyAfternoonCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate day) {
         Employee employeeToOperateAfternoonCredit = availableEmployees.stream()
                 .filter(Employee::isCanOperateCredit)
-                .sorted(Comparator.comparingInt(
-                        empl -> context.getEmployeeHours().get(empl)
-                ))
+                .sorted(employeeWithLowestHours(context))
                 .toList()
                 .getFirst();
 
         Shift afternoonCreditShift = shiftsSorted.stream()
-                .sorted(Comparator.comparingInt(
-                                (Shift shift) -> shift.getEndHour().getHour()
-                        )
-                )
+                .sorted(longestCloseStoreShift())
                 .toList()
                 .getFirst();
 
@@ -162,19 +230,12 @@ public class EmployeeToShiftMatcher {
     private void applyMorningCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate day) {
         Employee employeeToOperateMorningCredit = availableEmployees.stream()
                 .filter(Employee::isCanOperateCredit)
-                .sorted(Comparator.comparingInt(
-                        empl -> context.getEmployeeHours().get(empl)
-                ))
+                .sorted(employeeWithLowestHours(context))
                 .toList()
                 .getFirst();
 
         Shift morningCreditShift = shiftsSorted.stream()
-                .sorted(Comparator.comparingInt(
-                                (Shift shift) -> shift.getStartHour().getHour()
-                        )
-                        .thenComparingInt(
-                                shift -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
-                        ))
+                .sorted(longestOpenStoreShift())
                 .toList()
                 .getFirst();
 
@@ -221,16 +282,12 @@ public class EmployeeToShiftMatcher {
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
         Employee employeeToCloseStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
-                .sorted(Comparator.comparingInt(
-                        empl -> context.getEmployeeHours().get(empl)
-                ))
+                .sorted(employeeWithLowestHours(context))
                 .toList()
                 .getFirst();
 
         Shift closeShift = shiftsSorted.stream()
-                .sorted(Comparator.comparingInt(
-                        shift -> shift.getEndHour().getHour()
-                ))
+                .sorted(longestCloseStoreShift())
                 .toList()
                 .getFirst();
 
@@ -245,16 +302,23 @@ public class EmployeeToShiftMatcher {
         }
     }
 
+    private static Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context) {
+        return Comparator.comparingInt(
+                empl -> context.getEmployeeHours().get(empl)
+        );
+    }
+
     private void applyOpenStoreEmployee(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
         Employee employeeToOpenStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
-                .sorted(Comparator.comparingInt(
-                        empl -> context.getEmployeeHours().get(empl)
-                ))
+                .sorted(employeeWithLowestHours(context))
                 .toList()
                 .getFirst();
 
-        Shift openShift = shiftsSorted.getFirst();
+        Shift openShift = shiftsSorted.stream()
+                .sorted(longestOpenStoreShift())
+                .toList()
+                .getFirst();
 
         sumOfWorkingHoursExceeded(context, day, employeeToOpenStore);
 
@@ -264,6 +328,28 @@ public class EmployeeToShiftMatcher {
             availableEmployees.remove(employeeToOpenStore);
             context.addWorkingInformation(employeeToOpenStore, openShift, day.getDayOfWeek());
         }
+    }
+
+    private static Comparator<Shift> longestCloseStoreShift() {
+        return Comparator.comparingInt(
+                        (Shift shift) -> shift.getEndHour().getHour()
+                )
+                .thenComparing(
+                        Comparator.comparingInt(
+                                (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
+                        ).reversed()
+                );
+    }
+
+    private static Comparator<Shift> longestOpenStoreShift() {
+        return Comparator.comparingInt(
+                        (Shift shift) -> shift.getStartHour().getHour()
+                )
+                .thenComparing(
+                        Comparator.comparingInt(
+                            (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
+                        ).reversed()
+                );
     }
 
     private void employeesCountIsLessThanShiftCount(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
@@ -292,13 +378,9 @@ public class EmployeeToShiftMatcher {
 
 
                 Shift longestEndingShift = shiftsSorted.stream()
-                        .max(Comparator.comparingInt(
-                                        (Shift shift) -> shift.getEndHour().getHour()
-                                )
-                                .thenComparingInt(
-                                        (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
-                                ))
-                        .orElseThrow();
+                        .sorted(longestCloseStoreShift())
+                        .toList()
+                        .getFirst();
 
                 registerShiftToSchedule(context, employee, day, longestEndingShift);
                 shiftsSorted.remove(longestEndingShift);
