@@ -13,7 +13,6 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
-import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Component;
@@ -129,8 +128,7 @@ public class EmployeeToShiftMatcher {
                         .toList()
                         .getFirst();
 
-                shiftEntityService.updateShift(new ShiftHoursDTO(shiftToChangeStartHour.getStartHour().minusHours(1),null),shiftToChangeStartHour);
-
+                shiftToChangeStartHour.setStartHour(shiftToChangeStartHour.getStartHour().minusHours(1));
             }
 
 
