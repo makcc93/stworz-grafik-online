@@ -2,6 +2,11 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.jollyday.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.OpenCloseHourProposalAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.OpenCloseHourProposalResult;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.StoreHourType;
+import online.stworzgrafik.StworzGrafik.algorithm.resolver.CloseHourProposalResolver;
+import online.stworzgrafik.StworzGrafik.algorithm.resolver.OpeningHourProposalResolver;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
@@ -29,6 +34,9 @@ public class EmployeeToShiftMatcher {
     private final ScheduleMessageService scheduleMessageService;
     private final CalendarCalculation calendarCalculation;
     private final ShiftEntityService shiftEntityService;
+    private final OpenCloseHourProposalAnalyzer analyzer;
+    private final OpeningHourProposalResolver openingHourProposalResolver;
+    private final CloseHourProposalResolver closeHourProposalResolver;
 
     public void matchEmployeeToShift(ScheduleGeneratorContext context) {
         Map<LocalDate, int[]> originalStoreDrafts = context.getUneditedOriginalDateStoreDraft();
@@ -67,75 +75,20 @@ public class EmployeeToShiftMatcher {
             employeesCountIsLessThanShiftCount(context, day, availableEmployees, shiftsSorted);
             //**
 
+            OpenCloseHourProposalResult openingHourResult = analyzer.analyze(context, day, StoreHourType.OPENING);
 
-            int firstWorkingHour = 0;
-            for (int i = 0; i < originalStoreDrafts.get(day).length; i++){
-                if (originalStoreDrafts.get(day)[i] > 0){
-                    firstWorkingHour = i;
-                    break;
-                }
+            if (openingHourResult.hasProblem()){
+                openingHourProposalResolver.resolve(openingHourResult,context,day,shiftsSorted); //dodaj updateGodzin pracownika
             }
 
-            int openingHourDemandDraftValue = originalStoreDrafts.get(day)[firstWorkingHour];
+            OpenCloseHourProposalResult closingHourResult = analyzer.analyze(context, day, StoreHourType.CLOSING);
 
-            int[] sumOfDailyProposal = new int[24];
-            int proposalEmployeesCanOpenStoreCount = 0;
-            Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
-            List<Employee> employeesWithOpenStoreProposals = new ArrayList<>();
-            for (Map.Entry<Employee, int[]> proposalEntry : dailyProposals.entrySet()){
-                Employee employee = proposalEntry.getKey();
-
-                if (employee.isCanOpenCloseStore()){
-                    proposalEmployeesCanOpenStoreCount++;
-                }
-
-                int[] singleEmployeeProposal = proposalEntry.getValue();
-                for (int i = 0; i < sumOfDailyProposal.length; i++){
-                    sumOfDailyProposal[i] = sumOfDailyProposal[i] + singleEmployeeProposal[i];
-                }
-
-
-                if (singleEmployeeProposal[firstWorkingHour] > 0){
-                    employeesWithOpenStoreProposals.add(employee);
-                }
+            if (closingHourResult.hasProblem()){
+                closeHourProposalResolver.resolve(closingHourResult,context,day,shiftsSorted);//dodany juz update godzin
             }
-
-            int openingHourProposalsCount = sumOfDailyProposal[firstWorkingHour];
-
-            if (openingHourDemandDraftValue <= openingHourProposalsCount && proposalEmployeesCanOpenStoreCount < 1){
-                Employee employeeWithHighestMonthlyWorkingHours = employeesWithOpenStoreProposals.stream()
-                        .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
-                                .reversed())
-                        .toList()
-                        .getFirst();
-
-                Shift originalProposalShift = shiftEntityService.getArrayAsShift(dailyProposals.get(employeeWithHighestMonthlyWorkingHours));
-                Shift startHourIncrementShift = shiftEntityService.getEntityByHours(originalProposalShift.getStartHour().plusHours(1), originalProposalShift.getEndHour());
-
-                ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeShiftByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours, day);
-
-                scheduleDetailsService.updateScheduleDetails(context.getStoreId(),context.getSchedule().getId(),employeeOldShiftInSchedule.getId(),
-                        new UpdateScheduleDetailsDTO(
-                                null,
-                                null,
-                                startHourIncrementShift.getId(),
-                                null
-                        )
-                );
-
-                Shift shiftToChangeStartHour = shiftsSorted.stream()
-                        .sorted(longestOpenStoreShift())
-                        .toList()
-                        .getFirst();
-
-                shiftToChangeStartHour.setStartHour(shiftToChangeStartHour.getStartHour().minusHours(1));
-            }
-
-
-
+            //ogarnij .toList().getFirst() na .findFirst().orElseThrow() lub .findFirst() z optionalem - wiadomosc claude
 
             while (!shiftsSorted.isEmpty()) {
-                //TODO Z TABLICY KORKOWEJ CZYLI SPRAWDZENIE CZY PROPOSAL NIE BLOKUJE KIEROWNIKA DO OTWARCIA SKLEPU NP 3X 8-14 I NIE MA ZMIANY NA OTWARCIE DLA KIERO
 
                 //**CHECK OPEN STORE IN SCHEDULE
                 if (!morningOpenStoreEmployeeAlreadyInSchedule(context,day,uneditedOriginalStoreDailyDraft)) {
@@ -170,7 +123,6 @@ public class EmployeeToShiftMatcher {
                 //**
             }
         }
-
     }
 
     private boolean morningOpenStoreEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate day,  int[]dailyDraft) {
