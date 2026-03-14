@@ -23,6 +23,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 import static online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsSpecification.*;
 
 @Service
@@ -32,7 +34,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     private final UserAuthorizationService userAuthorizationService;
     private final ScheduleService scheduleService;
     private final ScheduleEntityService scheduleEntityService;
-    private final EmployeeEntityService employeeService;
+    private final EmployeeEntityService employeeEntityService;
     private final ShiftEntityService shiftService;
     private final ShiftTypeConfigService shiftTypeConfigService;
     private final ScheduleDetailsBuilder builder;
@@ -53,7 +55,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
 
         verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
 
-        Employee employee = employeeService.getEntityById(storeId);
+        Employee employee = employeeEntityService.getEntityById(storeId);
         Shift shift = shiftService.getEntityById(dto.shiftId());
         ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
 
@@ -74,18 +76,28 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     public ResponseScheduleDetailsDTO updateScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
         verifyUserToStoreAccess(storeId);
 
-        if (!repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
-            throw new EntityNotFoundException("Schedule details for employee id " + dto.employeeId()
-                    + " on date " + dto.date()
-                    + " does not exist");
-        }
-
         ScheduleDetails scheduleDetails = getScheduleDetails(scheduleDetailsId);
 
-        mapper.updateScheduleDetails(dto,scheduleDetails);
+        if (dto.employeeId() != null) {
+            Employee employee = employeeEntityService.getEntityById(dto.employeeId());
+            scheduleDetails.setEmployee(employee);
+        }
+
+        if (dto.date() != null) {
+            scheduleDetails.setDate(dto.date());
+        }
+
+        if (dto.shiftId() != null) {
+            Shift shift = shiftService.getEntityById(dto.shiftId());
+            scheduleDetails.setShift(shift);
+        }
+
+        if (dto.shiftTypeConfigId() != null) {
+            ShiftTypeConfig config = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
+            scheduleDetails.setShiftTypeConfig(config);
+        }
 
         ScheduleDetails saved = repository.save(scheduleDetails);
-
         return mapper.toDTO(saved);
     }
 
@@ -154,5 +166,15 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         );
 
         return repository.findAll(specification, pageable);
+    }
+
+    @Override
+    public ScheduleDetails findEmployeeShiftByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
+        verifyUserAccessAndData(storeId, scheduleId);
+
+        return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, employee.getId(), day)
+                .orElseThrow(() ->
+                new EntityNotFoundException("Cannot find schedule details for schedule id " + scheduleId + " and employee id " + employee.getId() + " on date " + day)
+        );
     }
 }
