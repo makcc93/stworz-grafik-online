@@ -71,9 +71,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
 
         return mapper.toDTO(saved);
     }
-
-    @Override
-    public ResponseScheduleDetailsDTO updateScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
+    public ScheduleDetails updateEntityScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
         verifyUserToStoreAccess(storeId);
 
         ScheduleDetails scheduleDetails = getScheduleDetails(scheduleDetailsId);
@@ -97,8 +95,14 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
             scheduleDetails.setShiftTypeConfig(config);
         }
 
-        ScheduleDetails saved = repository.save(scheduleDetails);
-        return mapper.toDTO(saved);
+        return repository.save(scheduleDetails);
+    }
+
+    @Override
+    public ResponseScheduleDetailsDTO updateScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
+        ScheduleDetails scheduleDetails = updateEntityScheduleDetails(storeId, scheduleId, scheduleDetailsId, dto);
+
+        return mapper.toDTO(scheduleDetails);
     }
 
     @Override
