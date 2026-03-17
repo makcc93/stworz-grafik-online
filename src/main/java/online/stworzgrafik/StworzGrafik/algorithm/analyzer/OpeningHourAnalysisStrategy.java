@@ -30,7 +30,7 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     }
 
     @Override
-    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day) {
+    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day,List<Shift> shifts, List<Employee> availableEmployees) {
         Map<LocalDate, int[]> originalStoreDraft = context.getUneditedOriginalDateStoreDraft();
 
         int targetHour =  findOpenStoreHour(originalStoreDraft,day);
@@ -62,7 +62,7 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         int targetHourProposalsCount = arrayDailyProposalsCount[targetHour];
 
-        return new OpeningHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals);
+        return new OpeningHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
 
     }
 
@@ -72,7 +72,9 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     }
 
     @Override
-    public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day, List<Shift> shiftsSorted) {
+    public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        List<Shift> shifts = ((OpeningHourAnalysisResult) result).shifts();
+
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
 
         Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((OpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
@@ -101,7 +103,7 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         context.updateEmployeeDailyProposal(employeeWithHighestMonthlyWorkingHours.get(),day, shiftEntityService.getShiftAsArray(startHourIncrementShift));
 
-        updateShiftsInMatcher(context, shiftsSorted, day);
+        updateShiftsInMatcher(context, shifts, day);
     }
 
     private int findOpenStoreHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
@@ -115,8 +117,8 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
         return targetHour;
     }
 
-    private void updateShiftsInMatcher(ScheduleGeneratorContext context, List<Shift> shiftsSorted, LocalDate day) {
-        Optional<Shift> shiftToChangeStartHour = shiftsSorted.stream()
+    private void updateShiftsInMatcher(ScheduleGeneratorContext context, List<Shift> shifts, LocalDate day) {
+        Optional<Shift> shiftToChangeStartHour = shifts.stream()
                 .sorted(longestOpenStoreShift())
                 .findFirst();
 

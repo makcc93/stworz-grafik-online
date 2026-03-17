@@ -1,6 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
+import online.stworzgrafik.StworzGrafik.algorithm.EmployeeToShiftMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
@@ -25,13 +27,13 @@ public class ScheduleAnalyzer {
     }
 
     public void analyzeAndResolve(ScheduleGeneratorContext context, LocalDate day,
-                                  List<Shift> shiftsSorted, AnalyzeType type){
+                                  List<Shift> shifts, List<Employee> availableEmployees, AnalyzeType type){
         ScheduleAnalysisStrategy scheduleAnalysisStrategy = strategies.get(type);
 
-        ScheduleAnalysisResult result = scheduleAnalysisStrategy.analyze(context, day);
+        ScheduleAnalysisResult result = scheduleAnalysisStrategy.analyze(context, day,shifts,availableEmployees);
 
         if (scheduleAnalysisStrategy.hasProblem(result)){
-            scheduleAnalysisStrategy.resolve(result,context,day,shiftsSorted);
+            scheduleAnalysisStrategy.resolve(result,context,day);
         }
     }
 }

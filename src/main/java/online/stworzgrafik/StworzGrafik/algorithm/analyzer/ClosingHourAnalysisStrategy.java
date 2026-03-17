@@ -30,7 +30,7 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     }
 
     @Override
-    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day) {
+    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day,List<Shift> shifts, List<Employee> availableEmployees) {
         Map<LocalDate, int[]> originalStoreDraft = context.getUneditedOriginalDateStoreDraft();
 
         int targetHour = findCloseStoreHour(originalStoreDraft,day);
@@ -62,7 +62,7 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         int targetHourProposalsCount = arrayDailyProposalsCount[targetHour];
 
-        return new ClosingHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals);
+        return new ClosingHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
     }
 
     @Override
@@ -71,8 +71,9 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     }
 
     @Override
-    public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day, List<Shift> shiftsSorted) {
+    public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        List<Shift> shifts = ((ClosingHourAnalysisResult) result).shifts();
 
         Employee employeeWithHighestMonthlyWorkingHours = ((ClosingHourAnalysisResult ) result).employeesWithCloseStoreProposals().stream()
                 .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
@@ -89,7 +90,7 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         context.updateEmployeeDailyProposal(employeeWithHighestMonthlyWorkingHours,day, shiftEntityService.getShiftAsArray(endHourDecrementShift));
 
-        updateShiftsInMatcher(shiftsSorted);
+        updateShiftsInMatcher(shifts);
     }
 
     private int findCloseStoreHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
@@ -103,8 +104,8 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
         }
         return targetHour;
     }
-    private void updateShiftsInMatcher(List<Shift> shiftsSorted) {
-        Shift shiftToChangeEndHour = shiftsSorted.stream()
+    private void updateShiftsInMatcher(List<Shift> shifts) {
+        Shift shiftToChangeEndHour = shifts.stream()
                 .sorted(longestCloseStoreShift())
                 .toList()
                 .getFirst();
