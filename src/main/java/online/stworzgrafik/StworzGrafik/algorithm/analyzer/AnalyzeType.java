@@ -1,7 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 public enum AnalyzeType {
-    OPENING_HOUR,
-    CLOSING_HOUR,
-    TOO_MANY_PROPOSALS
+    MANAGER_OPENING_HOUR,
+    MANAGER_CLOSING_HOUR,
+    TOO_MANY_PROPOSALS,
+    UNDERSTAFFED
 }
