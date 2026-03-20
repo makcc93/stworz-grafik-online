@@ -19,14 +19,14 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
+public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     private final ScheduleMessageService scheduleMessageService;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
 
     @Override
     public AnalyzeType getSupportedType() {
-        return AnalyzeType.OPENING_HOUR;
+        return AnalyzeType.MANAGER_OPENING_HOUR;
     }
 
     @Override
@@ -62,22 +62,23 @@ public class OpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         int targetHourProposalsCount = arrayDailyProposalsCount[targetHour];
 
-        return new OpeningHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
+        return new ManagerOpeningHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
 
     }
 
     @Override
     public boolean hasProblem(ScheduleAnalysisResult result) {
-        return ((OpeningHourAnalysisResult) result).hasProblem();
+        return ((ManagerOpeningHourAnalysisResult) result).hasProblem();
     }
 
+    //ogarnij czy ta klasa nie zrobi roboty w momencie zapisywania do bazy danych propozycji gdy proposals > originalDraft
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        List<Shift> shifts = ((OpeningHourAnalysisResult) result).shifts();
+        List<Shift> shifts = ((ManagerOpeningHourAnalysisResult) result).shifts();
 
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
 
-        Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((OpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
+        Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerOpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
                 .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
                         .reversed())
                 .findFirst();

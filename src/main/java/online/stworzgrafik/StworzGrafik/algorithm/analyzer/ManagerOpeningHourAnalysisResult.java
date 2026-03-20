@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 
 import java.util.List;
 
-record OpeningHourAnalysisResult (
+record ManagerOpeningHourAnalysisResult(
     int openHour,
     int openHourDemandDraftValue,
     int openHourProposalsCount,

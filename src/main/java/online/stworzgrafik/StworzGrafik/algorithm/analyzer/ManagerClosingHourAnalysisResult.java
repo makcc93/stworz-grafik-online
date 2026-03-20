@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 
 import java.util.List;
 
-public record ClosingHourAnalysisResult(
+public record ManagerClosingHourAnalysisResult(
         int closeHour,
         int closeHourDemandDraftValue,
         int closeHourProposalsCount,

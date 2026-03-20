@@ -26,8 +26,7 @@ public class ScheduleAnalyzer {
                 );
     }
 
-    public void analyzeAndResolve(ScheduleGeneratorContext context, LocalDate day,
-                                  List<Shift> shifts, List<Employee> availableEmployees, AnalyzeType type){
+    public void analyzeAndResolve(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees, AnalyzeType type){
         ScheduleAnalysisStrategy scheduleAnalysisStrategy = strategies.get(type);
 
         ScheduleAnalysisResult result = scheduleAnalysisStrategy.analyze(context, day,shifts,availableEmployees);

@@ -3,6 +3,8 @@ package online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations;
 import de.jollyday.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -25,6 +28,7 @@ public class ProposalShiftApplier {
     private final ScheduleDetailsService scheduleDetailsService;
     private final ScheduleMessageService scheduleMessageService;
     private final ShiftEntityService shiftEntityService;
+    private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
         List<Employee> employees = context.getStoreActiveEmployees();
@@ -35,6 +39,7 @@ public class ProposalShiftApplier {
 
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(year, month, day);
+            int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24]);
 
             if (holidayManager.isHoliday(date)) {
                 continue;
@@ -48,7 +53,7 @@ public class ProposalShiftApplier {
                                 new CreateScheduleMessageDTO(
                                         ScheduleMessageType.INFO,
                                         ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                                        "Employee " + employee.getFirstName() + " " + employee.getLastName() + " is on vacation and has proposal shift on day " + date,
+                                        "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję pracy w dniu " + date,
                                         employee.getId(),
                                         date
                                 )
@@ -62,7 +67,7 @@ public class ProposalShiftApplier {
                                 new CreateScheduleMessageDTO(
                                         ScheduleMessageType.INFO,
                                         ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                                        "Employee " + employee.getFirstName() + " " + employee.getLastName() + " has proposal day off and concrete shift in same time on day " + date,
+                                        "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " ma propozycję dnia wolnego i pracy w dniu " + date,
                                         employee.getId(),
                                         date
                                 )
@@ -75,6 +80,8 @@ public class ProposalShiftApplier {
 
                     registerProposalShiftOnSchedule(context,employee,date,proposalShift);
                     context.addWorkingInformation(employee,proposalShift,date.getDayOfWeek());
+
+                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
                 }
             }
 
@@ -93,4 +100,6 @@ public class ProposalShiftApplier {
                 )
         );
     }
+
+
 }

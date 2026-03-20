@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
-import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
@@ -35,10 +34,11 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
     @Override
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees) {
         Map<Employee, int[]> employeeDailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,Collections.emptyMap());
-        int[] dailyDraft = context.getUneditedOriginalDateStoreDraft().get(day);
         int[] proposalsCount = getEmployeesDailyProposalCount(employeeDailyProposals);
 
-        return new TooManyProposalsAnalysisResult(availableEmployees,shifts,dailyDraft,proposalsCount);
+        int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().get(day);
+
+        return new TooManyProposalsAnalysisResult(originalDailyDraft,proposalsCount);
     }
 
     @Override
@@ -48,28 +48,19 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        List<Employee> availableEmployees = ((TooManyProposalsAnalysisResult) result).availableEmployees();
-        List<Shift> shifts = ((TooManyProposalsAnalysisResult) result).shifts();
-        
-        while (shifts.size() > availableEmployees.size()) {
-            boolean resolved = cancelProposalAndAddEmployeeToAvailable(availableEmployees, context, day);
-
-            if (!resolved) break;
-        }
-
-        int[] dailyDraft = ((TooManyProposalsAnalysisResult) result).dailyDraft();
+        int[] dailyDraft = ((TooManyProposalsAnalysisResult) result).originalDailyDraft();
         int[] proposalsCount = ((TooManyProposalsAnalysisResult) result).proposalsCount();
 
         for (int indexHour = 0; indexHour < dailyDraft.length; indexHour++){
             while (dailyDraft[indexHour] < proposalsCount[indexHour]){
-                boolean resolved = changeProposalToDayOffForMostWorkingEmployee(context, day, indexHour, proposalsCount);
+                boolean resolved = changeProposalToDayOffForMostWorkingEmployee(context, day, indexHour, proposalsCount); //todo zmien na modyfikacje godzin a nie wpisanie wolneg dnia zamiast propozycji
 
                 if (!resolved) break;
             }
-            //todo pomysl teraz nad tym, ze powinno sie zaktualizowac draft dzienny jesli usunelismy pracownika ze zmiany na wolne
-            //potem przerob addWorkingInformation na metode uniwersalna ktora moglaby cos tez odjac itd z nullami
         }
     }
+
+    private boolean adaptProposalHourToDemandDraft() //todo zrob nowa metode ktora zmienia propozycje godzin aby pasowalo do draftu np z 8-14 na 9-14 itd
 
     private boolean changeProposalToDayOffForMostWorkingEmployee(ScheduleGeneratorContext context, LocalDate day, int indexHour,  int[] proposalsCount) {
         Map<Employee, Integer> employeeHours = context.getEmployeeHours();
@@ -155,87 +146,5 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
         }
 
         return proposalsCount;
-    }
-    private boolean cancelProposalAndAddEmployeeToAvailable(List<Employee> availableEmployees, ScheduleGeneratorContext context, LocalDate day){
-            Map<Employee, Integer> employeeProposalDayOffCount = getEmployeeProposalsCount(context, day, availableEmployees);
-
-            LinkedHashMap<Employee, Integer> sortedByProposalsCountDesc = employeeProposalDayOffCount.entrySet().stream()
-                    .sorted((key1, key2) -> key2.getValue().compareTo(key1.getValue()))
-                    .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (keyValue1, keyValue2) -> keyValue1,
-                                    LinkedHashMap::new
-                            )
-                    );
-
-            Optional<Employee> employeeWithHighestProposalsCount = sortedByProposalsCountDesc.keySet().stream().findFirst();
-            if (employeeWithHighestProposalsCount.isEmpty()) {
-                scheduleMessageService.addMessage(
-                        context.getSchedule().getId(),
-                        new CreateScheduleMessageDTO(
-                                ScheduleMessageType.WARNING,
-                                ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                                "Nie można znaleźć pracownika z największą liczbą propozycji dni wolnych",
-                                null,
-                                day
-                        )
-                );
-                return false;
-            }
-
-            ScheduleDetails scheduleDetails = scheduleDetailsEntityService.findEmployeeShiftByDay(
-                    context.getStoreId(),
-                    context.getSchedule().getId(),
-                    employeeWithHighestProposalsCount.get(),
-                    day
-            );
-
-            scheduleDetailsService.deleteScheduleDetails(
-                    context.getStoreId(),
-                    context.getSchedule().getId(),
-                    scheduleDetails.getId()
-            );
-
-            availableEmployees.add(employeeWithHighestProposalsCount.get());
-
-            scheduleMessageService.addMessage(
-                    context.getSchedule().getId(),
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.INFO,
-                            ScheduleMessageCode.TOO_MANY_EMPLOYEE_PROPOSALS,
-                            "Propozycja dnia wolnego dla " +
-                                    employeeWithHighestProposalsCount.get().getFirstName() +
-                                    " " +
-                                    employeeWithHighestProposalsCount.get().getLastName() +
-                                    " na dzień " +
-                                    day +
-                                    " została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
-                            employeeWithHighestProposalsCount.get().getId(),
-                            day
-                    )
-            );
-
-            return true;
-    }
-
-    private static Map<Employee, Integer> getEmployeeProposalsCount(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees) {
-        Map<Employee, int[]> monthlyEmployeesProposalDayOff = context.getMonthlyEmployeesProposalDayOff();
-        Map<Employee, Integer> employeeProposalDayOffCount = new HashMap<>();
-
-        for (Map.Entry<Employee, int[]> entry : monthlyEmployeesProposalDayOff.entrySet()) {
-            Employee employee = entry.getKey();
-            int[] monthlyProposal = entry.getValue();
-
-            if (availableEmployees.contains(employee) || monthlyProposal[day.getDayOfMonth() - 1] == 0) continue;
-
-            int proposalsCount = 0;
-            for (int dayValue : monthlyProposal) {
-                proposalsCount += dayValue;
-            }
-
-            employeeProposalDayOffCount.put(employee, proposalsCount);
-        }
-        return employeeProposalDayOffCount;
     }
 }

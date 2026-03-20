@@ -7,7 +7,6 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -42,7 +40,7 @@ public class EmployeeToShiftMatcher {
 
         for (Map.Entry<LocalDate,int[]> entry : everyDayStoreDemandDraftAfterProposals.entrySet()) {
             LocalDate day = entry.getKey();
-            int[]uneditedOriginalStoreDailyDraft = originalStoreDrafts.get(day);
+            int[] uneditedOriginalStoreDailyDraft = originalStoreDrafts.get(day);
 
             if (holidayManager.isHoliday(day) || Arrays.stream(everyDayStoreDemandDraftAfterProposals.getOrDefault(day, new int[24])).sum() == 0) {
                 continue;
@@ -67,8 +65,8 @@ public class EmployeeToShiftMatcher {
             );
 
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.TOO_MANY_PROPOSALS);
-            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.OPENING_HOUR);
-            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.CLOSING_HOUR);
+            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_OPENING_HOUR);
+            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_CLOSING_HOUR);
 
             while (!shiftsSorted.isEmpty()) {
 

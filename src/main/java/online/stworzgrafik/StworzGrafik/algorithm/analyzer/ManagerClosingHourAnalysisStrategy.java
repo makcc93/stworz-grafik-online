@@ -12,21 +12,18 @@ import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
+public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
     private final ScheduleMessageService scheduleMessageService;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
 
     @Override
     public AnalyzeType getSupportedType() {
-        return AnalyzeType.CLOSING_HOUR;
+        return AnalyzeType.MANAGER_CLOSING_HOUR;
     }
 
     @Override
@@ -39,7 +36,7 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         int[] arrayDailyProposalsCount = new int[24];
         int proposalEmployeesCanOpenCloseStoreCount = 0;
-        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, Collections.emptyMap());
         List<Employee> employeesWithOpenCloseStoreProposals = new ArrayList<>();
 
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposals.entrySet()){
@@ -62,20 +59,20 @@ public class ClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         int targetHourProposalsCount = arrayDailyProposalsCount[targetHour];
 
-        return new ClosingHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
+        return new ManagerClosingHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
     }
 
     @Override
     public boolean hasProblem(ScheduleAnalysisResult result) {
-        return ((ClosingHourAnalysisResult) result).hasProblem();
+        return ((ManagerClosingHourAnalysisResult) result).hasProblem();
     }
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
-        List<Shift> shifts = ((ClosingHourAnalysisResult) result).shifts();
+        List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
 
-        Employee employeeWithHighestMonthlyWorkingHours = ((ClosingHourAnalysisResult ) result).employeesWithCloseStoreProposals().stream()
+        Employee employeeWithHighestMonthlyWorkingHours = ((ManagerClosingHourAnalysisResult) result).employeesWithCloseStoreProposals().stream()
                 .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
                         .reversed())
                 .toList()

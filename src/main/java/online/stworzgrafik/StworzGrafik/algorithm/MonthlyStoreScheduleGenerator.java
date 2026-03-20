@@ -17,6 +17,8 @@ class MonthlyStoreScheduleGenerator {
     private final DaysOffApplier daysOffApplier;
     private final ProposalShiftApplier proposalShiftApplier;
     private final DailyShiftGeneratorAlgorithm dailyShiftGeneratorAlgorithm;
+    private final EmployeeToShiftMatcher employeeToShiftMatcher;
+
 
     @Async
     public void generateMonthlySchedule(Long storeId, Integer year, Integer month) {
@@ -30,6 +32,6 @@ class MonthlyStoreScheduleGenerator {
 
         dailyShiftGeneratorAlgorithm.generateShiftsToDays(context);
 
-        matchEmployeesToShifts(context);
+        employeeToShiftMatcher.matchEmployeeToShift(context);
     }
 }
