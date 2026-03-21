@@ -43,6 +43,8 @@ public class ScheduleGeneratorContextFactory {
                 .month(month)
                 .schedule(scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month))
                 .store(storeEntityService.getEntityById(storeId))
+                .storeOpeningHourIndexInArray(getOpeningHourIndex(storeId,year,month))
+                .storeClosingHourIndexInArray(getClosingHourIndex())
                 .storeActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
                 .uneditedOriginalDateStoreDraft(getOriginalStoreDraft(storeId,year,month))
                 .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
@@ -62,6 +64,38 @@ public class ScheduleGeneratorContextFactory {
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
                 .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
                 .build();
+    }
+
+    private int getOpeningHourIndex(Long storeId, Integer year, Integer month, Integer day){
+        LocalDate date = LocalDate.of(year,month,day);
+        int[] dailyOriginalDraft = getOriginalStoreDraft(storeId,year,month).getOrDefault(date, new int[24]);
+
+        int value = 0;
+
+        for (int i = 0; i < dailyOriginalDraft.length; i++){
+            if (dailyOriginalDraft[i] > 0){
+                value = i;
+                break;
+            }
+        }
+
+        return value;
+    }
+
+    private int getClosingHourIndex(Long storeId, Integer year, Integer month, Integer day){
+        LocalDate date = LocalDate.of(year,month,day);
+        int[] dailyOriginalDraft = getOriginalStoreDraft(storeId,year,month).getOrDefault(date, new int[24]);
+
+        int value = 23;
+
+        for (int i = 23; i >= 0; i--){
+            if (dailyOriginalDraft[i] > 0){
+                value = i;
+                break;
+            }
+        }
+
+        return value;
     }
 
     private Map<Employee, int[]> monthlyEmployeesVacation(Long storeId, Integer year, Integer month){
