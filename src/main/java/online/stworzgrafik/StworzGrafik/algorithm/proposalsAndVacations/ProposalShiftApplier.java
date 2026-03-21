@@ -18,8 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -37,9 +36,10 @@ public class ProposalShiftApplier {
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);
 
+        Map<Employee, int[]> employeeDailyProposal = new HashMap<>();
+
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(year, month, day);
-            int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24]);
 
             if (holidayManager.isHoliday(date)) {
                 continue;
@@ -75,13 +75,13 @@ public class ProposalShiftApplier {
                         continue;
                     }
 
+                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
+
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
                     Shift proposalShift = shiftEntityService.getArrayAsShift(proposalShiftAsArray);
 
                     registerProposalShiftOnSchedule(context,employee,date,proposalShift);
                     context.addWorkingInformation(employee,proposalShift,date.getDayOfWeek());
-
-                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
                 }
             }
 
