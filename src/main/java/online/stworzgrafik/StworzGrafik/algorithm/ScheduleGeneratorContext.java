@@ -20,8 +20,6 @@ public class ScheduleGeneratorContext {
     private final Integer month;
     private final Schedule schedule;
     private final Store store;
-    private final int storeOpeningHourIndexInArray;
-    private final int storeClosingHourIndexInArray;
     private final List<Employee> storeActiveEmployees;
     private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
     private final Map<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
