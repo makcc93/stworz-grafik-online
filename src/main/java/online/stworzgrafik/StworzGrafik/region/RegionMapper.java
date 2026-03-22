@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface RegionMapper {
 
     ResponseRegionDTO toResponseRegionDTO(Region region);

@@ -22,17 +22,14 @@ public class Branch {
 
     private String name;
 
-    private boolean enable;
+    @Builder.Default
+    private boolean enable = true;
 
+    @Builder.Default
     @OneToMany(mappedBy = "branch")
     private List<Store> stores = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "region_id",nullable = false)
     private Region region;
-
-    @PrePersist
-    void onCreate(){
-        enable = true;
-    }
 }

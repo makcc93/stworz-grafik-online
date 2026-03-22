@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.mapstruct.*;
 
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface ShiftMapper {
 
     @Mapping(target = "length",expression = "java(getShiftLength(shift))")

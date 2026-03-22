@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.*;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface StoreDetailsMapper {
     @Mapping(source = "store.id", target = "storeId")
     ResponseStoreDetailsDTO toDto(StoreDetails storeDetails);

@@ -6,7 +6,7 @@ import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface StoreMapper {
 
     @Mapping(source = "branch.id", target = "branchId")

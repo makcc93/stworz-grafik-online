@@ -11,6 +11,8 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 class ScheduleMessageServiceImpl implements ScheduleMessageService {
@@ -56,5 +58,16 @@ class ScheduleMessageServiceImpl implements ScheduleMessageService {
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find Schedule Message by id " + scheduleMessageId));
 
         scheduleMessageRepository.delete(scheduleMessage);
+    }
+
+    @Override
+    public List<ScheduleMessage> findAll(Long scheduleId) {
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
+
+        if (!userAuthorizationService.getUserStoreId().equals(schedule.getStore().getId())){
+            throw new AccessDeniedException("Logged user do not have access to schedule with id " + scheduleId);
+        }
+
+        return scheduleMessageRepository.findAll();
     }
 }

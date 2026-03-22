@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmp
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface EmployeeProposalShiftsMapper {
     @Mapping(source = "store.id" ,target = "storeId")
     @Mapping(source = "employee.id" ,target = "employeeId")

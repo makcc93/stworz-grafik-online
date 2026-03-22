@@ -64,7 +64,7 @@ public class EmployeeToShiftMatcher {
                     .toList()
             );
 
-            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.TOO_MANY_PROPOSALS);
+            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees, AnalyzeType.TOO_MANY_PROPOSALS);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_OPENING_HOUR);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_CLOSING_HOUR);
 
@@ -83,6 +83,7 @@ public class EmployeeToShiftMatcher {
                     applyCloseStoreEmployee(context, day, availableEmployees, shiftsSorted);
                 }
                 //**
+                //todo sprawdz czy jest dostepny pracownik kierownik/manager do zamkniecia sklepu, jesli nie znajdz tego co otwiera i daj mu calke "8-20"
 
                 //**CASHIER IF AVAILABLE
                 applyCashierIfPresent(context, day, availableEmployees, shiftsSorted);

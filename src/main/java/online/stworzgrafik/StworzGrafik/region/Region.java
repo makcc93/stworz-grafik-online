@@ -21,14 +21,10 @@ public class Region {
 
     private String name;
 
-    private boolean enable;
+    @Builder.Default
+    private boolean enable = true;
 
+    @Builder.Default
     @OneToMany(mappedBy = "region")
     private List<Branch> branches = new ArrayList<>();
-
-    @PrePersist
-    void onCreate(){
-        this.enable = true;
-    }
-
 }

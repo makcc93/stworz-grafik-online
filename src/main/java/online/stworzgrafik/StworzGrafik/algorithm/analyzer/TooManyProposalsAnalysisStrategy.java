@@ -3,7 +3,6 @@ package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

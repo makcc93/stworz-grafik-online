@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVa
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface EmployeeVacationMapper {
     @Mapping(source = "store.id" ,target = "storeId")
     @Mapping(source = "employee.id" ,target = "employeeId")

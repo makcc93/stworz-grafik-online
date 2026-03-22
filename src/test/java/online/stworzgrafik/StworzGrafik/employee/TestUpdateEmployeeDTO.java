@@ -14,6 +14,9 @@ public class TestUpdateEmployeeDTO {
     private boolean canOperateDelivery = true;
     private boolean seller = true;
     private boolean manager = true;
+    private boolean cashier = true;
+    private boolean pok = true;
+    private boolean warehouseman = true;
 
     public TestUpdateEmployeeDTO withFirstName(String firstName){
         this.firstName = firstName;
@@ -70,6 +73,21 @@ public class TestUpdateEmployeeDTO {
         return this;
     }
 
+    public TestUpdateEmployeeDTO withCashier(boolean cashier){
+        this.cashier = cashier;
+        return this;
+    }
+
+    public TestUpdateEmployeeDTO withPok(boolean pok){
+        this.pok = pok;
+        return this;
+    }
+
+    public TestUpdateEmployeeDTO withWarehouseman(boolean warehouseman){
+        this.warehouseman = warehouseman;
+        return this;
+    }
+
     public UpdateEmployeeDTO build(){
         return new UpdateEmployeeDTO(
                 firstName,
@@ -82,7 +100,10 @@ public class TestUpdateEmployeeDTO {
                 canOpenCloseStore,
                 canOperateDelivery,
                 seller,
-                manager
+                manager,
+                cashier,
+                pok,
+                warehouseman
         );
     }
 }

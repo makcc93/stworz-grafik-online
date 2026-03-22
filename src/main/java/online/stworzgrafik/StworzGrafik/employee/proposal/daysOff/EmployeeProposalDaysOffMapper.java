@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEm
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface EmployeeProposalDaysOffMapper {
     @Mapping(source = "store.id" ,target = "storeId")
     @Mapping(source = "employee.id" ,target = "employeeId")

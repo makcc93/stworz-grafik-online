@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface BranchMapper {
 
     @Mapping(source = "region.id", target = "regionId")

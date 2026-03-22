@@ -27,7 +27,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
     }
 
     @Override
-    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day,List<Shift> shifts, List<Employee> availableEmployees) {
+    public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees) {
         Map<LocalDate, int[]> originalStoreDraft = context.getUneditedOriginalDateStoreDraft();
 
         int targetHour = findCloseStoreHour(originalStoreDraft,day);

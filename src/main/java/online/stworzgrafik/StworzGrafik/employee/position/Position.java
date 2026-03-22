@@ -25,6 +25,7 @@ public class Position {
     @Column(nullable = true, unique = false)
     private String description;
 
+    @Builder.Default
     @OneToMany(mappedBy = "position")
     private List<Employee> employees = new ArrayList<>();
 

@@ -37,9 +37,11 @@ public class Store {
     @JoinColumn(name = "branch_id")
     private Branch branch;
 
+    @Builder.Default
     @OneToMany(mappedBy = "store")
     private List<Employee> employees = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "store")
     private List<DemandDraft> drafts = new ArrayList<>();
 

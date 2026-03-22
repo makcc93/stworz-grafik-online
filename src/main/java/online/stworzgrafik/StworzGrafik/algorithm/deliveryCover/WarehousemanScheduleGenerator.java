@@ -38,6 +38,7 @@ public class WarehousemanScheduleGenerator {
     private final ShiftEntityService shiftEntityService;
     private final ShiftTypeConfigService shiftTypeConfigService;
     private final ScheduleMessageService scheduleMessageService;
+    private final CalendarCalculation calendarCalculation;
 
 public void generate(ScheduleGeneratorContext context){
         if (!storeDeliveryService.hasDedicatedWarehouseman(context.getStoreId())){
@@ -58,7 +59,7 @@ public void generate(ScheduleGeneratorContext context){
                 continue;
             };
 
-            List<Integer> dayNumbersByDayOfWeek = CalendarCalculation.getDayNumbersByDayOfWeek(context.getYear(), context.getMonth(), dayOfWeek);
+            List<Integer> dayNumbersByDayOfWeek = calendarCalculation.getDayNumbersByDayOfWeek(context.getYear(), context.getMonth(), dayOfWeek);
             int[] shiftAsArray = dayOfWeekDeliveryConfig.shiftAsArray();
             Shift shift = shiftEntityService.getArrayAsShift(shiftAsArray);
 

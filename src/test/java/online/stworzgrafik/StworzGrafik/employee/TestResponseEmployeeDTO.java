@@ -20,6 +20,7 @@ public class TestResponseEmployeeDTO {
     private boolean manager = true;
     private boolean cashier = true;
     private boolean pok = true;
+    private boolean warehouseman = true;
     private LocalDateTime createdAt = LocalDateTime.of(2000,1,1,14,0);
     private LocalDateTime updatedAt = LocalDateTime.of(2019,10,5,14,0);
 
@@ -105,6 +106,11 @@ public class TestResponseEmployeeDTO {
         return this;
     }
 
+    public TestResponseEmployeeDTO withWarehouseman(boolean warehouseman){
+        this.warehouseman = warehouseman;
+        return this;
+    }
+
     public TestResponseEmployeeDTO withManager(boolean manager){
         this.manager = manager;
         return this;
@@ -119,8 +125,6 @@ public class TestResponseEmployeeDTO {
         this.updatedAt = updatedAt;
         return this;
     }
-
-    public TestResponseEmployeeDTO
 
     public ResponseEmployeeDTO build(){
         return new ResponseEmployeeDTO(
@@ -138,6 +142,7 @@ public class TestResponseEmployeeDTO {
                 seller,
                 manager,
                 cashier,
+                warehouseman,
                 pok,
                 createdAt,
                 updatedAt

@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface EmployeeMapper {
 
     @Mapping(source = "store.id" ,target = "storeId")

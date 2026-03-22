@@ -58,12 +58,4 @@ class ShiftController {
     public ResponseEntity<ResponseShiftDTO> updateShift(@PathVariable Long id, @RequestBody @Valid ShiftHoursDTO shiftHoursDTO) {
         return ResponseEntity.ok().body(shiftService.updateShift(id,shiftHoursDTO));
     }
-
-    @GetMapping("/shifts/test/{storeId}/{date}")
-    public List<Shift> testAlgorithm(@PathVariable Long storeId,
-                                     @PathVariable LocalDate date,
-                                     Pageable pageable
-                                     ){
-        return dailyShiftGeneratorAlgorithm.getDailyStoreShifts(storeId, date, pageable);
-    }
 }

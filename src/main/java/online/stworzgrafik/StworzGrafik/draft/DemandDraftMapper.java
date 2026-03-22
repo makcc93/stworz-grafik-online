@@ -4,7 +4,7 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface DemandDraftMapper {
     @Mapping(source = "store.id", target = "storeId")
     ResponseDemandDraftDTO toResponseDemandDraftDTO(DemandDraft demandDraft);

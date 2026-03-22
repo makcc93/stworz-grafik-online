@@ -17,7 +17,7 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-class DailyShiftGeneratorAlgorithm {
+public class DailyShiftGeneratorAlgorithm {
     private final ShiftService shiftService;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;

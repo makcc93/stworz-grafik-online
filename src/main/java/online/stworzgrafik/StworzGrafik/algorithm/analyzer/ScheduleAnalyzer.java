@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
-import online.stworzgrafik.StworzGrafik.algorithm.EmployeeToShiftMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;

@@ -2,12 +2,9 @@ package online.stworzgrafik.StworzGrafik.employee.position;
 
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.ResponsePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.UpdatePositionDTO;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface PositionMapper {
 
     ResponsePositionDTO toResponsePositionDTO(Position position);
