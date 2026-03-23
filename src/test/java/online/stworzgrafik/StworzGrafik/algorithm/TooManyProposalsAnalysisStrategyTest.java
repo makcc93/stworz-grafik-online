@@ -1,12 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyProposalsAnalysisResult;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyProposalsAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
-import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +26,7 @@ class TooManyProposalsAnalysisStrategyTest {
     @Mock
     private ScheduleMessageService scheduleMessageService;
 
+    //todo nowe analogiczne testy dla innych strategy
     @Test
     void resolve_reduceProposalOnEmployeeWhoCantOpenStoreWithHighestHours(){
         // given
