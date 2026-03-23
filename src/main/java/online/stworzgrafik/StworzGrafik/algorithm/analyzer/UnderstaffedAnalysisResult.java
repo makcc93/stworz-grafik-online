@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 
 import java.util.List;
 
-record UnderstaffedAnalysisResult(List<Employee> availableEmployees, List<Shift> shifts) implements ScheduleAnalysisResult{
+public record UnderstaffedAnalysisResult(List<Employee> availableEmployees, List<Shift> shifts) implements ScheduleAnalysisResult{
     public boolean hasProblem(){
         return shifts.size() > availableEmployees.size();
     }
