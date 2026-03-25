@@ -2,11 +2,13 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.Builder;
 import lombok.Getter;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
+
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -20,9 +22,10 @@ public class ScheduleGeneratorContext {
     private final Integer month;
     private final Schedule schedule;
     private final Store store;
+    private final Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate;
     private final List<Employee> storeActiveEmployees;
     private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
-    private final Map<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
+    private final LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
     private final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate;
     private final Map<Employee, int[]> monthlyEmployeesProposalDayOff;
     private final Map<Employee, int[]> monthlyEmployeesVacation;
@@ -38,6 +41,10 @@ public class ScheduleGeneratorContext {
     private final ShiftTypeConfig daysOffShiftTypeConfig;
     private final ShiftTypeConfig proposalShiftTypeConfig;
     private final ShiftTypeConfig standardShiftTypeConfig;
+
+    public OpenCloseStoreHoursDTO getStoreOpenCloseHoursByDate(LocalDate date){
+        return storeOpenCloseHoursByDate.getOrDefault(date, new OpenCloseStoreHoursDTO(0,0));
+    }
 
     public boolean employeeIsOnReplacementOnWarehouse(LocalDate date, Employee employee){
         return employeeReplacingWarehouseman.get(date) == employee;
@@ -125,9 +132,7 @@ public class ScheduleGeneratorContext {
     void addEmployeeWorkingDays(Employee employee){
         workingDaysCount.merge(employee,1,Integer::sum);
     }
-
-
-
+    
     private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){
         if (shiftEndHour < shiftsStartHour){
             return (24 - shiftsStartHour) + shiftEndHour;

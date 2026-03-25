@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Validated
 public interface ScheduleDetailsEntityService {
@@ -18,13 +19,17 @@ public interface ScheduleDetailsEntityService {
                                                ScheduleDetailsSpecificationDTO dto,
                                                Pageable pageable);
 
-    ScheduleDetails findEmployeeShiftByDay(@NotNull Long storeId,
-                                           @NotNull Long scheduleId,
-                                           @NotNull Employee employee,
-                                           @NotNull LocalDate day);
+    ScheduleDetails findEmployeeScheduleDetailsByDay(@NotNull Long storeId,
+                                                     @NotNull Long scheduleId,
+                                                     @NotNull Employee employee,
+                                                     @NotNull LocalDate day);
 
     ScheduleDetails updateEntityScheduleDetails(@NotNull Long storeId,
                                                 @NotNull Long scheduleId,
                                                 @NotNull Long scheduleDetailsId,
                                                 @NotNull @Valid UpdateScheduleDetailsDTO dto);
+
+    List<ScheduleDetails> findDailyScheduleDetails(@NotNull Long storeId,
+                                                   @NotNull Long scheduleId,
+                                                   @NotNull LocalDate date);
 }

@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +75,7 @@ public class UnderstaffedAnalysisStrategyTest {
         ScheduleDetails scheduleDetails = mock(ScheduleDetails.class);
         when(scheduleDetails.getId()).thenReturn(33L);
         when(context.getMonthlyEmployeesProposalDayOff()).thenReturn(monthlyEmployeesProposalDayOff);
-        when(scheduleDetailsEntityService.findEmployeeShiftByDay(anyLong(),anyLong(),eq(emp3),eq(date))).thenReturn(scheduleDetails);
+        when(scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(anyLong(),anyLong(),eq(emp3),eq(date))).thenReturn(scheduleDetails);
 
         //when
         strategy.resolve(result,context,date);

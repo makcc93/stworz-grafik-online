@@ -26,7 +26,6 @@ class TooManyProposalsAnalysisStrategyTest {
     @Mock
     private ScheduleMessageService scheduleMessageService;
 
-    //todo nowe analogiczne testy dla innych strategy
     @Test
     void resolve_reduceProposalOnEmployeeWhoCantOpenStoreWithHighestHours(){
         // given

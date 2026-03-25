@@ -12,6 +12,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,4 +26,6 @@ interface ScheduleDetailsRepository extends JpaRepository<ScheduleDetails, Long>
     boolean existsByEmployeeIdAndDate(Long employeeId, LocalDate date);
 
     Optional<ScheduleDetails> findBySchedule_IdAndEmployee_IdAndDate(Long scheduleId, Long employeeId, LocalDate date);
+
+    List<ScheduleDetails> findBySchedule_IdAndDate(Long scheduleId, LocalDate date);
 }

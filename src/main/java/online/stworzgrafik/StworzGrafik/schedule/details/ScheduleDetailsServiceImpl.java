@@ -24,6 +24,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsSpecification.*;
 
@@ -46,6 +47,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
 
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
 
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
 
         if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
             throw new EntityExistsException("Schedule details for employee id " + dto.employeeId()
@@ -53,7 +55,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
                     + " already exists");
         }
 
-        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+
 
         Employee employee = employeeEntityService.getEntityById(storeId);
         Shift shift = shiftService.getEntityById(dto.shiftId());
@@ -96,6 +98,17 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         }
 
         return repository.save(scheduleDetails);
+    }
+
+    @Override
+    public List<ScheduleDetails> findDailyScheduleDetails(Long storeId, Long scheduleId, LocalDate date) {
+        verifyUserToStoreAccess(storeId);
+
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
+
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+
+        return repository.findBySchedule_IdAndDate(scheduleId,date);
     }
 
     @Override
@@ -173,7 +186,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     }
 
     @Override
-    public ScheduleDetails findEmployeeShiftByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
+    public ScheduleDetails findEmployeeScheduleDetailsByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
         verifyUserAccessAndData(storeId, scheduleId);
 
         return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, employee.getId(), day)

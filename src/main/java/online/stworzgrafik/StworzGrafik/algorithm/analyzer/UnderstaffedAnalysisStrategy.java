@@ -79,7 +79,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
             return false;
         }
 
-        ScheduleDetails scheduleDetails = scheduleDetailsEntityService.findEmployeeShiftByDay(
+        ScheduleDetails scheduleDetails = scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(
                 context.getStoreId(),
                 context.getSchedule().getId(),
                 employeeWithHighestProposalsCount.get(),

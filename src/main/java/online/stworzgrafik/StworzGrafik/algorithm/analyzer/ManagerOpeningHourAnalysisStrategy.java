@@ -98,7 +98,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         Shift originalProposalShift = shiftEntityService.getArrayAsShift(dailyProposals.get(employeeWithHighestMonthlyWorkingHours.get()));
         Shift startHourIncrementShift = shiftEntityService.getEntityByHours(originalProposalShift.getStartHour().plusHours(1), originalProposalShift.getEndHour());
 
-        ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeShiftByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours.get(), day);
+        ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours.get(), day);
 
         changeProposalShiftInSchedule(context, employeeOldShiftInSchedule, startHourIncrementShift);
 

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,7 @@ public class ScheduleGeneratorContextFactory {
                 .month(month)
                 .schedule(scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month))
                 .store(storeEntityService.getEntityById(storeId))
+                .storeOpenCloseHoursByDate(getStoreOpenCloseHour(storeId,year,month))
                 .storeActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
                 .uneditedOriginalDateStoreDraft(getOriginalStoreDraft(storeId,year,month))
                 .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
@@ -62,6 +65,39 @@ public class ScheduleGeneratorContextFactory {
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
                 .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
                 .build();
+    }
+
+    private Map<LocalDate, OpenCloseStoreHoursDTO> getStoreOpenCloseHour(Long storeId, Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursDTO> map = new HashMap<>();
+
+        YearMonth yearMonth = YearMonth.of(year,month);
+
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = LocalDate.of(year, month, day);
+
+            int[] dailyDraft = getOriginalStoreDraft(storeId, year, month).getOrDefault(date, new int[24]);
+
+            int openHour = 0;
+            int closeHour = 0;
+
+            for (int i = 0; i < dailyDraft.length; i++) {
+                if (dailyDraft[i] > 0) {
+                    openHour = i + 1;
+                    break;
+                }
+            }
+
+            for (int i = 23; i >= 0; i--) {
+                if (dailyDraft[i] > 0) {
+                    closeHour = i + 1;
+                    break;
+                }
+            }
+
+            map.put(date,new OpenCloseStoreHoursDTO(openHour,closeHour));
+        }
+
+        return map;
     }
 
     private Map<Employee, int[]> monthlyEmployeesVacation(Long storeId, Integer year, Integer month){
@@ -103,7 +139,7 @@ public class ScheduleGeneratorContextFactory {
                 );
     }
 
-    private Map<LocalDate, int[]> dayAndDemandDraftSorted(Long storeId, Integer year, Integer month) {
+    private LinkedHashMap<LocalDate, int[]> dayAndDemandDraftSorted(Long storeId, Integer year, Integer month) {
         LocalDate firstDay = LocalDate.of(year,month,1);
         LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
 

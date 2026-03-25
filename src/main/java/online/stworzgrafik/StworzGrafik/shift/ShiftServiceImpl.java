@@ -1,7 +1,6 @@
 package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftCriteriaDTO;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +22,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
     @Override
     public ResponseShiftDTO save(Shift shift) {
-        validateHours(shift.getStartHour(), shift.getEndHour());
+        checkNull(shift.getStartHour(), shift.getEndHour());
 
         if (shiftRepository.existsByStartHourAndEndHour(shift.getStartHour(), shift.getEndHour())){
             return shiftMapper.toShiftDto(shift);
@@ -40,7 +38,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         LocalTime startHour = shiftHoursDTO.startHour();
         LocalTime endHour = shiftHoursDTO.endHour();
 
-        validateHours(startHour, endHour);
+        checkNull(startHour, endHour);
 
         if (shiftRepository.existsByStartHourAndEndHour(startHour, endHour)){
             return shiftMapper.toShiftDto(
@@ -114,14 +112,14 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
     @Override
     public Integer getLength(ShiftHoursDTO shiftHoursDTO) {
-        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+        checkNull(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
 
         return shiftHoursDTO.endHour().getHour() - shiftHoursDTO.startHour().getHour();
     }
 
     @Override
     public BigDecimal getDurationHours(ShiftHoursDTO shiftHoursDTO) {
-        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+        checkNull(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
 
         int length = shiftHoursDTO.endHour().getHour() - shiftHoursDTO.startHour().getHour();
 
@@ -130,7 +128,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
     @Override
     public int[] getShiftAsArray(ShiftHoursDTO shiftHoursDTO) {
-        validateHours(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
+        checkNull(shiftHoursDTO.startHour(),shiftHoursDTO.endHour());
 
         int[] array = new int[24];
 
@@ -147,7 +145,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
             return shift;
         }
 
-        validateHours(shift.getStartHour(), shift.getEndHour());
+        checkNull(shift.getStartHour(), shift.getEndHour());
 
         return shiftRepository.save(shift);
     }
@@ -187,17 +185,12 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
             }
         }
 
-        if (startHour == 0 || endHour == 0){
-            throw new IllegalArgumentException("This array: " + array.toString() + " cannot be converted to Shift");
-        }
-
-
         return shiftMapper.toEntity(create(new ShiftHoursDTO(LocalTime.of(startHour,0),LocalTime.of(endHour,0))));
     }
 
     @Override
     public int[] getShiftAsArray(Shift shift) {
-        validateHours(shift.getStartHour(),shift.getEndHour());
+        checkNull(shift.getStartHour(),shift.getEndHour());
 
         int[] array = new int[24];
 
@@ -214,18 +207,9 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         return  shiftRepository.save(shift);
     }
 
-    private void validateHours(LocalTime startHour, LocalTime endHour){
+    private void checkNull(LocalTime startHour, LocalTime endHour){
         if (startHour == null || endHour == null){
             throw new IllegalArgumentException("Start or end hour cannot be null");
         }
-
-//        if (startHour.getHour() == endHour.getHour()){
-//            throw new IllegalArgumentException("End hour cannot equals start hour");
-//        }
-
-//        if (endHour.isBefore(startHour)){
-//            throw new IllegalArgumentException("End hour cannot be before start hour");
-//        }
-
     }
 }

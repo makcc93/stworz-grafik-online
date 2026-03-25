@@ -81,7 +81,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         Shift originalProposalShift = shiftEntityService.getArrayAsShift(dailyProposals.get(employeeWithHighestMonthlyWorkingHours));
         Shift endHourDecrementShift = shiftEntityService.getEntityByHours(originalProposalShift.getStartHour(),originalProposalShift.getEndHour().minusHours(1));
 
-        ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeShiftByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours, day);
+        ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours, day);
 
         changeProposalShiftInSchedule(context,employeeOldShiftInSchedule,endHourDecrementShift);
 
