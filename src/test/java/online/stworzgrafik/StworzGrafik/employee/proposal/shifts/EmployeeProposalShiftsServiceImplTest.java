@@ -60,14 +60,14 @@ class EmployeeProposalShiftsServiceImplTest {
     @PrePersist
     void setup(){
         store = new TestStoreBuilder().build();
-        employee = new TestEmployeeBuilder().withStore(store).build();
+        employee = new TestEmployeeBuilder().withStore(store).buildDefault();
     }
 
     @Test
     void createEmployeeProposalShift_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         LocalDate date = LocalDate.of(2025, 12, 15);
         int[] dailyProposalShift = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0};
 
@@ -181,7 +181,7 @@ class EmployeeProposalShiftsServiceImplTest {
         //given
         Store store = new TestStoreBuilder().build();
         Store differentStore = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(differentStore).build();
+        Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
@@ -210,7 +210,7 @@ class EmployeeProposalShiftsServiceImplTest {
     void createEmployeeProposalShift_proposalForThisDayAlreadyExistsThrowsException(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         LocalDate date = LocalDate.of(2025, 12, 15);
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
@@ -243,7 +243,7 @@ class EmployeeProposalShiftsServiceImplTest {
     void updateEmployeeProposalShift_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         LocalDate date = LocalDate.of(2025, 12, 15);
         int[] dailyProposalShift = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0};
 
@@ -413,7 +413,7 @@ class EmployeeProposalShiftsServiceImplTest {
         //given
         Store store = new TestStoreBuilder().build();
         Store differentStore = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(differentStore).build();
+        Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
         LocalDate date = LocalDate.of(2025, 12, 15);
 
         EmployeeProposalShifts employeeProposalShifts = new TestEmployeeProposalShiftsBuilder()
@@ -455,7 +455,7 @@ class EmployeeProposalShiftsServiceImplTest {
     void save_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         LocalDate date = LocalDate.of(2025, 12, 15);
         int[] dailyProposalShift = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0};
 

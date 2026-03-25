@@ -4,8 +4,6 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
-import online.stworzgrafik.StworzGrafik.employee.position.Position;
-import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -19,7 +17,7 @@ public class TestEmployeeProposalShiftsBuilder {
     private Region region = new TestRegionBuilder().build();
     private Branch branch = new TestBranchBuilder().withRegion(region).build();
     private Store store = new TestStoreBuilder().withBranch(branch).build();
-    private Employee employee = new TestEmployeeBuilder().withStore(store).build();
+    private Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
     private LocalDate date = LocalDate.of(2020,05,10);
     private int[] dailyProposalShift = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2022,12,12,12,12);

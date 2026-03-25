@@ -35,8 +35,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -152,7 +150,7 @@ class EmployeeControllerTest {
         String firstName = "MATEUSZ";
         String lastName = "KRUK";
 
-        Employee employee = new TestEmployeeBuilder().withFirstName(firstName).withLastName(lastName).withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withFirstName(firstName).withLastName(lastName).withStore(store).withPosition(position).buildDefault();
         employeeService.save(employee);
 
         Long thisStoreId = store.getId();
@@ -179,13 +177,13 @@ class EmployeeControllerTest {
                 .withFirstName(expectedFirstName)
                 .withLastName(expectedLastName)
                 .withStore(store)
-                .withPosition(position).build();
+                .withPosition(position).buildDefault();
         employeeService.save(employee);
 
-        Employee secondEmployee = new TestEmployeeBuilder().withSap(12345678L).withStore(store).withPosition(position).build();
+        Employee secondEmployee = new TestEmployeeBuilder().withSap(12345678L).withStore(store).withPosition(position).buildDefault();
         employeeService.save(secondEmployee);
 
-        Employee thirdEmployee = new TestEmployeeBuilder().withSap(87654321L).withStore(store).withPosition(position).build();
+        Employee thirdEmployee = new TestEmployeeBuilder().withSap(87654321L).withStore(store).withPosition(position).buildDefault();
         employeeService.save(thirdEmployee);
 
         Long thisStoreId = store.getId();
@@ -218,7 +216,7 @@ class EmployeeControllerTest {
     @Test
     void findById_workingTest() throws Exception{
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeService.save(employee);
 
         Long employeeId = employee.getId();
@@ -292,7 +290,7 @@ class EmployeeControllerTest {
         //given
         Long sap = 11100022L;
 
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).buildDefault();
         employeeService.save(employee);
 
         CreateEmployeeDTO createEmployeeDTO = new TestCreateEmployeeDTO()
@@ -317,7 +315,7 @@ class EmployeeControllerTest {
     void updateEmployee_workingTest() throws Exception{
         //given
         String originalFirstName = "ORIGINAL";
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(originalFirstName).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(originalFirstName).buildDefault();
         employeeService.save(employee);
 
         Long employeeId = employee.getId();
@@ -364,11 +362,11 @@ class EmployeeControllerTest {
     void deleteEmployee_workingTest() throws Exception{
         //given
         String firstName = "FIRST";
-        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(firstName).withStore(store).withPosition(position).build();
+        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(firstName).withStore(store).withPosition(position).buildDefault();
         employeeService.save(firstEmployee);
 
         String secondName = "SECOND";
-        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(secondName).withStore(store).withPosition(position).build();
+        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(secondName).withStore(store).withPosition(position).buildDefault();
         employeeService.save(secondEmployee);
 
         //when
@@ -401,7 +399,7 @@ class EmployeeControllerTest {
     @Test
     void deleteEmployee_employeeDoesNotBelongToStoreThrowsException() throws Exception{
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeService.save(employee);
 
         long randomUnknownStoreId = 10000L;

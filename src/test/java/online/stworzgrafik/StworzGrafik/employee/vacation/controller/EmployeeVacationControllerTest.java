@@ -100,7 +100,7 @@ class EmployeeVacationControllerTest {
         position = new TestPositionBuilder().build();
         positionService.save(position);
 
-        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
 
         pageable = PageRequest.of(0,25);
@@ -200,7 +200,7 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
         Long secondEmployeeId = employee.getId();
 
@@ -247,7 +247,7 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
         Long secondEmployeeId = employee.getId();
 

@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.proposal.shifts.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -28,11 +27,8 @@ import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -103,7 +99,7 @@ class EmployeeProposalShiftsControllerTest {
         position = new TestPositionBuilder().build();
         positionService.save(position);
 
-        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
     }
 
@@ -191,7 +187,7 @@ class EmployeeProposalShiftsControllerTest {
             service.createEmployeeProposalShift(storeId, employeeId, createDto);
         }
 
-        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(secondEmployee);
         Long secondEmployeeId = secondEmployee.getId();
 
@@ -238,7 +234,7 @@ class EmployeeProposalShiftsControllerTest {
             service.createEmployeeProposalShift(storeId, employeeId, createDto);
         }
 
-        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(secondEmployee);
         Long secondEmployeeId = secondEmployee.getId();
 

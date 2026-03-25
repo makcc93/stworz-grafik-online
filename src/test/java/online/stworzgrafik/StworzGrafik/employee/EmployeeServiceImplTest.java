@@ -115,7 +115,7 @@ class EmployeeServiceImplTest {
                 .withSap(createEmployeeDTO.sap())
                 .withStore(store)
                 .withPosition(position)
-                .build();
+                .buildDefault();
 
         when(employeeBuilder.createEmployee(
                 createEmployeeDTO.firstName(),
@@ -256,7 +256,7 @@ class EmployeeServiceImplTest {
 
         String originalFirstName = "ORIGINAL FIRST NAME";
         String originalLastName = "ORIGINAL LAST NAME";
-        Employee employee = new TestEmployeeBuilder().withStore(store).withFirstName(originalFirstName).withLastName(originalLastName).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withFirstName(originalFirstName).withLastName(originalLastName).buildDefault();
         when(employeeRepository.save(employee)).thenReturn(employee);
 
         String newFirstName = "NEW FIRST NAME";
@@ -309,7 +309,7 @@ class EmployeeServiceImplTest {
         Store store = mock(Store.class);
         when(store.getId()).thenReturn(storeId);
 
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
 
 
@@ -347,7 +347,7 @@ class EmployeeServiceImplTest {
         Long storeId = 1L;
         Store store = mock(Store.class);
 
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
 
         when(store.getId()).thenReturn(2L);
@@ -370,9 +370,9 @@ class EmployeeServiceImplTest {
         String third = "THIRD";
         Pageable pageable = PageRequest.of(1,10);
 
-        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(first).build();
-        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(second).build();
-        Employee thirdEmployee = new TestEmployeeBuilder().withFirstName(third).build();
+        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(first).buildDefault();
+        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(second).buildDefault();
+        Employee thirdEmployee = new TestEmployeeBuilder().withFirstName(third).buildDefault();
 
         List<Employee> employees = List.of(firstEmployee,secondEmployee,thirdEmployee);
         Page<Employee> employeesPage = new PageImpl<>(employees,pageable,employees.size());
@@ -402,7 +402,7 @@ class EmployeeServiceImplTest {
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
 
         Long id = 6988L;
-        Employee employee = new TestEmployeeBuilder().build();
+        Employee employee = new TestEmployeeBuilder().buildDefault();
 
         when(employeeRepository.findById(id)).thenReturn(Optional.ofNullable(employee));
 
@@ -449,7 +449,7 @@ class EmployeeServiceImplTest {
     void existsById_workingTest(){
         //given
         Long id = 321L;
-        Employee employee = new TestEmployeeBuilder().build();
+        Employee employee = new TestEmployeeBuilder().buildDefault();
 
         when(employeeRepository.existsById(id)).thenReturn(true);
 
@@ -465,7 +465,7 @@ class EmployeeServiceImplTest {
     void existsBySap_workingTest(){
         //given
         Long sap = 87654321L;
-        Employee employee = new TestEmployeeBuilder().withSap(sap).build();
+        Employee employee = new TestEmployeeBuilder().withSap(sap).buildDefault();
 
         when(employeeRepository.existsBySap(sap)).thenReturn(true);
 
@@ -480,7 +480,7 @@ class EmployeeServiceImplTest {
     void existsByLastName_workingTest(){
         //given
         String lastName = "LAST-NAME";
-        Employee employee = new TestEmployeeBuilder().withLastName(lastName).build();
+        Employee employee = new TestEmployeeBuilder().withLastName(lastName).buildDefault();
         
         when(employeeRepository.existsByLastName(lastName)).thenReturn(true);
         

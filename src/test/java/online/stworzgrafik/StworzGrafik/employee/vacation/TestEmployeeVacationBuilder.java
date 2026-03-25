@@ -7,7 +7,7 @@ import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 
 public class TestEmployeeVacationBuilder {
     private Store store = new TestStoreBuilder().build();
-    private Employee employee = new TestEmployeeBuilder().withStore(store).build();
+    private Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
     private Integer year = 2022;
     private Integer month = 1;
     private int[] monthlyVacation =  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};

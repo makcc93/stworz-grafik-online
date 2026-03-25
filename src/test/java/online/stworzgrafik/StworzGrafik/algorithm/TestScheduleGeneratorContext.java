@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.TestScheduleBuilder;
@@ -13,20 +14,18 @@ import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TestScheduleGeneratorContext {
     private Long storeId = 1L;
     private Integer year = 2026;
     private Integer month =3;
     private Store store = new TestStoreBuilder().build();
+    Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate;
     private Schedule schedule = new TestScheduleBuilder().withStore(store).build();
     private List<Employee> storeActiveEmployees = new ArrayList<>();
     private Map<LocalDate, int[]> uneditedOriginalDateStoreDraft = new HashMap<>();
-    private Map<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn = new HashMap<>();
+    private LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn = new LinkedHashMap<>();
     private Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesProposalDayOff = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesVacation = new HashMap<>();
@@ -68,6 +67,11 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
+    public TestScheduleGeneratorContext withStoreOpenCloseHoursByDate(Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate){
+        this.storeOpenCloseHoursByDate = storeOpenCloseHoursByDate;
+        return this;
+    }
+
     public TestScheduleGeneratorContext withStoreActiveEmployees(List<Employee> storeActiveEmployees) {
         this.storeActiveEmployees = storeActiveEmployees;
         return this;
@@ -78,7 +82,7 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
-    public TestScheduleGeneratorContext withEveryDayStoreDemandDraftWorkingOn(Map<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn) {
+    public TestScheduleGeneratorContext withEveryDayStoreDemandDraftWorkingOn(LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn) {
         this.everyDayStoreDemandDraftWorkingOn = everyDayStoreDemandDraftWorkingOn;
         return this;
     }
@@ -165,6 +169,7 @@ public class TestScheduleGeneratorContext {
                 month,
                 schedule,
                 store,
+                storeOpenCloseHoursByDate,
                 storeActiveEmployees,
                 uneditedOriginalDateStoreDraft,
                 everyDayStoreDemandDraftWorkingOn,

@@ -22,14 +22,11 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -137,7 +134,7 @@ public class EmployeeServiceImplIT {
     @Test
     void createEmployee_employeeWithThisSapAlreadyExistsThrowsException(){
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeServiceImpl.save(employee);
 
         Long employeeSap = employee.getSap();
@@ -209,7 +206,7 @@ public class EmployeeServiceImplIT {
                 .withLastName(originalLastName)
                 .withStore(store)
                 .withPosition(position)
-                .build();
+                .buildDefault();
         employeeServiceImpl.save(employee);
 
         Long employeeId = employee.getId();
@@ -260,7 +257,7 @@ public class EmployeeServiceImplIT {
     @Test
     void updateEmployee_invalidNamesIsDtoThrowsException(){
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeServiceImpl.save(employee);
 
         String invalidFirstName = "!@#$%^&*()";
@@ -280,10 +277,10 @@ public class EmployeeServiceImplIT {
         String stay = "STAY";
         String delete = "DELETE";
 
-        Employee employeeToStay = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(stay).build();
+        Employee employeeToStay = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(stay).buildDefault();
         employeeServiceImpl.save(employeeToStay);
 
-        Employee employeeToDelete = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(delete).build();
+        Employee employeeToDelete = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName(delete).buildDefault();
         employeeServiceImpl.save(employeeToDelete);
 
         Long employeeToStayId = employeeToStay.getId();
@@ -327,7 +324,7 @@ public class EmployeeServiceImplIT {
     @Test
     void deleteEmployee_employeeDoesNotBelongToStoreThrowsException(){
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeServiceImpl.save(employee);
 
         Long employeeId = employee.getId();
@@ -345,11 +342,11 @@ public class EmployeeServiceImplIT {
     @Test
     void findAll_workingTest(){
         //given
-        Employee first = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("FIRST").build();
+        Employee first = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("FIRST").buildDefault();
         employeeServiceImpl.save(first);
-        Employee second = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("SECOND").build();
+        Employee second = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("SECOND").buildDefault();
         employeeServiceImpl.save(second);
-        Employee third = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("THIRD").build();
+        Employee third = new TestEmployeeBuilder().withStore(store).withPosition(position).withFirstName("THIRD").buildDefault();
         employeeServiceImpl.save(third);
 
         ResponseEmployeeDTO firstResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(first).build();
@@ -380,7 +377,7 @@ public class EmployeeServiceImplIT {
     @Test
     void findById_workingTest(){
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeServiceImpl.save(employee);
         Long employeeId = employee.getId();
 
@@ -409,7 +406,7 @@ public class EmployeeServiceImplIT {
     @Test
     void existsById_workingTest(){
         //given
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).buildDefault();
         employeeServiceImpl.save(employee);
 
         Long id = employee.getId();
@@ -428,7 +425,7 @@ public class EmployeeServiceImplIT {
     void existsBySap_workingTest(){
         //given
         Long sap = 1230123L;
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withSap(sap).buildDefault();
         employeeServiceImpl.save(employee);
 
         Long randomSap = 11111111L;
@@ -446,7 +443,7 @@ public class EmployeeServiceImplIT {
     void existsByLastName_workingTest(){
         //given
         String lastName = "TEST-LAST-NAME";
-        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withLastName(lastName).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).withPosition(position).withLastName(lastName).buildDefault();
         employeeServiceImpl.save(employee);
 
         String randomLastName = "RANDOM";

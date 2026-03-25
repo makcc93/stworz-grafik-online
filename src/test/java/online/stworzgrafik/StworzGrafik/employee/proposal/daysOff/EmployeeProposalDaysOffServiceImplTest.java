@@ -18,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
@@ -58,14 +57,14 @@ class EmployeeProposalDaysOffServiceImplTest {
     @PrePersist
     void setup(){
         store = new TestStoreBuilder().build();
-        employee = new TestEmployeeBuilder().withStore(store).build();
+        employee = new TestEmployeeBuilder().withStore(store).buildDefault();
     }
 
     @Test
     void createEmployeeProposalDaysOff_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyDaysOff = {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1};
@@ -183,7 +182,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     void createEmployeeProposalDaysOff_proposalForThisDayAlreadyExistsThrowsException(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
 
@@ -218,7 +217,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     void updateEmployeeProposalDaysOff_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyDaysOff = {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1};
@@ -401,7 +400,7 @@ class EmployeeProposalDaysOffServiceImplTest {
         //given
         Store store = new TestStoreBuilder().build();
         Store differentStore = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(differentStore).build();
+        Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
         Integer year = 2025;
         Integer month = 12;
 
@@ -446,7 +445,7 @@ class EmployeeProposalDaysOffServiceImplTest {
     void save_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyDaysOff = {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1};

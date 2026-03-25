@@ -132,7 +132,7 @@ public class ScheduleGeneratorContext {
     void addEmployeeWorkingDays(Employee employee){
         workingDaysCount.merge(employee,1,Integer::sum);
     }
-    
+
     private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){
         if (shiftEndHour < shiftsStartHour){
             return (24 - shiftsStartHour) + shiftEndHour;

@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -34,8 +33,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.List;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
@@ -98,7 +95,7 @@ class EmployeeProposalDaysOffControllerTest {
         position = new TestPositionBuilder().build();
         positionService.save(position);
 
-        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
     }
 
@@ -197,7 +194,7 @@ class EmployeeProposalDaysOffControllerTest {
             service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
         Long secondEmployeeId = employee.getId();
 
@@ -243,7 +240,7 @@ class EmployeeProposalDaysOffControllerTest {
             service.createEmployeeProposalDaysOff(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
         Long secondEmployeeId = employee.getId();
 

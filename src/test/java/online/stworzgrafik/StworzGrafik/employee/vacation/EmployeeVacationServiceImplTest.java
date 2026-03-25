@@ -64,14 +64,14 @@ class EmployeeVacationServiceImplTest {
     @BeforeEach
     void setup() {
         store = new TestStoreBuilder().build();
-        employee = new TestEmployeeBuilder().withStore(store).build();
+        employee = new TestEmployeeBuilder().withStore(store).buildDefault();
     }
 
     @Test
     void createEmployeeProposalVacation_workingTest() {
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyVacation = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1};
@@ -190,7 +190,7 @@ class EmployeeVacationServiceImplTest {
         //given
         Store store = new TestStoreBuilder().build();
         Store differentStore = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(differentStore).build();
+        Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
         Integer year = 2025;
         Integer month = 12;
 
@@ -224,7 +224,7 @@ class EmployeeVacationServiceImplTest {
     void createEmployeeProposalVacation_vacationForThisDayAlreadyExistsThrowsException() {
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
 
@@ -259,7 +259,7 @@ class EmployeeVacationServiceImplTest {
     void updateEmployeeVacation_workingTest() {
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyVacation = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1};
@@ -442,7 +442,7 @@ class EmployeeVacationServiceImplTest {
         //given
         Store store = new TestStoreBuilder().build();
         Store differentStore = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(differentStore).build();
+        Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
         Integer year = 2025;
         Integer month = 12;
 
@@ -487,7 +487,7 @@ class EmployeeVacationServiceImplTest {
     void save_workingTest() {
         //given
         Store store = new TestStoreBuilder().build();
-        Employee employee = new TestEmployeeBuilder().withStore(store).build();
+        Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyVacation = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1};
