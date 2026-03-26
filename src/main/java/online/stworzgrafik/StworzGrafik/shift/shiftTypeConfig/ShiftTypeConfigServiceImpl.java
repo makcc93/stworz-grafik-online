@@ -35,4 +35,12 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
         return shiftTypeConfigRepository.findById(shiftTypeConfigId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find shift type config by id" + shiftTypeConfigId));
     }
+
+    @Override
+    public ShiftTypeConfig save(ShiftCode shiftCode) {
+        return shiftTypeConfigRepository.save(ShiftTypeConfig.builder()
+                .code(shiftCode)
+                .build()
+        );
+    }
 }

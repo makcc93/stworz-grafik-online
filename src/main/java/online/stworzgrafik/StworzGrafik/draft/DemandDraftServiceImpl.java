@@ -145,7 +145,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new IllegalArgumentException("Must provide start day when providing end day");
         }
 
-        return demandDraftRepository.findByStoreIdAndDraftDateBetween(storeId, startDate, endDate,pageable);
+        return demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId, startDate, endDate,pageable);
     }
 
     @Override
@@ -154,6 +154,6 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        return demandDraftRepository.findAllByStoreIdAndDateBetween(storeId,startDay,endDay);
+        return demandDraftRepository.findAllByStore_IdAndDraftDateBetween(storeId,startDay,endDay);
     }
 }

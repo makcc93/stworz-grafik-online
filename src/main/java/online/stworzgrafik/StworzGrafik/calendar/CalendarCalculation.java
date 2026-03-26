@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.calendar;
 
-import de.jollyday.HolidayManager;
+import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

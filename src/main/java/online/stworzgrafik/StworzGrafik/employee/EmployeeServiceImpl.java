@@ -149,6 +149,11 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     @Override
+    public List<Employee> saveAll(List<Employee> employyes) {
+        return employeeRepository.saveAll(employyes);
+    }
+
+    @Override
     public Employee getEntityById(Long id) {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee by id " + id));

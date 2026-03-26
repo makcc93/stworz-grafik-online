@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
@@ -93,6 +95,11 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         );
 
         availableEmployees.add(employeeWithHighestProposalsCount.get());
+
+        log.info("Propozycja dnia wolnego dla {} {} na dzień {} została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
+                employeeWithHighestProposalsCount.get().getFirstName(),
+                employeeWithHighestProposalsCount.get().getLastName(),
+                day);
 
         scheduleMessageService.addMessage(
                 context.getSchedule().getId(),

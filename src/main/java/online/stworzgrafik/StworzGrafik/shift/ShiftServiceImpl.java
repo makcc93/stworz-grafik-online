@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -148,6 +149,11 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         checkNull(shift.getStartHour(), shift.getEndHour());
 
         return shiftRepository.save(shift);
+    }
+
+    @Override
+    public void saveAll(List<Shift> shifts) {
+        shiftRepository.saveAll(shifts);
     }
 
     @Override

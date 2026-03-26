@@ -1,7 +1,8 @@
 package online.stworzgrafik.StworzGrafik.calendar.holidays;
 
-import de.jollyday.HolidayManager;
-import de.jollyday.ManagerParameters;
+import de.focus_shift.jollyday.core.HolidayCalendar;
+import de.focus_shift.jollyday.core.HolidayManager;
+import de.focus_shift.jollyday.core.ManagerParameters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class HolidayConfig {
 
     @Bean
-    public HolidayManager polishHolidayManager(HolidayManager holidayManager){
-        return HolidayManager.getInstance(ManagerParameters.create("pl"));
+    public HolidayManager polishHolidayManager(){
+        return HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.POLAND));
     }
 }

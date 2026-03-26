@@ -23,6 +23,7 @@ public class DemandDraft {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @Column(name = "draft_date")
     private LocalDate draftDate;
 
     @Column(nullable = true)

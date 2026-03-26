@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.UpdateScheduleDetailsDTO;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
@@ -71,7 +73,6 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         return ((ManagerOpeningHourAnalysisResult) result).hasProblem();
     }
 
-    //ogarnij czy ta klasa nie zrobi roboty w momencie zapisywania do bazy danych propozycji gdy proposals > originalDraft
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
         List<Shift> shifts = ((ManagerOpeningHourAnalysisResult) result).shifts();
@@ -84,6 +85,8 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
                 .findFirst();
 
         if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
+            log.info("Brak dostępnego pracownika w dniu {},",day);
+
             scheduleMessageService.addMessage(context.getSchedule().getId(),
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
@@ -124,6 +127,8 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
                 .findFirst();
 
         if (shiftToChangeStartHour.isEmpty()){
+            log.info("Brak dostępnej zmiany w dniu {}", day);
+
             scheduleMessageService.addMessage(context.getSchedule().getId(),
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,

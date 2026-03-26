@@ -1,33 +1,26 @@
 package online.stworzgrafik.StworzGrafik.employee;
 
-import jakarta.persistence.Column;
+import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
-import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.TestEmployeeProposalDaysOffBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
-import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.TestEmployeeProposalShiftsBuilder;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
-import online.stworzgrafik.StworzGrafik.employee.vacation.TestEmployeeVacationBuilder;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
-import online.stworzgrafik.StworzGrafik.schedule.details.TestScheduleDetailsBuilder;
-import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
-import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class TestEmployeeBuilder {
-    private Long id = 10L;
+    private Long id = null;
     private String firstName = "TESTFIRSTNAME";
     private String lastName = "TESTLASTNAME";
     private Long sap = 1L;
     private Store store = new TestStoreBuilder().build();
     private Position position = new TestPositionBuilder().build();
-    private boolean enable;
+    private boolean enable = true;
     private boolean canOperateCheckout = false;
     private boolean canOperateCredit = false;
     private boolean canOpenCloseStore = false;
@@ -73,6 +66,12 @@ public class TestEmployeeBuilder {
         this.position = position;
         return this;
     }
+
+    public TestEmployeeBuilder withEnable(boolean enable){
+        this.enable = enable;
+        return this;
+    }
+
     public TestEmployeeBuilder withCanOperateCheckout(boolean canOperateCheckout) {
         this.canOperateCheckout = canOperateCheckout;
         return this;

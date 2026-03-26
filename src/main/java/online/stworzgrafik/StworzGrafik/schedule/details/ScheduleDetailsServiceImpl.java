@@ -43,35 +43,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
 
     @Override
     public ResponseScheduleDetailsDTO addScheduleDetails(Long storeId, Long scheduleId, CreateScheduleDetailsDTO dto) {
-        verifyUserToStoreAccess(storeId);
-
-        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
-
-        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
-
-        if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
-            throw new EntityExistsException("Schedule details for employee id " + dto.employeeId()
-                    + " on date " + dto.date()
-                    + " already exists");
-        }
-
-
-
-        Employee employee = employeeEntityService.getEntityById(storeId);
-        Shift shift = shiftService.getEntityById(dto.shiftId());
-        ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
-
-        ScheduleDetails scheduleDetails = builder.createScheduleDetails(
-                schedule,
-                employee,
-                dto.date(),
-                shift,
-                shiftTypeConfig
-        );
-
-        ScheduleDetails saved = repository.save(scheduleDetails);
-
-        return mapper.toDTO(saved);
+        return mapper.toDTO(add(storeId,scheduleId,dto));
     }
     public ScheduleDetails updateEntityScheduleDetails(Long storeId, Long scheduleId, Long scheduleDetailsId, UpdateScheduleDetailsDTO dto) {
         verifyUserToStoreAccess(storeId);
@@ -167,6 +139,33 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         if (!schedule.getStore().getId().equals(storeId)){
             throw new AccessDeniedException("Schedule id " + scheduleId + " does not belong to store with id " + storeId);
         }
+    }
+
+    @Override
+    public ScheduleDetails add(Long storeId, Long scheduleId, CreateScheduleDetailsDTO dto) {
+        verifyUserToStoreAccess(storeId);
+
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
+
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+
+        if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
+            return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId,dto.employeeId(),dto.date()).orElseThrow();
+        }
+
+        Employee employee = employeeEntityService.getEntityById(storeId);
+        Shift shift = shiftService.getEntityById(dto.shiftId());
+        ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
+
+        ScheduleDetails scheduleDetails = builder.createScheduleDetails(
+                schedule,
+                employee,
+                dto.date(),
+                shift,
+                shiftTypeConfig
+        );
+
+        return repository.save(scheduleDetails);
     }
 
     @Override

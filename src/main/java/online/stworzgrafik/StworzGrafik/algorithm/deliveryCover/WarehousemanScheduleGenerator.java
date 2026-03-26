@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.deliveryCover;
 
-import de.jollyday.HolidayManager;
+import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;

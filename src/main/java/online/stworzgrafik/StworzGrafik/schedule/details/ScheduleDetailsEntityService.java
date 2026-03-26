@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.schedule.details;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.UpdateScheduleDetailsDTO;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,8 @@ import java.util.List;
 
 @Validated
 public interface ScheduleDetailsEntityService {
+    ScheduleDetails add(@NotNull Long storeId, @NotNull Long scheduleId, CreateScheduleDetailsDTO dto);
+
     Page<ScheduleDetails> findEntityByCriteria(@NotNull Long storeId,
                                                @NotNull Long scheduleId,
                                                ScheduleDetailsSpecificationDTO dto,

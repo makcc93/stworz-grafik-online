@@ -38,31 +38,31 @@ public class Employee {
     @JoinColumn(name = "position_id", nullable = false)
     private Position position;
 
-    private boolean enable;
+    private boolean enable = true;
 
-    private boolean canOperateCheckout;
+    private boolean canOperateCheckout = false;
 
-    private boolean canOperateCredit;
+    private boolean canOperateCredit = false;
 
-    private boolean canOpenCloseStore;
+    private boolean canOpenCloseStore = false;
 
-    private boolean canOperateDelivery;
+    private boolean canOperateDelivery = false;
 
-    private boolean seller;
+    private boolean seller = false;
 
-    private boolean manager;
+    private boolean manager = false;
 
-    private boolean cashier;
+    private boolean cashier = false;
 
-    private boolean warehouseman;
+    private boolean warehouseman = false;
 
-    private boolean pok;
+    private boolean pok = false;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = null;
 
     @OneToMany(mappedBy = "employee")
     private List<EmployeeVacation> employeeVacations;
@@ -78,16 +78,6 @@ public class Employee {
 
     @PrePersist
     void onCreate(){
-        enable = true;
-        canOperateCheckout = false;
-        canOperateCredit = false;
-        canOpenCloseStore = false;
-        canOperateDelivery = false;
-        seller = false;
-        manager = false;
-        cashier = false;
-        pok = false;
-        warehouseman = false;
         createdAt = LocalDateTime.now();
     }
 

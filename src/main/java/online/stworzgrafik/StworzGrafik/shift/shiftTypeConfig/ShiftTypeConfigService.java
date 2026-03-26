@@ -11,4 +11,5 @@ public interface ShiftTypeConfigService {
     BigDecimal getDefaultHours(@NotNull ShiftCode code);
     Boolean countsAsWork(@NotNull ShiftCode code);
     ShiftTypeConfig findById(@NotNull Long shiftTypeConfigId);
+    ShiftTypeConfig save(@NotNull ShiftCode shiftCode);
 }

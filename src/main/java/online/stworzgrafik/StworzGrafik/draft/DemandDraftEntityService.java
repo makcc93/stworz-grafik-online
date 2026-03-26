@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.draft;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
-import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;

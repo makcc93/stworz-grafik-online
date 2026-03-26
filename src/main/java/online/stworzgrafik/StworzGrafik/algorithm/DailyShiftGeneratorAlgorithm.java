@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import de.jollyday.HolidayManager;
+import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
