@@ -1,9 +1,11 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ManagerOpeningHourAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.UnderstaffedAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
@@ -16,7 +18,6 @@ import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
-import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
@@ -27,6 +28,8 @@ import online.stworzgrafik.StworzGrafik.schedule.TestScheduleBuilder;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
@@ -35,23 +38,30 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigSer
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @SpringBootTest
-@Transactional
 public class EmployeeToShiftMatcherIT {
+    @Autowired
+    private TestDatabaseCleaner cleaner;
+
     @Autowired
     private RegionEntityService regionEntityService;
 
@@ -95,7 +105,16 @@ public class EmployeeToShiftMatcherIT {
     private ScheduleAnalyzer analyzer;
 
     @Autowired
+    private UnderstaffedAnalysisStrategy understaffedAnalysisStrategy;
+
+    @Autowired
     private EmployeeProposalDaysOffService employeeProposalDaysOffService;
+
+    @Autowired
+    private ScheduleMessageService scheduleMessageService;
+
+    @MockitoBean
+    private UserAuthorizationService userAuthorizationService;
 
     private Region region;
     private Branch branch;
@@ -122,6 +141,9 @@ public class EmployeeToShiftMatcherIT {
         store = new TestStoreBuilder().withBranch(branch).build();
         storeEntityService.saveEntity(store);
 
+        when(userAuthorizationService.hasAccessToStore(anyLong())).thenReturn(true);
+        when(userAuthorizationService.getUserStoreId()).thenReturn(store.getId());
+
         schedule = new TestScheduleBuilder().withStore(store).withBranch(branch).withYear(year).withMonth(month).withRegion(region).build();
         scheduleService.saveSchedule(schedule);
 
@@ -129,7 +151,6 @@ public class EmployeeToShiftMatcherIT {
         positionEntityService.saveEntity(position);
 
         generateAndSaveAllShifts(shiftEntityService);
-        employees = generateAndSaveAllEmployees(employeeEntityService);
 
         standardWorkShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.WORK);
         workByProposalShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.WORK_BY_PROPOSAL);
@@ -137,10 +158,16 @@ public class EmployeeToShiftMatcherIT {
         vacationShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.VACATION);
     }
 
+    @AfterEach
+    void clean(){
+        cleaner.cleanAll();
+    }
+
     @Test
     void matchEmployeeToShift_workingTest(){
         //given
         LocalDate date = LocalDate.of(year,month,26);
+        employees = generateAndSaveAllEmployees(employeeEntityService);
 
         int[] originalDemandDraft = {0,0,0,0,0,0,0,0,3,6,7,7,7,7,9,9,9,9,9,6,0,0,0,0};
         int[] employeeProposalsCount = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -186,10 +213,12 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isNotEmpty();
     }
 
+    
     @Test
     void matchEmployeeToShift_onlyOneManagerAvailableGiveAllDaysShiftToHim(){
         //given
         LocalDate date = LocalDate.of(year,month,26);
+        employees = generateAndSaveAllEmployees(employeeEntityService);
 
         Optional<Employee> theOnlyOneManager = employees.stream().filter(Employee::isCanOpenCloseStore).findFirst();
 
@@ -251,10 +280,12 @@ public class EmployeeToShiftMatcherIT {
         assertTrue(isTheOnlyOneManagerWorking);
     }
 
+    
     @Test
     void matchEmployeeToShift_zeroDemandDraftDay() {
         //given
         LocalDate date = LocalDate.of(year, month, 22);
+        employees = generateAndSaveAllEmployees(employeeEntityService);
 
         int[] originalDemandDraft = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         int[] employeeProposalsCount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -301,10 +332,12 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isEmpty();
     }
 
+    
     @Test
-    void matchEmployeeToShift_understaffedAddEmployeeToAvailable(){
+    void matchEmployeeToShift_understaffedAddEmployeeToAvailable(){ //todo Cannot find schedule details for schedule id...
         //given
         LocalDate date = LocalDate.of(year,month,26);
+        employees = generateAndSaveAllEmployees(employeeEntityService);
 
         int[] originalDemandDraft = {0,0,0,0,0,0,0,0,3,6,7,7,7,7,9,9,9,9,9,6,0,0,0,0};
         int[] employeeProposalsCount = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -319,7 +352,7 @@ public class EmployeeToShiftMatcherIT {
         Map<Employee, int[]> employeesDaysOffProposal = new HashMap<>();
         int[] allMonthDayOffProposal = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
         for (Employee e : employees){
-            if (!e.isCanOpenCloseStore()){
+            if (!e.isCanOpenCloseStore() && !e.isWarehouseman()){
                 employeesDaysOffProposal.put(e,allMonthDayOffProposal);
 
                 EmployeeProposalDaysOff dayOffProposal = EmployeeProposalDaysOff.builder().employee(e).monthlyDaysOff(allMonthDayOffProposal).store(store).year(year).month(month).build();
@@ -329,6 +362,8 @@ public class EmployeeToShiftMatcherIT {
                 scheduleDetailsEntityService.add(store.getId(),schedule.getId(),new CreateScheduleDetailsDTO(e.getId(),date,dayOffShift.getId(),dayOffShiftTypeConfig.getId()));
             }
         }
+
+
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
                 .withStoreId(store.getId())
@@ -442,16 +477,56 @@ public class EmployeeToShiftMatcherIT {
         shiftEntityService.saveAll(shifts);
     }
 
-
     private List<Shift> generateLowestPersonNeededDailyShifts(int[] dailyDemandDraft) {
-        List<Shift> startHoursShifts = generateShiftStartHours(dailyDemandDraft);
+        List<int[]> startEndPairs = new ArrayList<>();
 
-        List<Shift> shiftsSortedDesc = startHoursShifts.stream()
-                .sorted(Comparator.comparing(Shift::getStartHour).reversed())
-                .toList();
+        // Wyznacz godziny startu
+        List<Integer> startHours = new ArrayList<>();
+        for (int hour = 0; hour < 24; hour++) {
+            int demand = dailyDemandDraft[hour];
+            if (demand > 0) {
+                int previousDemand = (hour == 0) ? 0 : dailyDemandDraft[hour - 1];
+                for (int i = demand; i > previousDemand; i--) {
+                    startHours.add(hour);
+                }
+            }
+        }
 
-        return generateShiftEndHours(shiftsSortedDesc, dailyDemandDraft);
+        // Posortuj malejąco żeby dopasować do godzin końca
+        startHours.sort(Collections.reverseOrder());
+
+        // Wyznacz godziny końca i paruj ze startami
+        int index = 0;
+        for (int hour = 23; hour >= 0; hour--) {
+            int demand = dailyDemandDraft[hour];
+            if (demand > 0) {
+                int nextDemand = (hour == 23) ? 0 : dailyDemandDraft[hour + 1];
+                for (int i = demand; i > nextDemand; i--) {
+                    int endHour = (hour == 23) ? 0 : hour + 1;
+                    startEndPairs.add(new int[]{startHours.get(index), endHour});
+                    index++;
+                }
+            }
+        }
+
+        // Pobierz encje z bazy po gotowych parach godzin
+        return startEndPairs.stream()
+                .map(pair -> shiftEntityService.getEntityByHours(
+                        LocalTime.of(pair[0], 0),
+                        LocalTime.of(pair[1], 0)
+                ))
+                .collect(Collectors.toList());
     }
+
+//    private List<Shift> generateLowestPersonNeededDailyShifts(int[] dailyDemandDraft) {
+//        List<Shift> startHoursShifts = generateShiftStartHours(dailyDemandDraft);
+//
+//        List<Shift> shiftsSortedDesc = startHoursShifts.stream()
+//                .sorted(Comparator.comparing(Shift::getStartHour).reversed())
+//                .toList();
+//
+//        return generateShiftEndHours(shiftsSortedDesc, dailyDemandDraft);
+//    }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc, int[] dailyDemandDraft) {
         int index = 0;
@@ -483,8 +558,9 @@ public class EmployeeToShiftMatcherIT {
             if (demand != 0) {
                 int previousDemand = (hourOfDay == 0) ? 0 : dailyDemandDraft[hourOfDay -1];
                 for (int i = demand; i > previousDemand; i--) {
-                    LocalTime start = LocalTime.of(hourOfDay, 0);
-                    Shift shift = shiftEntityService.getEntityByHours(start, LocalTime.of(0,0)); // to tylko placeholder, musisz pobrać właściwą
+                    Shift shift = new Shift();
+                    shift.setStartHour(LocalTime.of(hourOfDay,0));
+
                     shifts.add(shift);
                 }
             }

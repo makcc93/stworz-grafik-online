@@ -184,6 +184,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         return repository.findAll(specification, pageable);
     }
 
+    //todo change it for optional and modify implementation
     @Override
     public ScheduleDetails findEmployeeScheduleDetailsByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
         verifyUserAccessAndData(storeId, scheduleId);

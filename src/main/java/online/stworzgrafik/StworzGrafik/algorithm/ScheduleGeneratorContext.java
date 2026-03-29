@@ -109,18 +109,25 @@ public class ScheduleGeneratorContext {
     }
 
     public void updateEmployeeHours(Employee employee, Shift oldShift, Shift newShift){
+        int currentEmployeeHoursValue = employeeHours.getOrDefault(employee, 0);
+
         int oldShiftLengthHours = computeShiftHours(oldShift.getEndHour().getHour(), oldShift.getStartHour().getHour());
         int newShiftLengthHours = computeShiftHours(newShift.getEndHour().getHour(), newShift.getStartHour().getHour());
 
         int shiftHoursDifference = newShiftLengthHours - oldShiftLengthHours;
 
-        employeeHours.merge(employee,shiftHoursDifference,Integer::sum);
+        int newValueOfEmployeeHours = currentEmployeeHoursValue + shiftHoursDifference;
+
+        employeeHours.put(employee,newValueOfEmployeeHours);
     }
 
     public void addEmployeeHours(Employee employee, Shift shift){
         int shiftHours = computeShiftHours(shift.getEndHour().getHour(), shift.getStartHour().getHour());
 
-        employeeHours.merge(employee,shiftHours,Integer::sum);
+        int employeeHoursValue = this.employeeHours.getOrDefault(employee, 0);
+        int newValueOfEmployeeHours = employeeHoursValue + shiftHours;
+
+        employeeHours.put(employee,newValueOfEmployeeHours);
     }
 
     void addEmployeeWorkingOnWeekend(Employee employee, DayOfWeek dayOfWeek){

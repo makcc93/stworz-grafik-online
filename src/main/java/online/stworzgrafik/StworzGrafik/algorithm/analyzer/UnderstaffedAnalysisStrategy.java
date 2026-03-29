@@ -128,7 +128,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
             Employee employee = entry.getKey();
             int[] monthlyProposal = entry.getValue();
 
-            if (availableEmployees.contains(employee) || monthlyProposal[day.getDayOfMonth() - 1] == 0) continue;
+            if (availableEmployees.contains(employee) || monthlyProposal[day.getDayOfMonth() - 1] == 0 || employee.isWarehouseman()) continue;
 
             int proposalsCount = 0;
             for (int dayValue : monthlyProposal) {

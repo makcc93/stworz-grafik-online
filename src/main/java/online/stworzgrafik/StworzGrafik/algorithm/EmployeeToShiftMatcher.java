@@ -436,7 +436,7 @@ public class EmployeeToShiftMatcher {
 
         scheduleMessageService.addMessage(context.getSchedule().getId(),
                 new CreateScheduleMessageDTO(
-                        ScheduleMessageType.WARNING,
+                        ScheduleMessageType.INFO,
                         ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                         "Z powodu brak pracownika mogącego zamknąć sklep w dniu: " + day +
                                 " zmieniony został grafik " + canOpenCloseStoreEmployee.getFirstName() + " "
@@ -447,7 +447,7 @@ public class EmployeeToShiftMatcher {
                         day
                 ));
 
-        log.info("Liczba godzin pracy {} {} to {}",
+        log.info("Nowa liczba godzin pracy {} {} to {}",
                 canOpenCloseStoreEmployee.getFirstName(),
                 canOpenCloseStoreEmployee.getLastName(),
                 context.getEmployeeHours().get(canOpenCloseStoreEmployee));
