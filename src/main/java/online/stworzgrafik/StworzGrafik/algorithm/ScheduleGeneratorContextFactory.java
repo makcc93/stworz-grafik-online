@@ -64,6 +64,8 @@ public class ScheduleGeneratorContextFactory {
                 .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
                 .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
+                .finalSchedule(new LinkedHashMap<>())
+                .finalScheduleMessages(new ArrayList<>())
                 .build();
     }
 

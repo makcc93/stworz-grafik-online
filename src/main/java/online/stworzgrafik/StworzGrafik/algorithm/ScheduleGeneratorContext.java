@@ -2,9 +2,11 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
+import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -14,6 +16,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @Getter
 @Builder
 public class ScheduleGeneratorContext {
@@ -41,6 +44,40 @@ public class ScheduleGeneratorContext {
     private final ShiftTypeConfig daysOffShiftTypeConfig;
     private final ShiftTypeConfig proposalShiftTypeConfig;
     private final ShiftTypeConfig standardShiftTypeConfig;
+    private final LinkedHashMap<LocalDate,Map<Employee,Shift>> finalSchedule;
+    private final List<CreateScheduleMessageDTO> finalScheduleMessages;
+
+    public void registerMessageOnSchedule(CreateScheduleMessageDTO dto){
+        finalScheduleMessages.add(dto);
+    }
+
+    public void updateShiftOnSchedule(LocalDate date, Employee employee, Shift newShift){
+        Map<Employee, Shift> dailySchedule = finalSchedule.computeIfAbsent(date, k -> new HashMap<>());
+        Shift oldShift = dailySchedule.getOrDefault(employee, defaultDaysOffShift);
+
+        dailySchedule.put(employee,newShift);
+
+        log.info("Modyfikuję zmianę pracownika {} {} z {}-{} na {}-{}",
+                employee.getFirstName(),
+                employee.getLastName(),
+                oldShift.getStartHour().getHour(),
+                oldShift.getEndHour().getHour(),
+                newShift.getStartHour().getHour(),
+                newShift.getEndHour().getHour()
+                );
+    }
+
+    public void registerShiftOnSchedule(LocalDate date, Employee employee, Shift shift){
+        log.info("Dopasowuje pracownika {} {} do zmiany od {} do {}",
+                employee.getFirstName(),
+                employee.getLastName(),
+                shift.getStartHour().getHour(),
+                shift.getEndHour().getHour()
+        );
+
+        finalSchedule.computeIfAbsent(date, k -> new HashMap<>())
+                .put(employee,shift);
+    }
 
     public OpenCloseStoreHoursDTO getStoreOpenCloseHoursByDate(LocalDate date){
         return storeOpenCloseHoursByDate.getOrDefault(date, new OpenCloseStoreHoursDTO(0,0));

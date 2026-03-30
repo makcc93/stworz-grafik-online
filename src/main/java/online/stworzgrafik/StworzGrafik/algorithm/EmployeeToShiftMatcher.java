@@ -30,9 +30,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class EmployeeToShiftMatcher {
     private final HolidayManager holidayManager;
-    private final ScheduleDetailsService scheduleDetailsService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
-    private final ScheduleMessageService scheduleMessageService;
     private final CalendarCalculation calendarCalculation;
     private final ShiftEntityService shiftEntityService;
     private final ScheduleAnalyzer scheduleAnalyzer;
@@ -93,15 +90,14 @@ public class EmployeeToShiftMatcher {
 
                 if (shift.isEmpty()){
                     log.info("Brak dostępnych zmian do rozdysponowania w dniu {}", day);
-
-                    scheduleMessageService.addMessage(context.getSchedule().getId(),
+                    context.registerMessageOnSchedule(
                             new CreateScheduleMessageDTO(
                                     ScheduleMessageType.INFO,
                                     ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                                     "Brak dostępnych zmian w dniu: " + day,
                                     null,
-                                    day
-                            ));
+                                    day)
+                    );
                     break;
                 }
 
@@ -111,22 +107,22 @@ public class EmployeeToShiftMatcher {
 
                 if (employee.isEmpty()){
                     log.info("Brak dostępnych pracowników w dniu {}", day);
-
-                    scheduleMessageService.addMessage(context.getSchedule().getId(),
+                    context.registerMessageOnSchedule(
                             new CreateScheduleMessageDTO(
                                     ScheduleMessageType.INFO,
                                     ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                                     "Brak dostępnych pracowników w dniu: " + day,
                                     null,
                                     day
-                            ));
+                            )
+                    );
                     break;
                 }
 
                 saveMessageIfEmployeeHoursExceeded(context,day,employee.get());
                 saveMessageIfEmployeeWorkingDaysExceeded(context,day,employee.get());
 
-                registerShiftToSchedule(context,employee.get(),day,shift.get());
+                context.registerShiftOnSchedule(day,employee.get(),shift.get());
                 shiftsSorted.remove(shift.get());
                 availableEmployees.remove(employee.get());
                 context.addWorkingInformation(employee.get(),shift.get(),day.getDayOfWeek());
@@ -141,11 +137,8 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean dayIsHolidayOrHasEmptyDemandDraft(LocalDate day, Map<LocalDate, int[]> everyDayStoreDemandDraftAfterProposals) {
-        if (holidayManager.isHoliday(day) ||
-            Arrays.stream(everyDayStoreDemandDraftAfterProposals.getOrDefault(day, new int[24])).sum() == 0) {
-            return true;
-        }
-        return false;
+        return holidayManager.isHoliday(day) ||
+                Arrays.stream(everyDayStoreDemandDraftAfterProposals.getOrDefault(day, new int[24])).sum() == 0;
     }
 
     private ArrayList<Employee> getAvailableEmployees(ScheduleGeneratorContext context, List<Employee> storeActiveEmployees, LocalDate day) {
@@ -169,8 +162,6 @@ public class EmployeeToShiftMatcher {
                 .toList()
         );
     }
-
-
 
     private boolean afternoonCloseStoreEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
         Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
@@ -196,14 +187,15 @@ public class EmployeeToShiftMatcher {
                 .findFirst();
 
         if (employeeToOperateAfternoonCredit.isEmpty()){
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                             "Brak pracownika obsługującego sprzedaż ratalną popołudniu w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
@@ -212,21 +204,22 @@ public class EmployeeToShiftMatcher {
                 .findFirst();
 
         if (afternoonCreditShift.isEmpty()){
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                             "Brak dostępnej popołudniowej zmiany do zamknięcia w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
         saveMessageIfEmployeeHoursExceeded(context, day, employeeToOperateAfternoonCredit.get());
         saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOperateAfternoonCredit.get());
 
-        registerShiftToSchedule(context, employeeToOperateAfternoonCredit.get(), day, afternoonCreditShift.get());
+        context.registerShiftOnSchedule(day,employeeToOperateAfternoonCredit.get(),afternoonCreditShift.get());
         shiftsSorted.remove(afternoonCreditShift.get());
         availableEmployees.remove(employeeToOperateAfternoonCredit.get());
         context.addWorkingInformation(employeeToOperateAfternoonCredit.get(), afternoonCreditShift.get(), day.getDayOfWeek());
@@ -239,14 +232,15 @@ public class EmployeeToShiftMatcher {
                 .findFirst();
 
         if (employeeToOperateMorningCredit.isEmpty()){
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                             "Brak pracownika obsługującego sprzedaż ratalną rano w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
@@ -255,21 +249,22 @@ public class EmployeeToShiftMatcher {
                         .findFirst();
 
         if (morningCreditShift.isEmpty()){
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                             "Brak dostępnej otwierającej zmiany w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
         saveMessageIfEmployeeHoursExceeded(context, day, employeeToOperateMorningCredit.get());
         saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOperateMorningCredit.get());
 
-        registerShiftToSchedule(context, employeeToOperateMorningCredit.get(), day, morningCreditShift.get());
+        context.registerShiftOnSchedule(day,employeeToOperateMorningCredit.get(),morningCreditShift.get());
         shiftsSorted.remove(morningCreditShift.get());
         availableEmployees.remove(employeeToOperateMorningCredit.get());
         context.addWorkingInformation(employeeToOperateMorningCredit.get(), morningCreditShift.get(), day.getDayOfWeek());
@@ -336,14 +331,15 @@ public class EmployeeToShiftMatcher {
         if (employeeToCloseStore.isEmpty()) {
             log.info("Brak dostępnego pracownika mogącego zamknąć sklep w dniu {}", day);
 
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                             "Brak pracownika mogącego zamknąć sklep w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
         }
 
         Optional<Shift> closeShift = shiftsSorted.stream()
@@ -352,19 +348,18 @@ public class EmployeeToShiftMatcher {
 
         if (closeShift.isEmpty()){
             log.info("Brak dostępnej zmiany do zamknięcia sklepu w dniu {}", day);
-
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                             "Brak dostępnej zamykącej zmiany w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
         }
 
         if (employeeToCloseStore.isEmpty() || closeShift.isEmpty()) {
-            log.info("probuje wejsc w modyfikacje zmiany");
             modifyOpenStoreEmployeeHoursToAllDayShift(context, day);
             return;
         }
@@ -372,7 +367,7 @@ public class EmployeeToShiftMatcher {
         saveMessageIfEmployeeHoursExceeded(context, day, employeeToCloseStore.get());
         saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToCloseStore.get());
 
-        registerShiftToSchedule(context, employeeToCloseStore.get(), day, closeShift.get());
+        context.registerShiftOnSchedule(day,employeeToCloseStore.get(),closeShift.get());
         shiftsSorted.remove(closeShift.get());
         availableEmployees.remove(employeeToCloseStore.get());
         context.addWorkingInformation(employeeToCloseStore.get(), closeShift.get(), day.getDayOfWeek());
@@ -390,17 +385,16 @@ public class EmployeeToShiftMatcher {
                 .findFirst();
 
         if (dailyScheduleDetailsOfOpenStoreEmployeeWithLongestShift.isEmpty()){
-            log.info("Brak w grafiku managera, który otwiera sklep");
-
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            log.info("Brak w grafiku managera, który otwiera sklep. Dzień: {}",day);
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                             "Brak pracownika otwierającego sklep w dniu: " + day,
                             null,
                             day
-                    ));
-
+                    )
+            );
             return;
         }
 
@@ -419,7 +413,8 @@ public class EmployeeToShiftMatcher {
                 newShiftBetweenOpenAndCloseStore.getStartHour().getHour(),
                 newShiftBetweenOpenAndCloseStore.getEndHour().getHour()
         );
-
+        //todo implementuj context schedule i message zamiast wywolania DB
+        //teraz trzeba ta metode ogarnac zeby pobierala dane z map context a nie z DB  i zrobic update
         scheduleDetailsService.updateScheduleDetails(
                 context.getStoreId(),
                 context.getSchedule().getId(),
@@ -434,23 +429,17 @@ public class EmployeeToShiftMatcher {
 
         context.updateEmployeeHours(canOpenCloseStoreEmployee,oldShift,newShiftBetweenOpenAndCloseStore);
 
-        scheduleMessageService.addMessage(context.getSchedule().getId(),
-                new CreateScheduleMessageDTO(
-                        ScheduleMessageType.INFO,
-                        ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                        "Z powodu brak pracownika mogącego zamknąć sklep w dniu: " + day +
-                                " zmieniony został grafik " + canOpenCloseStoreEmployee.getFirstName() + " "
-                                + canOpenCloseStoreEmployee.getLastName() + " na całodniową zmianę od "
-                                + newShiftBetweenOpenAndCloseStore.getStartHour().getHour() + " do "
-                                + newShiftBetweenOpenAndCloseStore.getEndHour().getHour(),
-                        canOpenCloseStoreEmployee.getId(),
-                        day
-                ));
-
-        log.info("Nowa liczba godzin pracy {} {} to {}",
-                canOpenCloseStoreEmployee.getFirstName(),
-                canOpenCloseStoreEmployee.getLastName(),
-                context.getEmployeeHours().get(canOpenCloseStoreEmployee));
+        context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                ScheduleMessageType.INFO,
+                ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                "Z powodu brak pracownika mogącego zamknąć sklep w dniu: " + day +
+                        " zmieniony został grafik " + canOpenCloseStoreEmployee.getFirstName() + " "
+                        + canOpenCloseStoreEmployee.getLastName() + " na całodniową zmianę od "
+                        + newShiftBetweenOpenAndCloseStore.getStartHour().getHour() + " do "
+                        + newShiftBetweenOpenAndCloseStore.getEndHour().getHour(),
+                canOpenCloseStoreEmployee.getId(),
+                day)
+        );
     }
 
     private Shift getShiftFromOpenToCloseStoreHours(ScheduleGeneratorContext context, LocalDate date){
@@ -474,14 +463,13 @@ public class EmployeeToShiftMatcher {
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", day);
 
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.WARNING,
-                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                            "Brak pracownika mogącego otworzyć sklep w dniu: " + day,
-                            null,
-                            day
-                    ));
+            context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                    ScheduleMessageType.WARNING,
+                    ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                    "Brak pracownika mogącego otworzyć sklep w dniu: " + day,
+                    null,
+                    day)
+            );
             return;
         }
 
@@ -491,21 +479,21 @@ public class EmployeeToShiftMatcher {
 
         if (openShift.isEmpty()){
             log.info("Brak dostępnej zmiany otwierającej sklep w dniu {}", day);
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.WARNING,
-                            ScheduleMessageCode.NO_AVAILABLE_SHIFT,
-                            "Brak dostępnej otwierącej zmiany w dniu: " + day,
-                            null,
-                            day
-                    ));
+            context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                    ScheduleMessageType.WARNING,
+                    ScheduleMessageCode.NO_AVAILABLE_SHIFT,
+                    "Brak dostępnej otwierącej zmiany w dniu: " + day,
+                    null,
+                    day
+                    )
+            );
             return;
         }
 
         saveMessageIfEmployeeHoursExceeded(context, day, employeeToOpenStore.get());
         saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOpenStore.get());
 
-        registerShiftToSchedule(context, employeeToOpenStore.get(), day, openShift.get());
+        context.registerShiftOnSchedule(day,employeeToOpenStore.get(),openShift.get());
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
         context.addWorkingInformation(employeeToOpenStore.get(), openShift.get(), day.getDayOfWeek());
@@ -548,21 +536,22 @@ public class EmployeeToShiftMatcher {
                         .findFirst();
 
                 if (longestCloseShift.isEmpty()){
-                    scheduleMessageService.addMessage(context.getSchedule().getId(),
+                    context.registerMessageOnSchedule(
                             new CreateScheduleMessageDTO(
                                     ScheduleMessageType.WARNING,
                                     ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                                     "Brak dostępnej zamykającej zmiany w dniu: " + day,
                                     null,
                                     day
-                            ));
+                            )
+                    );
                     return;
                 }
 
                 saveMessageIfEmployeeHoursExceeded(context,day,employee);
                 saveMessageIfEmployeeWorkingDaysExceeded(context,day,employee);
 
-                registerShiftToSchedule(context, employee, day, longestCloseShift.get());
+                context.registerShiftOnSchedule(day,employee,longestCloseShift.get());
                 shiftsSorted.remove(longestCloseShift.get());
                 iterator.remove();
                 context.addWorkingInformation(employee, longestCloseShift.get(), day.getDayOfWeek());
@@ -572,54 +561,28 @@ public class EmployeeToShiftMatcher {
 
     private void saveMessageIfEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         if (context.getWorkingDaysCount().get(employee) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())){
-            scheduleMessageService.addMessage(
-                    context.getSchedule().getId(),
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.ERROR,
-                            ScheduleMessageCode.EMPLOYEE_MONTHLY_MAX_WORKING_DAYS_EXCEEDED,
-                            "Employee " + employee.getFirstName() + " " + employee.getLastName() + " monthly working days has been exceeded, on date: " + day,
-                            employee.getId(),
-                            day
-                    )
+            context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                    ScheduleMessageType.ERROR,
+                    ScheduleMessageCode.EMPLOYEE_MONTHLY_MAX_WORKING_DAYS_EXCEEDED,
+                    "Employee " + employee.getFirstName() + " " + employee.getLastName() + " monthly working days has been exceeded, on date: " + day,
+                    employee.getId(),
+                    day)
             );
         }
     }
 
     private void saveMessageIfEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         if (context.getEmployeeHours().get(employee) > calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth())) {
-            scheduleMessageService.addMessage(
-                    context.getSchedule().getId(),
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.WARNING,
-                            ScheduleMessageCode.EMPLOYEE_MONTHLY_SUM_OF_HOURS_EXCEEDED,
-                            "Miesięczna suma przepracowanych godzin u  "
-                                    + employee.getFirstName() + " "
-                                    + employee.getLastName() + " została przekroczona w dniu "
-                                    + day,
-                            employee.getId(),
-                            day
-                    )
+            context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                    ScheduleMessageType.WARNING,
+                    ScheduleMessageCode.EMPLOYEE_MONTHLY_SUM_OF_HOURS_EXCEEDED,
+                    "Miesięczna suma przepracowanych godzin u  "
+                            + employee.getFirstName() + " "
+                            + employee.getLastName() + " została przekroczona w dniu "
+                            + day,
+                    employee.getId(),
+                    day)
             );
         }
-    }
-
-    private void registerShiftToSchedule(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift){
-        log.info("Dopasowuje pracownika {} {} do zmiany od {} do {}",
-                employee.getFirstName(),
-                employee.getLastName(),
-                shift.getStartHour().getHour(),
-                shift.getEndHour().getHour()
-        );
-
-        scheduleDetailsService.addScheduleDetails(
-                context.getStoreId(),
-                context.getSchedule().getId(),
-                new CreateScheduleDetailsDTO(
-                        employee.getId(),
-                        date,
-                        shift.getId(),
-                        context.getStandardShiftTypeConfig().getId()
-                )
-        );
     }
 }
