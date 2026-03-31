@@ -14,10 +14,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Shift {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     private LocalTime startHour;
