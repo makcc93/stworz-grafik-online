@@ -213,6 +213,11 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         return  shiftRepository.save(shift);
     }
 
+    @Override
+    public List<Shift> getAll() {
+        return shiftRepository.findAll();
+    }
+
     private void checkNull(LocalTime startHour, LocalTime endHour){
         if (startHour == null || endHour == null){
             throw new IllegalArgumentException("Start or end hour cannot be null");
