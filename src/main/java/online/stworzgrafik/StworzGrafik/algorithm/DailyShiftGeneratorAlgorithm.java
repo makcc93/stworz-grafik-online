@@ -1,14 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
-import online.stworzgrafik.StworzGrafik.shift.ShiftService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -18,12 +12,6 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class DailyShiftGeneratorAlgorithm {
-    private final ShiftService shiftService;
-    private final ShiftEntityService shiftEntityService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
-    private final ScheduleEntityService scheduleEntityService;
-    private final DemandDraftEntityService dailyDemand;
-    private final HolidayManager holidayManager;
 
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getEveryDayStoreDemandDraftWorkingOn();

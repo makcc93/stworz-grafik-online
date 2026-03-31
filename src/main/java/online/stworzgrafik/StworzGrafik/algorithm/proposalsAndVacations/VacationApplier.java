@@ -2,11 +2,13 @@ package online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
+import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -14,10 +16,10 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class VacationApplier {
-    private final ScheduleDetailsService scheduleDetailsService;
     private final HolidayManager holidayManager;
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
@@ -29,6 +31,8 @@ public class VacationApplier {
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);
 
+        Shift vacationShift = context.getDefaultVacationShift();
+
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year, month, day);
 
@@ -38,26 +42,13 @@ public class VacationApplier {
 
             for (Employee employee : employeesWithVacation) {
                 if (context.employeeIsOnVacation(employee, day)) {
-                    registerVacationOnSchedule(context, employee, date);
+                    log.info("Dodaje urlop pracownikowi {} {} w dniu {}",employee.getFirstName(),employee.getLastName(),date);
 
-                    context.addEmployeeHours(employee,context.getDefaultVacationShift());
-                    context.addEmployeeVacationDay(employee,1);
+                    context.registerShiftOnSchedule(date,employee,vacationShift);
+                    context.addWorkingInformation(employee,vacationShift,date.getDayOfWeek());
                 }
             }
 
         }
-    }
-
-    private void registerVacationOnSchedule(ScheduleGeneratorContext context, Employee employee, LocalDate date) {
-        scheduleDetailsService.addScheduleDetails(
-                context.getStoreId(),
-                context.getSchedule().getId(),
-                new CreateScheduleDetailsDTO(
-                        employee.getId(),
-                        date,
-                        context.getDefaultVacationShift().getId(),
-                        context.getVacationShiftTypeConfig().getId()
-                )
-        );
     }
 }

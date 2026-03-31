@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
@@ -20,13 +21,11 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProposalShiftApplier {
     private final HolidayManager holidayManager;
-    private final ScheduleDetailsService scheduleDetailsService;
-    private final ScheduleMessageService scheduleMessageService;
-    private final ShiftEntityService shiftEntityService;
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
@@ -48,8 +47,7 @@ public class ProposalShiftApplier {
             for (Employee employee : employees){
                 if (context.employeeHasProposalShift(employee,date)){
                     if (context.employeeIsOnVacation(employee,day)){
-                        scheduleMessageService.addMessage(
-                                context.getSchedule().getId(),
+                        context.registerMessageOnSchedule(
                                 new CreateScheduleMessageDTO(
                                         ScheduleMessageType.INFO,
                                         ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
@@ -58,12 +56,12 @@ public class ProposalShiftApplier {
                                         date
                                 )
                         );
+
                         continue;
                     }
 
                     if (context.employeeIsOnDayOff(employee,day)){
-                        scheduleMessageService.addMessage(
-                                context.getSchedule().getId(),
+                        context.registerMessageOnSchedule(
                                 new CreateScheduleMessageDTO(
                                         ScheduleMessageType.INFO,
                                         ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
@@ -72,34 +70,27 @@ public class ProposalShiftApplier {
                                         date
                                 )
                         );
+
                         continue;
                     }
 
                     scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
 
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
-                    Shift proposalShift = shiftEntityService.getArrayAsShift(proposalShiftAsArray);
+                    Shift proposalShift = context.findShiftByArray(proposalShiftAsArray);
 
-                    registerProposalShiftOnSchedule(context,employee,date,proposalShift);
+                    log.info("Wprowadzam propozycję zmiany {}-{} pracownika {} {} w dniu {}",
+                            proposalShift.getStartHour().getHour(),
+                            proposalShift.getEndHour().getHour(),
+                            employee.getFirstName(),
+                            employee.getLastName(),
+                            date);
+
+                    context.registerShiftOnSchedule(date,employee,proposalShift);
                     context.addWorkingInformation(employee,proposalShift,date.getDayOfWeek());
                 }
             }
 
         }
     }
-
-    private void registerProposalShiftOnSchedule(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift) {
-        scheduleDetailsService.addScheduleDetails(
-                context.getStoreId(),
-                context.getSchedule().getId(),
-                new CreateScheduleDetailsDTO(
-                        employee.getId(),
-                        date,
-                        shift.getId(),
-                        context.getProposalShiftTypeConfig().getId()
-                )
-        );
-    }
-
-
 }
