@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHou
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -14,6 +16,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 @Slf4j
@@ -38,6 +41,7 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> vacationDaysCount;
     private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
     private final Map<LocalDate, Employee> employeeReplacingWarehouseman;
+    private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
     private final ShiftTypeConfig vacationShiftTypeConfig;
@@ -46,6 +50,41 @@ public class ScheduleGeneratorContext {
     private final ShiftTypeConfig standardShiftTypeConfig;
     private final LinkedHashMap<LocalDate,Map<Employee,Shift>> finalSchedule;
     private final List<CreateScheduleMessageDTO> finalScheduleMessages;
+    private final boolean storeHasDedicatedWarehouseman;
+
+    public Shift findShiftByArray(int[] array){
+        if (array.length != 24){
+            throw new IllegalArgumentException("Shift array must equal 24 elements");
+        }
+
+        int startHour = 0;
+        int endHour = 0;
+
+        for (int i = 0; i < array.length; i++){
+            if (array[i] != 0){
+                startHour = array[i];
+                break;
+            }
+        }
+
+        for (int i = 23; i >= 0; i--){
+            if (array[i] != 0){
+                endHour = array[i];
+                break;
+            }
+        }
+
+        return findShiftByHours(LocalTime.of(startHour,0),LocalTime.of(endHour,0));
+    }
+
+    public Shift findShiftByHours(LocalTime startHour, LocalTime endHour){
+        for (Shift shift : allShifts){
+            if (shift.getStartHour() == startHour && shift.getEndHour() == endHour){
+                return shift;
+            }
+        }
+        throw new EntityNotFoundException("Cannot find shift by start hour " + startHour + " and end hour " + endHour);
+    }
 
     public void registerMessageOnSchedule(CreateScheduleMessageDTO dto){
         finalScheduleMessages.add(dto);

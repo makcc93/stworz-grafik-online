@@ -13,10 +13,12 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposa
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -37,6 +39,7 @@ public class ScheduleGeneratorContextFactory {
     private final EmployeeVacationEntityService employeeVacationEntityService;
     private final ShiftEntityService shiftEntityService;
     private final ShiftTypeConfigService shiftTypeConfigService;
+    private final StoreDeliveryService storeDeliveryService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         return ScheduleGeneratorContext.builder()
@@ -60,13 +63,19 @@ public class ScheduleGeneratorContextFactory {
                 .employeeReplacingWarehouseman(new HashMap<>())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(12,0),LocalTime.of(20,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
+                .allShifts(getAllShifts())
                 .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))
                 .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
                 .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
                 .finalSchedule(new LinkedHashMap<>())
                 .finalScheduleMessages(new ArrayList<>())
+                .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))
                 .build();
+    }
+
+    private List<Shift> getAllShifts(){
+        return shiftEntityService.getAll();
     }
 
     private Map<LocalDate, OpenCloseStoreHoursDTO> getStoreOpenCloseHour(Long storeId, Integer year, Integer month){
