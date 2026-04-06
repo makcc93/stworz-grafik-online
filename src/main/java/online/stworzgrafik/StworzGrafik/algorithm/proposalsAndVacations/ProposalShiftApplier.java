@@ -7,19 +7,16 @@ import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
-import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -35,8 +32,6 @@ public class ProposalShiftApplier {
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);
 
-        Map<Employee, int[]> employeeDailyProposal = new HashMap<>();
-
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(year, month, day);
 
@@ -46,33 +41,8 @@ public class ProposalShiftApplier {
 
             for (Employee employee : employees){
                 if (context.employeeHasProposalShift(employee,date)){
-                    if (context.employeeIsOnVacation(employee,day)){
-                        context.registerMessageOnSchedule(
-                                new CreateScheduleMessageDTO(
-                                        ScheduleMessageType.INFO,
-                                        ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                                        "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję pracy w dniu " + date,
-                                        employee.getId(),
-                                        date
-                                )
-                        );
-
-                        continue;
-                    }
-
-                    if (context.employeeIsOnDayOff(employee,day)){
-                        context.registerMessageOnSchedule(
-                                new CreateScheduleMessageDTO(
-                                        ScheduleMessageType.INFO,
-                                        ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                                        "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " ma propozycję dnia wolnego i pracy w dniu " + date,
-                                        employee.getId(),
-                                        date
-                                )
-                        );
-
-                        continue;
-                    }
+                    if (employeeIsOnVacation(context, employee, day, date)) continue;
+                    if (employeeIsOnDayOff(context, employee, day, date)) continue;
 
                     scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
 
@@ -90,7 +60,40 @@ public class ProposalShiftApplier {
                     context.addWorkingInformation(employee,proposalShift,date.getDayOfWeek());
                 }
             }
-
         }
+    }
+
+    private static boolean employeeIsOnDayOff(ScheduleGeneratorContext context, Employee employee, int day, LocalDate date) {
+        if (context.employeeIsOnDayOff(employee, day)){
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.INFO,
+                            ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " ma propozycję dnia wolnego i pracy w dniu " + date,
+                            employee.getId(),
+                            date
+                    )
+            );
+
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean employeeIsOnVacation(ScheduleGeneratorContext context, Employee employee, int day, LocalDate date) {
+        if (context.employeeIsOnVacation(employee, day)){
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.INFO,
+                            ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję pracy w dniu " + date,
+                            employee.getId(),
+                            date
+                    )
+            );
+
+            return true;
+        }
+        return false;
     }
 }

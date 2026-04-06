@@ -523,7 +523,7 @@ public class EmployeeToShiftMatcher {
     private void saveMessageIfEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         if (context.getWorkingDaysCount().get(employee) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())){
             log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}",employee.getFirstName(),employee.getLastName(),day);
-            
+
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
                     ScheduleMessageType.ERROR,
                     ScheduleMessageCode.EMPLOYEE_MONTHLY_MAX_WORKING_DAYS_EXCEEDED,

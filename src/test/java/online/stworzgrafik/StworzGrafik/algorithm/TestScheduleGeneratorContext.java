@@ -4,6 +4,7 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHou
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.TestScheduleBuilder;
+import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
@@ -37,10 +38,14 @@ public class TestScheduleGeneratorContext {
     private Map<LocalDate, Employee> employeeReplacingWarehouseman = new HashMap<>();
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12,0)).withEndHour(LocalTime.of(20,0)).build();
     private Shift defaultDaysOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0,0)).withEndHour(LocalTime.of(0,0)).build();
+    private List<Shift> allShifts = new ArrayList<>();
     private ShiftTypeConfig vacationShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.VACATION).build();
     private ShiftTypeConfig daysOffShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.DAY_OFF).build();
     private ShiftTypeConfig proposalShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK_BY_PROPOSAL).build();
     private ShiftTypeConfig standardShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK).build();
+    private LinkedHashMap<LocalDate, Map<Employee, Shift>> finalSchedule = new LinkedHashMap<>();
+    private List<CreateScheduleMessageDTO> finalScheduleMessages = new ArrayList<>();
+    private boolean storeHasDedicatedWarehouseman = true;
 
     public TestScheduleGeneratorContext withStoreId(Long storeId){
         this.storeId = storeId;
@@ -161,6 +166,26 @@ public class TestScheduleGeneratorContext {
         this.standardShiftTypeConfig = standardShiftTypeConfig;
         return this;
     }
+
+    public TestScheduleGeneratorContext withAllShifts(List<Shift> allShifts){
+        this.allShifts = allShifts;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withFinalSchedule(LinkedHashMap<LocalDate, Map<Employee, Shift>>finalSchedule){
+        this.finalSchedule = finalSchedule;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withScheduleMessages(List<CreateScheduleMessageDTO> finalScheduleMessages){
+        this.finalScheduleMessages = finalScheduleMessages;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withStoreHasDedicatedWarehouseman(boolean storeHasDedicatedWarehouseman){
+        this.storeHasDedicatedWarehouseman = storeHasDedicatedWarehouseman;
+        return this;
+    }
     
     public ScheduleGeneratorContext build(){
         return new ScheduleGeneratorContext(
@@ -182,12 +207,16 @@ public class TestScheduleGeneratorContext {
                 vacationDaysCount,
                 generatedShiftsByDay,
                 employeeReplacingWarehouseman,
+                allShifts,
                 defaultVacationShift,
                 defaultDaysOffShift,
                 vacationShiftTypeConfig,
                 daysOffShiftTypeConfig,
                 proposalShiftTypeConfig,
-                standardShiftTypeConfig
+                standardShiftTypeConfig,
+                finalSchedule,
+                finalScheduleMessages,
+                storeHasDedicatedWarehouseman
         );
     }
 }

@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DaysOffApplier {
     private final HolidayManager holidayManager;
-    private final ScheduleDetailsService scheduleDetailsService;
 
     public void applyDaysOffToSchedule(ScheduleGeneratorContext context){
         List<Employee> employeesWithProposalDaysOff= context.getStoreActiveEmployees().stream()
