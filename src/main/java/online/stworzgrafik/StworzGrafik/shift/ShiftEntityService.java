@@ -11,7 +11,7 @@ import java.util.List;
 @Validated
 public interface ShiftEntityService {
     Shift saveEntity(@NotNull Shift shift);
-    void saveAll(List<Shift> shifts);
+    List<Shift> saveAll(List<Shift> shifts);
     Shift getEntityById(@NotNull Long id);
     Shift getEntityByHours(@NotNull LocalTime startHour, @NotNull LocalTime endHour);
     Shift getArrayAsShift(@NotNull int[] array);

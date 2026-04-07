@@ -37,10 +37,15 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
     }
 
     @Override
-    public ShiftTypeConfig save(ShiftCode shiftCode) {
+    public ShiftTypeConfig saveByShiftCode(ShiftCode shiftCode) {
         return shiftTypeConfigRepository.save(ShiftTypeConfig.builder()
                 .code(shiftCode)
                 .build()
         );
+    }
+
+    @Override
+    public ShiftTypeConfig save(ShiftTypeConfig shiftTypeConfig) {
+        return shiftTypeConfigRepository.save(shiftTypeConfig);
     }
 }

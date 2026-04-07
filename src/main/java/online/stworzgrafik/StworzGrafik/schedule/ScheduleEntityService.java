@@ -16,5 +16,5 @@ public interface ScheduleEntityService {
     Schedule findEntityById(@NotNull Long scheduleId);
     Page<Schedule> findEntityByCriteria(@NotNull Long storeId, @Nullable ScheduleSpecificationDTO dto, Pageable pageable);
     Schedule findByStoreIdAndYearAndMonth(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
-
+    Schedule saveEntity(@NotNull Schedule schedule);
 }

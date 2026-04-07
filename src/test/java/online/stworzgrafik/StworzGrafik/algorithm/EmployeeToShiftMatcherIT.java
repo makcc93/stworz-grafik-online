@@ -44,7 +44,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -152,10 +151,10 @@ public class EmployeeToShiftMatcherIT {
 
         generateAndSaveAllShifts(shiftEntityService);
 
-        standardWorkShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.WORK);
-        workByProposalShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.WORK_BY_PROPOSAL);
-        dayOffShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.DAY_OFF);
-        vacationShiftTypeConfig = shiftTypeConfigService.save(ShiftCode.VACATION);
+        standardWorkShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.WORK);
+        workByProposalShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.WORK_BY_PROPOSAL);
+        dayOffShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.DAY_OFF);
+        vacationShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.VACATION);
     }
 
     @AfterEach

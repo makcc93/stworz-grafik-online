@@ -75,6 +75,11 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     }
 
     @Override
+    public Schedule saveEntity(Schedule schedule) {
+        return repository.save(schedule);
+    }
+
+    @Override
     public ResponseScheduleDTO createSchedule(Long storeId, CreateScheduleDTO dto) {
         verifyStoreAccess(storeId);
 

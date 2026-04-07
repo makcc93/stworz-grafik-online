@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class StoreDeliveryServiceImpl implements StoreDeliveryService{
+public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeliveryEntityService{
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeEntityService;
     private final StoreDeliveryRepository repository;
@@ -65,5 +65,10 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService{
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
+    }
+
+    @Override
+    public StoreDelivery save(StoreDelivery storeDelivery) {
+        return repository.save(storeDelivery);
     }
 }

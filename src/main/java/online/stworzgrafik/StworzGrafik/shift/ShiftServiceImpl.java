@@ -152,8 +152,8 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     @Override
-    public void saveAll(List<Shift> shifts) {
-        shiftRepository.saveAll(shifts);
+    public List<Shift> saveAll(List<Shift> shifts) {
+        return shiftRepository.saveAll(shifts);
     }
 
     @Override
