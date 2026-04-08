@@ -41,7 +41,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
 
         int[] arrayDailyProposalsCount = new int[24];
         int proposalEmployeesCanOpenCloseStoreCount = 0;
-        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,new HashMap<>());
         List<Employee> employeesWithOpenCloseStoreProposals = new ArrayList<>();
 
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposals.entrySet()){

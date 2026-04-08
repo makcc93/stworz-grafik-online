@@ -19,6 +19,8 @@ public class DaysOffApplier {
     private final HolidayManager holidayManager;
 
     public void applyDaysOffToSchedule(ScheduleGeneratorContext context){
+        log.info("Sprawdzam propozycje dni wolnych do dodania do grafika");
+
         List<Employee> employeesWithProposalDaysOff= context.getStoreActiveEmployees().stream()
                 .filter(context::employeeHasProposalDaysOff)
                 .toList();

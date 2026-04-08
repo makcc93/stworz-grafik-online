@@ -20,6 +20,8 @@ public class VacationApplier {
     private final HolidayManager holidayManager;
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
+        log.info("Sprawdzam urlopy do dodania do grafika");
+
         List<Employee> employeesWithVacation = context.getStoreActiveEmployees().stream()
                 .filter(context::employeeHasPlannedVacation)
                 .toList();

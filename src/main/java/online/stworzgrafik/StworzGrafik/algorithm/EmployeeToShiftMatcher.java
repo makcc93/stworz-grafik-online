@@ -27,6 +27,8 @@ public class EmployeeToShiftMatcher {
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void matchEmployeeToShift(ScheduleGeneratorContext context) {
+        log.info("Dopasowuję zmiany do pracowników");
+
         Map<LocalDate, int[]> originalStoreDrafts = context.getUneditedOriginalDateStoreDraft();
         LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc = context.getEveryDayStoreDemandDraftWorkingOn();
 
@@ -137,7 +139,7 @@ public class EmployeeToShiftMatcher {
                 .filter(empl -> !empl.isWarehouseman())
                 .filter(empl -> !context.employeeIsOnReplacementOnWarehouse(day, empl))
                 .filter(empl ->
-                        calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth()) > context.getWorkingDaysCount().get(empl))
+                        calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth()) > context.getWorkingDaysCount().getOrDefault(empl,0))
                 .toList()
         );
     }
@@ -269,7 +271,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean morningOpenStoreEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,new HashMap<>());
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposal.entrySet()) {
             Employee employee = proposalEntry.getKey();
             int[] employeeProposal = proposalEntry.getValue();
@@ -286,7 +288,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean morningCreditEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,new HashMap<>());
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposal.entrySet()) {
             Employee employee = proposalEntry.getKey();
             int[] employeeProposal = proposalEntry.getValue();
@@ -417,8 +419,7 @@ public class EmployeeToShiftMatcher {
 
     private Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context) {
         return Comparator.comparingInt(
-                empl -> context.getEmployeeHours().get(empl)
-        );
+                empl -> context.getEmployeeHours().getOrDefault(empl,0));
     }
 
     private void applyOpenStoreEmployee(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
@@ -521,7 +522,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private void saveMessageIfEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getWorkingDaysCount().get(employee) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())){
+        if (context.getWorkingDaysCount().getOrDefault(employee,0) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())){
             log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}",employee.getFirstName(),employee.getLastName(),day);
 
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
@@ -535,7 +536,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private void saveMessageIfEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getEmployeeHours().get(employee) > calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth())) {
+        if (context.getEmployeeHours().getOrDefault(employee,0) > calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth())) {
             log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {}", employee.getFirstName(),employee.getLastName(),day);
 
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(

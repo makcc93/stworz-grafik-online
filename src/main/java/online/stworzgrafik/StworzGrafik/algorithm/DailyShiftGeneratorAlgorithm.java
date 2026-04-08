@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
@@ -8,19 +9,25 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DailyShiftGeneratorAlgorithm {
 
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
-        Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getEveryDayStoreDemandDraftWorkingOn();
+        log.info("Zaczynam budowanie zmian na każdy dzień pracy");
+
+        Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
         List<Employee> employees = context.getStoreActiveEmployees();
 
         for (Map.Entry<LocalDate, int[]> entry : everyDayStoreDemandDraft.entrySet()) {
             int[] employeeDailyProposalCount = new int[24];
             LocalDate date = entry.getKey();
-            int[] dateDraft = entry.getValue();
+
+            int[] dailyDraft = entry.getValue();
+            log.info("Dzień {} draft {}",date,dailyDraft);
 
             Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = context.getMonthlyEmployeesProposalShiftsByDate();
             Map<Employee, int[]> dailyEmployeeProposals = monthlyEmployeesProposalShiftsByDate.getOrDefault(date, Collections.emptyMap());
@@ -31,11 +38,18 @@ public class DailyShiftGeneratorAlgorithm {
                 employeeDailyProposalCount = addArrays(employeeDailyProposalCount,employeeProposal);
             }
 
-            int[] draftAfterProposals = subtractArrays(dateDraft, employeeDailyProposalCount);
+            int[] draftAfterProposals = subtractArrays(dailyDraft, employeeDailyProposalCount);
+            log.info("Dzień {} draft po wpisanych propozycjach zmian {}", date, draftAfterProposals);
 
             List<Shift> shifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
             context.addShiftsToDay(date,shifts);
+
+            String shiftsInfo = shifts.stream()
+                    .map(s -> s.getStartHour() + " - " + s.getEndHour())
+                    .collect(Collectors.joining(", "));
+
+            log.info("Dla dnia {} wygenerowałem zmiany: {}", date,shiftsInfo);
         }
     }
 

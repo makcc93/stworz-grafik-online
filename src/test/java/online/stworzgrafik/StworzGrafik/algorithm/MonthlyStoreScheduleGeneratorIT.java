@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
@@ -8,6 +9,8 @@ import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.Vacation
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
+import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
@@ -50,6 +53,7 @@ import java.util.stream.Collectors;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
+@Slf4j
 @SpringBootTest
 class MonthlyStoreScheduleGeneratorIT {
     @Autowired
@@ -100,6 +104,8 @@ class MonthlyStoreScheduleGeneratorIT {
     @Autowired
     private StoreDeliveryEntityService storeDeliveryEntityService;
 
+    @Autowired
+    private DemandDraftService demandDraftService;
 
     private StoreDelivery storeDelivery;
 
@@ -121,6 +127,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private Region region;
     private Branch branch;
     private Store store;
+    private Long storeId;
     private Schedule schedule;
     private Position position = new TestPositionBuilder().withName("TESTOWAPOZYCJA").build();
     private ShiftTypeConfig vacationTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.VACATION).build();
@@ -142,8 +149,7 @@ class MonthlyStoreScheduleGeneratorIT {
         store = new TestStoreBuilder().withBranch(branch).build();
         storeEntityService.saveEntity(store);
 
-        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).build();
-        storeDeliveryEntityService.save(storeDelivery);
+        storeId = store.getId();
 
         when(userAuthorizationService.hasAccessToStore(anyLong())).thenReturn(true);
         when(userAuthorizationService.getUserStoreId()).thenReturn(store.getId());
@@ -182,11 +188,11 @@ class MonthlyStoreScheduleGeneratorIT {
                 true
         );
 
-
+        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(getEmployees().stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
+        storeDeliveryEntityService.save(storeDelivery);
 
     }
 
-    //todo storeDelivery do ogarniecia bo blad could not execute statement [Data truncation: Data too long for column 'weekly_schedule' at row 1]
     @Test
     void generateMonthlySchedule_workingOn(){
         //given
@@ -326,26 +332,32 @@ class MonthlyStoreScheduleGeneratorIT {
 
             if (date.getDayOfWeek() == DayOfWeek.MONDAY){
                 map.put(date,mondayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,mondayDraft));
             }
 
             if (date.getDayOfWeek() == DayOfWeek.TUESDAY){
                 map.put(date,tuesdayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,tuesdayDraft));
             }
 
             if (date.getDayOfWeek() == DayOfWeek.WEDNESDAY){
                 map.put(date,wednesdayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,wednesdayDraft));
             }
 
             if (date.getDayOfWeek() == DayOfWeek.THURSDAY){
                 map.put(date,thursdayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,thursdayDraft));
             }
 
             if (date.getDayOfWeek() == DayOfWeek.FRIDAY){
                 map.put(date,fridayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,fridayDraft));
             }
 
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY){
                 map.put(date,saturdayDraft);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,saturdayDraft));
             }
         }
 

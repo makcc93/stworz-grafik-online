@@ -26,6 +26,8 @@ public class ProposalShiftApplier {
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
+        log.info("Sprawdzam propozycje zmian do dodania do grafika");
+
         List<Employee> employees = context.getStoreActiveEmployees();
 
         Integer year = context.getYear();

@@ -33,10 +33,11 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
         Long validatedStoreId = userAuthorizationService.getUserAccessibleStoreId(storeId);
 
-        Store store = storeEntityService.getEntityById(validatedStoreId);
+        Store store = storeEntityService.getEntityById(storeId);//change
 
         if (demandDraftRepository.existsByStoreIdAndDraftDate(storeId,dto.draftDate())){
-            throw new EntityExistsException("Store id " + storeId + " demand draft on date " + dto.draftDate() + " already exists");
+            return demandDraftMapper.toResponseDemandDraftDTO(demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId,dto.draftDate(),dto.draftDate())
+                    .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft on date " + dto.draftDate() + " for store with id " + storeId)));
         }
 
         DemandDraft demandDraft = new DemandDraftBuilder().createDemandDraft(

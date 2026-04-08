@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
@@ -27,6 +28,7 @@ import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ScheduleGeneratorContextFactory {
@@ -42,6 +44,8 @@ public class ScheduleGeneratorContextFactory {
     private final StoreDeliveryService storeDeliveryService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
+        log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);
+
         return ScheduleGeneratorContext.builder()
                 .storeId(storeId)
                 .year(year)

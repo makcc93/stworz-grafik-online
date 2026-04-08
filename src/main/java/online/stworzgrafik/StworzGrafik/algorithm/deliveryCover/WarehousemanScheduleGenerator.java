@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm.deliveryCover;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WarehousemanScheduleGenerator {
@@ -29,6 +31,8 @@ public class WarehousemanScheduleGenerator {
     private final CalendarCalculation calendarCalculation;
 
 public void generate(ScheduleGeneratorContext context){
+    log.info("Sprawdzam magazyniera w celu dodania do grafika");
+
         if (!context.isStoreHasDedicatedWarehouseman()){
             return;
         }
@@ -49,7 +53,9 @@ public void generate(ScheduleGeneratorContext context){
 
             List<Integer> dayNumbersByDayOfWeek = calendarCalculation.getDayNumbersByDayOfWeek(context.getYear(), context.getMonth(), dayOfWeek);
             int[] shiftAsArray = dayOfWeekDeliveryConfig.shiftAsArray();
+            log.info("shift as array {}", shiftAsArray);
             Shift shift = context.findShiftByArray(shiftAsArray);
+            log.info("shift: {} - {}", shift.getStartHour().getHour(),shift.getEndHour().getHour());
 
             for (int day : dayNumbersByDayOfWeek){
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);

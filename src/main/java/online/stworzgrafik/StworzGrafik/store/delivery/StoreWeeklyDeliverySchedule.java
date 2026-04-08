@@ -20,7 +20,7 @@ import java.util.Map;
 public class StoreWeeklyDeliverySchedule {
 
     @Convert(converter = WeeklyScheduleConverter.class)
-    @Column(name = "weekly_schedule")
+    @Column(name = "weekly_schedule",columnDefinition = "TEXT")
     private Map<DayOfWeek, DayDeliveryConfig> deliverySchedule;
 
     public DayDeliveryConfig getConfigFor(DayOfWeek dayOfWeek){
