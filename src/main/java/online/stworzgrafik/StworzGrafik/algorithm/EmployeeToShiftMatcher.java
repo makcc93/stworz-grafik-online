@@ -154,7 +154,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean afternoonCloseStoreEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>());
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposal.entrySet()) {
             Employee employee = proposalEntry.getKey();
             int[] employeeProposal = proposalEntry.getValue();
@@ -254,7 +254,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean afternoonCreditEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        Map<Employee, int[]> dailyProposal = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>());
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposal.entrySet()) {
             Employee employee = proposalEntry.getKey();
             int[] employeeProposal = proposalEntry.getValue();
