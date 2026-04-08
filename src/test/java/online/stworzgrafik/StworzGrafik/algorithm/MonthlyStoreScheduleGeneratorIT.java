@@ -157,6 +157,8 @@ class MonthlyStoreScheduleGeneratorIT {
         schedule = new TestScheduleBuilder().withRegion(region).withBranch(branch).withStore(store).withYear(year).withMonth(month).build();
         scheduleEntityService.saveEntity(schedule);
 
+        List<Employee> employees = getEmployees();
+
         context = new ScheduleGeneratorContext(
                 store.getId(),
                 year,
@@ -164,7 +166,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 schedule,
                 store,
                 getStoreOpenCloseHour(year,month),
-                getEmployees(),
+                employees,
                 getDraftForEveryDay(year,month),
                 getSortedDrafts(year, month),
                 new HashMap<>(),
@@ -188,7 +190,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 true
         );
 
-        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(getEmployees().stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
+        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(employees.stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
         storeDeliveryEntityService.save(storeDelivery);
 
     }
