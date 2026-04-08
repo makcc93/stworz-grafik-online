@@ -60,16 +60,16 @@ public class ScheduleGeneratorContext {
         int startHour = 0;
         int endHour = 0;
 
-        for (int i = 0; i < array.length; i++){
+        for (int i = 0; i < 24; i++){
             if (array[i] != 0){
-                startHour = array[i];
+                startHour = i;
                 break;
             }
         }
 
         for (int i = 23; i >= 0; i--){
             if (array[i] != 0){
-                endHour = array[i];
+                endHour = (i + 1) % 24;
                 break;
             }
         }
@@ -107,7 +107,8 @@ public class ScheduleGeneratorContext {
     }
 
     public void registerShiftOnSchedule(LocalDate date, Employee employee, Shift shift){
-        log.info("Dopasowuje pracownika {} {} do zmiany od {} do {}",
+        log.info("Dzień {} Dopasowuje pracownika {} {} do zmiany od {} do {}",
+                date,
                 employee.getFirstName(),
                 employee.getLastName(),
                 shift.getStartHour().getHour(),
@@ -204,16 +205,19 @@ public class ScheduleGeneratorContext {
         int newValueOfEmployeeHours = employeeHoursValue + shiftHours;
 
         employeeHours.put(employee,newValueOfEmployeeHours);
+        log.info("Nowa ilość przepracowanych godzin pracownika {} {} wynosi {}",employee.getFirstName(),employee.getLastName(), this.employeeHours.getOrDefault(employee,999) );
     }
 
     void addEmployeeWorkingOnWeekend(Employee employee, DayOfWeek dayOfWeek){
         if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
             workingOnWeekendCount.merge(employee,1, Integer::sum);
+            log.info("Nowa ilość przepracowanych dni weekendowych pracownika {} {} wynosi {}",employee.getFirstName(),employee.getLastName(), this.workingOnWeekendCount.getOrDefault(employee,888));
         }
     }
 
     void addEmployeeWorkingDays(Employee employee){
         workingDaysCount.merge(employee,1,Integer::sum);
+        log.info("Nowa ilość przepracowanych dni pracownika {} {} wynosi {}",employee.getFirstName(),employee.getLastName(), this.workingDaysCount.getOrDefault(employee,777));
     }
 
     private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){
