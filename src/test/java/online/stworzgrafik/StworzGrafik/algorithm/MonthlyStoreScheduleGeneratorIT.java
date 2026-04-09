@@ -17,6 +17,8 @@ import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
+import online.stworzgrafik.StworzGrafik.fileExport.ExportFile;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
@@ -43,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -107,6 +110,9 @@ class MonthlyStoreScheduleGeneratorIT {
     @Autowired
     private DemandDraftService demandDraftService;
 
+    @Autowired
+    private ExcelExport excelExport;
+
     private StoreDelivery storeDelivery;
 
     @MockitoBean
@@ -120,7 +126,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
     private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 8, 8, 9, 9, 9, 9, 9, 6, 0, 0, 0, 0};
     private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 10, 10, 10, 10, 10, 9, 9, 9, 9, 6, 0, 0, 0, 0};
-    private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12, 0)).withEndHour(LocalTime.of(20, 0)).build();
+    private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
 
     private ScheduleGeneratorContext context;
@@ -196,7 +202,7 @@ class MonthlyStoreScheduleGeneratorIT {
     }
 
     @Test
-    void generateMonthlySchedule_workingOn(){
+    void generateMonthlySchedule_workingOn() throws IOException {
         //given
 
         //when
@@ -400,7 +406,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Przepiórka").withSap(10000011L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
                 new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Wojtas").withSap(10000012L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
 
-                new TestEmployeeBuilder().withFirstName("Olga").withLastName("Beznazwiska").withSap(10000013L).withStore(store).withPosition(position).build(),
+                new TestEmployeeBuilder().withFirstName("Olga").withLastName("Darewicz").withSap(10000013L).withStore(store).withPosition(position).build(),
 
                 new TestEmployeeBuilder().withFirstName("Karolina").withLastName("Nakonieczna").withSap(10000014L).withCashier(true).withCanOperateCheckout(true).withStore(store).withPosition(position).build(),
 

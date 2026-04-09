@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -102,7 +103,7 @@ class MonthlyStoreScheduleGeneratorTest {
 
     //todo zmien na IT zeby sprawdzic czy grafik powstanie a jak tak to jak to wyglada
     @Test
-    void generateMonthlySchedule_workingTest(){
+    void generateMonthlySchedule_workingTest() throws IOException {
         //given
 
         //when
