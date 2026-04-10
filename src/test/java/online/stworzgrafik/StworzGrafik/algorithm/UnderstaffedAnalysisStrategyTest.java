@@ -18,10 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,7 +72,7 @@ public class UnderstaffedAnalysisStrategyTest {
         ScheduleDetails scheduleDetails = mock(ScheduleDetails.class);
         when(scheduleDetails.getId()).thenReturn(33L);
         when(context.getMonthlyEmployeesProposalDayOff()).thenReturn(monthlyEmployeesProposalDayOff);
-        when(scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(anyLong(),anyLong(),eq(emp3),eq(date))).thenReturn(scheduleDetails);
+        when(scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(anyLong(),anyLong(),eq(emp3),eq(date))).thenReturn(Optional.of(scheduleDetails));
 
         //when
         strategy.resolve(result,context,date);

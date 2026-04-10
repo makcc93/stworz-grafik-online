@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsSpecification.*;
 
@@ -184,14 +185,9 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         return repository.findAll(specification, pageable);
     }
 
-    //todo change it for optional and modify implementation
     @Override
-    public ScheduleDetails findEmployeeScheduleDetailsByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
+    public Optional<ScheduleDetails> findEmployeeScheduleDetailsByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
         verifyUserAccessAndData(storeId, scheduleId);
-//todo tu jest blad
-        return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, employee.getId(), day)
-                .orElseThrow(() ->
-                new EntityNotFoundException("Cannot find schedule details for schedule id " + scheduleId + " and employee id " + employee.getId() + " on date " + day)
-        );
+        return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, employee.getId(), day);
     }
 }

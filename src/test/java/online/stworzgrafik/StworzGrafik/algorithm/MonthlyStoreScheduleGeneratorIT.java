@@ -147,7 +147,7 @@ class MonthlyStoreScheduleGeneratorIT {
     Employee emiMia;
 
     private int[] proposalShiftEightToFourteen = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
-    private int[] proposalShiftEIghtToThirteen = {0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
+    private int[] proposalShiftEightToThirteen = {0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
 
     private int[] firstTwoWeeks = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     private int[] secondTwoWeeks = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
@@ -332,11 +332,11 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,thiMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,fouMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,fifMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,sixMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,secMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,thiMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,fouMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,fifMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,sixMar, proposalShiftEightToThirteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -345,7 +345,7 @@ class MonthlyStoreScheduleGeneratorIT {
     }
 
     @Test
-    void generateMonthlySchedule_weirdTwoEmployeeHasProposalShiftsAndTwoEmployeesOnVacation() throws IOException {
+    void generateMonthlySchedule_weirdFifthEmployeeHasProposalShiftsFromOpenAndTwoEmployeesOnVacation() throws IOException {
         //given
         generateVacation(damMro,firstTwoWeeks);
         generateVacation(filKam,firstTwoWeeks);
@@ -358,15 +358,16 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar,proposalShiftEIghtToThirteen);
-        generateProposal(micKoz,secMar,proposalShiftEIghtToThirteen);
-        generateProposal(agaWar,secMar,proposalShiftEIghtToThirteen);
-        generateProposal(olgDar,secMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,secMar, proposalShiftEightToThirteen);
+        generateProposal(micKoz,secMar, proposalShiftEightToThirteen);
+        generateProposal(agaWar,secMar, proposalShiftEightToThirteen);
+        generateProposal(olgDar,secMar, proposalShiftEightToThirteen);
+        generateProposal(tomZaj,secMar, proposalShiftEightToThirteen);
 
-        generateProposal(wojPie,thiMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,fouMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,fifMar,proposalShiftEIghtToThirteen);
-        generateProposal(wojPie,sixMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,thiMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,fouMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,fifMar, proposalShiftEightToThirteen);
+        generateProposal(wojPie,sixMar, proposalShiftEightToThirteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);

@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Validated
 public interface ScheduleDetailsEntityService {
@@ -22,10 +23,10 @@ public interface ScheduleDetailsEntityService {
                                                ScheduleDetailsSpecificationDTO dto,
                                                Pageable pageable);
 
-    ScheduleDetails findEmployeeScheduleDetailsByDay(@NotNull Long storeId,
-                                                     @NotNull Long scheduleId,
-                                                     @NotNull Employee employee,
-                                                     @NotNull LocalDate day);
+    Optional<ScheduleDetails> findEmployeeScheduleDetailsByDay(@NotNull Long storeId,
+                                                               @NotNull Long scheduleId,
+                                                               @NotNull Employee employee,
+                                                               @NotNull LocalDate day);
 
     ScheduleDetails updateEntityScheduleDetails(@NotNull Long storeId,
                                                 @NotNull Long scheduleId,

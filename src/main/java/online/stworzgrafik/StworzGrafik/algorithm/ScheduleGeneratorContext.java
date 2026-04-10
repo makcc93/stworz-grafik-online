@@ -77,6 +77,23 @@ public class ScheduleGeneratorContext {
         return findShiftByHours(LocalTime.of(startHour,0),LocalTime.of(endHour,0));
     }
 
+    public int[] shiftAsArray(Shift shift){
+        int startHour = shift.getStartHour().getHour();
+        int endHour = shift.getEndHour().getHour();
+
+        if (endHour > startHour){
+            return new int[24];
+        }
+
+        int[] array = new int[24];
+
+        for (int i = (startHour - 1); i < endHour; i++){
+           array[i] = 1;
+        }
+
+        return array;
+    }
+
     public Shift findShiftByHours(LocalTime startHour, LocalTime endHour){
         for (Shift shift : allShifts){
             if (shift.getStartHour() == startHour && shift.getEndHour() == endHour){
@@ -104,6 +121,16 @@ public class ScheduleGeneratorContext {
                 newShift.getStartHour(),
                 newShift.getEndHour()
                 );
+    }
+
+    public void deleteShiftFromSchedule(LocalDate date, Employee employee){
+        Map<Employee, Shift> dailySchedule = finalSchedule.getOrDefault(date, new HashMap<>());
+
+        if (!dailySchedule.isEmpty()){
+            dailySchedule.remove(employee);
+
+            log.info("Usuwam zmianę w dniu {} u pracownika {} {}", date, employee.getFirstName(), employee.getLastName());
+        }
     }
 
     public void registerShiftOnSchedule(LocalDate date, Employee employee, Shift shift){
@@ -147,18 +174,26 @@ public class ScheduleGeneratorContext {
     }
 
     public void updateEmployeeDailyProposal(Employee employee, LocalDate date, int[] updatedProposal){
-        monthlyEmployeesProposalShiftsByDate
+        this.monthlyEmployeesProposalShiftsByDate
                 .computeIfAbsent(date, k -> new HashMap<>())
                 .put(employee,updatedProposal);
     }
 
+    public void deleteEmployeeDayOffProposal(LocalDate date, Employee employee){
+        int day = date.getDayOfMonth();
+
+        int[] employeeMonthlyDayOffProposal = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
+
+        employeeMonthlyDayOffProposal[day-1] = 0;
+    }
+
     public boolean employeeIsOnDayOff(Employee employee, int day){
-        int[] daysOff = monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
+        int[] daysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
         return daysOff[day-1] == 1;
     }
 
     public boolean employeeHasProposalDaysOff(Employee employee){
-        int[] proposalDaysOff = monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
+        int[] proposalDaysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
 
         return Arrays.stream(proposalDaysOff).sum() > 0;
     }

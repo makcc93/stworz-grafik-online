@@ -195,19 +195,6 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     }
 
     @Override
-    public int[] getShiftAsArray(Shift shift) {
-        checkNull(shift.getStartHour(),shift.getEndHour());
-
-        int[] array = new int[24];
-
-        for (int hour = shift.getStartHour().getHour(); hour <= shift.getEndHour().getHour(); hour++){
-            array[hour] = 1;
-        }
-
-        return array;
-    }
-
-    @Override
     public Shift updateShift(ShiftHoursDTO dto,Shift shift) {
         shiftMapper.updateShift(dto,shift);
         return  shiftRepository.save(shift);
