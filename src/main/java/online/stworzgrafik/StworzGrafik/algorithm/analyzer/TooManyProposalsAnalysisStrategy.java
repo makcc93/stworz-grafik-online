@@ -3,26 +3,21 @@ package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
-import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrategy{
-    private final ScheduleMessageService scheduleMessageService;
-    private final ShiftEntityService shiftEntityService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
-    private final ScheduleDetailsService scheduleDetailsService;
 
     @Override
     public AnalyzeType getSupportedType() {
@@ -70,12 +65,10 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
                             return proposal != null && proposal[indexHour] > 0;
                         }
                 )
-                .sorted((empl1, empl2) -> context.getEmployeeHours().getOrDefault(empl2, 0).compareTo(context.getEmployeeHours().getOrDefault(empl1, 0)))
-                .findFirst();
+                .min((empl1, empl2) -> context.getEmployeeHours().getOrDefault(empl2, 0).compareTo(context.getEmployeeHours().getOrDefault(empl1, 0)));
 
         if (employeeWithHighestWorkingHoursCannotOpenStore.isEmpty()){
-            scheduleMessageService.addMessage(
-                    context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,

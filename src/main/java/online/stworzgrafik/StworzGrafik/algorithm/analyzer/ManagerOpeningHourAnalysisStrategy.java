@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -22,9 +23,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
-    private final ScheduleMessageService scheduleMessageService;
-    private final ShiftEntityService shiftEntityService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
 
     @Override
     public AnalyzeType getSupportedType() {
@@ -80,32 +78,31 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
 
         Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerOpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
-                .sorted(Comparator.comparingInt(empl -> context.getEmployeeHours().get(empl))
-                        .reversed())
-                .findFirst();
+                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl,0)));
 
         if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
             log.info("Brak dostępnego pracownika w dniu {},",day);
 
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
                             "Brak dostępnego pracownika w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
-        Shift originalProposalShift = shiftEntityService.getArrayAsShift(dailyProposals.get(employeeWithHighestMonthlyWorkingHours.get()));
-        Shift startHourIncrementShift = shiftEntityService.getEntityByHours(originalProposalShift.getStartHour().plusHours(1), originalProposalShift.getEndHour());
+        Employee chosenEmployee = employeeWithHighestMonthlyWorkingHours.get();
 
-        ScheduleDetails employeeOldShiftInSchedule = scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(context.getStoreId(), context.getSchedule().getId(), employeeWithHighestMonthlyWorkingHours.get(), day);
+        Shift originalProposalShift = context.findShiftByArray(dailyProposals.getOrDefault(chosenEmployee, new int[24]));
+        Shift startHourIncrementShift = context.findShiftByHours(originalProposalShift.getStartHour().plusHours(1),originalProposalShift.getEndHour());
 
-        changeProposalShiftInSchedule(context, employeeOldShiftInSchedule, startHourIncrementShift);
+        changeProposalShiftInSchedule(day,chosenEmployee,context, originalProposalShift, startHourIncrementShift);
 
-        context.updateEmployeeDailyProposal(employeeWithHighestMonthlyWorkingHours.get(),day, shiftEntityService.getShiftAsArray(startHourIncrementShift));
+        context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(startHourIncrementShift));
 
         updateShiftsInMatcher(context, shifts, day);
     }
@@ -123,37 +120,30 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
 
     private void updateShiftsInMatcher(ScheduleGeneratorContext context, List<Shift> shifts, LocalDate day) {
         Optional<Shift> shiftToChangeStartHour = shifts.stream()
-                .sorted(longestOpenStoreShift())
-                .findFirst();
+                .min(longestOpenStoreShift());
 
         if (shiftToChangeStartHour.isEmpty()){
             log.info("Brak dostępnej zmiany w dniu {}", day);
 
-            scheduleMessageService.addMessage(context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                             "Brak dostępnej zmiany w dniu: " + day,
                             null,
                             day
-                    ));
+                    )
+            );
             return;
         }
 
         shiftToChangeStartHour.get().setStartHour(shiftToChangeStartHour.get().getStartHour().minusHours(1));
     }
 
-    private void changeProposalShiftInSchedule(ScheduleGeneratorContext context, ScheduleDetails employeeOldShiftInSchedule, Shift startHourIncrementShift) {
-        scheduleDetailsEntityService.updateEntityScheduleDetails(context.getStoreId(), context.getSchedule().getId(), employeeOldShiftInSchedule.getId(),
-                new UpdateScheduleDetailsDTO(
-                        null,
-                        null,
-                        startHourIncrementShift.getId(),
-                        null
-                )
-        );
-
-        context.updateEmployeeHours(employeeOldShiftInSchedule.getEmployee(),employeeOldShiftInSchedule.getShift(),startHourIncrementShift);
+    private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {
+        context.updateShiftOnSchedule(date,employee,newShift);
+        context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
+        context.updateEmployeeHours(employee,oldShift,newShift);
     }
 
     private static Comparator<Shift> longestOpenStoreShift() {

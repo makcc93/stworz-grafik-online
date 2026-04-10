@@ -4,12 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
-import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
@@ -22,9 +18,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
-    private final ScheduleMessageService scheduleMessageService;
-    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
-    private final ScheduleDetailsService scheduleDetailsService;
 
     @Override
     public AnalyzeType getSupportedType() {
@@ -68,8 +61,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         Optional<Employee> employeeWithHighestProposalsCount = sortedByProposalsCountDesc.keySet().stream().findFirst();
         if (employeeWithHighestProposalsCount.isEmpty()) {
-            scheduleMessageService.addMessage(
-                    context.getSchedule().getId(),
+            context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
@@ -81,38 +73,29 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
             return false;
         }
 
-        ScheduleDetails scheduleDetails = scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(
-                context.getStoreId(),
-                context.getSchedule().getId(),
-                employeeWithHighestProposalsCount.get(),
-                day
-        );
 
-        scheduleDetailsService.deleteScheduleDetails(
-                context.getStoreId(),
-                context.getSchedule().getId(),
-                scheduleDetails.getId()
-        );
+        Employee chosenEmployee = employeeWithHighestProposalsCount.get();
 
-        availableEmployees.add(employeeWithHighestProposalsCount.get());
+        context.deleteShiftFromSchedule(day, chosenEmployee);
+        context.deleteEmployeeDayOffProposal(day, chosenEmployee);
+        availableEmployees.add(chosenEmployee);
 
         log.info("Propozycja dnia wolnego dla {} {} na dzień {} została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
-                employeeWithHighestProposalsCount.get().getFirstName(),
-                employeeWithHighestProposalsCount.get().getLastName(),
+                chosenEmployee.getFirstName(),
+                chosenEmployee.getLastName(),
                 day);
 
-        scheduleMessageService.addMessage(
-                context.getSchedule().getId(),
+        context.registerMessageOnSchedule(
                 new CreateScheduleMessageDTO(
                         ScheduleMessageType.INFO,
                         ScheduleMessageCode.UNDERSTAFFED,
                         "Propozycja dnia wolnego dla " +
-                                employeeWithHighestProposalsCount.get().getFirstName() +
+                                chosenEmployee.getFirstName() +
                                 " " +
-                                employeeWithHighestProposalsCount.get().getLastName() +
+                                chosenEmployee.getLastName() +
                                 " na dzień " + day +
                                 " została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
-                        employeeWithHighestProposalsCount.get().getId(),
+                        chosenEmployee.getId(),
                         day
                 )
         );
