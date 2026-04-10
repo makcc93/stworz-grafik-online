@@ -17,8 +17,11 @@ import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsService;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationService;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
-import online.stworzgrafik.StworzGrafik.fileExport.ExportFile;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
@@ -87,7 +90,13 @@ class MonthlyStoreScheduleGeneratorIT {
     private VacationApplier vacationApplier;
 
     @Autowired
+    private EmployeeProposalShiftsService employeeProposalShiftsService;
+
+    @Autowired
     private DaysOffApplier daysOffApplier;
+
+    @Autowired
+    private EmployeeVacationService employeeVacationService;
 
     @Autowired
     private ProposalShiftApplier proposalShiftApplier;
@@ -120,12 +129,36 @@ class MonthlyStoreScheduleGeneratorIT {
 
     private final int year = 2026;
     private final int month = 3;
+
+    Employee damMro;
+    Employee monBar;
+    Employee matKru;
+    Employee filKam;
+    Employee marNow;
+    Employee wojPie;
+    Employee micWoc;
+    Employee tomZaj;
+    Employee agaWar;
+    Employee micKoz;
+    Employee marPrz;
+    Employee marWoj;
+    Employee olgDar;
+    Employee karNak;
+    Employee emiMia;
+
+    private int[] proposalShiftEightToFourteen = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
+    private int[] proposalShiftEIghtToThirteen = {0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
+
+    private int[] firstTwoWeeks = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    private int[] secondTwoWeeks = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+
     private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 9, 9, 9, 9, 9, 5, 0, 0, 0, 0};
     private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 4, 0, 0, 0, 0};
     private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 0, 0, 0, 0};
     private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
     private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 8, 8, 9, 9, 9, 9, 9, 6, 0, 0, 0, 0};
     private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 10, 10, 10, 10, 10, 9, 9, 9, 9, 6, 0, 0, 0, 0};
+
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
 
@@ -209,6 +242,160 @@ class MonthlyStoreScheduleGeneratorIT {
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
 
         //then
+    }
+
+    @Test
+    void generateMonthlySchedule_twoEmployeesHasVacationInSameTime() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(karNak,secondTwoWeeks);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+    @Test
+    void generateMonthlySchedule_warehousemanOnVacationOtherEmployeeTakesHisShifts() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(emiMia,secondTwoWeeks);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+    @Test
+    void generateMonthlySchedule_employeeHasProposalShifts() throws IOException {
+        //given
+        LocalDate secMar = LocalDate.of(year,month,2);
+        LocalDate thiMar = LocalDate.of(year,month,3);
+        LocalDate fouMar = LocalDate.of(year,month,4);
+        LocalDate fifMar = LocalDate.of(year,month,5);
+        LocalDate sixMar = LocalDate.of(year,month,6);
+
+        generateProposal(wojPie,secMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,thiMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,fouMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,fifMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,sixMar,proposalShiftEightToFourteen);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+    @Test
+    void generateMonthlySchedule_employeeHasProposalShiftsAndTwoEmployeesOnVacation() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(emiMia,secondTwoWeeks);
+
+        LocalDate secMar = LocalDate.of(year,month,2);
+        LocalDate thiMar = LocalDate.of(year,month,3);
+        LocalDate fouMar = LocalDate.of(year,month,4);
+        LocalDate fifMar = LocalDate.of(year,month,5);
+        LocalDate sixMar = LocalDate.of(year,month,6);
+
+        generateProposal(wojPie,secMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,thiMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,fouMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,fifMar,proposalShiftEightToFourteen);
+        generateProposal(wojPie,sixMar,proposalShiftEightToFourteen);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+    @Test
+    void generateMonthlySchedule_weirdEmployeeHasProposalShiftsAndTwoEmployeesOnVacation() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(emiMia,secondTwoWeeks);
+
+        LocalDate secMar = LocalDate.of(year,month,2);
+        LocalDate thiMar = LocalDate.of(year,month,3);
+        LocalDate fouMar = LocalDate.of(year,month,4);
+        LocalDate fifMar = LocalDate.of(year,month,5);
+        LocalDate sixMar = LocalDate.of(year,month,6);
+
+        generateProposal(wojPie,secMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,thiMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,fouMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,fifMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,sixMar,proposalShiftEIghtToThirteen);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+    @Test
+    void generateMonthlySchedule_weirdTwoEmployeeHasProposalShiftsAndTwoEmployeesOnVacation() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(emiMia,secondTwoWeeks);
+
+        LocalDate secMar = LocalDate.of(year,month,2);
+        LocalDate thiMar = LocalDate.of(year,month,3);
+        LocalDate fouMar = LocalDate.of(year,month,4);
+        LocalDate fifMar = LocalDate.of(year,month,5);
+        LocalDate sixMar = LocalDate.of(year,month,6);
+
+        generateProposal(wojPie,secMar,proposalShiftEIghtToThirteen);
+        generateProposal(micKoz,secMar,proposalShiftEIghtToThirteen);
+        generateProposal(agaWar,secMar,proposalShiftEIghtToThirteen);
+        generateProposal(olgDar,secMar,proposalShiftEIghtToThirteen);
+
+        generateProposal(wojPie,thiMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,fouMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,fifMar,proposalShiftEIghtToThirteen);
+        generateProposal(wojPie,sixMar,proposalShiftEIghtToThirteen);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+
+    private void generateProposal(Employee employee, LocalDate date, int[] shiftAsArray){
+        employeeProposalShiftsService.createEmployeeProposalShift(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeProposalShiftsDTO(
+                        date,
+                        shiftAsArray
+                )
+        );
+    }
+
+    private void generateVacation(Employee employee, int[] vacationTime){
+        employeeVacationService.createEmployeeProposalVacation(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeVacationDTO(
+                        year,
+                        month,
+                        vacationTime
+                )
+        );
     }
 
     private List<Shift> generateAllShifts() {
@@ -389,30 +576,38 @@ class MonthlyStoreScheduleGeneratorIT {
 
 
     private List<Employee> getEmployees(){
-        List<Employee> employees = List.of(
-                new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Monika").withLastName("Baran").withSap(10000002L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Mateusz").withLastName("Kruk").withSap(10000003L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build(),
+        damMro = new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build();
+        monBar = new TestEmployeeBuilder().withFirstName("Monika").withLastName("Baran").withSap(10000002L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build();
+        matKru = new TestEmployeeBuilder().withFirstName("Mateusz").withLastName("Kruk").withSap(10000003L).withCanOpenCloseStore(true).withStore(store).withPosition(position).build();
+        filKam = new TestEmployeeBuilder().withFirstName("Filip").withLastName("Kamiński").withSap(10000004L).withCanOpenCloseStore(true).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        marNow = new TestEmployeeBuilder().withFirstName("Martyna").withLastName("Nowicka").withSap(10000005L).withCanOpenCloseStore(true).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        wojPie = new TestEmployeeBuilder().withFirstName("Wojciech").withLastName("Pietruszka").withSap(10000006L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        micWoc = new TestEmployeeBuilder().withFirstName("Michał").withLastName("Woch").withSap(10000007L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        tomZaj = new TestEmployeeBuilder().withFirstName("Tomasz").withLastName("Zając").withSap(10000008L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        agaWar = new TestEmployeeBuilder().withFirstName("Agata").withLastName("Warmińska").withSap(10000009L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        micKoz = new TestEmployeeBuilder().withFirstName("Michał").withLastName("Kozik").withSap(10000010L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        marPrz = new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Przepiórka").withSap(10000011L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        marWoj = new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Wojtas").withSap(10000012L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build();
+        olgDar = new TestEmployeeBuilder().withFirstName("Olga").withLastName("Darewicz").withSap(10000013L).withStore(store).withPosition(position).build();
+        karNak = new TestEmployeeBuilder().withFirstName("Karolina").withLastName("Nakonieczna").withSap(10000014L).withCashier(true).withCanOperateCheckout(true).withStore(store).withPosition(position).build();
+        emiMia = new TestEmployeeBuilder().withFirstName("Emil").withLastName("Miazek").withSap(10000015L).withWarehouseman(true).withStore(store).withPosition(position).build();
 
-                new TestEmployeeBuilder().withFirstName("Filip").withLastName("Kamiński").withSap(10000004L).withCanOpenCloseStore(true).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Martyna").withLastName("Nowicka").withSap(10000005L).withCanOpenCloseStore(true).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-
-                new TestEmployeeBuilder().withFirstName("Wojciech").withLastName("Pietruszka").withSap(10000006L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Michał").withLastName("Woch").withSap(10000007L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Tomasz").withLastName("Zając").withSap(10000008L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Agata").withLastName("Warmińska").withSap(10000009L).withCanOperateCheckout(true).withCanOperateCredit(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-
-                new TestEmployeeBuilder().withFirstName("Michał").withLastName("Kozik").withSap(10000010L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Przepiórka").withSap(10000011L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-                new TestEmployeeBuilder().withFirstName("Marcin").withLastName("Wojtas").withSap(10000012L).withCanOperateCheckout(true).withCanOperateDelivery(true).withStore(store).withPosition(position).build(),
-
-                new TestEmployeeBuilder().withFirstName("Olga").withLastName("Darewicz").withSap(10000013L).withStore(store).withPosition(position).build(),
-
-                new TestEmployeeBuilder().withFirstName("Karolina").withLastName("Nakonieczna").withSap(10000014L).withCashier(true).withCanOperateCheckout(true).withStore(store).withPosition(position).build(),
-
-                new TestEmployeeBuilder().withFirstName("Emil").withLastName("Miazek").withSap(10000015L).withWarehouseman(true).withStore(store).withPosition(position).build()
-        );
-
-        return employeeEntityService.saveAll(employees);
+        return employeeEntityService.saveAll(List.of(
+                damMro,
+                monBar,
+                matKru,
+                filKam,
+                marNow,
+                wojPie,
+                micWoc,
+                tomZaj,
+                agaWar,
+                micKoz,
+                marPrz,
+                marWoj,
+                olgDar,
+                karNak,
+                emiMia
+        ));
     }
 }

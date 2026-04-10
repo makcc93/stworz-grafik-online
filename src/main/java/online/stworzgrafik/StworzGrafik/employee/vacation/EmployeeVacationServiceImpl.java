@@ -43,9 +43,9 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-        if (!employee.getStore().equals(store)) {
-            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-        }
+//        if (!employee.getStore().equals(store)) {
+//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+//        }
 
         if (repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())) {
             throw new EntityExistsException("Employee vacation in month " + dto.month() + " of  year " + dto.year() + " already exists");

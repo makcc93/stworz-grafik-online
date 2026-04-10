@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 @Service
 public class ExcelExport implements ExportFile{
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM");
-
     @Override
     public byte[] export(ScheduleGeneratorContext context) throws IOException {
         Set<Employee> employees = context.getFinalSchedule().values().stream()
@@ -47,21 +45,28 @@ public class ExcelExport implements ExportFile{
             headerRow.createCell(0).setCellValue("Pracownik");
             headerRow.getCell(0).setCellStyle(headerStyle);
 
+//            for (LocalDate date : yearMonth.getMonth().length()){//finalScheduleSortedByDate.keySet() //todo
+//                Cell cell = headerRow.createCell(columnIndex++);
+//                cell.setCellValue(date.format(DATE_FORMATTER));
+//                cell.setCellStyle(headerStyle);
+//            }
+
             int columnIndex = 1;
             Integer year = context.getYear();
             Integer month = context.getMonth();
             YearMonth yearMonth = YearMonth.of(year,month);
-            for (LocalDate date : yearMonth.getMonth()){//finalScheduleSortedByDate.keySet() //todo
+
+            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){//finalScheduleSortedByDate.keySet() //todo
                 Cell cell = headerRow.createCell(columnIndex++);
-                cell.setCellValue(date.format(DATE_FORMATTER));
+                cell.setCellValue(day + " " + yearMonth.getMonth().toString());
                 cell.setCellStyle(headerStyle);
             }
 
-            Cell totalHoursCell = headerRow.createCell(columnIndex);
+            Cell totalHoursCell = headerRow.createCell(columnIndex++);
             totalHoursCell.setCellValue("Suma godzin");
             totalHoursCell.setCellStyle(headerStyle);
 
-            Cell totalWorkingDaysCell = headerRow.createCell(columnIndex);
+            Cell totalWorkingDaysCell = headerRow.createCell(columnIndex++);
             totalWorkingDaysCell.setCellValue("Dni pracy");
             totalWorkingDaysCell.setCellStyle(headerStyle);
 
@@ -74,30 +79,39 @@ public class ExcelExport implements ExportFile{
                 employeeName.setCellStyle(dataStyle);
 
                 int cellIndex = 1;
-                for (Map.Entry<LocalDate, Map<Employee,Shift>> entry : finalScheduleSortedByDate.entrySet()){
-                    LocalDate date = entry.getKey();
-                    Map<Employee, Shift> dailyMap = entry.getValue();
+                for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+                    LocalDate date = LocalDate.of(year,month,day);
 
-                    Shift shift = dailyMap.getOrDefault(employee, context.getDefaultDaysOffShift());
-
-                    Cell cell = row.createCell(cellIndex++);
-                    if (shift.getStartHour().getHour() == 0){
-                        if (shift.getEndHour().getHour() == 0){
-                            cell.setCellValue("w");
-                        }
-                        else if (shift.getEndHour().getHour() == 8){
-                            cell.setCellValue("u");
-                        }
-                    }
-                    else {
-                        cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
+                    if (!scheduleContainsDate(finalScheduleSortedByDate, date)){
+                        Cell cell = row.createCell(cellIndex++);
+                        cell.setCellValue("w");
+                        cell.setCellStyle(dataStyle);
+                        continue;
                     }
 
-                    cell.setCellStyle(dataStyle);
-                }
+                    Map<Employee, Shift> dailyMap = finalScheduleSortedByDate.getOrDefault(date, new HashMap<>());
+
+//                    for (Map.Entry<LocalDate, Map<Employee,Shift>> entry : finalScheduleSortedByDate.entrySet()) {
+//                        Map<Employee, Shift> dailyMap = entry.getValue();
+
+                        Shift shift = dailyMap.getOrDefault(employee, context.getDefaultDaysOffShift());
+
+                        Cell cell = row.createCell(cellIndex++);
+                        if (shift.getStartHour().getHour() == 0) {
+                            if (shift.getEndHour().getHour() == 0) {
+                                cell.setCellValue("w");
+                            } else if (shift.getEndHour().getHour() == 8) {
+                                cell.setCellValue("u");
+                            }
+                        } else {
+                            cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
+                        }
+
+                        cell.setCellStyle(dataStyle);
+                        }
 
                 Integer workedHours = employeeHours.getOrDefault(employee, 0);
-                Cell workedHoursCell = row.createCell(cellIndex);
+                Cell workedHoursCell = row.createCell(cellIndex++);
                 workedHoursCell.setCellValue(workedHours);
                 workedHoursCell.setCellStyle(totalStyle);
 
@@ -107,11 +121,6 @@ public class ExcelExport implements ExportFile{
                 workedDaysCell.setCellStyle(totalStyle);
             }
 
-            for (int i = 0; i <= context.getFinalSchedule().size() + 1; i++) {
-                sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, (int) (sheet.getColumnWidth(i) * 1.2));
-            }
-
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             workbook.write(byteArrayOutputStream);
 
@@ -119,11 +128,21 @@ public class ExcelExport implements ExportFile{
         }
     }
 
+    private boolean scheduleContainsDate(LinkedHashMap<LocalDate, Map<Employee,Shift>> schedule, LocalDate date){
+        for (LocalDate day : schedule.keySet()){
+            if (day.isEqual(date)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
-        font.setBold(true);
-        font.setFontHeightInPoints((short) 12);
+        font.setBold(false);
+        font.setFontHeightInPoints((short) 9);
         style.setFont(font);
         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);

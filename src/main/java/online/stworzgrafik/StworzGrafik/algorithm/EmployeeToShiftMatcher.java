@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -43,8 +45,6 @@ public class EmployeeToShiftMatcher {
             log.info("oryginalny draft w dniu {}      - {}", day, uneditedOriginalStoreDailyDraft);
             log.info("draft po propozycjach w dniu {} - {}", day, entry.getValue());
 
-            log.info("ROBIE TEST LOGA W DNIU {}", day);
-
             if (dayIsHolidayOrHasEmptyDemandDraft(day, everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc)) {
                 log.info("Pomijam dzień {} ponieważ jest świętem lub brak ustalonego zapotrzebowania na pracę", day);
 
@@ -53,6 +53,8 @@ public class EmployeeToShiftMatcher {
 
             List<Employee> availableEmployees = getAvailableEmployees(context, storeActiveEmployees, day);
             List<Shift> shiftsSorted = getShiftsSortedByStartHour(generatedShiftsByDate, day);
+
+            showShiftsInLog(shiftsSorted);
 
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees, AnalyzeType.TOO_MANY_PROPOSALS);
@@ -63,19 +65,29 @@ public class EmployeeToShiftMatcher {
                 applyOpenStoreEmployee(context, day, availableEmployees, shiftsSorted);
             }
 
+            showShiftsInLog(shiftsSorted);
+
             if (!afternoonCloseStoreEmployeeAlreadyInProposal(context,day,uneditedOriginalStoreDailyDraft)) {
                 applyCloseStoreEmployee(context, day, availableEmployees, shiftsSorted);
             }
 
+            showShiftsInLog(shiftsSorted);
+
             applyCashierIfPresent(context, day, availableEmployees, shiftsSorted);
+
+            showShiftsInLog(shiftsSorted);
 
             if (!morningCreditEmployeeAlreadyInProposal(context,day,uneditedOriginalStoreDailyDraft)){
                 applyMorningCreditEmployee(context, availableEmployees, shiftsSorted, day);
             }
 
+            showShiftsInLog(shiftsSorted);
+
             if (!afternoonCreditEmployeeAlreadyInProposal(context,day,uneditedOriginalStoreDailyDraft)){
                 applyAfternoonCreditEmployee(context, availableEmployees, shiftsSorted, day);
             }
+
+            showShiftsInLog(shiftsSorted);
 
             while (!shiftsSorted.isEmpty()) {
                 Optional<Shift> shift = shiftsSorted.stream().min(longestShift());
@@ -109,15 +121,27 @@ public class EmployeeToShiftMatcher {
                     break;
                 }
 
-                saveMessageIfEmployeeHoursExceeded(context,day,employee.get());
-                saveMessageIfEmployeeWorkingDaysExceeded(context,day,employee.get());
+                whenEmployeeHoursExceeded(context,day,employee.get());
+                whenEmployeeWorkingDaysExceeded(context,day,employee.get());
 
                 context.registerShiftOnSchedule(day,employee.get(),shift.get());
                 shiftsSorted.remove(shift.get());
                 availableEmployees.remove(employee.get());
                 context.addWorkingInformation(employee.get(),shift.get(),day.getDayOfWeek());
+
+                showShiftsInLog(shiftsSorted);
             }
         }
+    }
+
+    private String showShiftsInLog(List<Shift> shifts){
+        String shiftsAsString = shifts.stream()
+                .map(shift -> shift.getStartHour() + "-" + shift.getEndHour())
+                .collect(Collectors.joining(" | "));
+
+        log.info("Zmiany: {}", shiftsAsString);
+
+        return shiftsAsString;
     }
 
     private static Comparator<Shift> longestShift() {
@@ -203,8 +227,8 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
-        saveMessageIfEmployeeHoursExceeded(context, day, employeeToOperateAfternoonCredit.get());
-        saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOperateAfternoonCredit.get());
+        whenEmployeeHoursExceeded(context, day, employeeToOperateAfternoonCredit.get());
+        whenEmployeeWorkingDaysExceeded(context, day, employeeToOperateAfternoonCredit.get());
 
         context.registerShiftOnSchedule(day,employeeToOperateAfternoonCredit.get(),afternoonCreditShift.get());
         shiftsSorted.remove(afternoonCreditShift.get());
@@ -244,8 +268,8 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
-        saveMessageIfEmployeeHoursExceeded(context, day, employeeToOperateMorningCredit.get());
-        saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOperateMorningCredit.get());
+        whenEmployeeHoursExceeded(context, day, employeeToOperateMorningCredit.get());
+        whenEmployeeWorkingDaysExceeded(context, day, employeeToOperateMorningCredit.get());
 
         context.registerShiftOnSchedule(day,employeeToOperateMorningCredit.get(),morningCreditShift.get());
         shiftsSorted.remove(morningCreditShift.get());
@@ -343,13 +367,16 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
-        saveMessageIfEmployeeHoursExceeded(context, day, employeeToCloseStore.get());
-        saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToCloseStore.get());
+        Employee employeeClosingStore = employeeToCloseStore.get();
+        Shift closingShift = closeShift.get();
 
-        context.registerShiftOnSchedule(day,employeeToCloseStore.get(),closeShift.get());
-        shiftsSorted.remove(closeShift.get());
-        availableEmployees.remove(employeeToCloseStore.get());
-        context.addWorkingInformation(employeeToCloseStore.get(), closeShift.get(), day.getDayOfWeek());
+        whenEmployeeHoursExceeded(context, day, employeeClosingStore);
+        whenEmployeeWorkingDaysExceeded(context, day, employeeToCloseStore.get());
+
+        context.registerShiftOnSchedule(day,employeeClosingStore,closingShift);
+        shiftsSorted.remove(closingShift);
+        availableEmployees.remove(employeeClosingStore);
+        context.addWorkingInformation(employeeClosingStore, closingShift, day.getDayOfWeek());
     }
 
     private void modifyOpenStoreEmployeeHoursToAllDayShift(ScheduleGeneratorContext context, LocalDate date){
@@ -401,13 +428,21 @@ public class EmployeeToShiftMatcher {
         context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
                 ScheduleMessageType.INFO,
                 ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                "Z powodu brak pracownika mogącego zamknąć sklep w dniu: " + date +
+                "Z powodu braku pracownika mogącego zamknąć sklep w dniu: " + date +
                         " zmieniony został grafik " + employee.getFirstName() + " "
                         + employee.getLastName() + " na całodniową zmianę od "
                         + newShiftFromOpenToClose.getStartHour().getHour() + " do "
                         + newShiftFromOpenToClose.getEndHour().getHour(),
                 employee.getId(),
                 date)
+        );
+
+        log.info("Z powodu braku pracownika mogącego zamnkąc w sklep w dniu {} zmieniony został grafik {} {} na całodniową zmianę od {} do {}",
+                date,
+                employee.getFirstName(),
+                employee.getLastName(),
+                newShiftFromOpenToClose.getStartHour().getHour(),
+                newShiftFromOpenToClose.getEndHour().getHour()
         );
     }
 
@@ -454,18 +489,13 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
-        saveMessageIfEmployeeHoursExceeded(context, day, employeeToOpenStore.get());
-        saveMessageIfEmployeeWorkingDaysExceeded(context, day, employeeToOpenStore.get());
+        whenEmployeeHoursExceeded(context, day, employeeToOpenStore.get());
+        whenEmployeeWorkingDaysExceeded(context, day, employeeToOpenStore.get());
 
         context.registerShiftOnSchedule(day,employeeToOpenStore.get(),openShift.get());
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
         context.addWorkingInformation(employeeToOpenStore.get(), openShift.get(), day.getDayOfWeek());
-
-        log.info("Liczba godzin pracy {} {} to {}",
-                employeeToOpenStore.get().getFirstName(),
-                employeeToOpenStore.get().getLastName(),
-                context.getEmployeeHours().get(employeeToOpenStore.get()));
     }
 
     private static Comparator<Shift> longestCloseStoreShift() {
@@ -494,7 +524,11 @@ public class EmployeeToShiftMatcher {
         Iterator<Employee> iterator = availableEmployees.iterator();
         while (iterator.hasNext()) {
             Employee employee = iterator.next();
+
             if (employee.isCashier()) {
+                if (whenEmployeeHoursExceeded(context,day,employee)) continue;
+                if (whenEmployeeWorkingDaysExceeded(context,day,employee)) continue;
+
                 Optional<Shift> longestCloseShift = shiftsSorted.stream().min(longestCloseStoreShift());
 
                 if (longestCloseShift.isEmpty()){
@@ -510,32 +544,34 @@ public class EmployeeToShiftMatcher {
                     return;
                 }
 
-                saveMessageIfEmployeeHoursExceeded(context,day,employee);
-                saveMessageIfEmployeeWorkingDaysExceeded(context,day,employee);
+                Shift chosenShift = longestCloseShift.get();
 
-                context.registerShiftOnSchedule(day,employee,longestCloseShift.get());
-                shiftsSorted.remove(longestCloseShift.get());
+                context.registerShiftOnSchedule(day,employee,chosenShift);
+                shiftsSorted.remove(chosenShift);
                 iterator.remove();
-                context.addWorkingInformation(employee, longestCloseShift.get(), day.getDayOfWeek());
+                context.addWorkingInformation(employee, chosenShift, day.getDayOfWeek());
             }
         }
     }
 
-    private void saveMessageIfEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getWorkingDaysCount().getOrDefault(employee,0) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())){
-            log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}",employee.getFirstName(),employee.getLastName(),day);
+    private boolean whenEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
+        if (context.getWorkingDaysCount().getOrDefault(employee,0) > calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())) {
+            log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}", employee.getFirstName(), employee.getLastName(), day);
 
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
                     ScheduleMessageType.ERROR,
                     ScheduleMessageCode.EMPLOYEE_MONTHLY_MAX_WORKING_DAYS_EXCEEDED,
-                    "Miesięczna suma przepracowanych dni u " + employee.getFirstName() + " " + employee.getLastName() + " przekroczyła maksymalną ilość w dniu "  + day,
+                    "Miesięczna suma przepracowanych dni u " + employee.getFirstName() + " " + employee.getLastName() + " przekroczyła maksymalną ilość w dniu " + day,
                     employee.getId(),
                     day)
             );
+
+            return true;
         }
+        return false;
     }
 
-    private void saveMessageIfEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
+    private boolean whenEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         if (context.getEmployeeHours().getOrDefault(employee,0) > calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth())) {
             log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {}", employee.getFirstName(),employee.getLastName(),day);
 
@@ -549,6 +585,9 @@ public class EmployeeToShiftMatcher {
                     employee.getId(),
                     day)
             );
+
+            return true;
         }
+        return false;
     }
 }

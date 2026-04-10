@@ -22,8 +22,10 @@ public class Shift {
     @EqualsAndHashCode.Include
     private Long id;
 
+    @EqualsAndHashCode.Include
     private LocalTime startHour;
 
+    @EqualsAndHashCode.Include
     private LocalTime endHour;
 
     @OneToMany(mappedBy = "shift")

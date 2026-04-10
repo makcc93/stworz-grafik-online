@@ -188,7 +188,7 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     @Override
     public ScheduleDetails findEmployeeScheduleDetailsByDay(Long storeId, Long scheduleId, Employee employee, LocalDate day) {
         verifyUserAccessAndData(storeId, scheduleId);
-
+//todo tu jest blad
         return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, employee.getId(), day)
                 .orElseThrow(() ->
                 new EntityNotFoundException("Cannot find schedule details for schedule id " + scheduleId + " and employee id " + employee.getId() + " on date " + day)

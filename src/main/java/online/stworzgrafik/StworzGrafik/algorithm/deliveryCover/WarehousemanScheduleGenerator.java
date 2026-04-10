@@ -91,7 +91,10 @@ public void generate(ScheduleGeneratorContext context){
                 .filter(empl -> !context.employeeIsOnDayOff(empl, date.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
-                .min(Comparator.comparingInt(context.getEmployeeHours()::get));
+                .min(Comparator.comparingInt(
+                        empl ->
+                                context.getEmployeeHours().getOrDefault(empl, 0)
+                ));
 
         if (optionalEmployee.isEmpty()){
             context.registerMessageOnSchedule(
