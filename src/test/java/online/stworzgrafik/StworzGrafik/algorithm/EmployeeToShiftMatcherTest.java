@@ -136,7 +136,7 @@ public class EmployeeToShiftMatcherTest {
                 eq(DAY),
                 any(),
                 any(),
-                eq(AnalyzeType.UNDERSTAFFED)
+                eq(AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
         );
     }
 
@@ -173,7 +173,7 @@ public class EmployeeToShiftMatcherTest {
                 eq(DAY),
                 any(),
                 any(),
-                eq(AnalyzeType.UNDERSTAFFED)
+                eq(AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
         );
     }
 

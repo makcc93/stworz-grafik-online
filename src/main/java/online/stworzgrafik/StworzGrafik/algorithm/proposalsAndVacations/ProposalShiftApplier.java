@@ -46,7 +46,7 @@ public class ProposalShiftApplier {
                     if (employeeIsOnVacation(context, employee, day, date)) continue;
                     if (employeeIsOnDayOff(context, employee, day, date)) continue;
 
-                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_PROPOSALS);
+                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
 
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
                     Shift proposalShift = context.findShiftByArray(proposalShiftAsArray);

@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyProposalsAnalysisResult;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyProposalsAnalysisStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyShiftProposalsAnalysisResult;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyShiftProposalsAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import org.junit.jupiter.api.Test;
@@ -19,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TooManyProposalsAnalysisStrategyTest {
+class TooManyShiftProposalsAnalysisStrategyTest {
     @InjectMocks
-    private TooManyProposalsAnalysisStrategy strategy;
+    private TooManyShiftProposalsAnalysisStrategy strategy;
 
     @Mock
     private ScheduleMessageService scheduleMessageService;
@@ -47,7 +47,7 @@ class TooManyProposalsAnalysisStrategyTest {
         int[] proposalCount = new int[24];
         proposalCount[targetHour] = 4;
 
-        TooManyProposalsAnalysisResult result = new TooManyProposalsAnalysisResult(originalDailyDraft, proposalCount);
+        TooManyShiftProposalsAnalysisResult result = new TooManyShiftProposalsAnalysisResult(originalDailyDraft, proposalCount);
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
         when(context.getStoreActiveEmployees()).thenReturn(List.of(emp1, emp2,empCantOpenStoreWithHighestHours, emp4));

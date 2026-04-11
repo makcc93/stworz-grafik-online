@@ -144,7 +144,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         context.updateShiftOnSchedule(date,employee,newShift);
         context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
         context.updateEmployeeHours(employee,oldShift,newShift);
-    }
+}
 
     private static Comparator<Shift> longestOpenStoreShift() {
         return Comparator.comparingInt(

@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ManagerOpeningHourAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.UnderstaffedAnalysisStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalStrategy;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
@@ -104,7 +104,7 @@ public class EmployeeToShiftMatcherIT {
     private ScheduleAnalyzer analyzer;
 
     @Autowired
-    private UnderstaffedAnalysisStrategy understaffedAnalysisStrategy;
+    private TooManyDayOffProposalStrategy tooManyDayOffProposalStrategy;
 
     @Autowired
     private EmployeeProposalDaysOffService employeeProposalDaysOffService;

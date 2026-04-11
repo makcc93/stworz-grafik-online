@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -15,13 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrategy{
+public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     @Override
     public AnalyzeType getSupportedType() {
-        return AnalyzeType.TOO_MANY_PROPOSALS;
+        return AnalyzeType.TOO_MANY_SHIFT_PROPOSALS;
     }
 
     @Override
@@ -31,18 +33,18 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
 
         int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().get(day);
 
-        return new TooManyProposalsAnalysisResult(originalDailyDraft,proposalsCount);
+        return new TooManyShiftProposalsAnalysisResult(originalDailyDraft,proposalsCount);
     }
 
     @Override
     public boolean hasProblem(ScheduleAnalysisResult result) {
-        return ((TooManyProposalsAnalysisResult) result).hasProblem();
+        return ((TooManyShiftProposalsAnalysisResult) result).hasProblem();
     }
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        int[] originalDailyDraft = ((TooManyProposalsAnalysisResult) result).originalDailyDraft();
-        int[] proposalsCount = ((TooManyProposalsAnalysisResult) result).proposalsCount();
+        int[] originalDailyDraft = ((TooManyShiftProposalsAnalysisResult) result).originalDailyDraft();
+        int[] proposalsCount = ((TooManyShiftProposalsAnalysisResult) result).proposalsCount();
 
         for (int indexHour = 0; indexHour < originalDailyDraft.length; indexHour++){
             while (originalDailyDraft[indexHour] < proposalsCount[indexHour]){
@@ -81,6 +83,11 @@ public class TooManyProposalsAnalysisStrategy implements ScheduleAnalysisStrateg
         }
 
         int[] adaptedProposal = modifyOriginalProposal(indexHour, employeesDailyProposals, employeeWithHighestWorkingHoursCannotOpenStore.get());
+        log.info("Modyfikuję propozycję zmiany pracownika {} {} na zmianę {}-{}",
+                employeeWithHighestWorkingHoursCannotOpenStore.get().getFirstName(),
+                employeeWithHighestWorkingHoursCannotOpenStore.get().getLastName(),
+                context.findShiftByArray(adaptedProposal).getStartHour(),
+                context.findShiftByArray(adaptedProposal).getEndHour());
 
         context.updateEmployeeDailyProposal(employeeWithHighestWorkingHoursCannotOpenStore.get(),day,adaptedProposal);
         reduceProposalCount(proposalsCount,indexHour);

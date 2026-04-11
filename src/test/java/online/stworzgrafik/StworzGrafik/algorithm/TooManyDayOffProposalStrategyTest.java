@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.UnderstaffedAnalysisResult;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.UnderstaffedAnalysisStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalResult;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
@@ -26,9 +26,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UnderstaffedAnalysisStrategyTest {
+public class TooManyDayOffProposalStrategyTest {
     @InjectMocks
-    private UnderstaffedAnalysisStrategy strategy;
+    private TooManyDayOffProposalStrategy strategy;
 
     @Mock
     private ScheduleMessageService scheduleMessageService;
@@ -61,7 +61,7 @@ public class UnderstaffedAnalysisStrategyTest {
         List<Employee> availableEmployees = new ArrayList<>();
         List<Shift> shifts = List.of(mock(Shift.class));
 
-        UnderstaffedAnalysisResult result = new UnderstaffedAnalysisResult(availableEmployees,shifts);
+        TooManyDayOffProposalResult result = new TooManyDayOffProposalResult(availableEmployees,shifts);
 
         Map<Employee, int[]> monthlyEmployeesProposalDayOff = new HashMap<>();
         monthlyEmployeesProposalDayOff.put(emp1,emp1MonthlyDayOffProposal);
