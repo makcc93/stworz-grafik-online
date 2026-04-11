@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
@@ -43,7 +42,6 @@ public class EmployeeToShiftMatcher {
             int[] uneditedOriginalStoreDailyDraft = originalStoreDrafts.get(day);
 
             log.info("oryginalny draft w dniu {}      - {}", day, uneditedOriginalStoreDailyDraft);
-            log.info("draft po propozycjach w dniu {} - {}", day, entry.getValue());
 
             if (dayIsHolidayOrHasEmptyDemandDraft(day, everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc)) {
                 log.info("Pomijam dzień {} ponieważ jest świętem lub brak ustalonego zapotrzebowania na pracę", day);
@@ -56,8 +54,8 @@ public class EmployeeToShiftMatcher {
 
             showShiftsInLog(shiftsSorted);
 
-            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
-            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees, AnalyzeType.TOO_MANY_PROPOSALS);
+            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS);
+            scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees, AnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_OPENING_HOUR);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_CLOSING_HOUR);
 
@@ -90,6 +88,11 @@ public class EmployeeToShiftMatcher {
             showShiftsInLog(shiftsSorted);
 
             while (!shiftsSorted.isEmpty()) {
+                if (shiftsSorted.size() > availableEmployees.size()){
+                    log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", day);
+                    scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
+                }
+
                 Optional<Shift> shift = shiftsSorted.stream().min(longestShift());
 
                 if (shift.isEmpty()){
@@ -134,14 +137,12 @@ public class EmployeeToShiftMatcher {
         }
     }
 
-    private String showShiftsInLog(List<Shift> shifts){
+    private void showShiftsInLog(List<Shift> shifts){
         String shiftsAsString = shifts.stream()
                 .map(shift -> shift.getStartHour() + "-" + shift.getEndHour())
                 .collect(Collectors.joining(" | "));
 
         log.info("Zmiany: {}", shiftsAsString);
-
-        return shiftsAsString;
     }
 
     private static Comparator<Shift> longestShift() {
