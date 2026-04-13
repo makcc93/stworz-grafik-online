@@ -59,6 +59,8 @@ public class EmployeeToShiftMatcher {
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_OPENING_HOUR);
             scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_CLOSING_HOUR);
 
+            showShiftsInLog(shiftsSorted);
+
             if (!morningOpenStoreEmployeeAlreadyInProposal(context,day,uneditedOriginalStoreDailyDraft)) {
                 applyOpenStoreEmployee(context, day, availableEmployees, shiftsSorted);
             }
@@ -88,11 +90,6 @@ public class EmployeeToShiftMatcher {
             showShiftsInLog(shiftsSorted);
 
             while (!shiftsSorted.isEmpty()) {
-                if (shiftsSorted.size() > availableEmployees.size()){
-                    log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", day);
-                    scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
-                }
-
                 Optional<Shift> shift = shiftsSorted.stream().min(longestShift());
 
                 if (shift.isEmpty()){
@@ -133,6 +130,11 @@ public class EmployeeToShiftMatcher {
                 context.addWorkingInformation(employee.get(),shift.get(),day.getDayOfWeek());
 
                 showShiftsInLog(shiftsSorted);
+            }
+
+            while (shiftsSorted.size() > availableEmployees.size()){
+                log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", day);
+                scheduleAnalyzer.analyzeAndResolve(context,day,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
             }
         }
     }
@@ -331,6 +333,8 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
+       log.info("");
+       log.info("applyCloseStoreEmployee");
         Optional<Employee> employeeToCloseStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore).min(employeeWithLowestHours(context));
 
@@ -378,6 +382,7 @@ public class EmployeeToShiftMatcher {
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
         context.addWorkingInformation(employeeClosingStore, closingShift, day.getDayOfWeek());
+        log.info("");
     }
 
     private void modifyOpenStoreEmployeeHoursToAllDayShift(ScheduleGeneratorContext context, LocalDate date){
@@ -459,6 +464,8 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyOpenStoreEmployee(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
+        log.info("");
+        log.info("applyOpenStoreEmployee");
         Optional<Employee> employeeToOpenStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore).min(employeeWithLowestHours(context));
 
@@ -497,6 +504,7 @@ public class EmployeeToShiftMatcher {
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
         context.addWorkingInformation(employeeToOpenStore.get(), openShift.get(), day.getDayOfWeek());
+        log.info("");
     }
 
     private static Comparator<Shift> longestCloseStoreShift() {
