@@ -42,13 +42,116 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         int i = 1;
         while (shifts.size() > availableEmployees.size()) {
             log.info("          wchodze w resolve understaffed po raz {}", i);
-            boolean resolved = modifyProposalToCoverUnmatchedShift(employees, shifts, context, day);
+            boolean resolved = newModifyProposalToCoverUnmatchedShift(employees, shifts, context, day);
             i++;
             if (!resolved) break;
         }
     }
 
-    private boolean modifyProposalToCoverUnmatchedShift(Set<Employee> employees , List<Shift> shifts, ScheduleGeneratorContext context, LocalDate day){
+    private boolean newModifyProposalToCoverUnmatchedShift(Set<Employee> employees , List<Shift> shifts, ScheduleGeneratorContext context, LocalDate day) {
+        Shift shiftToCover = shifts.getFirst();
+        int[] shiftToCoverAsArray = context.shiftAsArray(shiftToCover);
+
+        log.info("  Zmiana, którą trzeba dopasować: {}-{}", shiftToCover.getStartHour(),shiftToCover.getEndHour());
+
+        log.info("");
+        Map<Employee,Integer> shiftMatchingScore = new HashMap<>();
+        for (Employee employee : employees){
+            log.info("---");
+            int score = 0;
+
+            int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(employee, new int[24]);
+            Shift employeeProposalShift = context.findShiftByArray(employeeProposalAsArray);
+
+            log.info("EMPL: {} {} | SHIFT: {}-{}",
+                    employee.getFirstName(),employee.getLastName(),
+                    employeeProposalShift.getStartHour(),
+                    employeeProposalShift.getEndHour());
+
+            int[] summedArray = summedArrays(shiftToCoverAsArray,employeeProposalAsArray);
+
+            score = calculateMatchingScore(summedArray);
+
+            shiftMatchingScore.put(employee,score);
+            log.info("SCORING: {}",
+                    score);
+
+            log.info("---");
+        }
+        log.info("");
+
+        Optional<Employee> highestMatchingScoreEmployee = shiftMatchingScore.entrySet().stream()
+                .sorted((key1, key2) -> key2.getValue().compareTo(key1.getValue()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (k1, k2) -> k1,
+                        LinkedHashMap::new
+                ))
+                .keySet().stream()
+                .findFirst();
+
+        if (highestMatchingScoreEmployee.isEmpty()) {
+            log.info("Nie można znaleźć pracownika z najwyższym wynikiem dopasowania do zmiany");
+
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                            "Nie można znaleźć pracownika z najwyższym wynikiem dopasowania do zmiany",
+                            null,
+                            day
+                    )
+            );
+            return false;
+        }
+
+        Employee chosenEmployee = highestMatchingScoreEmployee.get();
+
+        int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(chosenEmployee, new int[24]);
+        Shift chosenEmployeeShift = context.findShiftByArray(employeeProposalAsArray);
+
+        log.info("  Najlepiej dopasowana zmiana do połączenia: {}-{} u {} {}",
+                chosenEmployeeShift.getStartHour(),
+                chosenEmployeeShift.getEndHour(),
+                chosenEmployee.getFirstName(),
+                chosenEmployee.getLastName());
+
+        Shift joinedShift = joinShifts(context, chosenEmployeeShift, shiftToCover);
+
+        context.updateShiftOnSchedule(day, chosenEmployee,joinedShift);
+        context.updateEmployeeDailyProposal(chosenEmployee,day,context.shiftAsArray(joinedShift));
+        context.updateEmployeeHours(chosenEmployee,chosenEmployeeShift,joinedShift);
+
+        shifts.remove(shiftToCover);
+        employees.remove(chosenEmployee);
+
+        return true;
+    }
+
+    private int calculateMatchingScore(int[] summedArray){
+        int score = 0;
+
+        for (int i = 0; i < 24; i++){
+            if (summedArray[i] == 1) score++;
+        }
+
+        return score;
+    }
+
+    private int[] summedArrays(int[] shiftToCoverAsArray, int[] employeeProposalAsArray){
+        int[] result =  new int[24];
+
+        for (int i = 0; i < 24; i++){
+            result[i] = shiftToCoverAsArray[i] + employeeProposalAsArray[i];
+        }
+        log.info("summedArrays shiftToCover:     {}",shiftToCoverAsArray);
+        log.info("summedArrays employeeProposal: {}", employeeProposalAsArray);
+        log.info("summedArrays RESULT:           {}", result);
+        return result;
+    }
+
+        private boolean modifyProposalToCoverUnmatchedShift(Set<Employee> employees , List<Shift> shifts, ScheduleGeneratorContext context, LocalDate day){
         Map<Employee, Integer> proposalShiftCount = calculateEmployeeProposalShiftCount(employees, context);
 
         Optional<Employee> employeeWithMostProposals = proposalShiftCount.entrySet().stream()
@@ -107,7 +210,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         context.updateShiftOnSchedule(day,chosenMostProposalsCountEmployee,joinedShift);
         context.updateEmployeeDailyProposal(chosenMostProposalsCountEmployee,day,context.shiftAsArray(joinedShift));
         context.updateEmployeeHours(chosenMostProposalsCountEmployee,chosenEmployeeShift,joinedShift);
-        
+
         shifts.remove(unmatchedShift.get());
         employees.remove(chosenMostProposalsCountEmployee);
 

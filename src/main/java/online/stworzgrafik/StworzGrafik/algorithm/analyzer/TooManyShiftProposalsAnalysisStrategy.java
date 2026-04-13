@@ -55,6 +55,8 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
     }
 
     private boolean adaptProposalHourToDemandDraft(ScheduleGeneratorContext context, LocalDate day, int indexHour, int[] proposalsCount){
+        log.info("");
+        log.info("tooManyShiftProposalAnalysisStrategy");
         Map<Employee, int[]> employeesDailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, Collections.emptyMap());
 
         Optional<Employee> employeeWithHighestWorkingHoursCannotOpenStore = context.getStoreActiveEmployees().stream()
@@ -91,7 +93,8 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
 
         context.updateEmployeeDailyProposal(employeeWithHighestWorkingHoursCannotOpenStore.get(),day,adaptedProposal);
         reduceProposalCount(proposalsCount,indexHour);
-        
+
+        log.info("");
         return true;
     }
 

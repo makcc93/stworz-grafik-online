@@ -81,14 +81,18 @@ public class ScheduleGeneratorContext {
         int startHour = shift.getStartHour().getHour();
         int endHour = shift.getEndHour().getHour();
 
-        if (endHour > startHour){
+        if (endHour < startHour){
             return new int[24];
         }
 
         int[] array = new int[24];
 
-        for (int i = (startHour - 1); i < endHour; i++){
-           array[i] = 1;
+//        for (int i = (startHour - 1); i < endHour; i++){
+//           array[i] = 1;
+//        }
+
+        for (int i = startHour; i < endHour; i++){
+            array[i] = 1;
         }
 
         return array;

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,6 +64,8 @@ public class ProposalShiftApplier {
                 }
             }
         }
+
+
     }
 
     private static boolean employeeIsOnDayOff(ScheduleGeneratorContext context, Employee employee, int day, LocalDate date) {

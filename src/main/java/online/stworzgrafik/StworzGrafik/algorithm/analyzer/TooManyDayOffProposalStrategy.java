@@ -47,6 +47,8 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
     }
 
     private boolean cancelProposalDayOffAndAddEmployeeToAvailable(List<Employee> availableEmployees, ScheduleGeneratorContext context, LocalDate day){
+        log.info("");
+        log.info("tooManyDayOffProposalStrategy");
         Map<Employee, Integer> employeeProposalDayOffCount = getEmployeeProposalDayOffCount(context, day, availableEmployees);
 
         LinkedHashMap<Employee, Integer> sortedByProposalsCountDesc = employeeProposalDayOffCount.entrySet().stream()
@@ -100,6 +102,7 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
                 )
         );
 
+        log.info("");
         return true;
     }
 
