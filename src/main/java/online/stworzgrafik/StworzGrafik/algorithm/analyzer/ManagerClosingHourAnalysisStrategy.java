@@ -123,45 +123,6 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         log.info("");
     }
 
-    public void oldResolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        log.info("");
-        log.info("managerClosingHourAnalysisStrategy");
-        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
-        List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
-
-        Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerClosingHourAnalysisResult) result).employeesWithCloseStoreProposals().stream()
-                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl, 0)));
-
-        if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
-            log.info("Brak dostępnego pracownika w dniu {},",day);
-
-            context.registerMessageOnSchedule(
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.WARNING,
-                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                            "Brak dostępnego pracownika w dniu: " + day,
-                            null,
-                            day
-                    )
-            );
-            return;
-        }
-
-
-
-        Employee chosenEmployee = employeeWithHighestMonthlyWorkingHours.get();
-
-        Shift originalProposalShift = context.findShiftByArray(dailyProposals.getOrDefault(chosenEmployee, new int[24]));
-        Shift endHourDecrementShift = context.findShiftByHours(originalProposalShift.getStartHour(),originalProposalShift.getEndHour().minusHours(1));
-
-        changeProposalShiftInSchedule(day,chosenEmployee,context,originalProposalShift,endHourDecrementShift);
-
-        context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(endHourDecrementShift));
-
-        updateShiftsInMatcher(shifts);
-        log.info("");
-    }
-
     private int findStoreCloseHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
         int targetHour = 23;
 
