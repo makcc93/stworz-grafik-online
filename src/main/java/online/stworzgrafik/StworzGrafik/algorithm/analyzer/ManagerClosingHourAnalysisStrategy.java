@@ -134,6 +134,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         }
         return targetHour;
     }
+
     private void updateShiftsInMatcher(List<Shift> shifts) {
         Shift shiftToChangeEndHour = shifts.stream()
                 .sorted(longestCloseStoreShift())

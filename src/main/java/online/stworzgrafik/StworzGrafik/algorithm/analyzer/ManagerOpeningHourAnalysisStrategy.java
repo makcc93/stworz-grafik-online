@@ -127,26 +127,16 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         log.info("");
     }
 
-    private void updateShiftsInMatcher(ScheduleGeneratorContext context, List<Shift> shifts, LocalDate day) {
-        Optional<Shift> shiftToChangeStartHour = shifts.stream()
-                .min(longestOpenStoreShift());
+    private int findStoreOpenHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
+        int targetHour = 0;
 
-        if (shiftToChangeStartHour.isEmpty()){
-            log.info("Brak dostępnej zmiany w dniu {}", day);
-
-            context.registerMessageOnSchedule(
-                    new CreateScheduleMessageDTO(
-                            ScheduleMessageType.WARNING,
-                            ScheduleMessageCode.NO_AVAILABLE_SHIFT,
-                            "Brak dostępnej zmiany w dniu: " + day,
-                            null,
-                            day
-                    )
-            );
-            return;
+        for (int i = 0; i < 24; i++){
+            if (originalStoreDrafts.getOrDefault(day,new int[24])[i] > 0){
+                targetHour = i;
+                break;
+            }
         }
-
-        shiftToChangeStartHour.get().setStartHour(shiftToChangeStartHour.get().getStartHour().minusHours(1));
+        return targetHour;
     }
 
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {

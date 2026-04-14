@@ -146,6 +146,8 @@ class MonthlyStoreScheduleGeneratorIT {
     Employee karNak;
     Employee emiMia;
 
+    List<Employee> employees;
+
     private int[] proposalShiftEightToFifteen =   {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0};
     private int[] proposalShiftEightToFourteen =  {0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
     private int[] proposalShiftEightToThirteen =  {0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
@@ -199,7 +201,7 @@ class MonthlyStoreScheduleGeneratorIT {
         schedule = new TestScheduleBuilder().withRegion(region).withBranch(branch).withStore(store).withYear(year).withMonth(month).build();
         scheduleEntityService.saveEntity(schedule);
 
-        List<Employee> employees = getEmployees();
+        employees = getEmployees();
 
         context = new ScheduleGeneratorContext(
                 store.getId(),
@@ -402,6 +404,22 @@ class MonthlyStoreScheduleGeneratorIT {
 
         //then
     }
+
+    @Test
+    void generateMonthlySchedule_allEmployeesHasMorningProposals() throws IOException {
+        //given
+        LocalDate secMar = LocalDate.of(year,month,2);
+
+        for (Employee employee : employees){
+            generateProposal(employee,secMar, proposalShiftEightToFourteen);
+        }
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
 
 
     private void generateProposal(Employee employee, LocalDate date, int[] shiftAsArray){

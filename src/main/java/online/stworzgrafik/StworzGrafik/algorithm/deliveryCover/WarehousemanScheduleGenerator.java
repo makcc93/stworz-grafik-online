@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -38,7 +35,7 @@ public void generate(ScheduleGeneratorContext context){
         }
 
         StoreDelivery storeDelivery = context.getStore().getDelivery();
-        Employee employee = storeDelivery.getPrimaryEmployee();
+        Employee warehouseman = storeDelivery.getPrimaryEmployee();
         ShiftTypeConfig shiftTypeConfig = context.getStandardShiftTypeConfig();
         StoreWeeklyDeliverySchedule storeWeeklyDeliverySchedule = storeDelivery.getStoreWeeklyDeliverySchedule();
         Map<DayOfWeek, DayDeliveryConfig> deliverySchedule = storeWeeklyDeliverySchedule.getDeliverySchedule();
@@ -60,26 +57,17 @@ public void generate(ScheduleGeneratorContext context){
             for (int day : dayNumbersByDayOfWeek){
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
-                if (holidayManager.isHoliday(date)){
+                if (holidayManager.isHoliday(date) || context.employeeHasProposalShift(warehouseman,date)){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(employee,day) || context.employeeIsOnDayOff(employee,day)){
-                    coverDeliveryByOtherEmployee(context, employee, date,shift,dayOfWeek,shiftTypeConfig);
+                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnDayOff(warehouseman,day)){
+                    coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
 
-                if (context.employeeHasProposalShift(employee,date)) {
-                    int[] employeeProposalShift = context.employeeProposalShiftAsArray(employee,date);
-                    Shift proposalShift = context.findShiftByArray(employeeProposalShift);
-
-                    context.registerShiftOnSchedule(date,employee,proposalShift);
-                    context.addWorkingInformation(employee,proposalShift,dayOfWeek);
-                    continue;
-                }
-
-                context.registerShiftOnSchedule(date,employee,shift);
-                context.addWorkingInformation(employee,shift,dayOfWeek);
+                context.registerShiftOnSchedule(date,warehouseman,shift);
+                context.addWorkingInformation(warehouseman,shift,dayOfWeek);
             }
         }
     }
