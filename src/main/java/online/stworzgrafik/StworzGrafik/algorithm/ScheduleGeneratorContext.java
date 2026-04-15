@@ -174,6 +174,12 @@ public class ScheduleGeneratorContext {
         return Arrays.stream(shift).sum() > 0;
     }
 
+    public boolean employeeIsWorking(Employee employee, LocalDate date){
+        Shift shift = finalSchedule.getOrDefault(date, new HashMap<>()).getOrDefault(employee, findShiftByArray(new int[24]));
+
+        return Arrays.stream(shiftAsArray(shift)).sum() > 0;
+    }
+
     public void updateEmployeeDailyProposal(Employee employee, LocalDate date, int[] updatedProposal){
         this.monthlyEmployeesProposalShiftsByDate
                 .computeIfAbsent(date, k -> new HashMap<>())
@@ -193,10 +199,11 @@ public class ScheduleGeneratorContext {
         return daysOff[day-1] == 1;
     }
 
-    public boolean employeeHasProposalDaysOff(Employee employee){
+    public boolean employeeHasProposalDaysOff(Employee employee, LocalDate date){
         int[] proposalDaysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
+        int dayIndex = date.getDayOfMonth() - 1;
 
-        return Arrays.stream(proposalDaysOff).sum() > 0;
+        return proposalDaysOff[dayIndex] > 0;
     }
 
     public boolean employeeHasPlannedVacation(Employee employee){
