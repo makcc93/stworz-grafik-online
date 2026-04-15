@@ -1,11 +1,5 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
-import online.stworzgrafik.StworzGrafik.employee.Employee;
-
-import java.util.Map;
-
-public record ShiftSplitterAnalysisResult(
-        Map<Employee, Integer> workingDaysCount,
-        int monthlyMaxWorkingDays
-) {
+public record ShiftSplitterAnalysisResult(int monthlyMaxWorkingDays, int employeeLowestValueOfWorkingDays)  implements ScheduleAnalysisResult{
+        public boolean hasProblem() { return employeeLowestValueOfWorkingDays >= monthlyMaxWorkingDays - 2;}
 }
