@@ -61,13 +61,13 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnDayOff(warehouseman,day)){
+                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnUnwantedDayOff(warehouseman,day)){
                     coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
 
-                context.registerShiftOnSchedule(date,warehouseman,shift);
-                context.addWorkingInformation(warehouseman,shift,dayOfWeek);
+                context.registerShiftOnSchedule(date,warehouseman,shift,dayOfWeek);
+//                context.addWorkingInformation(warehouseman,shift,dayOfWeek);
             }
         }
     }
@@ -76,7 +76,7 @@ public void generate(ScheduleGeneratorContext context){
         Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(Employee::isCanOperateDelivery)
                 .filter(empl -> !context.employeeIsOnVacation(empl, date.getDayOfMonth()))
-                .filter(empl -> !context.employeeIsOnDayOff(empl, date.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnUnwantedDayOff(empl, date.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
                 .min(Comparator.comparingInt(
@@ -99,8 +99,8 @@ public void generate(ScheduleGeneratorContext context){
         }
 
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
-        context.registerShiftOnSchedule(date,employeeToCoverWarehouseman,shift);
-        context.addWorkingInformation(employeeToCoverWarehouseman,shift,dayOfWeek);
+        context.registerShiftOnSchedule(date,employeeToCoverWarehouseman,shift,dayOfWeek);
+//        context.addWorkingInformation(employeeToCoverWarehouseman,shift,dayOfWeek);
         context.addEmployeeReplacingWarehouseman(date,employeeToCoverWarehouseman);
     }
 }

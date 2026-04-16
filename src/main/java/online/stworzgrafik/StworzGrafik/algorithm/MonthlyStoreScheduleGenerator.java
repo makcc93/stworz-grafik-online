@@ -1,6 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
@@ -13,7 +15,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @RequiredArgsConstructor
 @Service
@@ -26,6 +30,7 @@ class MonthlyStoreScheduleGenerator {
     private final DailyShiftGeneratorAlgorithm dailyShiftGeneratorAlgorithm;
     private final EmployeeToShiftMatcher employeeToShiftMatcher;
     private final ExcelExport excelExport;
+    private final ScheduleAnalyzer scheduleAnalyzer;
 
 
     @Async
@@ -41,6 +46,8 @@ class MonthlyStoreScheduleGenerator {
         dailyShiftGeneratorAlgorithm.generateShiftsToDays(context);
 
         employeeToShiftMatcher.matchEmployeeToShift(context);
+
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), AnalyzeType.SHIFT_SPLITTER);
 
         byte[] export = excelExport.export(context);
         Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");

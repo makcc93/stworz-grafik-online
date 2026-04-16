@@ -45,7 +45,7 @@ public class DaysOffApplier {
             for (Employee employee : employeesWithProposalDaysOff){
                 log.info("Wprowadzam propozycję dnia wolnego dla {} {} w dniu {}", employee.getFirstName(),employee.getLastName(),date);
 
-                context.registerShiftOnSchedule(date,employee,dayOffShift);
+                context.registerShiftOnSchedule(date,employee,dayOffShift,date.getDayOfWeek());
             }
         }
     }

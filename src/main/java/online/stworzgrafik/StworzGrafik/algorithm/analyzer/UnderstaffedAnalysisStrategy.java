@@ -116,7 +116,6 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
 
         context.updateShiftOnSchedule(day, chosenEmployee,joinedShift);
         context.updateEmployeeDailyProposal(chosenEmployee,day,context.shiftAsArray(joinedShift));
-        context.updateEmployeeHours(chosenEmployee,chosenEmployeeShift,joinedShift);
 
         shifts.remove(shiftToCover);
         employees.remove(chosenEmployee);

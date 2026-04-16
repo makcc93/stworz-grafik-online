@@ -43,8 +43,8 @@ public class VacationApplier {
                 if (context.employeeIsOnVacation(employee, day)) {
                     log.info("Dodaje urlop pracownikowi {} {} w dniu {}",employee.getFirstName(),employee.getLastName(),date);
 
-                    context.registerShiftOnSchedule(date,employee,vacationShift);
-                    context.addWorkingInformation(employee,vacationShift,date.getDayOfWeek());
+                    context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
+//                    context.addWorkingInformation(employee,vacationShift,date.getDayOfWeek());
                 }
             }
 

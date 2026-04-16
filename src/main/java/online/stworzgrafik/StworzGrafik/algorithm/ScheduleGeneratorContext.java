@@ -8,7 +8,6 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHou
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
-import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -122,6 +121,8 @@ public class ScheduleGeneratorContext {
                 newShift.getStartHour(),
                 newShift.getEndHour()
                 );
+
+        updateEmployeeHours(employee,oldShift,newShift);
     }
 
     public void deleteShiftFromSchedule(LocalDate date, Employee employee){
@@ -134,7 +135,7 @@ public class ScheduleGeneratorContext {
         }
     }
 
-    public void registerShiftOnSchedule(LocalDate date, Employee employee, Shift shift){
+    public void registerShiftOnSchedule(LocalDate date, Employee employee, Shift shift, DayOfWeek dayOfWeek){
         log.info("Dzień {} Dopasowuje pracownika {} {} do zmiany {}-{}",
                 date,
                 employee.getFirstName(),
@@ -145,6 +146,8 @@ public class ScheduleGeneratorContext {
 
         finalSchedule.computeIfAbsent(date, k -> new HashMap<>())
                 .put(employee,shift);
+
+        addWorkingInformation(employee,shift,dayOfWeek);
     }
 
     public OpenCloseStoreHoursDTO getStoreOpenCloseHoursByDate(LocalDate date){
@@ -194,7 +197,7 @@ public class ScheduleGeneratorContext {
         employeeMonthlyDayOffProposal[day-1] = 0;
     }
 
-    public boolean employeeIsOnDayOff(Employee employee, int day){
+    public boolean employeeIsOnUnwantedDayOff(Employee employee, int day){
         int[] daysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
         return daysOff[day-1] == 1;
     }
@@ -218,7 +221,7 @@ public class ScheduleGeneratorContext {
         return vacations[day-1] == 1;
     }
 
-    public void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){
+    private void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){
         addEmployeeHours(employee,shift);
         addEmployeeWorkingDays(employee);
         addEmployeeWorkingOnWeekend(employee,dayOfWeek);
@@ -228,8 +231,9 @@ public class ScheduleGeneratorContext {
         vacationDaysCount.merge(employee, numberOfDays, Integer::sum);
     }
 
-    public void updateEmployeeHours(Employee employee, Shift oldShift, Shift newShift){
+    private void updateEmployeeHours(Employee employee, Shift oldShift, Shift newShift){
         int currentEmployeeHoursValue = employeeHours.getOrDefault(employee, 0);
+
 
         int oldShiftLengthHours = computeShiftHours(oldShift.getEndHour().getHour(), oldShift.getStartHour().getHour());
         int newShiftLengthHours = computeShiftHours(newShift.getEndHour().getHour(), newShift.getStartHour().getHour());
@@ -239,9 +243,10 @@ public class ScheduleGeneratorContext {
         int newValueOfEmployeeHours = currentEmployeeHoursValue + shiftHoursDifference;
 
         employeeHours.put(employee,newValueOfEmployeeHours);
+        log.info("AKTUALIZACJA GODZIN pracownika {} {}, poprzednia liczba godzin: {}, nowa: {}",employee.getFirstName(),employee.getLastName(),currentEmployeeHoursValue,newValueOfEmployeeHours);
     }
 
-    public void addEmployeeHours(Employee employee, Shift shift){
+    private void addEmployeeHours(Employee employee, Shift shift){
         int shiftHours = computeShiftHours(shift.getEndHour().getHour(), shift.getStartHour().getHour());
 
         int employeeHoursValue = this.employeeHours.getOrDefault(employee, 0);
@@ -250,13 +255,13 @@ public class ScheduleGeneratorContext {
         employeeHours.put(employee,newValueOfEmployeeHours);
     }
 
-    void addEmployeeWorkingOnWeekend(Employee employee, DayOfWeek dayOfWeek){
+    private void addEmployeeWorkingOnWeekend(Employee employee, DayOfWeek dayOfWeek){
         if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
             workingOnWeekendCount.merge(employee,1, Integer::sum);
         }
     }
 
-    void addEmployeeWorkingDays(Employee employee){
+    private void addEmployeeWorkingDays(Employee employee){
         workingDaysCount.merge(employee,1,Integer::sum);
     }
 

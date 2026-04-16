@@ -124,10 +124,9 @@ public class EmployeeToShiftMatcher {
                 whenEmployeeHoursExceeded(context,day,employee.get());
                 whenEmployeeWorkingDaysExceeded(context,day,employee.get());
 
-                context.registerShiftOnSchedule(day,employee.get(),shift.get());
+                context.registerShiftOnSchedule(day,employee.get(),shift.get(),day.getDayOfWeek());
                 shiftsSorted.remove(shift.get());
                 availableEmployees.remove(employee.get());
-                context.addWorkingInformation(employee.get(),shift.get(),day.getDayOfWeek());
 
                 showShiftsInLog(shiftsSorted);
             }
@@ -160,7 +159,7 @@ public class EmployeeToShiftMatcher {
 
     private ArrayList<Employee> getAvailableEmployees(ScheduleGeneratorContext context, List<Employee> storeActiveEmployees, LocalDate day) {
         return new ArrayList<>(storeActiveEmployees.stream()
-                .filter(empl -> !context.employeeIsOnDayOff(empl, day.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnUnwantedDayOff(empl, day.getDayOfMonth()))
                 .filter(empl -> !context.employeeIsOnVacation(empl, day.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl, day))
                 .filter(empl -> !empl.isWarehouseman())
@@ -233,10 +232,9 @@ public class EmployeeToShiftMatcher {
         whenEmployeeHoursExceeded(context, day, employeeToOperateAfternoonCredit.get());
         whenEmployeeWorkingDaysExceeded(context, day, employeeToOperateAfternoonCredit.get());
 
-        context.registerShiftOnSchedule(day,employeeToOperateAfternoonCredit.get(),afternoonCreditShift.get());
+        context.registerShiftOnSchedule(day,employeeToOperateAfternoonCredit.get(),afternoonCreditShift.get(),day.getDayOfWeek());
         shiftsSorted.remove(afternoonCreditShift.get());
         availableEmployees.remove(employeeToOperateAfternoonCredit.get());
-        context.addWorkingInformation(employeeToOperateAfternoonCredit.get(), afternoonCreditShift.get(), day.getDayOfWeek());
     }
 
     private void applyMorningCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate day) {
@@ -274,10 +272,9 @@ public class EmployeeToShiftMatcher {
         whenEmployeeHoursExceeded(context, day, employeeToOperateMorningCredit.get());
         whenEmployeeWorkingDaysExceeded(context, day, employeeToOperateMorningCredit.get());
 
-        context.registerShiftOnSchedule(day,employeeToOperateMorningCredit.get(),morningCreditShift.get());
+        context.registerShiftOnSchedule(day,employeeToOperateMorningCredit.get(),morningCreditShift.get(),day.getDayOfWeek());
         shiftsSorted.remove(morningCreditShift.get());
         availableEmployees.remove(employeeToOperateMorningCredit.get());
-        context.addWorkingInformation(employeeToOperateMorningCredit.get(), morningCreditShift.get(), day.getDayOfWeek());
     }
 
     private boolean afternoonCreditEmployeeAlreadyInProposal(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
@@ -378,10 +375,9 @@ public class EmployeeToShiftMatcher {
         whenEmployeeHoursExceeded(context, day, employeeClosingStore);
         whenEmployeeWorkingDaysExceeded(context, day, employeeToCloseStore.get());
 
-        context.registerShiftOnSchedule(day,employeeClosingStore,closingShift);
+        context.registerShiftOnSchedule(day,employeeClosingStore,closingShift,day.getDayOfWeek());
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
-        context.addWorkingInformation(employeeClosingStore, closingShift, day.getDayOfWeek());
         log.info("");
     }
 
@@ -429,7 +425,6 @@ public class EmployeeToShiftMatcher {
         Shift newShiftFromOpenToClose = getShiftFromOpenToCloseStoreHours(context, date);
 
         context.updateShiftOnSchedule(date,employee,newShiftFromOpenToClose);
-        context.updateEmployeeHours(employee,shift,newShiftFromOpenToClose);
 
         context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
                 ScheduleMessageType.INFO,
@@ -500,10 +495,9 @@ public class EmployeeToShiftMatcher {
         whenEmployeeHoursExceeded(context, day, employeeToOpenStore.get());
         whenEmployeeWorkingDaysExceeded(context, day, employeeToOpenStore.get());
 
-        context.registerShiftOnSchedule(day,employeeToOpenStore.get(),openShift.get());
+        context.registerShiftOnSchedule(day,employeeToOpenStore.get(),openShift.get(),day.getDayOfWeek());
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
-        context.addWorkingInformation(employeeToOpenStore.get(), openShift.get(), day.getDayOfWeek());
         log.info("");
     }
 
@@ -555,10 +549,9 @@ public class EmployeeToShiftMatcher {
 
                 Shift chosenShift = longestCloseShift.get();
 
-                context.registerShiftOnSchedule(day,employee,chosenShift);
+                context.registerShiftOnSchedule(day,employee,chosenShift,day.getDayOfWeek());
                 shiftsSorted.remove(chosenShift);
                 iterator.remove();
-                context.addWorkingInformation(employee, chosenShift, day.getDayOfWeek());
             }
         }
     }

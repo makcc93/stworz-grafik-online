@@ -147,7 +147,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {
         context.updateShiftOnSchedule(date,employee,newShift);
         context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
-        context.updateEmployeeHours(employee,oldShift,newShift);
+//        context.updateEmployeeHours(employee,oldShift,newShift);
     }
 
     private Comparator<Shift> longestCloseStoreShift() {
