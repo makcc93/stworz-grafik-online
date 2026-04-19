@@ -1,18 +1,22 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
+import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.DividedShiftDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.ShiftSwapCandidate;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -20,6 +24,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     private final CalendarCalculation calendarCalculation;
+    private final HolidayManager holidayManager;
+
     @Override
     public AnalyzeType getSupportedType() {
         return AnalyzeType.SHIFT_SPLITTER;
@@ -33,8 +39,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         for (Employee employee : employees) {
             Integer value = context.getWorkingDaysCount().getOrDefault(employee, 0);
-            log.info("value = {}", value);
-            log.info("employee = {}", employee);
 
             workingDaysCount.put(employee,value);
         }
@@ -56,7 +60,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         Integer lowestValue = filteredWorkingDaysCountSortedAsc.entrySet().stream().findFirst().get().getValue();
 
-        log.info("analyzer przekazuje, lowestValue = {}, maxWorkingDays = {}",lowestValue,monthlyMaxWorkingDays);
        return new ShiftSplitterAnalysisResult(monthlyMaxWorkingDays,lowestValue);
     }
 
@@ -68,53 +71,68 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
         int monthlyMaxWorkingDays = ((ShiftSplitterAnalysisResult) result).monthlyMaxWorkingDays();
-        int employeeLowestValueOfWorkingDays = ((ShiftSplitterAnalysisResult) result).employeeLowestValueOfWorkingDays();
-        log.info("*** wchodze w resolve, max days: {}", monthlyMaxWorkingDays);
 
         while (context.getWorkingDaysCount().entrySet().stream()
-                .filter(e -> e.getKey().isCanOpenCloseStore())
                 .anyMatch(e -> e.getValue() <= monthlyMaxWorkingDays - 2)) {
             boolean resolved = splitShifts(context);
 
             if (!resolved) break;
         }
-
-        log.info("*** koncze resolve");
     }
 
     private boolean splitShifts(ScheduleGeneratorContext context){
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
 
         boolean result = managersSplitShifts(context,monthlyMaxWorkingDays);
-//        operateCreditSplitShifts();
-//        othersSplitShifts();
+        result = creditEmployeesSplitShifts(context, monthlyMaxWorkingDays);
+        result = otherEmployeesSplitShifts(context,monthlyMaxWorkingDays);
 
         return result;
     }
 
     private boolean managersSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
+        return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
+                Employee::isCanOpenCloseStore);
+    }
+
+    private boolean creditEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
+        return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
+                empl -> empl.isCanOperateCredit() && !empl.isCanOpenCloseStore());
+    }
+
+    private boolean otherEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
+        return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
+                empl -> !empl.isCanOpenCloseStore()
+                        && !empl.isCanOperateCredit()
+//                        && !empl.isCashier()
+                        && !empl.isWarehouseman());
+    }
+
+    private boolean splitShiftsByCriteria(ScheduleGeneratorContext context, int monthlyMaxWorkingDays, Predicate<Employee> employeeFilter) {
         boolean anySwapDone = false;
+        int wantedMaxWorkingDays = monthlyMaxWorkingDays -1;
 
         List<Employee> employees = context.getStoreActiveEmployees().stream()
-                .filter(Employee::isCanOpenCloseStore)
+                .filter(employeeFilter)
                 .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
                 .toList();
 
         Map<Employee, Map<LocalDate, Shift>> daysWithShiftsToSplit = new HashMap<>();
-
         YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
 
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
-
             for (Employee employee : employees) {
                 if (!context.employeeIsWorking(employee, date)) continue;
                 if (context.employeeIsOnVacation(employee, day)) continue;
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
-                if (context.employeeIsOnUnwantedDayOff(employee, day)) continue;
+                if (context.employeeIsOnDayOff(employee, day)) continue;
+                if (context.employeeIsInWarehouse(employee,date)) continue;
 
-                Shift shift = context.getFinalSchedule().getOrDefault(date, new HashMap<>()).getOrDefault(employee, context.findShiftByArray(new int[24]));
+                Shift shift = context.getFinalSchedule()
+                        .getOrDefault(date, new HashMap<>())
+                        .getOrDefault(employee, context.findShiftByArray(new int[24]));
 
                 daysWithShiftsToSplit
                         .computeIfAbsent(employee, k -> new HashMap<>())
@@ -122,58 +140,39 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
             }
         }
 
-        LinkedHashMap<Employee, Map<LocalDate, Shift>> employeeSortedByWorkingDaysAscAndShiftsLengthSortedDesc = daysWithShiftsToSplit.entrySet().stream()
-                // 1. sortujemy wpisy zewnętrznej mapy po liczbie dni pracy rosnąco
-                .sorted(Comparator.comparingInt(entry ->
-                        context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
-                // 2. zbieramy z powrotem do mapy, transformując wewnętrzną mapę
+        LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,   // klucz: Employee (bez zmian)
+                        Map.Entry::getKey,
                         entry -> entry.getValue().entrySet().stream()
-                                // 3. sortujemy wewnętrzne wpisy po długości zmiany malejąco
                                 .sorted((a, b) -> getShiftLength(b.getValue()) - getShiftLength(a.getValue()))
-                                .collect(Collectors.toMap(
-                                        Map.Entry::getKey,   // klucz: LocalDate
-                                        Map.Entry::getValue, // wartość: Shift
-                                        (v1, v2) -> v1,      // merge function (nie wystąpi, LocalDate jest unikalny)
-                                        LinkedHashMap::new   // zachowuje kolejność sortowania
-                                )),
-                        (v1, v2) -> v1,      // merge function dla zewnętrznej mapy (też nie wystąpi)
-                        LinkedHashMap::new   // zewnętrzna mapa też musi zachować kolejność
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new
                 ));
 
-
-        for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : employeeSortedByWorkingDaysAscAndShiftsLengthSortedDesc.entrySet()) {
+        for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
             Employee employee = entry.getKey();
             Map<LocalDate, Shift> employeeDateShift = entry.getValue();
 
             List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
                     .flatMap(insideEntry -> {
-                                LocalDate insideDate = insideEntry.getKey();
-                                Shift insideShift = insideEntry.getValue();
+                        LocalDate insideDate = insideEntry.getKey();
+                        Shift insideShift = insideEntry.getValue();
 
-                                return employees.stream()
-                                        .filter(empl -> !empl.equals(employee))
-                                        .filter(empl -> employeeSortedByWorkingDaysAscAndShiftsLengthSortedDesc.containsKey(empl))
-                                        .filter(empl -> !context.employeeIsWorking(empl, insideDate))
-                                        .flatMap(empl -> employeeSortedByWorkingDaysAscAndShiftsLengthSortedDesc.get(empl).entrySet().stream()
-                                                .filter(otherEmpl -> {
-                                                    LocalDate otherDate = otherEmpl.getKey();
-                                                    Shift otherShift = otherEmpl.getValue();
-
-                                                    return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate);
-                                                })
-                                                .map(otherEmpl -> new ShiftSwapCandidate(
-                                                        employee,
-                                                        empl,
-                                                        insideDate,
-                                                        otherEmpl.getKey(),
-                                                        insideShift
-                                                )));
-                            }
-                    )
-                    .toList();
-
+                        return employees.stream()
+                                .filter(empl -> !empl.equals(employee))
+                                .filter(sortedData::containsKey)
+                                .filter(empl -> !context.employeeIsWorking(empl, insideDate))
+                                .flatMap(empl -> sortedData.get(empl).entrySet().stream()
+                                        .filter(otherEmplEntry -> {
+                                            LocalDate otherDate = otherEmplEntry.getKey();
+                                            Shift otherShift = otherEmplEntry.getValue();
+                                            return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
+                                                    && getShiftLength(insideShift) > 9;
+                                        })
+                                        .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
+                    }).toList();
 
             for (ShiftSwapCandidate candidate : swapCandidates) {
                 Employee originalEmployee = candidate.originalEmployee();
@@ -181,45 +180,107 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 LocalDate originalEmployeeDate = candidate.originalDateForSwap();
                 LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
 
-                int originalDays = context.getWorkingDaysCount().getOrDefault(originalEmployee, 0);
-                int otherDays = context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0);
+                // re-walidacja dni
+                if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
+                if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
 
-                if (originalDays >= monthlyMaxWorkingDays) break;
-                if (otherDays >= monthlyMaxWorkingDays) continue;
-
+                // re-walidacja kolizji po poprzednich swapach
                 if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                 if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
-                List<Shift> dividedShift = divideShift(candidate.swappingShift(), context);
-                Shift firstShift = dividedShift.get(0);
-                Shift secondShift = dividedShift.get(1);
+                // re-walidacja zmiany — pobierz AKTUALNĄ zmianę z contextu, nie z sortedData
+                Shift currentShiftOnDate = context.getFinalSchedule()
+                        .getOrDefault(originalEmployeeDate, new HashMap<>())
+                        .get(originalEmployee);
 
-                context.updateShiftOnSchedule(originalEmployeeDate, originalEmployee, firstShift);
-                context.registerShiftOnSchedule(originalEmployeeDate, otherEmployeeForSwap, secondShift, originalEmployeeDate.getDayOfWeek());
+                if (currentShiftOnDate == null) continue;
+                if (getShiftLength(currentShiftOnDate) < 10) continue;
 
-                context.updateShiftOnSchedule(otherEmployeeDateForSwap, otherEmployeeForSwap, firstShift);
-                context.registerShiftOnSchedule(otherEmployeeDateForSwap, originalEmployee, secondShift, otherEmployeeDateForSwap.getDayOfWeek());
+                // re-walidacja zmiany otherEmployee
+                Shift otherCurrentShiftOnDate = context.getFinalSchedule()
+                        .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
+                        .get(otherEmployeeForSwap);
 
-                anySwapDone = true;
+                if (otherCurrentShiftOnDate == null) continue;
+                if (getShiftLength(otherCurrentShiftOnDate) < 10) continue;
 
-                if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= monthlyMaxWorkingDays) break;
+                // divide na aktualnej zmianie, nie candidate.swappingShift()
+                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate)) {
+                    anySwapDone = true;
+                    break;
+                }
             }
         }
         return anySwapDone;
     }
 
+    private boolean processCandidate(ShiftSwapCandidate candidate, ScheduleGeneratorContext context, int maxDays, Shift currentShift) {
+        Employee originalEmployee = candidate.originalEmployee();
+        Employee otherEmployee = candidate.employeeForSwapShift();
 
-    private List<Shift> divideShift(Shift shift, ScheduleGeneratorContext context){
+        if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= maxDays) return false;
+        if (context.getWorkingDaysCount().getOrDefault(otherEmployee, 0) >= maxDays) return false;
+
+        if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
+            return false;
+        }
+
+//        List<Shift> dividedShift = divideShift(currentShift, context);
+        DividedShiftDTO dividedShiftDTO = divideShift(currentShift, context);
+
+        Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
+        Shift shiftForOther    = originalEmployee.isCashier() ? dividedShiftDTO.morningShift()   : dividedShiftDTO.afternoonShift();
+
+        context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
+        context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployee, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
+
+        context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployee, shiftForOther);
+        context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+
+        return true;
+    }
+
+    private boolean isWeekendOrHoliday(LocalDate date) {
+        return date.getDayOfWeek() == DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == DayOfWeek.SUNDAY
+                || holidayManager.isHoliday(date);
+    }
+
+    private DividedShiftDTO divideShift(Shift shift, ScheduleGeneratorContext context){
         int startHour = shift.getStartHour().getHour();
         int endHour = shift.getEndHour().getHour();
 
         int midHour = (startHour + endHour) / 2;
-        Shift firstShift = context.findShiftByHours(LocalTime.of(startHour, 0), LocalTime.of(midHour, 0));
-        Shift secondShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, 0));
-        log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),firstShift.getStartHour(),firstShift.getEndHour(),secondShift.getStartHour(),secondShift.getEndHour());
 
-        return List.of(firstShift,secondShift);
+        if (midHour < 13) midHour = 13;
+        if (midHour > 16) midHour = 16;
+
+        Shift morningShift = context.findShiftByHours(LocalTime.of(startHour, 0), LocalTime.of(midHour, 0));
+        Shift afternoonShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, 0));
+        log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),morningShift.getStartHour(),morningShift.getEndHour(),afternoonShift.getStartHour(),afternoonShift.getEndHour());
+
+        return new DividedShiftDTO(
+                morningShift,
+                afternoonShift
+        );
     }
+
+
+//    private List<Shift> divideShift(Shift shift, ScheduleGeneratorContext context){
+//        int startHour = shift.getStartHour().getHour();
+//        int endHour = shift.getEndHour().getHour();
+//
+//        int midHour = (startHour + endHour) / 2;
+//
+//        if (midHour < 13) midHour = 13;
+//        if (midHour > 16) midHour = 16;
+//
+//        Shift firstShift = context.findShiftByHours(LocalTime.of(startHour, 0), LocalTime.of(midHour, 0));
+//        Shift secondShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, 0));
+//        log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),firstShift.getStartHour(),firstShift.getEndHour(),secondShift.getStartHour(),secondShift.getEndHour());
+//
+//        return List.of(firstShift,secondShift);
+//    }
 
     private int getShiftLength(Shift shift){
         return shift.getEndHour().getHour() - shift.getStartHour().getHour();

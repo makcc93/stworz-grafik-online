@@ -48,6 +48,7 @@ class MonthlyStoreScheduleGenerator {
         employeeToShiftMatcher.matchEmployeeToShift(context);
 
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), AnalyzeType.SHIFT_SPLITTER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), AnalyzeType.HOURS_SWAPPER);
 
         byte[] export = excelExport.export(context);
         Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");

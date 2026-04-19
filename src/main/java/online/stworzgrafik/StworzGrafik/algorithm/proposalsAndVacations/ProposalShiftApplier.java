@@ -68,7 +68,7 @@ public class ProposalShiftApplier {
     }
 
     private static boolean employeeIsOnDayOff(ScheduleGeneratorContext context, Employee employee, int day, LocalDate date) {
-        if (context.employeeIsOnUnwantedDayOff(employee, day)){
+        if (context.employeeIsOnDayOff(employee, day)){
             context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.INFO,

@@ -50,9 +50,7 @@ public void generate(ScheduleGeneratorContext context){
 
             List<Integer> dayNumbersByDayOfWeek = calendarCalculation.getDayNumbersByDayOfWeek(context.getYear(), context.getMonth(), dayOfWeek);
             int[] shiftAsArray = dayOfWeekDeliveryConfig.shiftAsArray();
-            log.info("shift as array {}", shiftAsArray);
             Shift shift = context.findShiftByArray(shiftAsArray);
-            log.info("shift: {} - {}", shift.getStartHour().getHour(),shift.getEndHour().getHour());
 
             for (int day : dayNumbersByDayOfWeek){
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
@@ -61,13 +59,13 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnUnwantedDayOff(warehouseman,day)){
+                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnDayOff(warehouseman,day)){
                     coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
 
                 context.registerShiftOnSchedule(date,warehouseman,shift,dayOfWeek);
-//                context.addWorkingInformation(warehouseman,shift,dayOfWeek);
+                context.addEmployeeWorkingInWarehouse(date,warehouseman);
             }
         }
     }
@@ -76,13 +74,25 @@ public void generate(ScheduleGeneratorContext context){
         Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(Employee::isCanOperateDelivery)
                 .filter(empl -> !context.employeeIsOnVacation(empl, date.getDayOfMonth()))
-                .filter(empl -> !context.employeeIsOnUnwantedDayOff(empl, date.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnDayOff(empl, date.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
+                .peek(empl -> log.info("W A R E H O U S E, pracownik {} {} ilosc dostaw: {}, suma godzin: {}",
+                        empl.getFirstName(),
+                        empl.getLastName(),
+                        context.getEmployeeInWarehouse().getOrDefault(empl, new ArrayList<>()).size(),
+                        context.getEmployeeHours().getOrDefault(empl, 0)
+                        ))
                 .min(Comparator.comparingInt(
-                        empl ->
-                                context.getEmployeeHours().getOrDefault(empl, 0)
-                ));
+                                empl ->
+                                        context.getEmployeeInWarehouse().getOrDefault(empl, new ArrayList<>()).size())
+                        .thenComparingInt(
+                                empl ->
+                                        context.getEmployeeHours().getOrDefault(empl, 0)
+                        )
+                );
+
+
 
         if (optionalEmployee.isEmpty()){
             context.registerMessageOnSchedule(
@@ -100,7 +110,6 @@ public void generate(ScheduleGeneratorContext context){
 
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
         context.registerShiftOnSchedule(date,employeeToCoverWarehouseman,shift,dayOfWeek);
-//        context.addWorkingInformation(employeeToCoverWarehouseman,shift,dayOfWeek);
-        context.addEmployeeReplacingWarehouseman(date,employeeToCoverWarehouseman);
+        context.addEmployeeWorkingInWarehouse(date,employeeToCoverWarehouseman);
     }
 }

@@ -39,7 +39,7 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
     private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
-    private final Map<LocalDate, Employee> employeeReplacingWarehouseman;
+    private final Map<Employee, List<LocalDate>> employeeInWarehouse;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -113,13 +113,14 @@ public class ScheduleGeneratorContext {
 
         dailySchedule.put(employee,newShift);
 
-        log.info("Modyfikuję zmianę pracownika {} {} z {}-{} na {}-{}",
+        log.info("Modyfikuję zmianę pracownika {} {} z {}-{} na {}-{} w dniu {}",
                 employee.getFirstName(),
                 employee.getLastName(),
                 oldShift.getStartHour(),
                 oldShift.getEndHour(),
                 newShift.getStartHour(),
-                newShift.getEndHour()
+                newShift.getEndHour(),
+                date
                 );
 
         updateEmployeeHours(employee,oldShift,newShift);
@@ -154,12 +155,14 @@ public class ScheduleGeneratorContext {
         return storeOpenCloseHoursByDate.getOrDefault(date, new OpenCloseStoreHoursDTO(0,0));
     }
 
-    public boolean employeeIsOnReplacementOnWarehouse(LocalDate date, Employee employee){
-        return employeeReplacingWarehouseman.get(date) == employee;
+    public boolean employeeIsInWarehouse(Employee employee, LocalDate date){
+        return employeeInWarehouse.getOrDefault(employee,new ArrayList<>()).contains(date);
     }
 
-    public void addEmployeeReplacingWarehouseman(LocalDate date, Employee employee){
-        employeeReplacingWarehouseman.put(date,employee);
+    public void addEmployeeWorkingInWarehouse(LocalDate date, Employee employee){
+        employeeInWarehouse
+                .computeIfAbsent(employee, k -> new ArrayList<>())
+                .add(date);
     }
 
     public void addShiftsToDay(LocalDate date, List<Shift> shifts){
@@ -197,7 +200,7 @@ public class ScheduleGeneratorContext {
         employeeMonthlyDayOffProposal[day-1] = 0;
     }
 
-    public boolean employeeIsOnUnwantedDayOff(Employee employee, int day){
+    public boolean employeeIsOnDayOff(Employee employee, int day){
         int[] daysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
         return daysOff[day-1] == 1;
     }
@@ -223,8 +226,8 @@ public class ScheduleGeneratorContext {
 
     private void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){
         addEmployeeHours(employee,shift);
-        addEmployeeWorkingDays(employee);
-        addEmployeeWorkingOnWeekend(employee,dayOfWeek);
+        addEmployeeWorkingDays(employee,shift);
+        addEmployeeWorkingOnWeekend(employee,shift,dayOfWeek);
     }
 
     public void addEmployeeVacationDay(Employee employee, Integer numberOfDays){
@@ -255,14 +258,16 @@ public class ScheduleGeneratorContext {
         employeeHours.put(employee,newValueOfEmployeeHours);
     }
 
-    private void addEmployeeWorkingOnWeekend(Employee employee, DayOfWeek dayOfWeek){
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
+    private void addEmployeeWorkingOnWeekend(Employee employee,Shift shift, DayOfWeek dayOfWeek){
+        if (!shift.equals(this.defaultDaysOffShift) && dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
             workingOnWeekendCount.merge(employee,1, Integer::sum);
         }
     }
 
-    private void addEmployeeWorkingDays(Employee employee){
-        workingDaysCount.merge(employee,1,Integer::sum);
+    private void addEmployeeWorkingDays(Employee employee, Shift shift){
+        if (!shift.equals(this.defaultDaysOffShift)) {
+            workingDaysCount.merge(employee, 1, Integer::sum);
+        }
     }
 
     private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){

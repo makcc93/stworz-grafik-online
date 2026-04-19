@@ -28,14 +28,14 @@ public class StoreWeeklyDeliverySchedule {
     }
 
     public static StoreWeeklyDeliverySchedule createDefault(){
-        int[] workday = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0};
+        int[] workday = {0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0};
         int[] weekend = new int[24];
 
         Map<DayOfWeek,DayDeliveryConfig> map = new EnumMap<>(DayOfWeek.class);
         map.put(DayOfWeek.MONDAY, new DayDeliveryConfig(true,workday));
         map.put(DayOfWeek.TUESDAY, new DayDeliveryConfig(true,workday));
         map.put(DayOfWeek.WEDNESDAY, new DayDeliveryConfig(true,workday));
-        map.put(DayOfWeek.THURSDAY, new DayDeliveryConfig(true,workday));
+        map.put(DayOfWeek.THURSDAY, new DayDeliveryConfig(true,weekend));
         map.put(DayOfWeek.FRIDAY, new DayDeliveryConfig(true,workday));
         map.put(DayOfWeek.SATURDAY, new DayDeliveryConfig(false,weekend));
         map.put(DayOfWeek.SUNDAY, new DayDeliveryConfig(false,weekend));

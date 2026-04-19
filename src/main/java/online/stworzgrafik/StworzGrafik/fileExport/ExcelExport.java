@@ -4,6 +4,7 @@ import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -15,6 +16,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +34,10 @@ public class ExcelExport implements ExportFile{
 
         Map<Employee, Integer> employeeHours = context.getEmployeeHours();
         Map<Employee, Integer> employeeWorkingDaysCount = context.getWorkingDaysCount();
+        Map<Employee, Integer> employeeWorkingWeekendsCount = context.getWorkingOnWeekendCount();
+        Map<Employee, Integer> employeeVacationsCount = context.getVacationDaysCount();
+        Map<Employee, List<LocalDate>> employeeWarehouseCount = context.getEmployeeInWarehouse();
+
         LinkedHashMap<LocalDate, Map<Employee,Shift>> finalScheduleSortedByDate = context.getFinalSchedule().entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getDayOfMonth()))
                 .collect(Collectors.toMap(Map.Entry::getKey,
@@ -61,7 +67,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell cell = headerRow.createCell(columnIndex++);
                 cell.setCellValue(day + " " + yearMonth.getMonth().toString());
-                cell.setCellStyle(defineBackgroundColor(workbook,headerStyle,cell,date));
+                cell.setCellStyle(defineWeekendBackgroundColor(workbook,headerStyle,cell,date));
             }
 
             Cell totalHoursCell = headerRow.createCell(columnIndex++);
@@ -72,6 +78,19 @@ public class ExcelExport implements ExportFile{
             totalWorkingDaysCell.setCellValue("DNI PRACY");
             totalWorkingDaysCell.setCellStyle(headerStyle);
 
+
+            Cell totalWorkingWeekendsCell = headerRow.createCell(columnIndex++);
+            totalWorkingWeekendsCell.setCellValue("WEEKENDY");
+            totalWorkingWeekendsCell.setCellStyle(headerStyle);
+
+            Cell totalVacationsCell = headerRow.createCell(columnIndex++);
+            totalVacationsCell.setCellValue("URLOP");
+            totalVacationsCell.setCellStyle(headerStyle);
+
+            Cell totalWarehouseCell = headerRow.createCell(columnIndex++);
+            totalWarehouseCell.setCellValue("DOSTAWY");
+            totalWarehouseCell.setCellStyle(headerStyle);
+
             int rowNumber = 1;
             Row row = sheet.createRow(rowNumber++);
 
@@ -81,7 +100,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell employeeName = row.createCell(day);
                 employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, new Locale("pl", "PL")));
-                employeeName.setCellStyle(defineBackgroundColor(workbook,dataStyle,employeeName,date));
+                employeeName.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,employeeName,date));
             }
 
 
@@ -102,7 +121,7 @@ public class ExcelExport implements ExportFile{
                     if (!scheduleContainsDate(finalScheduleSortedByDate, date)){
                         Cell cell = row.createCell(cellIndex++);
                         cell.setCellValue("w");
-                        cell.setCellStyle(defineBackgroundColor(workbook,dataStyle,cell,date));
+                        cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
                         continue;
                     }
 
@@ -122,7 +141,7 @@ public class ExcelExport implements ExportFile{
                             cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
                         }
 
-                        cell.setCellStyle(defineBackgroundColor(workbook,dataStyle,cell,date));
+                        cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
                         }
 
                 Integer workedHours = employeeHours.getOrDefault(employee, 0);
@@ -130,16 +149,31 @@ public class ExcelExport implements ExportFile{
                 workedHoursCell.setCellValue(workedHours);
                 workedHoursCell.setCellStyle(totalStyle);
 
-                Integer workedDays = employeeWorkingDaysCount.getOrDefault(employee, 0);
-                Cell workedDaysCell = row.createCell(cellIndex);
+                Integer workedDays = employeeWorkingDaysCount.getOrDefault(employee, 0) - employeeVacationsCount.getOrDefault(employee,0);
+                Cell workedDaysCell = row.createCell(cellIndex++);
                 workedDaysCell.setCellValue(workedDays);
                 workedDaysCell.setCellStyle(totalStyle);
+
+                Integer workedWeekends = employeeWorkingWeekendsCount.getOrDefault(employee, 0);
+                Cell workedWeekendsCell = row.createCell(cellIndex++);
+                workedWeekendsCell.setCellValue(workedWeekends);
+                workedWeekendsCell.setCellStyle(totalStyle);
+
+                Integer vacations = employeeVacationsCount.getOrDefault(employee, 0);
+                Cell vacationsCell = row.createCell(cellIndex++);
+                vacationsCell.setCellValue(vacations);
+                vacationsCell.setCellStyle(totalStyle);
+
+                Integer warehouse = employeeWarehouseCount.getOrDefault(employee, new ArrayList<>()).size();
+                Cell warehouseCell = row.createCell(cellIndex);
+                warehouseCell.setCellValue(warehouse);
+                warehouseCell.setCellStyle(totalStyle);
             }
 
             rowNumber++;
 
             for (int i = 0; i < 24; i++) {
-                row = sheet.createRow(rowNumber++); //Row row
+                row = sheet.createRow(rowNumber++);
 
                 LocalTime hour = LocalTime.of(i, 0);
                 Cell employeeName = row.createCell(0);
@@ -153,11 +187,42 @@ public class ExcelExport implements ExportFile{
 
                     Cell cell = row.createCell(cellIndex++);
                     cell.setCellValue(dailyShiftsCount[i]);
-                    cell.setCellStyle(defineBackgroundColor(workbook,dataStyle,cell,date));
+                    cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
                 }
             }
 
             sheet.autoSizeColumn(0);
+
+
+
+
+            //
+
+            Sheet messagesSheet = workbook.createSheet("INFORMACJE DO GRAFIKA");
+            messagesSheet.createRow(0).createCell(0).setCellValue("Wiadomości");
+            List<CreateScheduleMessageDTO> finalScheduleMessages = context.getFinalScheduleMessages();
+
+            int messagesRowIndex = 1;
+            for (CreateScheduleMessageDTO dto : finalScheduleMessages){
+                messagesSheet.createRow(messagesRowIndex++).createCell(0).setCellValue(dto.message());
+            }
+
+            messagesSheet.getRow(0).createCell(1).setCellValue("Data");
+            int dateRowIndex = 1;
+            for (CreateScheduleMessageDTO dto : finalScheduleMessages){
+                messagesSheet.getRow(dateRowIndex++).createCell(1).setCellValue(dto.messageDate().format(DateTimeFormatter.ISO_DATE));
+            }
+
+            messagesSheet.getRow(0).createCell(2).setCellValue("Rodzaj");
+            int typeRowIndex = 1;
+            for (CreateScheduleMessageDTO dto : finalScheduleMessages){
+                messagesSheet.getRow(typeRowIndex++).createCell(2).setCellValue(dto.scheduleMessageType().toString());
+            }
+
+            messagesSheet.autoSizeColumn(0);
+            //
+
+
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             workbook.write(byteArrayOutputStream);
@@ -166,7 +231,7 @@ public class ExcelExport implements ExportFile{
         }
     }
 
-    private CellStyle defineBackgroundColor(Workbook workbook, CellStyle originalCellStyle, Cell cell, LocalDate date){
+    private CellStyle defineWeekendBackgroundColor(Workbook workbook, CellStyle originalCellStyle, Cell cell, LocalDate date){
 
         if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY || holidayManager.isHoliday(date)){
             CellStyle updatedStyle = workbook.createCellStyle();
@@ -185,9 +250,12 @@ public class ExcelExport implements ExportFile{
 
     private int[] sumOfDailyShiftsAsArray(ScheduleGeneratorContext context, LocalDate date, Set<Employee> employees){
         Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
+
         int[] shiftCount = new int[24];
         for (int i = 0; i < 24; i++) {
             for (Employee employee : employees) {
+                if (context.employeeIsInWarehouse(employee,date)) continue;
+
                 Shift shift = dailySchedule.getOrDefault(employee, context.findShiftByArray(new int[24]));
 
                 if (!employee.isWarehouseman() && !shift.equals(context.getDefaultVacationShift())) {
