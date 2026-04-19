@@ -17,6 +17,8 @@ import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShiftsService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
@@ -99,6 +101,9 @@ class MonthlyStoreScheduleGeneratorIT {
     private EmployeeVacationService employeeVacationService;
 
     @Autowired
+    private EmployeeProposalDaysOffService employeeProposalDaysOffService;
+
+    @Autowired
     private ProposalShiftApplier proposalShiftApplier;
 
     @Autowired
@@ -128,7 +133,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 3;
+    private final int month = 5;
 
     Employee damMro;
     Employee monBar;
@@ -148,6 +153,9 @@ class MonthlyStoreScheduleGeneratorIT {
 
     List<Employee> employees;
 
+    private int[] dayOffProposalSecondDayOfMonth = {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    private int[] dayOffProposalSecondAndThirdDayOfMonth = {0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
     private int[] proposalShiftEightToFifteen =   {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0};
     private int[] proposalShiftEightToFourteen =  {0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
     private int[] proposalShiftEightToThirteen =  {0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
@@ -157,12 +165,12 @@ class MonthlyStoreScheduleGeneratorIT {
     private int[] firstTwoWeeks = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     private int[] secondTwoWeeks = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
-    private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 9, 9, 9, 9, 9, 5, 0, 0, 0, 0};
-    private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 4, 0, 0, 0, 0};
-    private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 0, 0, 0, 0};
-    private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
-    private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 7, 8, 8, 9, 9, 9, 9, 9, 6, 0, 0, 0, 0};
-    private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 10, 10, 10, 10, 10, 9, 9, 9, 9, 6, 0, 0, 0, 0};
+    private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 7, 7, 7, 8, 8, 8, 8, 8, 7, 5, 0, 0, 0, 0};
+    private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 7, 7, 7, 7, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
+    private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
+    private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
+    private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 7, 7, 7, 8, 8, 8, 8, 8, 5, 0, 0, 0, 0};
+    private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 9, 9, 9, 9, 8, 8, 8, 8, 6, 4, 0, 0, 0, 0};
 
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
@@ -240,6 +248,73 @@ class MonthlyStoreScheduleGeneratorIT {
     }
 
     @Test
+    void generateMonthlySchedule_realScheduleForMay() throws IOException {
+        //given
+
+        //VACATION
+        generateVacations(micKoz,18,26);
+        generateVacations(marNow,14,15);
+        generateVacations(wojPie,6,14);
+        generateVacations(marPrz,11,16);
+        generateVacations(agaWar,1,8);
+        generateVacations(damMro,1,10);
+        generateVacations(marWoj,1,6);
+        generateVacations(emiMia,25,29);
+        generateVacations(olgDar,18,21);
+
+        //DAYSOFF_PROPOSAL
+        generateDayOffProposals(agaWar,List.of(2));
+        generateDayOffProposals(monBar,List.of(2,7));
+        generateDayOffProposals(micWoc,List.of(9));
+        generateDayOffProposals(marNow,List.of(16,5,26));
+        generateDayOffProposals(marWoj,List.of(13,16));
+        generateDayOffProposals(karNak,List.of(18,22,23));
+        generateDayOffProposals(matKru,List.of(5,12,16,30));
+        generateDayOffProposals(damMro,List.of(11,22,25,26));
+        generateDayOffProposals(olgDar,List.of(23));
+
+        //SHIFT_PROPOSAL
+        newGenerateShiftProposal(damMro,12,8,20);
+        newGenerateShiftProposal(damMro,13,8,14);
+        newGenerateShiftProposal(damMro,14,8,20);
+        newGenerateShiftProposal(damMro,15,13,20);
+        newGenerateShiftProposal(damMro,16,8,20);
+        newGenerateShiftProposal(damMro,18,8,14);
+        newGenerateShiftProposal(damMro,19,14,20);
+        newGenerateShiftProposal(damMro,20,8,14);
+        newGenerateShiftProposal(damMro,21,8,14);
+        newGenerateShiftProposal(damMro,23,8,20);
+        newGenerateShiftProposal(damMro,27,8,20);
+        newGenerateShiftProposal(damMro,28,8,20);
+        newGenerateShiftProposal(damMro,29,14,20);
+        newGenerateShiftProposal(damMro,30,8,20);
+
+        newGenerateShiftProposal(matKru,15,8,14);
+        newGenerateShiftProposal(matKru,21,8,14);
+        newGenerateShiftProposal(matKru,26,8,14);
+
+        newGenerateShiftProposal(wojPie,5,8,14);
+        newGenerateShiftProposal(agaWar,6,8,15);
+        newGenerateShiftProposal(monBar,8,8,14);
+        newGenerateShiftProposal(monBar,9,8,14);
+        newGenerateShiftProposal(agaWar,14,8,14);
+        newGenerateShiftProposal(wojPie,18,8,14);
+        newGenerateShiftProposal(monBar,18,8,14);
+        newGenerateShiftProposal(wojPie,19,8,14);
+        newGenerateShiftProposal(monBar,19,8,14);
+        newGenerateShiftProposal(agaWar,20,8,15);
+        newGenerateShiftProposal(wojPie,21,8,14);
+        newGenerateShiftProposal(wojPie,26,8,14);
+        newGenerateShiftProposal(wojPie,27,8,14);
+        newGenerateShiftProposal(monBar,28,8,14);
+        newGenerateShiftProposal(monBar,29,8,14);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+        //then
+    }
+
+    @Test
     void generateMonthlySchedule_workingOn() throws IOException {
         //given
 
@@ -285,11 +360,11 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,thiMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,fouMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,fifMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,sixMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,secMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,thiMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,fouMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,fifMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,sixMar,proposalShiftEightToFourteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -311,11 +386,11 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,thiMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,fouMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,fifMar,proposalShiftEightToFourteen);
-        generateProposal(wojPie,sixMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,secMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,thiMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,fouMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,fifMar,proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,sixMar,proposalShiftEightToFourteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -328,8 +403,8 @@ class MonthlyStoreScheduleGeneratorIT {
     void generateMonthlySchedule_weirdEmployeeHasProposalMorningShiftsAndTwoEmployeesOnVacationInSameTime() throws IOException {
         //given
         generateVacation(damMro,firstTwoWeeks);
-        generateVacation(filKam,firstTwoWeeks);
-        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(micKoz,firstTwoWeeks);
+        generateVacation(micWoc,secondTwoWeeks);
         generateVacation(emiMia,secondTwoWeeks);
 
         LocalDate secMar = LocalDate.of(year,month,2);
@@ -338,11 +413,11 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,thiMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,fouMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,fifMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,sixMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,secMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,thiMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,fouMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,fifMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,sixMar, proposalShiftEightToThirteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -364,17 +439,17 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate fifMar = LocalDate.of(year,month,5);
         LocalDate sixMar = LocalDate.of(year,month,6);
 
-        generateProposal(wojPie,secMar, proposalShiftEightToFourteen);
-        generateProposal(micKoz,secMar, proposalShiftEightToFourteen);
-        generateProposal(agaWar,secMar, proposalShiftEightToFourteen);
-        generateProposal(olgDar,secMar, proposalShiftEightToFourteen);
-        generateProposal(tomZaj,secMar, proposalShiftEightToFourteen);
-        generateProposal(marPrz,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(wojPie,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(micKoz,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(agaWar,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(olgDar,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(tomZaj,secMar, proposalShiftEightToFourteen);
+        generateShiftProposal(marPrz,secMar, proposalShiftEightToFourteen);
 
-        generateProposal(wojPie,thiMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,fouMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,fifMar, proposalShiftEightToThirteen);
-        generateProposal(wojPie,sixMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,thiMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,fouMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,fifMar, proposalShiftEightToThirteen);
+        generateShiftProposal(wojPie,sixMar, proposalShiftEightToThirteen);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -392,12 +467,37 @@ class MonthlyStoreScheduleGeneratorIT {
 
         LocalDate secMar = LocalDate.of(year,month,2);
 
-        generateProposal(wojPie,secMar, proposalShiftFourteenToTwenty);
-        generateProposal(micKoz,secMar, proposalShiftFourteenToTwenty);
-        generateProposal(agaWar,secMar, proposalShiftFourteenToTwenty);
-        generateProposal(olgDar,secMar, proposalShiftFourteenToTwenty);
-        generateProposal(tomZaj,secMar, proposalShiftFourteenToTwenty);
-        generateProposal(marPrz,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(wojPie,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(micKoz,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(agaWar,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(olgDar,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(tomZaj,secMar, proposalShiftFourteenToTwenty);
+        generateShiftProposal(marPrz,secMar, proposalShiftFourteenToTwenty);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
+    }
+
+    @Test
+    void generateMonthlySchedule_TooManyDayOffProposalInSameDay() throws IOException {
+        //given
+        generateVacation(damMro,firstTwoWeeks);
+        generateVacation(filKam,firstTwoWeeks);
+        generateVacation(marNow,secondTwoWeeks);
+        generateVacation(emiMia,secondTwoWeeks);
+
+
+
+        generateDayOffProposal(filKam,dayOffProposalSecondDayOfMonth);
+        generateDayOffProposal(monBar,dayOffProposalSecondDayOfMonth);
+        generateDayOffProposal(olgDar,dayOffProposalSecondDayOfMonth);
+        generateDayOffProposal(agaWar,dayOffProposalSecondDayOfMonth);
+
+        generateDayOffProposal(matKru,dayOffProposalSecondAndThirdDayOfMonth);
+        generateDayOffProposal(tomZaj,dayOffProposalSecondAndThirdDayOfMonth);
+        generateDayOffProposal(marNow,dayOffProposalSecondAndThirdDayOfMonth);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -411,7 +511,7 @@ class MonthlyStoreScheduleGeneratorIT {
         LocalDate secMar = LocalDate.of(year,month,2);
 
         for (Employee employee : employees){
-            generateProposal(employee,secMar, proposalShiftEightToFourteen);
+            generateShiftProposal(employee,secMar, proposalShiftEightToFourteen);
         }
 
         //when
@@ -422,7 +522,7 @@ class MonthlyStoreScheduleGeneratorIT {
 
 
 
-    private void generateProposal(Employee employee, LocalDate date, int[] shiftAsArray){
+    private void generateShiftProposal(Employee employee, LocalDate date, int[] shiftAsArray){
         employeeProposalShiftsService.createEmployeeProposalShift(
                 storeId,
                 employee.getId(),
@@ -433,6 +533,54 @@ class MonthlyStoreScheduleGeneratorIT {
         );
     }
 
+    private void newGenerateShiftProposal(Employee employee, int dayOfMonth, int startShiftHour, int endShiftHour){
+        LocalDate date = LocalDate.of(year,month,dayOfMonth);
+
+        int[] shiftAsArray = new int[24];
+        for (int i = startShiftHour; i < endShiftHour; i++){
+            shiftAsArray[i] = 1;
+        }
+
+        employeeProposalShiftsService.createEmployeeProposalShift(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeProposalShiftsDTO(
+                        date,
+                        shiftAsArray
+                )
+        );
+    }
+
+    private void generateDayOffProposal(Employee employee, int[] monthlyDayOffProposal){
+        employeeProposalDaysOffService.createEmployeeProposalDaysOff(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeProposalDaysOffDTO(
+                        year,
+                        month,
+                        monthlyDayOffProposal
+                )
+        );
+    }
+
+    private void generateDayOffProposals(Employee employee, List<Integer> listOfDays){
+        int[] monthlyDayOffProposal = new int[31];
+        for (int day : listOfDays){
+            monthlyDayOffProposal[day-1] = 1;
+        }
+
+        employeeProposalDaysOffService.createEmployeeProposalDaysOff(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeProposalDaysOffDTO(
+                        year,
+                        month,
+                        monthlyDayOffProposal
+                )
+        );
+
+    }
+
     private void generateVacation(Employee employee, int[] vacationTime){
         employeeVacationService.createEmployeeProposalVacation(
                 storeId,
@@ -441,6 +589,24 @@ class MonthlyStoreScheduleGeneratorIT {
                         year,
                         month,
                         vacationTime
+                )
+        );
+    }
+
+    private void generateVacations(Employee employee, int startDay, int endDay){
+        int[] vacation = new int[31];
+
+        for (int i = startDay; i <= endDay; i++){
+            vacation[i-1] = 1;
+        }
+
+        employeeVacationService.createEmployeeProposalVacation(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeVacationDTO(
+                        year,
+                        month,
+                        vacation
                 )
         );
     }
