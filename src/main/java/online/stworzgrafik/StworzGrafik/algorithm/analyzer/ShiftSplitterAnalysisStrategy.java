@@ -188,6 +188,9 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                 if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
+                if (context.employeeIsInWarehouse(originalEmployee,originalEmployeeDate)) continue;
+                if (context.employeeIsInWarehouse(otherEmployeeForSwap,otherEmployeeDateForSwap)) continue;
+
                 // re-walidacja zmiany — pobierz AKTUALNĄ zmianę z contextu, nie z sortedData
                 Shift currentShiftOnDate = context.getFinalSchedule()
                         .getOrDefault(originalEmployeeDate, new HashMap<>())

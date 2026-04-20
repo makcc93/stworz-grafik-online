@@ -10,6 +10,9 @@ import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
+import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
@@ -125,6 +128,9 @@ class MonthlyStoreScheduleGeneratorIT {
     private DemandDraftService demandDraftService;
 
     @Autowired
+    private DemandDraftEntityService demandDraftEntityService;
+
+    @Autowired
     private ExcelExport excelExport;
 
     private StoreDelivery storeDelivery;
@@ -166,6 +172,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private int[] secondTwoWeeks = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
     private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 7, 7, 7, 8, 8, 8, 8, 8, 7, 5, 0, 0, 0, 0};
+    private int[] mondayDraftPlusOneAllDay = {0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 8, 8, 8, 9, 9, 9, 9, 9, 8, 6, 0, 0, 0, 0};
     private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 7, 7, 7, 7, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
     private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
     private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
@@ -768,6 +775,12 @@ class MonthlyStoreScheduleGeneratorIT {
                 demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,saturdayDraft));
             }
         }
+
+        LocalDate extraDate = LocalDate.of(year, month, 4);
+        List<DemandDraft> extraDateDraft = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, extraDate, extraDate);
+
+        map.put(extraDate,mondayDraftPlusOneAllDay);
+        demandDraftService.updateDemandDraft(storeId,extraDateDraft.getFirst().getId(),new UpdateDemandDraftDTO(extraDate,mondayDraftPlusOneAllDay));
 
         return map;
     }

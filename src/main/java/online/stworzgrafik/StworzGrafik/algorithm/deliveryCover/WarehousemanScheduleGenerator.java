@@ -55,7 +55,7 @@ public void generate(ScheduleGeneratorContext context){
             for (int day : dayNumbersByDayOfWeek){
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
-                if (holidayManager.isHoliday(date) || context.employeeHasProposalShift(warehouseman,date)){
+                if (holidayManager.isHoliday(date) || context.employeeHasProposalShift(warehouseman,date) || shift.equals(context.getDefaultDaysOffShift())){
                     continue;
                 }
 
@@ -65,7 +65,7 @@ public void generate(ScheduleGeneratorContext context){
                 }
 
                 context.registerShiftOnSchedule(date,warehouseman,shift,dayOfWeek);
-                context.addEmployeeWorkingInWarehouse(date,warehouseman);
+                context.addEmployeeWorkingInWarehouse(date,warehouseman,shift);
             }
         }
     }
@@ -110,6 +110,6 @@ public void generate(ScheduleGeneratorContext context){
 
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
         context.registerShiftOnSchedule(date,employeeToCoverWarehouseman,shift,dayOfWeek);
-        context.addEmployeeWorkingInWarehouse(date,employeeToCoverWarehouseman);
+        context.addEmployeeWorkingInWarehouse(date,employeeToCoverWarehouseman,shift);
     }
 }

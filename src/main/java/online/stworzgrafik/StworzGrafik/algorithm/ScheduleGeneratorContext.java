@@ -159,10 +159,12 @@ public class ScheduleGeneratorContext {
         return employeeInWarehouse.getOrDefault(employee,new ArrayList<>()).contains(date);
     }
 
-    public void addEmployeeWorkingInWarehouse(LocalDate date, Employee employee){
-        employeeInWarehouse
-                .computeIfAbsent(employee, k -> new ArrayList<>())
-                .add(date);
+    public void addEmployeeWorkingInWarehouse(LocalDate date, Employee employee, Shift shift){
+        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+            employeeInWarehouse
+                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .add(date);
+        }
     }
 
     public void addShiftsToDay(LocalDate date, List<Shift> shifts){
