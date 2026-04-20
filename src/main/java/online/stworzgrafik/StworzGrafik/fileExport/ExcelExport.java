@@ -67,7 +67,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell cell = headerRow.createCell(columnIndex++);
                 cell.setCellValue(day + " " + yearMonth.getMonth().toString());
-                cell.setCellStyle(defineWeekendBackgroundColor(workbook,headerStyle,cell,date));
+                cell.setCellStyle(determineCellStyle(workbook,headerStyle,date,false,false,false,false));
             }
 
             Cell totalHoursCell = headerRow.createCell(columnIndex++);
@@ -100,7 +100,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell employeeName = row.createCell(day);
                 employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, new Locale("pl", "PL")));
-                employeeName.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,employeeName,date));
+                employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false));
             }
 
 
@@ -116,33 +116,39 @@ public class ExcelExport implements ExportFile{
 
                 int cellIndex = 1;
                 for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                    LocalDate date = LocalDate.of(year,month,day);
+                    LocalDate date = LocalDate.of(year, month, day);
 
-                    if (!scheduleContainsDate(finalScheduleSortedByDate, date)){
-                        Cell cell = row.createCell(cellIndex++);
+                    Cell cell = row.createCell(cellIndex++);
+
+                    if (!scheduleContainsDate(finalScheduleSortedByDate, date)) {
                         cell.setCellValue("w");
-                        cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
+                        cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, false, false,false,false));
                         continue;
                     }
 
                     Map<Employee, Shift> dailyMap = finalScheduleSortedByDate.getOrDefault(date, new HashMap<>());
+                    Shift shift = dailyMap.getOrDefault(employee, context.getDefaultDaysOffShift());
 
+                    boolean isVacation = false;
+                    boolean isWarehouse = employeeWarehouseCount
+                            .getOrDefault(employee, List.of())
+                            .contains(date);
+                    boolean isShiftProposal = context.employeeHasProposalShift(employee,date);
+                    boolean isDayOffProposal = context.employeeHasProposalDaysOff(employee,date);
 
-                        Shift shift = dailyMap.getOrDefault(employee, context.getDefaultDaysOffShift());
-
-                        Cell cell = row.createCell(cellIndex++);
-                        if (shift.getStartHour().getHour() == 0) {
-                            if (shift.getEndHour().getHour() == 0) {
-                                cell.setCellValue("w");
-                            } else if (shift.getEndHour().getHour() == 8) {
-                                cell.setCellValue("u");
-                            }
-                        } else {
-                            cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
+                    if (shift.getStartHour().getHour() == 0) {
+                        if (shift.getEndHour().getHour() == 0) {
+                            cell.setCellValue("w");
+                        } else if (shift.getEndHour().getHour() == 8) {
+                            cell.setCellValue("u");
+                            isVacation = true;
                         }
+                    } else {
+                        cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
+                    }
 
-                        cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
-                        }
+                    cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isWarehouse,isShiftProposal,isDayOffProposal));
+                }
 
                 Integer workedHours = employeeHours.getOrDefault(employee, 0);
                 Cell workedHoursCell = row.createCell(cellIndex++);
@@ -187,17 +193,15 @@ public class ExcelExport implements ExportFile{
 
                     Cell cell = row.createCell(cellIndex++);
                     cell.setCellValue(dailyShiftsCount[i]);
-                    cell.setCellStyle(defineWeekendBackgroundColor(workbook,dataStyle,cell,date));
+                    cell.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false));
                 }
             }
+            createLegend(sheet,workbook);
 
             sheet.autoSizeColumn(0);
 
 
-
-
-            //
-
+            //NEW SHEET
             Sheet messagesSheet = workbook.createSheet("INFORMACJE DO GRAFIKA");
             messagesSheet.createRow(0).createCell(0).setCellValue("Wiadomości");
             List<CreateScheduleMessageDTO> finalScheduleMessages = context.getFinalScheduleMessages();
@@ -222,32 +226,12 @@ public class ExcelExport implements ExportFile{
             messagesSheet.autoSizeColumn(0);
             //
 
-
-
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             workbook.write(byteArrayOutputStream);
 
             return byteArrayOutputStream.toByteArray();
         }
     }
-
-    private CellStyle defineWeekendBackgroundColor(Workbook workbook, CellStyle originalCellStyle, Cell cell, LocalDate date){
-
-        if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY || holidayManager.isHoliday(date)){
-            CellStyle updatedStyle = workbook.createCellStyle();
-
-            updatedStyle.cloneStyleFrom(originalCellStyle);
-            updatedStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            updatedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-            cell.setCellStyle(updatedStyle);
-
-            return updatedStyle;
-        }
-
-        return originalCellStyle;
-    }
-
     private int[] sumOfDailyShiftsAsArray(ScheduleGeneratorContext context, LocalDate date, Set<Employee> employees){
         Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
 
@@ -283,8 +267,6 @@ public class ExcelExport implements ExportFile{
         font.setBold(false);
         font.setFontHeightInPoints((short) 9);
         style.setFont(font);
-//        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-//        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
@@ -312,9 +294,91 @@ public class ExcelExport implements ExportFile{
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
         style.setAlignment(HorizontalAlignment.RIGHT);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
         Font font = workbook.createFont();
         font.setBold(true);
         style.setFont(font);
         return style;
+    }
+
+    private CellStyle determineCellStyle(Workbook workbook,
+                                         CellStyle baseStyle,
+                                         LocalDate date,
+                                         boolean isVacation,
+                                         boolean isWarehouse,
+                                         boolean isProposal,
+                                         boolean isDayOffProposal) {
+        IndexedColors color = null;
+
+        if (date.getDayOfWeek() == DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == DayOfWeek.SUNDAY
+                || holidayManager.isHoliday(date)) {
+            color = IndexedColors.GREY_25_PERCENT;
+        }
+
+        if (isWarehouse) {
+            color = IndexedColors.LIGHT_ORANGE; // lub LIGHT_TURQUOISE
+        }
+
+        if (isProposal || isDayOffProposal){
+            color = IndexedColors.VIOLET;
+        }
+
+        if (isVacation) {
+            color = IndexedColors.SEA_GREEN; // lub LIGHT_BLUE
+        }
+
+        if (color == null) return baseStyle;
+
+        CellStyle updatedStyle = workbook.createCellStyle();
+        updatedStyle.cloneStyleFrom(baseStyle);
+        updatedStyle.setFillForegroundColor(color.getIndex());
+        updatedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return updatedStyle;
+    }
+
+    private void createLegend(Sheet sheet, Workbook workbook) {
+        int startRow = 2;
+        int startCol = 38;
+
+        record LegendEntry(String label, IndexedColors color) {}
+
+        List<LegendEntry> entries = List.of(
+                new LegendEntry("PROPOZYCJA PRACOWNIKA", IndexedColors.VIOLET),
+                new LegendEntry("URLOP", IndexedColors.SEA_GREEN),
+                new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
+                new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT)
+        );
+
+        for (int i = 0; i < entries.size(); i++) {
+            LegendEntry entry = entries.get(i);
+
+            Row row = sheet.getRow(startRow + i);
+            if (row == null) {
+                row = sheet.createRow(startRow + i);
+            }
+
+            CellStyle legendStyle = workbook.createCellStyle();
+            legendStyle.setFillForegroundColor(entry.color().getIndex());
+            legendStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            legendStyle.setBorderBottom(BorderStyle.THIN);
+            legendStyle.setBorderTop(BorderStyle.THIN);
+            legendStyle.setBorderLeft(BorderStyle.THIN);
+            legendStyle.setBorderRight(BorderStyle.THIN);
+            legendStyle.setAlignment(HorizontalAlignment.CENTER);
+            legendStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            Font font = workbook.createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 9);
+            legendStyle.setFont(font);
+
+            Cell cell = row.createCell(startCol);
+            cell.setCellValue(entry.label());
+            cell.setCellStyle(legendStyle);
+
+            sheet.setColumnWidth(startCol, 30 * 256);
+        }
     }
 }
