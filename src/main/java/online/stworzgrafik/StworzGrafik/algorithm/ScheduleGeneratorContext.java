@@ -39,7 +39,8 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
     private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
-    private final Map<Employee, List<LocalDate>> employeeInWarehouse;
+    private final Map<Employee, List<LocalDate>> employeeWarehouseDays;
+    private final Map<Employee, List<LocalDate>> employeeCreditDays;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -155,13 +156,25 @@ public class ScheduleGeneratorContext {
         return storeOpenCloseHoursByDate.getOrDefault(date, new OpenCloseStoreHoursDTO(0,0));
     }
 
-    public boolean employeeIsInWarehouse(Employee employee, LocalDate date){
-        return employeeInWarehouse.getOrDefault(employee,new ArrayList<>()).contains(date);
+    public boolean isEmployeeWorkingInWarehouse(Employee employee, LocalDate date){
+        return employeeWarehouseDays.getOrDefault(employee,new ArrayList<>()).contains(date);
     }
 
-    public void addEmployeeWorkingInWarehouse(LocalDate date, Employee employee, Shift shift){
+    public void assignEmployeeToWarehouse(LocalDate date, Employee employee, Shift shift){
         if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
-            employeeInWarehouse
+            employeeWarehouseDays
+                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .add(date);
+        }
+    }
+
+    public boolean isEmployeeWorkingOnCredit(Employee employee, LocalDate date){
+        return employeeCreditDays.getOrDefault(employee,new ArrayList<>()).contains(date);
+    }
+
+    public void assignEmployeeToCredit(LocalDate date, Employee employee, Shift shift){
+        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+            employeeCreditDays
                     .computeIfAbsent(employee, k -> new ArrayList<>())
                     .add(date);
         }

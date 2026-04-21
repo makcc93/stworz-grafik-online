@@ -36,7 +36,7 @@ public class ExcelExport implements ExportFile{
         Map<Employee, Integer> employeeWorkingDaysCount = context.getWorkingDaysCount();
         Map<Employee, Integer> employeeWorkingWeekendsCount = context.getWorkingOnWeekendCount();
         Map<Employee, Integer> employeeVacationsCount = context.getVacationDaysCount();
-        Map<Employee, List<LocalDate>> employeeWarehouseCount = context.getEmployeeInWarehouse();
+        Map<Employee, List<LocalDate>> employeeWarehouseCount = context.getEmployeeWarehouseDays();
 
         LinkedHashMap<LocalDate, Map<Employee,Shift>> finalScheduleSortedByDate = context.getFinalSchedule().entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getDayOfMonth()))
@@ -238,7 +238,7 @@ public class ExcelExport implements ExportFile{
         int[] shiftCount = new int[24];
         for (int i = 0; i < 24; i++) {
             for (Employee employee : employees) {
-                if (context.employeeIsInWarehouse(employee,date)) continue;
+                if (context.isEmployeeWorkingInWarehouse(employee,date)) continue;
 
                 Shift shift = dailySchedule.getOrDefault(employee, context.findShiftByArray(new int[24]));
 
@@ -348,6 +348,7 @@ public class ExcelExport implements ExportFile{
                 new LegendEntry("PROPOZYCJA PRACOWNIKA", IndexedColors.VIOLET),
                 new LegendEntry("URLOP", IndexedColors.SEA_GREEN),
                 new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
+                new LegendEntry("RATY", IndexedColors.AQUA),
                 new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT)
         );
 

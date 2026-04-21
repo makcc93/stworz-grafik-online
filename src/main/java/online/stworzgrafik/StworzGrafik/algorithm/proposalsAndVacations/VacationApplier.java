@@ -20,8 +20,6 @@ public class VacationApplier {
     private final HolidayManager holidayManager;
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
-        log.info("Sprawdzam urlopy do dodania do grafika");
-
         List<Employee> employeesWithVacation = context.getStoreActiveEmployees().stream()
                 .filter(context::employeeHasPlannedVacation)
                 .toList();
@@ -41,8 +39,6 @@ public class VacationApplier {
 
             for (Employee employee : employeesWithVacation) {
                 if (context.employeeIsOnVacation(employee, day)) {
-                    log.info("Dodaje urlop pracownikowi {} {} w dniu {}",employee.getFirstName(),employee.getLastName(),date);
-
                     context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
                     context.addEmployeeVacationDay(employee,1);
                 }

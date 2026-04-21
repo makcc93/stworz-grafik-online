@@ -102,10 +102,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean otherEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
         return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
-                empl -> !empl.isCanOpenCloseStore()
+                empl ->
+                        !empl.isCanOpenCloseStore()
                         && !empl.isCanOperateCredit()
-//                        && !empl.isCashier()
-                        && !empl.isWarehouseman());
+                        && !empl.isWarehouseman()
+        );
     }
 
     private boolean splitShiftsByCriteria(ScheduleGeneratorContext context, int monthlyMaxWorkingDays, Predicate<Employee> employeeFilter) {
@@ -128,7 +129,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
                 if (context.employeeIsOnDayOff(employee, day)) continue;
-                if (context.employeeIsInWarehouse(employee,date)) continue;
+                if (context.isEmployeeWorkingInWarehouse(employee,date)) continue;
 
                 Shift shift = context.getFinalSchedule()
                         .getOrDefault(date, new HashMap<>())
@@ -188,8 +189,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                 if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
-                if (context.employeeIsInWarehouse(originalEmployee,originalEmployeeDate)) continue;
-                if (context.employeeIsInWarehouse(otherEmployeeForSwap,otherEmployeeDateForSwap)) continue;
+                if (context.isEmployeeWorkingInWarehouse(originalEmployee,originalEmployeeDate)) continue;
+                if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap,otherEmployeeDateForSwap)) continue;
 
                 // re-walidacja zmiany — pobierz AKTUALNĄ zmianę z contextu, nie z sortedData
                 Shift currentShiftOnDate = context.getFinalSchedule()

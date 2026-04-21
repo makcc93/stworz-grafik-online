@@ -19,12 +19,6 @@ public class DaysOffApplier {
     private final HolidayManager holidayManager;
 
     public void applyDaysOffToSchedule(ScheduleGeneratorContext context){
-        log.info("Sprawdzam propozycje dni wolnych do dodania do grafika");
-
-//        List<Employee> employeesWithProposalDaysOff= context.getStoreActiveEmployees().stream()
-//                .filter(context::employeeHasProposalDaysOff)
-//                .toList();
-
         Integer year = context.getYear();
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);
@@ -43,8 +37,6 @@ public class DaysOffApplier {
             }
 
             for (Employee employee : employeesWithProposalDaysOff){
-                log.info("Wprowadzam propozycję dnia wolnego dla {} {} w dniu {}", employee.getFirstName(),employee.getLastName(),date);
-
                 context.registerShiftOnSchedule(date,employee,dayOffShift,date.getDayOfWeek());
             }
         }

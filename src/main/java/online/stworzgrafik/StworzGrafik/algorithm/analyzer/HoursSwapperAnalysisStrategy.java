@@ -1,7 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
 
 import de.focus_shift.jollyday.core.HolidayManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,7 +25,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     @Override
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
-        int maxHoursDifference = 5;
+        int maxHoursDifference = 3;
 
         int employeeLowestValueOfWorkingHours = employees.stream()
                 .filter(empl -> !empl.isWarehouseman())
@@ -61,7 +59,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         while (true) {
             int employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-//                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
+                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparingInt(Map.Entry::getValue))
@@ -123,11 +121,9 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         return swapHours(context, employees);
     }
 
-
-
     private boolean swapHours(ScheduleGeneratorContext context, List<Employee> employees) {
         boolean anySwapDone = false;
-        int timesRepeat = 3;
+        int timesRepeat = 10;
 
         YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
 
@@ -142,27 +138,10 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Map<Employee, Shift> employeeShift = new HashMap<>();
 
                 for (Employee employee : employees) {
-                    if (context.employeeHasProposalShift(employee, date)) {
-                        log.info("Pracownik {} {} ma propozycje pracy. {}", employee.getFirstName(), employee.getLastName(), date);
-                        continue;
-                    }
-                    ;
-
-                    if (context.employeeIsInWarehouse(employee, date)) {
-                        log.info("Pracownik {} {} pracuje na magazynie. {}", employee.getFirstName(), employee.getLastName(), date);
-                        continue;
-                    }
-                    ;
-                    if (context.employeeIsOnVacation(employee, day)) {
-                        log.info("Pracownik {} {} jest na urlopie. {}", employee.getFirstName(), employee.getLastName(), date);
-                        continue;
-                    }
-                    ;
-                    if (!context.employeeIsWorking(employee, date)) {
-                        log.info("Pracownik {} {} nie pracuje. {}", employee.getFirstName(), employee.getLastName(), date);
-                        continue;
-                    }
-                    ;
+                    if (context.employeeHasProposalShift(employee, date)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                    if (context.employeeIsOnVacation(employee, day)) continue;
+                    if (!context.employeeIsWorking(employee, date)) continue;
 
                     employeeHours.put(employee, context.getEmployeeHours().getOrDefault(employee, 0));
 

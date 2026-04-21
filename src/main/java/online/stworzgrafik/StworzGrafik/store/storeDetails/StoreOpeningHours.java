@@ -58,20 +58,20 @@ public class StoreOpeningHours {
 
     public static StoreOpeningHours createDefault() {
         return StoreOpeningHours.builder()
-                .mondayOpen(LocalTime.of(8, 0))
+                .mondayOpen(LocalTime.of(9, 0))
                 .mondayClose(LocalTime.of(20, 0))
-                .tuesdayOpen(LocalTime.of(8, 0))
+                .tuesdayOpen(LocalTime.of(9, 0))
                 .tuesdayClose(LocalTime.of(20, 0))
-                .wednesdayOpen(LocalTime.of(8, 0))
+                .wednesdayOpen(LocalTime.of(9, 0))
                 .wednesdayClose(LocalTime.of(20, 0))
-                .thursdayOpen(LocalTime.of(8, 0))
+                .thursdayOpen(LocalTime.of(9, 0))
                 .thursdayClose(LocalTime.of(20, 0))
-                .fridayOpen(LocalTime.of(8, 0))
+                .fridayOpen(LocalTime.of(9, 0))
                 .fridayClose(LocalTime.of(20, 0))
                 .saturdayOpen(LocalTime.of(9, 0))
-                .saturdayClose(LocalTime.of(18, 0))
+                .saturdayClose(LocalTime.of(20, 0))
                 .sundayOpen(LocalTime.of(10, 0))
-                .sundayClose(LocalTime.of(16, 0))
+                .sundayClose(LocalTime.of(19, 0))
                 .build();
     }
 }

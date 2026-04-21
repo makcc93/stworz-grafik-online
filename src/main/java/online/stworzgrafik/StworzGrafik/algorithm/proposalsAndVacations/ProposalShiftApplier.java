@@ -26,8 +26,6 @@ public class ProposalShiftApplier {
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
-        log.info("Sprawdzam propozycje zmian do dodania do grafika");
-
         List<Employee> employees = context.getStoreActiveEmployees();
 
         Integer year = context.getYear();
@@ -51,15 +49,7 @@ public class ProposalShiftApplier {
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
                     Shift proposalShift = context.findShiftByArray(proposalShiftAsArray);
 
-                    log.info("Wprowadzam propozycję zmiany {}-{} pracownika {} {} w dniu {}",
-                            proposalShift.getStartHour().getHour(),
-                            proposalShift.getEndHour().getHour(),
-                            employee.getFirstName(),
-                            employee.getLastName(),
-                            date);
-
                     context.registerShiftOnSchedule(date,employee,proposalShift,date.getDayOfWeek());
-//                    context.addWorkingInformation(employee,proposalShift,date.getDayOfWeek());
                 }
             }
         }
@@ -73,7 +63,7 @@ public class ProposalShiftApplier {
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.INFO,
                             ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " ma propozycję dnia wolnego i pracy w dniu " + date,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " ma propozycję dnia wolnego i pracy jednocześnie w dniu " + date,
                             employee.getId(),
                             date
                     )
@@ -90,7 +80,7 @@ public class ProposalShiftApplier {
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.INFO,
                             ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję pracy w dniu " + date,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję w dniu " + date,
                             employee.getId(),
                             date
                     )

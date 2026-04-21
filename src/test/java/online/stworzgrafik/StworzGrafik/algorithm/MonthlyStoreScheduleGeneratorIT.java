@@ -237,6 +237,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 new HashMap<>(),
                 getShiftsForEveryDay(year,month),
                 new HashMap<>(),
+                new HashMap<>(),
                 generateAllShifts(),
                 defaultVacationShift,
                 defaultDayOffShift,
@@ -258,6 +259,10 @@ class MonthlyStoreScheduleGeneratorIT {
     void generateMonthlySchedule_realScheduleForMay() throws IOException {
         //given
 
+        LocalDate extraDate = LocalDate.of(year, month, 4);
+        List<DemandDraft> extraDateDraft = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, extraDate, extraDate);
+        demandDraftService.updateDemandDraft(storeId,extraDateDraft.getFirst().getId(),new UpdateDemandDraftDTO(extraDate,mondayDraftPlusOneAllDay));
+
         //VACATION
         generateVacations(micKoz,18,26);
         generateVacations(marNow,14,15);
@@ -275,8 +280,8 @@ class MonthlyStoreScheduleGeneratorIT {
         generateDayOffProposals(micWoc,List.of(9));
         generateDayOffProposals(marNow,List.of(16,5,26));
         generateDayOffProposals(marWoj,List.of(13,16));
-        generateDayOffProposals(karNak,List.of(18,22,23));
-        generateDayOffProposals(matKru,List.of(5,12,16,30));
+        generateDayOffProposals(karNak,List.of(6,18,22,23));
+        generateDayOffProposals(matKru,List.of(4,12,16,30));
         generateDayOffProposals(damMro,List.of(11,22,25,26));
         generateDayOffProposals(olgDar,List.of(23));
 
@@ -297,6 +302,7 @@ class MonthlyStoreScheduleGeneratorIT {
         newGenerateShiftProposal(damMro,30,8,20);
 
         newGenerateShiftProposal(matKru,15,8,14);
+        newGenerateShiftProposal(matKru,2,8,14);
         newGenerateShiftProposal(matKru,21,8,14);
         newGenerateShiftProposal(matKru,26,8,14);
 
@@ -775,12 +781,6 @@ class MonthlyStoreScheduleGeneratorIT {
                 demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,saturdayDraft));
             }
         }
-
-        LocalDate extraDate = LocalDate.of(year, month, 4);
-        List<DemandDraft> extraDateDraft = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, extraDate, extraDate);
-
-        map.put(extraDate,mondayDraftPlusOneAllDay);
-        demandDraftService.updateDemandDraft(storeId,extraDateDraft.getFirst().getId(),new UpdateDemandDraftDTO(extraDate,mondayDraftPlusOneAllDay));
 
         return map;
     }

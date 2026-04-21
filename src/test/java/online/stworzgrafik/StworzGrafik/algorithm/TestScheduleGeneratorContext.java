@@ -35,7 +35,8 @@ public class TestScheduleGeneratorContext {
     private Map<Employee, Integer> workingDaysCount = new HashMap<>();
     private Map<Employee, Integer> vacationDaysCount = new HashMap<>();
     private Map<LocalDate, List<Shift>> generatedShiftsByDay = new HashMap<>();
-    private Map<Employee, List<LocalDate>> employeeReplacingWarehouseman = new HashMap<>();
+    private Map<Employee, List<LocalDate>> employeeAssignToWarehouse = new HashMap<>();
+    private Map<Employee, List<LocalDate>> employeeAssignToCredit = new HashMap<>();
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12,0)).withEndHour(LocalTime.of(20,0)).build();
     private Shift defaultDaysOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0,0)).withEndHour(LocalTime.of(0,0)).build();
     private List<Shift> allShifts = new ArrayList<>();
@@ -133,7 +134,7 @@ public class TestScheduleGeneratorContext {
     }
 
     public TestScheduleGeneratorContext withEmployeeReplacingWarehouseman(Map<Employee, List<LocalDate>> employeeReplacingWarehouseman) {
-        this.employeeReplacingWarehouseman = employeeReplacingWarehouseman;
+        this.employeeAssignToWarehouse = employeeReplacingWarehouseman;
         return this;
     }
 
@@ -206,7 +207,8 @@ public class TestScheduleGeneratorContext {
                 workingDaysCount,
                 vacationDaysCount,
                 generatedShiftsByDay,
-                employeeReplacingWarehouseman,
+                employeeAssignToWarehouse,
+                employeeAssignToCredit,
                 allShifts,
                 defaultVacationShift,
                 defaultDaysOffShift,

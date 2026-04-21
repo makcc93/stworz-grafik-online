@@ -85,7 +85,8 @@ class MonthlyStoreScheduleGeneratorTest {
         when(context.getWorkingDaysCount()).thenReturn(new HashMap<>());
         when(context.getVacationDaysCount()).thenReturn(new HashMap<>());
         when(context.getGeneratedShiftsByDay()).thenReturn(getShiftsForEveryDay(year,month));
-        when(context.getEmployeeInWarehouse()).thenReturn(new HashMap<>());
+        when(context.getEmployeeWarehouseDays()).thenReturn(new HashMap<>());
+        when(context.getEmployeeCreditDays()).thenReturn(new HashMap<>());
         when(context.getDefaultVacationShift()).thenReturn(defaultVacationShift);
         when(context.getDefaultDaysOffShift()).thenReturn(defaultDayOffShift);
         when(context.getAllShifts()).thenReturn(generateAllShifts());

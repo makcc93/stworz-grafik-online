@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 public class DailyShiftGeneratorAlgorithm {
 
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
-        log.info("Zaczynam budowanie zmian na każdy dzień pracy");
-
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
         List<Employee> employees = context.getStoreActiveEmployees();
 
@@ -27,8 +25,6 @@ public class DailyShiftGeneratorAlgorithm {
             LocalDate date = entry.getKey();
 
             int[] dailyDraft = entry.getValue();
-            log.info("Dzień {} draft {}",date,dailyDraft);
-
             Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = context.getMonthlyEmployeesProposalShiftsByDate();
             Map<Employee, int[]> dailyEmployeeProposals = monthlyEmployeesProposalShiftsByDate.getOrDefault(date, Collections.emptyMap());
 
@@ -39,7 +35,6 @@ public class DailyShiftGeneratorAlgorithm {
             }
 
             int[] draftAfterProposals = subtractArrays(dailyDraft, employeeDailyProposalCount);
-            log.info("Dzień {} draft po wpisanych propozycjach zmian {}", date, draftAfterProposals);
 
             List<Shift> shifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
@@ -48,8 +43,6 @@ public class DailyShiftGeneratorAlgorithm {
             String shiftsInfo = shifts.stream()
                     .map(s -> s.getStartHour() + " - " + s.getEndHour())
                     .collect(Collectors.joining(", "));
-
-            log.info("Dla dnia {} wygenerowałem zmiany: {}", date,shiftsInfo);
         }
     }
 

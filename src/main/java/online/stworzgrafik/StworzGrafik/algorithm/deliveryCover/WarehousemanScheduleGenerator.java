@@ -65,7 +65,7 @@ public void generate(ScheduleGeneratorContext context){
                 }
 
                 context.registerShiftOnSchedule(date,warehouseman,shift,dayOfWeek);
-                context.addEmployeeWorkingInWarehouse(date,warehouseman,shift);
+                context.assignEmployeeToWarehouse(date,warehouseman,shift);
             }
         }
     }
@@ -77,15 +77,9 @@ public void generate(ScheduleGeneratorContext context){
                 .filter(empl -> !context.employeeIsOnDayOff(empl, date.getDayOfMonth()))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
-                .peek(empl -> log.info("W A R E H O U S E, pracownik {} {} ilosc dostaw: {}, suma godzin: {}",
-                        empl.getFirstName(),
-                        empl.getLastName(),
-                        context.getEmployeeInWarehouse().getOrDefault(empl, new ArrayList<>()).size(),
-                        context.getEmployeeHours().getOrDefault(empl, 0)
-                        ))
                 .min(Comparator.comparingInt(
                                 empl ->
-                                        context.getEmployeeInWarehouse().getOrDefault(empl, new ArrayList<>()).size())
+                                        context.getEmployeeWarehouseDays().getOrDefault(empl, new ArrayList<>()).size())
                         .thenComparingInt(
                                 empl ->
                                         context.getEmployeeHours().getOrDefault(empl, 0)
@@ -110,6 +104,6 @@ public void generate(ScheduleGeneratorContext context){
 
         Employee employeeToCoverWarehouseman = optionalEmployee.get();
         context.registerShiftOnSchedule(date,employeeToCoverWarehouseman,shift,dayOfWeek);
-        context.addEmployeeWorkingInWarehouse(date,employeeToCoverWarehouseman,shift);
+        context.assignEmployeeToWarehouse(date,employeeToCoverWarehouseman,shift);
     }
 }
