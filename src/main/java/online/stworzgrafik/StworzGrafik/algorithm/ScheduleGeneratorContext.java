@@ -198,7 +198,7 @@ public class ScheduleGeneratorContext {
     public boolean employeeIsWorking(Employee employee, LocalDate date){
         Shift shift = finalSchedule.getOrDefault(date, new HashMap<>()).getOrDefault(employee, findShiftByArray(new int[24]));
 
-        return Arrays.stream(shiftAsArray(shift)).sum() > 0;
+        return Arrays.stream(shiftAsArray(shift)).sum() > 0 && !shift.equals(defaultVacationShift);
     }
 
     public void updateEmployeeDailyProposal(Employee employee, LocalDate date, int[] updatedProposal){
@@ -213,11 +213,6 @@ public class ScheduleGeneratorContext {
         int[] employeeMonthlyDayOffProposal = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
 
         employeeMonthlyDayOffProposal[day-1] = 0;
-    }
-
-    public boolean employeeIsOnDayOff(Employee employee, int day){
-        int[] daysOff = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
-        return daysOff[day-1] == 1;
     }
 
     public boolean employeeHasProposalDaysOff(Employee employee, LocalDate date){

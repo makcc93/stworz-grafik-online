@@ -7,6 +7,5 @@ import java.util.Optional;
 
 interface StoreDetailsRepository extends JpaRepository<StoreDetails,Long>, JpaSpecificationExecutor<StoreDetails> {
     Optional<StoreDetails> findByStoreId(Long storeId);
-
     boolean existsByStoreId(Long storeId);
 }

@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public record ResponseStoreDetailsDTO(
         Long id,
         Long storeId,
-        StoreHoursDTO hours,
         OptimalStaffingDTO staffing,
         LocalDateTime createdAt,
         @Nullable Long createdByUserId,

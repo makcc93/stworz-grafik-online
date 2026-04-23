@@ -69,8 +69,6 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        log.info("");
-        log.info("managerOpeningHourAnalysisStrategy");
         List<Shift> shifts = ((ManagerOpeningHourAnalysisResult) result).shifts();
 
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
@@ -124,7 +122,6 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(changedProposalShift));
 
         shiftToChangeStartHour.get().setStartHour(originalProposalShift.getStartHour());
-        log.info("");
     }
 
     private int findStoreOpenHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {

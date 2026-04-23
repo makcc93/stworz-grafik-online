@@ -84,8 +84,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
 
         boolean result = managersSplitShifts(context,monthlyMaxWorkingDays);
-        result = creditEmployeesSplitShifts(context, monthlyMaxWorkingDays);
-        result = otherEmployeesSplitShifts(context,monthlyMaxWorkingDays);
+        result |= creditEmployeesSplitShifts(context, monthlyMaxWorkingDays);
+        result |= otherEmployeesSplitShifts(context,monthlyMaxWorkingDays);
 
         return result;
     }
@@ -128,7 +128,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.employeeIsOnVacation(employee, day)) continue;
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
-                if (context.employeeIsOnDayOff(employee, day)) continue;
                 if (context.isEmployeeWorkingInWarehouse(employee,date)) continue;
 
                 Shift shift = context.getFinalSchedule()
@@ -209,7 +208,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (getShiftLength(otherCurrentShiftOnDate) < 10) continue;
 
                 // divide na aktualnej zmianie, nie candidate.swappingShift()
-                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate)) {
+                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate,originalEmployeeDate,otherEmployeeDateForSwap)) {
                     anySwapDone = true;
                     break;
                 }
@@ -218,18 +217,22 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         return anySwapDone;
     }
 
-    private boolean processCandidate(ShiftSwapCandidate candidate, ScheduleGeneratorContext context, int maxDays, Shift currentShift) {
+    private boolean processCandidate(ShiftSwapCandidate candidate, ScheduleGeneratorContext context, int maxDays, Shift currentShift, LocalDate originalEmployeeDate, LocalDate otherEmployeeDate) {
         Employee originalEmployee = candidate.originalEmployee();
         Employee otherEmployee = candidate.employeeForSwapShift();
 
         if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= maxDays) return false;
         if (context.getWorkingDaysCount().getOrDefault(otherEmployee, 0) >= maxDays) return false;
 
+        if (context.employeeHasProposalDaysOff(originalEmployee,originalEmployeeDate)) return false;
+        if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDate)) return false;
+        if (context.employeeHasProposalDaysOff(otherEmployee,otherEmployeeDate)) return false;
+        if (context.employeeHasProposalDaysOff(otherEmployee,originalEmployeeDate)) return false;
+
         if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
             return false;
         }
 
-//        List<Shift> dividedShift = divideShift(currentShift, context);
         DividedShiftDTO dividedShiftDTO = divideShift(currentShift, context);
 
         Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
@@ -268,23 +271,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 afternoonShift
         );
     }
-
-
-//    private List<Shift> divideShift(Shift shift, ScheduleGeneratorContext context){
-//        int startHour = shift.getStartHour().getHour();
-//        int endHour = shift.getEndHour().getHour();
-//
-//        int midHour = (startHour + endHour) / 2;
-//
-//        if (midHour < 13) midHour = 13;
-//        if (midHour > 16) midHour = 16;
-//
-//        Shift firstShift = context.findShiftByHours(LocalTime.of(startHour, 0), LocalTime.of(midHour, 0));
-//        Shift secondShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, 0));
-//        log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),firstShift.getStartHour(),firstShift.getEndHour(),secondShift.getStartHour(),secondShift.getEndHour());
-//
-//        return List.of(firstShift,secondShift);
-//    }
 
     private int getShiftLength(Shift shift){
         return shift.getEndHour().getHour() - shift.getStartHour().getHour();

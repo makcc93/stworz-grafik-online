@@ -9,7 +9,10 @@ import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.*;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
+import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetails;
+import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetailsService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.springframework.data.domain.Page;
@@ -32,6 +35,9 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     private final BranchEntityService branchEntityService;
     private final NameValidatorService nameValidatorService;
     private final UserAuthorizationService userAuthorizationService;
+    private final StoreOpeningHoursService openingHoursService;
+    private final StoreDeliveryService storeDeliveryService;
+    private final StoreDetailsService storeDetailsService;
 
     @Override
     public Page<ResponseStoreDTO> findAll(Pageable pageable) {
@@ -70,48 +76,12 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
 
     @Override
     public ResponseStoreDTO createStore(CreateStoreDTO createStoreDTO) {
-        ifStoreAlreadyExist(createStoreDTO);
-
-        Branch branch = branchEntityService.getEntityById(createStoreDTO.branchId());
-
-        String validatedName = nameValidatorService.validate(createStoreDTO.name(), ObjectType.STORE);
-
-        Store store = storeBuilder.createStore(
-                validatedName,
-                createStoreDTO.storeCode(),
-                createStoreDTO.location(),
-                branch
-        );
-
-        store.setDelivery(StoreDelivery.builder().build());
-        store.setDetails(StoreDetails.builder().build());
-
-        Store savedStore = storeRepository.save(store);
-
-        return storeMapper.toResponseStoreDto(savedStore);
+        return storeMapper.toResponseStoreDto(createEntityStore(createStoreDTO));
     }
 
     @Override
     public ResponseStoreDTO update(Long storeId, UpdateStoreDTO updateStoreDTO) {
-        if (!userAuthorizationService.hasAccessToStore(storeId)){
-            throw new AccessDeniedException("Access denied for store with id " + storeId);
-        }
-
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
-
-        if (updateStoreDTO.name() != null){
-            String validatedName = nameValidatorService.validate(updateStoreDTO.name(), ObjectType.STORE);
-            store.setName(validatedName);
-        }
-
-        storeMapper.updateStoreFromDTO(updateStoreDTO,store);
-
-        updateBranchIfNeeded(updateStoreDTO, store);
-
-        Store saved = storeRepository.save(store);
-
-        return storeMapper.toResponseStoreDto(saved);
+        return storeMapper.toResponseStoreDto(updateEntityStore(storeId,updateStoreDTO));
     }
 
     @Override
@@ -142,6 +112,51 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
         Store savedStore = storeRepository.save(store);
 
         return storeMapper.toResponseStoreDto(savedStore);
+    }
+
+    @Override
+    public Store createEntityStore(CreateStoreDTO dto) {
+        ifStoreAlreadyExist(dto);
+
+        Branch branch = branchEntityService.getEntityById(dto.branchId());
+
+        String validatedName = nameValidatorService.validate(dto.name(), ObjectType.STORE);
+
+        Store store = storeBuilder.createStore(
+                validatedName,
+                dto.storeCode(),
+                dto.location(),
+                branch
+        );
+
+        Store savedStore = storeRepository.save(store);
+
+        storeDetailsService.initializeDefault(savedStore);
+        storeDeliveryService.initializeDefault(savedStore);
+        openingHoursService.initializeDefaultHours(savedStore);
+
+        return savedStore;
+    }
+
+    @Override
+    public Store updateEntityStore(Long storeId, UpdateStoreDTO dto) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
+
+        if (dto.name() != null){
+            String validatedName = nameValidatorService.validate(dto.name(), ObjectType.STORE);
+            store.setName(validatedName);
+        }
+
+        storeMapper.updateStoreFromDTO(dto,store);
+
+        updateBranchIfNeeded(dto, store);
+
+        return storeRepository.save(store);
     }
 
     @Override

@@ -9,9 +9,6 @@ public record CreateStoreDetailsDTO(
         Long storeId,
 
         @Valid
-        StoreHoursDTO hours,
-
-        @Valid
         OptimalStaffingDTO staffing,
 
         @Nullable

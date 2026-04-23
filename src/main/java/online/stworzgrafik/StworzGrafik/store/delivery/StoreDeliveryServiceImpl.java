@@ -9,12 +9,12 @@ import online.stworzgrafik.StworzGrafik.store.delivery.DTO.ResponseStoreDelivery
 import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDTO;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeliveryEntityService{
     private final UserAuthorizationService userAuthorizationService;
-    private final StoreEntityService storeEntityService;
     private final StoreDeliveryRepository repository;
     private final StoreDeliveryMapper mapper;
 
@@ -22,8 +22,8 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeli
     public ResponseStoreDeliveryDTO findByStoreId(Long storeId) {
         verifyLoggedUserStoreAccess(storeId);
 
-        Store store = storeEntityService.getEntityById(storeId);
-        StoreDelivery storeDelivery = store.getDelivery();
+        StoreDelivery storeDelivery  = repository.findByStoreId(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store entity by id " + storeId));
 
         return mapper.toDTO(storeDelivery);
     }
@@ -40,9 +40,8 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeli
     public ResponseStoreDeliveryDTO update(Long storeId,UpdateStoreDeliveryDTO dto) {
         verifyLoggedUserStoreAccess(storeId);
 
-        Store store = storeEntityService.getEntityById(storeId);
-
-        StoreDelivery storeDelivery = store.getDelivery();
+        StoreDelivery storeDelivery  = repository.findByStoreId(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store delivery by store id " + storeId));
 
         mapper.update(dto,storeDelivery);
 
@@ -54,11 +53,23 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeli
     @Override
     public boolean hasDedicatedWarehouseman(Long storeId) {
         verifyLoggedUserStoreAccess(storeId);
-        Store store = storeEntityService.getEntityById(storeId);
 
-        StoreDelivery storeDelivery = store.getDelivery();
+        StoreDelivery storeDelivery  = repository.findByStoreId(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store entity by id " + storeId));
 
         return storeDelivery.getHasDedicatedWarehouseman();
+    }
+
+    @Override
+    @Transactional
+    public void initializeDefault(Store store) {
+        StoreDelivery delivery = StoreDelivery.builder()
+                .store(store)
+                .hasDedicatedWarehouseman(false)
+                .storeWeeklyDeliverySchedule(StoreWeeklyDeliverySchedule.createDefault())
+                .build();
+
+        repository.save(delivery);
     }
 
     private void verifyLoggedUserStoreAccess(Long storeId) {

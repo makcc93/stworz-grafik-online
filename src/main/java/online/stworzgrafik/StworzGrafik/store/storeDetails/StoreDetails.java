@@ -24,9 +24,6 @@ public class StoreDetails {
     private Store store;
 
     @Embedded
-    private StoreOpeningHours hours;
-
-    @Embedded
     private OptimalStaffing staffing;
 
     private LocalDateTime createdAt;
@@ -40,13 +37,6 @@ public class StoreDetails {
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();
-
-        if (hours == null) {
-            hours = StoreOpeningHours.createDefault();
-        }
-        if (staffing == null) {
-            staffing = OptimalStaffing.createDefault();
-        }
     }
 
     @PreUpdate

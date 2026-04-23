@@ -9,15 +9,11 @@ interface StoreDetailsMapper {
     @Mapping(source = "store.id", target = "storeId")
     ResponseStoreDetailsDTO toDto(StoreDetails storeDetails);
 
-    StoreHoursDTO toDto(StoreOpeningHours hours);
-
     OptimalStaffingDTO toDto(OptimalStaffing staffing);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "store", source = "store")
     StoreDetails toEntity(CreateStoreDetailsDTO dto, Store store);
-
-    StoreOpeningHours toEntity(StoreHoursDTO dto);
 
     OptimalStaffing toEntity(OptimalStaffingDTO dto);
 

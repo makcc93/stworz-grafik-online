@@ -28,8 +28,6 @@ public class WarehousemanScheduleGenerator {
     private final CalendarCalculation calendarCalculation;
 
 public void generate(ScheduleGeneratorContext context){
-    log.info("Sprawdzam magazyniera w celu dodania do grafika");
-
         if (!context.isStoreHasDedicatedWarehouseman()){
             return;
         }
@@ -59,7 +57,7 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeIsOnDayOff(warehouseman,day)){
+                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeHasProposalDaysOff(warehouseman,date)){
                     coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
@@ -74,7 +72,7 @@ public void generate(ScheduleGeneratorContext context){
         Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(Employee::isCanOperateDelivery)
                 .filter(empl -> !context.employeeIsOnVacation(empl, date.getDayOfMonth()))
-                .filter(empl -> !context.employeeIsOnDayOff(empl, date.getDayOfMonth()))
+                .filter(empl -> !context.employeeHasProposalDaysOff(empl, date))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))
                 .min(Comparator.comparingInt(

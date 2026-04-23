@@ -42,7 +42,6 @@ public class StoreDelivery {
     @PrePersist
     void onCreate(){
         createdAt = LocalDateTime.now();
-        this.storeWeeklyDeliverySchedule = StoreWeeklyDeliverySchedule.createDefault();
     }
 
     @PreUpdate

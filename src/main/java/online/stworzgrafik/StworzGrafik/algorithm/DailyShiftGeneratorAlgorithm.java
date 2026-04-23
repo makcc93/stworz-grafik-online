@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -24,6 +23,7 @@ public class DailyShiftGeneratorAlgorithm {
             int[] employeeDailyProposalCount = new int[24];
             LocalDate date = entry.getKey();
 
+
             int[] dailyDraft = entry.getValue();
             Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = context.getMonthlyEmployeesProposalShiftsByDate();
             Map<Employee, int[]> dailyEmployeeProposals = monthlyEmployeesProposalShiftsByDate.getOrDefault(date, Collections.emptyMap());
@@ -35,14 +35,9 @@ public class DailyShiftGeneratorAlgorithm {
             }
 
             int[] draftAfterProposals = subtractArrays(dailyDraft, employeeDailyProposalCount);
-
             List<Shift> shifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
             context.addShiftsToDay(date,shifts);
-
-            String shiftsInfo = shifts.stream()
-                    .map(s -> s.getStartHour() + " - " + s.getEndHour())
-                    .collect(Collectors.joining(", "));
         }
     }
 

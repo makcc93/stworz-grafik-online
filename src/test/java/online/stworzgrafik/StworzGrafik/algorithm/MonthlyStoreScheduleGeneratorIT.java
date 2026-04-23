@@ -41,11 +41,16 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.TestShiftTypeConfigBuilder;
+import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDTO;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryEntityService;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
 import online.stworzgrafik.StworzGrafik.store.delivery.TestStoreDeliveryBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -131,6 +136,9 @@ class MonthlyStoreScheduleGeneratorIT {
     private DemandDraftEntityService demandDraftEntityService;
 
     @Autowired
+    private StoreDeliveryService storeDeliveryService;
+
+    @Autowired
     private ExcelExport excelExport;
 
     private StoreDelivery storeDelivery;
@@ -205,9 +213,8 @@ class MonthlyStoreScheduleGeneratorIT {
         branch = new TestBranchBuilder().withRegion(region).build();
         branchEntityService.saveEntity(branch);
 
-        store = new TestStoreBuilder().withBranch(branch).build();
-        storeEntityService.saveEntity(store);
-
+//        store = new TestStoreBuilder().withBranch(branch).build();
+        store = storeEntityService.createEntityStore(new CreateStoreDTO("NAME","00","WARSAW", branch.getId()));
         storeId = store.getId();
 
         when(userAuthorizationService.hasAccessToStore(anyLong())).thenReturn(true);
@@ -217,6 +224,9 @@ class MonthlyStoreScheduleGeneratorIT {
         scheduleEntityService.saveEntity(schedule);
 
         employees = getEmployees();
+
+        Employee warehouseman = employees.stream().filter(Employee::isWarehouseman).toList().getFirst();
+        storeDeliveryService.update(storeId,new UpdateStoreDeliveryDTO(true,warehouseman.getId(),null,null));
 
         context = new ScheduleGeneratorContext(
                 store.getId(),
@@ -250,8 +260,8 @@ class MonthlyStoreScheduleGeneratorIT {
                 true
         );
 
-        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(employees.stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
-        storeDeliveryEntityService.save(storeDelivery);
+//        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(employees.stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
+//        storeDeliveryEntityService.save(storeDelivery);
 
     }
 
@@ -264,19 +274,21 @@ class MonthlyStoreScheduleGeneratorIT {
         demandDraftService.updateDemandDraft(storeId,extraDateDraft.getFirst().getId(),new UpdateDemandDraftDTO(extraDate,mondayDraftPlusOneAllDay));
 
         //VACATION
-        generateVacations(micKoz,18,26);
-        generateVacations(marNow,14,15);
-        generateVacations(wojPie,6,14);
-        generateVacations(marPrz,11,16);
-        generateVacations(agaWar,1,8);
-        generateVacations(damMro,1,10);
-        generateVacations(marWoj,1,6);
-        generateVacations(emiMia,25,29);
-        generateVacations(olgDar,18,21);
+        generateVacations(micKoz,18,26,null);
+        generateVacations(marNow,14,15,null);
+        generateVacations(wojPie,6,14,null);
+        generateVacations(marPrz,11,16,null);
+        generateVacations(agaWar,1,8,null);
+        generateVacations(damMro,1,10,List.of(12,13));
+        generateVacations(marWoj,1,6,List.of(7));
+        generateVacations(emiMia,25,29,null);
+        generateVacations(olgDar,18,21,List.of(5,6,14));
+        generateVacations(matKru,14,14,null);
+        generateVacations(filKam,21,21,null);
 
         //DAYSOFF_PROPOSAL
         generateDayOffProposals(agaWar,List.of(2));
-        generateDayOffProposals(monBar,List.of(2,7));
+        generateDayOffProposals(monBar,List.of(2,7,15));
         generateDayOffProposals(micWoc,List.of(9));
         generateDayOffProposals(marNow,List.of(16,5,26));
         generateDayOffProposals(marWoj,List.of(13,16));
@@ -286,8 +298,6 @@ class MonthlyStoreScheduleGeneratorIT {
         generateDayOffProposals(olgDar,List.of(23));
 
         //SHIFT_PROPOSAL
-        newGenerateShiftProposal(damMro,12,8,20);
-        newGenerateShiftProposal(damMro,13,8,14);
         newGenerateShiftProposal(damMro,14,8,20);
         newGenerateShiftProposal(damMro,15,13,20);
         newGenerateShiftProposal(damMro,16,8,20);
@@ -302,15 +312,17 @@ class MonthlyStoreScheduleGeneratorIT {
         newGenerateShiftProposal(damMro,30,8,20);
 
         newGenerateShiftProposal(matKru,15,8,14);
+        newGenerateShiftProposal(matKru,5,8,14);
         newGenerateShiftProposal(matKru,2,8,14);
-        newGenerateShiftProposal(matKru,21,8,14);
+        newGenerateShiftProposal(matKru,21,8,20);
         newGenerateShiftProposal(matKru,26,8,14);
+        newGenerateShiftProposal(matKru,8,14,20);
 
         newGenerateShiftProposal(wojPie,5,8,14);
-        newGenerateShiftProposal(agaWar,6,8,15);
         newGenerateShiftProposal(monBar,8,8,14);
         newGenerateShiftProposal(monBar,9,8,14);
         newGenerateShiftProposal(agaWar,14,8,14);
+        newGenerateShiftProposal(agaWar,15,8,14);
         newGenerateShiftProposal(wojPie,18,8,14);
         newGenerateShiftProposal(monBar,18,8,14);
         newGenerateShiftProposal(wojPie,19,8,14);
@@ -606,11 +618,17 @@ class MonthlyStoreScheduleGeneratorIT {
         );
     }
 
-    private void generateVacations(Employee employee, int startDay, int endDay){
+    private void generateVacations(Employee employee, int startDay, int endDay, List<Integer> otherDays){
         int[] vacation = new int[31];
 
         for (int i = startDay; i <= endDay; i++){
             vacation[i-1] = 1;
+        }
+
+        if (otherDays != null){
+            for (Integer day : otherDays){
+                vacation[day-1] = 1;
+            }
         }
 
         employeeVacationService.createEmployeeProposalVacation(

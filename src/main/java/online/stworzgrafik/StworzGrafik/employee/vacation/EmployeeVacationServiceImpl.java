@@ -74,13 +74,13 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
         EmployeeVacation employeeVacation = repository.findById(employeeVacationId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation with id " + employeeVacationId));
 
-        Store store = storeService.getEntityById(storeId);
-
-        Employee employee = employeeService.getEntityById(employeeId);
-
-        if (!employee.getStore().equals(store)) {
-            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-        }
+//        Store store = storeService.getEntityById(storeId);
+//
+//        Employee employee = employeeService.getEntityById(employeeId);
+//
+//        if (!employee.getStore().equals(store)) {
+//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+//        }
 
         mapper.updateEmployeeVacation(dto, employeeVacation);
 

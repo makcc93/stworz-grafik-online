@@ -9,11 +9,16 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeePropos
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
+import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
+import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHours;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetails;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -67,6 +72,17 @@ public class Store {
 
     @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private StoreDelivery delivery;
+
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StoreOpeningHours> openingHours = new ArrayList<>();
+
+    public Map<DayOfWeek, DayHours> getOpeningHoursAsMap() {
+        return openingHours.stream()
+                .collect(Collectors.toMap(
+                        StoreOpeningHours::getDayOfWeek,
+                        h -> new DayHours(h.getOpenTime(), h.getCloseTime())
+                ));
+    }
 
     public void setDetails(StoreDetails details) {
         if (details == null) {

@@ -40,13 +40,4 @@ public class OptimalStaffing {
                 .pok(0)
                 .build();
     }
-
-    public int getTotalStaff() {
-        return (storeManagers != null ? storeManagers : 0) +
-                (salesManagers != null ? salesManagers : 0) +
-                (sellers != null ? sellers : 0) +
-                (cashiers != null ? cashiers : 0) +
-                (storemen != null ? storemen : 0) +
-                (pok != null ? pok : 0);
-    }
 }

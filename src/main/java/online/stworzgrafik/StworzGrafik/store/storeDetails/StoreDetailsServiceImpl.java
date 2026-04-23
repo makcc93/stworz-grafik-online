@@ -1,12 +1,8 @@
 package online.stworzgrafik.StworzGrafik.store.storeDetails;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.CreateStoreDetailsDTO;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.ResponseStoreDetailsDTO;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.DTO.UpdateStoreDetailsDTO;
 import org.springframework.stereotype.Service;
@@ -16,7 +12,6 @@ import org.springframework.stereotype.Service;
 class StoreDetailsServiceImpl implements StoreDetailsService{
 
     private final StoreDetailsRepository storeDetailsRepository;
-    private final StoreEntityService storeService;
     private final StoreDetailsMapper mapper;
 
     public ResponseStoreDetailsDTO findByStoreId(Long storeId) {
@@ -25,21 +20,6 @@ class StoreDetailsServiceImpl implements StoreDetailsService{
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Store details not found for store id: " + storeId
                 ));
-    }
-
-    public ResponseStoreDetailsDTO create(CreateStoreDetailsDTO dto) {
-        Store store = storeService.getEntityById(dto.storeId());
-
-        if (storeDetailsRepository.existsByStoreId(dto.storeId())) {
-            throw new IllegalStateException(
-                    "Store details already exist for store id: " + dto.storeId()
-            );
-        }
-
-        StoreDetails details = mapper.toEntity(dto, store);
-        StoreDetails saved = storeDetailsRepository.save(details);
-
-        return mapper.toDto(saved);
     }
 
     public ResponseStoreDetailsDTO update(Long storeId, UpdateStoreDetailsDTO dto) {
@@ -61,5 +41,15 @@ class StoreDetailsServiceImpl implements StoreDetailsService{
                 ));
 
         storeDetailsRepository.delete(details);
+    }
+
+    @Override
+    public void initializeDefault(Store store) {
+        StoreDetails storeDetails = StoreDetails.builder()
+                .store(store)
+                .staffing(OptimalStaffing.createDefault())
+                .build();
+
+        storeDetailsRepository.save(storeDetails);
     }
 }

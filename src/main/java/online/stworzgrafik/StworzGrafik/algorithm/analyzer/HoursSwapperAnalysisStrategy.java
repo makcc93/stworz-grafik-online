@@ -139,6 +139,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 for (Employee employee : employees) {
                     if (context.employeeHasProposalShift(employee, date)) continue;
+                    if (context.employeeHasProposalDaysOff(employee, date)) continue;
                     if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
                     if (context.employeeIsOnVacation(employee, day)) continue;
                     if (!context.employeeIsWorking(employee, date)) continue;
@@ -181,10 +182,8 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if ((highestHoursEmployeeShiftLength > lowestHoursEmployeeShiftLength) &&
                         (highestEmployeeHoursCount - lowestEmployeeHoursCount) > (highestHoursEmployeeShiftLength - lowestHoursEmployeeShiftLength)) {
-                    log.info("@@@@@@@@ MANAGER MOZEMY PODMIENIAC ZMIANY");
                     context.updateShiftOnSchedule(date, highestHoursEmployee, lowestHoursEmployeeShift);
                     context.updateShiftOnSchedule(date, lowestHoursEmployee, highestHoursEmployeeShift);
-                    log.info("@@@@@@@@");
                     anySwapDone = true;
                 }
             }

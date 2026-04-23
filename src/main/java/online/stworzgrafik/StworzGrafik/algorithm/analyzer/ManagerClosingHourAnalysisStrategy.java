@@ -66,8 +66,6 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        log.info("");
-        log.info("managerClosingHourAnalysisStrategy");
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
         List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
 
@@ -120,7 +118,6 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(changedProposalShift));
 
         shiftToChangeEndHour.get().setEndHour(originalProposalShift.getEndHour());
-        log.info("");
     }
 
     private int findStoreCloseHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
@@ -147,7 +144,6 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {
         context.updateShiftOnSchedule(date,employee,newShift);
         context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
-//        context.updateEmployeeHours(employee,oldShift,newShift);
     }
 
     private Comparator<Shift> longestCloseStoreShift() {
