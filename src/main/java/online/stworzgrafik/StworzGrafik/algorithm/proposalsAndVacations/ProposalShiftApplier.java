@@ -4,8 +4,8 @@ import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
@@ -44,7 +44,7 @@ public class ProposalShiftApplier {
                     if (employeeIsOnVacation(context, employee, day, date)) continue;
                     if (employeeIsOnDayOff(context, employee, date)) continue;
 
-                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), AnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
+                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
 
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
                     Shift proposalShift = context.findShiftByArray(proposalShiftAsArray);

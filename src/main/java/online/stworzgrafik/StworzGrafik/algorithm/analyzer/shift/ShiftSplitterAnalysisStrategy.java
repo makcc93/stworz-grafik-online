@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +27,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     private final HolidayManager holidayManager;
 
     @Override
-    public AnalyzeType getSupportedType() {
-        return AnalyzeType.SHIFT_SPLITTER;
+    public ShiftAnalyzeType getSupportedType() {
+        return ShiftAnalyzeType.SHIFT_SPLITTER;
     }
 
     @Override

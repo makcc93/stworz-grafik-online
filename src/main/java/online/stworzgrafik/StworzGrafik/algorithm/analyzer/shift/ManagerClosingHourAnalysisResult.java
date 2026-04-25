@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;

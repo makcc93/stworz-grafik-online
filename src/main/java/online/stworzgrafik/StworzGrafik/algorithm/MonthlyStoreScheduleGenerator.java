@@ -1,8 +1,10 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
@@ -31,6 +33,7 @@ class MonthlyStoreScheduleGenerator {
     private final EmployeeToShiftMatcher employeeToShiftMatcher;
     private final ExcelExport excelExport;
     private final ScheduleAnalyzer scheduleAnalyzer;
+    private final RestAnalyzer restAnalyzer;
 
 
     @Async
@@ -47,8 +50,10 @@ class MonthlyStoreScheduleGenerator {
 
         employeeToShiftMatcher.matchEmployeeToShift(context);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), AnalyzeType.SHIFT_SPLITTER);
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), AnalyzeType.HOURS_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+
+        restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
         byte[] export = excelExport.export(context);
         Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");

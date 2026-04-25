@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 public record TooManyShiftProposalsAnalysisResult(int[] originalDailyDraft, int[] proposalsCount) implements ScheduleAnalysisResult{
     public boolean hasProblem(){

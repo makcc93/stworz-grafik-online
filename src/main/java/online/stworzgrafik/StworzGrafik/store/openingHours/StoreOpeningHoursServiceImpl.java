@@ -31,7 +31,7 @@ class StoreOpeningHoursServiceImpl implements StoreOpeningHoursService{
     }
 
     @Override
-    public DayHours getHoursForDay(Long storeId, DayOfWeek day) {
+    public DayHours getHoursForDayOfWeek(Long storeId, DayOfWeek day) {
         return repository.findByStoreIdAndDayOfWeek(storeId, day)
                 .map(h -> new DayHours(h.getOpenTime(), h.getCloseTime()))
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -40,7 +40,7 @@ class StoreOpeningHoursServiceImpl implements StoreOpeningHoursService{
 
     @Override
     @Transactional
-    public void updateHoursForDay(Long storeId, DayOfWeek day, DayHours hours) {
+    public void updateHoursForDayOfWeek(Long storeId, DayOfWeek day, DayHours hours) {
         StoreOpeningHours entity = repository.findByStoreIdAndDayOfWeek(storeId, day)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No hours configured for day: " + day));

@@ -2,7 +2,9 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -20,8 +22,11 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
+import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
+import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
@@ -42,6 +47,9 @@ public class ScheduleGeneratorContextFactory {
     private final ShiftEntityService shiftEntityService;
     private final ShiftTypeConfigService shiftTypeConfigService;
     private final StoreDeliveryService storeDeliveryService;
+    private final StoreOpeningHoursService storeOpeningHoursService;
+    private final CalendarCalculation calendarCalculation;
+    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.SUNDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);
@@ -52,7 +60,9 @@ public class ScheduleGeneratorContextFactory {
                 .month(month)
                 .schedule(scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month))
                 .store(storeEntityService.getEntityById(storeId))
-                .storeOpenCloseHoursByDate(getStoreOpenCloseHour(storeId,year,month))
+                .periodWeek(calculatePeriodWeeks(year,month))
+                .storeOpenCloseHoursForEmployeesByDate(getStoreOpenCloseHourForEmployees(storeId,year,month))
+                .storeOpenCloseHoursForClientsByDate(getStoreOpenCloseHourForClients(storeId,year,month))
                 .storeActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
                 .uneditedOriginalDateStoreDraft(getOriginalStoreDraft(storeId,year,month))
                 .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
@@ -79,12 +89,77 @@ public class ScheduleGeneratorContextFactory {
                 .build();
     }
 
+    private Map<Integer, PeriodDateDTO> calculatePeriodWeeks(Integer year,Integer month){
+        Map<Integer, PeriodDateDTO> periodWeek = new LinkedHashMap<>();
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDayOfMonth = yearMonth.atDay(1);
+        LocalDate lastDayOfMonth = yearMonth.atEndOfMonth();
+
+
+        int daysDifference = (dayOfWeekStartingPeriod.getValue() - firstDayOfMonth.getDayOfWeek().getValue() + 7) % 7;
+        LocalDate firstFullWeekStart = firstDayOfMonth.plusDays(daysDifference);
+
+        int weekIndex = 1;
+        periodWeek.put(
+                weekIndex++,
+                new PeriodDateDTO(firstDayOfMonth,firstFullWeekStart.minusDays(1))
+        );
+
+
+        LocalDate currentStart = firstFullWeekStart;
+        while (!currentStart.isAfter(lastDayOfMonth)){
+
+            LocalDate currentEnd = currentStart.plusDays(6);
+
+            if (currentEnd.isAfter(lastDayOfMonth)){
+                currentEnd = lastDayOfMonth;
+            }
+
+            periodWeek.put(
+                    weekIndex++,
+                    new PeriodDateDTO(currentStart,currentEnd)
+            );
+
+            currentStart = currentStart.plusDays(7);
+        }
+
+
+
+        periodWeek.entrySet()
+                .forEach(entry -> {
+                    log.info("{}  {}-{} ", entry.getKey(),entry.getValue().startDate(),entry.getValue().endDate());
+                });
+
+        return periodWeek;
+    }
+
     private List<Shift> getAllShifts(){
         return shiftEntityService.getAll();
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursDTO> getStoreOpenCloseHour(Long storeId, Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursDTO> map = new HashMap<>();
+    private Map<LocalDate,OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHourForClients(Long storeId, Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursIndexDTO> openCloseHoursIndexByDate = new HashMap<>();
+
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()){
+            DayHours hoursForDayOfWeek = storeOpeningHoursService.getHoursForDayOfWeek(storeId, dayOfWeek);
+            LocalTime openHour = hoursForDayOfWeek.open();
+            LocalTime closeHour = hoursForDayOfWeek.close();
+
+            OpenCloseStoreHoursIndexDTO hoursIndexDTO = new OpenCloseStoreHoursIndexDTO(openHour.getHour(), closeHour.getHour() - 1);
+
+            List<Integer> dayNumbersByDayOfWeek = calendarCalculation.getDayNumbersByDayOfWeek(year, month, dayOfWeek);
+            for (int day : dayNumbersByDayOfWeek){
+                LocalDate date = LocalDate.of(year,month,day);
+                openCloseHoursIndexByDate.put(date,hoursIndexDTO);
+            }
+        }
+
+        return openCloseHoursIndexByDate;
+    }
+
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHourForEmployees(Long storeId, Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
 
@@ -94,23 +169,23 @@ public class ScheduleGeneratorContextFactory {
             int[] dailyDraft = getOriginalStoreDraft(storeId, year, month).getOrDefault(date, new int[24]);
 
             int openHour = 0;
-            int closeHour = 0;
+            int closeHour = 23;
 
             for (int i = 0; i < dailyDraft.length; i++) {
                 if (dailyDraft[i] > 0) {
-                    openHour = i + 1;
+                    openHour = i;
                     break;
                 }
             }
 
             for (int i = 23; i >= 0; i--) {
                 if (dailyDraft[i] > 0) {
-                    closeHour = i + 1;
+                    closeHour = i;
                     break;
                 }
             }
 
-            map.put(date,new OpenCloseStoreHoursDTO(openHour,closeHour));
+            map.put(date,new OpenCloseStoreHoursIndexDTO(openHour,closeHour));
         }
 
         return map;

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.TestScheduleBuilder;
@@ -22,7 +23,9 @@ public class TestScheduleGeneratorContext {
     private Integer year = 2026;
     private Integer month =3;
     private Store store = new TestStoreBuilder().build();
-    Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate;
+    private Map<Integer, PeriodDateDTO> periodWeek;
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate;
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate;
     private Schedule schedule = new TestScheduleBuilder().withStore(store).build();
     private List<Employee> storeActiveEmployees = new ArrayList<>();
     private Map<LocalDate, int[]> uneditedOriginalDateStoreDraft = new HashMap<>();
@@ -73,8 +76,13 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
-    public TestScheduleGeneratorContext withStoreOpenCloseHoursByDate(Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate){
-        this.storeOpenCloseHoursByDate = storeOpenCloseHoursByDate;
+    public TestScheduleGeneratorContext withStoreOpenCloseHoursForEmployeesByDate(Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate){
+        this.storeOpenCloseHoursForEmployeesByDate = storeOpenCloseHoursForEmployeesByDate;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withStoreOpenCloseHoursForClientsByDate(Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate){
+        this.storeOpenCloseHoursForClientsByDate = storeOpenCloseHoursForClientsByDate;
         return this;
     }
 
@@ -195,7 +203,9 @@ public class TestScheduleGeneratorContext {
                 month,
                 schedule,
                 store,
-                storeOpenCloseHoursByDate,
+                periodWeek,
+                storeOpenCloseHoursForEmployeesByDate,
+                storeOpenCloseHoursForClientsByDate,
                 storeActiveEmployees,
                 uneditedOriginalDateStoreDraft,
                 everyDayStoreDemandDraftWorkingOn,

@@ -1,8 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.focus_shift.jollyday.core.HolidayManager;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
@@ -136,7 +136,7 @@ public class EmployeeToShiftMatcherTest {
                 eq(DAY),
                 any(),
                 any(),
-                eq(AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
+                eq(ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
         );
     }
 
@@ -173,7 +173,7 @@ public class EmployeeToShiftMatcherTest {
                 eq(DAY),
                 any(),
                 any(),
-                eq(AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
+                eq(ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
         );
     }
 

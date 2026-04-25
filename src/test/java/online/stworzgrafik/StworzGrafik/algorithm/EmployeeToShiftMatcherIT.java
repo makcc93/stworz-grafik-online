@@ -2,10 +2,10 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ManagerOpeningHourAnalysisStrategy;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ManagerOpeningHourAnalysisStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalStrategy;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
@@ -196,7 +196,7 @@ public class EmployeeToShiftMatcherIT {
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
                 .build();
 
 
@@ -258,7 +258,7 @@ public class EmployeeToShiftMatcherIT {
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
                 .build();
 
 
@@ -314,7 +314,7 @@ public class EmployeeToShiftMatcherIT {
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
                 .build();
 
 
@@ -382,7 +382,7 @@ public class EmployeeToShiftMatcherIT {
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
                 .withMonthlyEmployeesProposalDayOff(employeesDaysOffProposal)
                 .build();
 
@@ -399,9 +399,9 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isNotEmpty();
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursDTO> generateOpenCloseStoreHoursByDate(LocalDate date){
-    Map<LocalDate,OpenCloseStoreHoursDTO> map = new HashMap<>();
-    map.put(date, new OpenCloseStoreHoursDTO(8,20));
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> generateOpenCloseStoreHoursByDate(LocalDate date){
+    Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+    map.put(date, new OpenCloseStoreHoursIndexDTO(8,20));
 
     return map;
     }

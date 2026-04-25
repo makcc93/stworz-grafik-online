@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -74,7 +74,7 @@ class MonthlyStoreScheduleGeneratorTest {
         when(context.getMonth()).thenReturn(month);
         when(context.getSchedule()).thenReturn(schedule);
         when(context.getStore()).thenReturn(store);
-        when(context.getStoreOpenCloseHoursByDate()).thenReturn(getStoreOpenCloseHour(year,month));
+        when(context.getStoreOpenCloseHoursForEmployeesByDate()).thenReturn(getStoreOpenCloseHour(year,month));
         when(context.getStoreActiveEmployees()).thenReturn(getEmployees());
         when(context.getUneditedOriginalDateStoreDraft()).thenReturn(getDraftForEveryDay(year,month));
         when(context.getEveryDayStoreDemandDraftWorkingOn()).thenReturn(getSortedDrafts(year,month));
@@ -138,15 +138,15 @@ class MonthlyStoreScheduleGeneratorTest {
         );
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursDTO> getStoreOpenCloseHour(Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
 
             if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
-                map.put(date,new OpenCloseStoreHoursDTO(8,20));
+                map.put(date,new OpenCloseStoreHoursIndexDTO(8,20));
             }
         }
 

@@ -3,9 +3,9 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.AnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -51,10 +51,10 @@ public class EmployeeToShiftMatcher {
 
             showShiftsInLog(shiftsSorted);
 
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees,AnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, AnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_OPENING_HOUR);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees,AnalyzeType.MANAGER_CLOSING_HOUR);
+            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS);
+            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
+            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_OPENING_HOUR);
+            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_CLOSING_HOUR);
 
             if (!morningOpenStoreEmployeeAlreadyInSchedule(context,date,uneditedOriginalStoreDailyDraft)) {
                 applyOpenStoreEmployee(context, date, availableEmployees, shiftsSorted);
@@ -136,7 +136,7 @@ public class EmployeeToShiftMatcher {
 
             while (shiftsSorted.size() > availableEmployees.size()){
                 log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", date);
-                scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees,AnalyzeType.UNDERSTAFFED);
+                scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.UNDERSTAFFED);
             }
         }
     }
@@ -172,18 +172,35 @@ public class EmployeeToShiftMatcher {
                 .sorted(Comparator.comparingInt(empl -> context.getEmployeeCreditDays().getOrDefault(empl, new ArrayList<>()).size()))
                 .toList();
 
-        int openHour = openForEmployeesHourIndex(dailyDraft);
-        int closeHour = closeForEmployeesHourIndex(dailyDraft);
+        int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
+        int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
+
+        int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
+        int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
 
         boolean morningCreditAssigned = false;
         boolean afternoonCreditAssigned = false;
         for (Employee employee : sortedEmployees){
             Shift shift = context.getFinalSchedule().getOrDefault(date, new HashMap<>()).getOrDefault(employee, context.getDefaultDaysOffShift());
             int[] shiftAsArray = context.shiftAsArray(shift);
-
+//todo teraz czas szatkowac zmiany pomiedzy wszystkimi ktorzy nie sa isOpenCloseStore i nie maja dzisiaj zmiany ratalnej (lepiej powinno rodzielic polowki)
+            //potem dodanie sprwadzenia 35h odpoczynku
             if (!morningCreditAssigned) {
-                if (shiftAsArray[openHour] > 0) {
-                    log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={}", employee.getFirstName(), employee.getLastName(), date,openHour,shiftAsArray[openHour],closeHour,shiftAsArray[closeHour]);
+//                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0) {
+                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0 && shiftAsArray[closeHour] == 0 || shiftAsArray[closeForClientsHour] == 0){
+                    log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
+                            employee.getFirstName(),
+                            employee.getLastName(),
+                            date,
+                            openHour,
+                            shiftAsArray[openHour],
+                            openForClientsHour,
+                            shiftAsArray[openForClientsHour],
+                            closeHour,
+                            shiftAsArray[closeHour],
+                            closeForClientsHour,
+                            shiftAsArray[closeForClientsHour]);
+
                     context.assignEmployeeToCredit(date, employee, shift);
                     morningCreditAssigned = true;
 
@@ -192,8 +209,21 @@ public class EmployeeToShiftMatcher {
             }
 
             if (!afternoonCreditAssigned) {
-                if (shiftAsArray[closeHour] > 0) {
-                    log.info("\n Dopisuje POPOŁUDNIOWEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={}", employee.getFirstName(), employee.getLastName(), date,openHour,shiftAsArray[openHour],closeHour,shiftAsArray[closeHour]);
+//                if (shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0) {
+                if (shiftAsArray[openHour] == 0 || shiftAsArray[openForClientsHour] == 0 && shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0){
+                    log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
+                            employee.getFirstName(),
+                            employee.getLastName(),
+                            date,
+                            openHour,
+                            shiftAsArray[openHour],
+                            openForClientsHour,
+                            shiftAsArray[openForClientsHour],
+                            closeHour,
+                            shiftAsArray[closeHour],
+                            closeForClientsHour,
+                            shiftAsArray[closeForClientsHour]);
+
                     context.assignEmployeeToCredit(date, employee, shift);
                     afternoonCreditAssigned = true;
 
@@ -306,7 +336,7 @@ public class EmployeeToShiftMatcher {
 
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
 
-            int lastHourIndex = closeForEmployeesHourIndex(dailyDraft);
+            int lastHourIndex = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day).closeHour();
 
             if (shiftAsArray[lastHourIndex] > 0) return true;
         }
@@ -421,17 +451,10 @@ public class EmployeeToShiftMatcher {
 
             int[] employeeProposal = context.shiftAsArray(entry.getValue());
 
-            if (employeeProposal[closeForEmployeesHourIndex(dailyDraft)] > 1){
+            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
+            if (employeeProposal[openCloseHoursForEmployees.closeHour()] > 1){
                 return true;
             }
-
-//            for (int i = 23; i >= 0; i--){
-//                if (dailyDraft[i] > 0){
-//                    if (employeeProposal[i] > 0){
-//                        return true;
-//                    }
-//                }
-//            }
         }
         return false;
     }
@@ -444,9 +467,9 @@ public class EmployeeToShiftMatcher {
 
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
 
-            int openHourIndex = openForEmployeesHourIndex(dailyDraft);
+            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
 
-            if (shiftAsArray[openHourIndex] > 0) return true;
+            if (shiftAsArray[openCloseHoursForEmployees.openHour()] > 0) return true;
         }
         return false;
     }
@@ -459,18 +482,11 @@ public class EmployeeToShiftMatcher {
 
             int[] employeeProposal = context.shiftAsArray(entry.getValue());
 
-            if(employeeProposal[openForEmployeesHourIndex(dailyDraft)] > 1){
+            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
+
+            if(employeeProposal[openCloseHoursForEmployees.openHour()] > 1){
                 return true;
             }
-
-//            for (int i = 0; i < dailyDraft.length; i++) {
-//                if (dailyDraft[i] > 0) {
-//                    if (employee.isCanOperateCredit() && employeeProposal[i] > 0 ||
-//                            (i + 1 < dailyDraft.length && employee.isCanOperateCredit() && employeeProposal[i + 1] > 0)) {
-//                        return true;
-//                    }
-//                }
-//            }
         }
         return false;
     }
@@ -581,7 +597,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private Shift getShiftFromOpenToCloseStoreHours(ScheduleGeneratorContext context, LocalDate date){
-        OpenCloseStoreHoursDTO dto = context.getStoreOpenCloseHoursByDate(date);
+        OpenCloseStoreHoursIndexDTO dto = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date);
 
         return context.findShiftByHours(LocalTime.of(dto.openHour(), 0), LocalTime.of(dto.closeHour(), 0));
     }
@@ -754,27 +770,27 @@ public class EmployeeToShiftMatcher {
         return shift.getEndHour().getHour() - shift.getStartHour().getHour();
     }
 
-    private int openForEmployeesHourIndex(int[] dailyDraft){
-        int openHourIndex = 0;
-        for (int i = 0; i < 24; i++){
-            if (dailyDraft[i] > 0){
-                openHourIndex = i;
-                break;
-            }
-        }
+//    private int openForEmployeesHourIndex(int[] dailyDraft){
+//        int openHourIndex = 0;
+//        for (int i = 0; i < 24; i++){
+//            if (dailyDraft[i] > 0){
+//                openHourIndex = i;
+//                break;
+//            }
+//        }
+//
+//        return openHourIndex;
+//    }
 
-        return openHourIndex;
-    }
-
-    private int closeForEmployeesHourIndex(int[] dailyDraft){
-        int lastHourIndex = 23;
-        for (int i = 23; i >= 0; i--){
-            if (dailyDraft[i] > 0){
-                lastHourIndex = i;
-                break;
-            }
-        }
-
-        return lastHourIndex;
-    }
+//    private int closeForEmployeesHourIndex(int[] dailyDraft){
+//        int lastHourIndex = 23;
+//        for (int i = 23; i >= 0; i--){
+//            if (dailyDraft[i] > 0){
+//                lastHourIndex = i;
+//                break;
+//            }
+//        }
+//
+//        return lastHourIndex;
+//    }
 }

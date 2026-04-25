@@ -1,7 +1,8 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
@@ -42,16 +43,12 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.TestShiftTypeConfigBuilder;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDTO;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
-import online.stworzgrafik.StworzGrafik.store.delivery.TestStoreDeliveryBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,6 +199,8 @@ class MonthlyStoreScheduleGeneratorIT {
     private ShiftTypeConfig proposalTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK_BY_PROPOSAL).build();
     private ShiftTypeConfig standardTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK).build();
 
+    Map<Integer, PeriodDateDTO> periodWeek = new LinkedHashMap<>();
+
 
     @BeforeEach
     void setup() {
@@ -234,7 +233,9 @@ class MonthlyStoreScheduleGeneratorIT {
                 month,
                 schedule,
                 store,
-                getStoreOpenCloseHour(year,month),
+                periodWeek,
+                getEmployeesOpenCloseHour(year,month),
+                getClientsOpenCloseHour(year,month),
                 employees,
                 getDraftForEveryDay(year,month),
                 getSortedDrafts(year, month),
@@ -803,15 +804,30 @@ class MonthlyStoreScheduleGeneratorIT {
         return map;
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursDTO> getStoreOpenCloseHour(Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getEmployeesOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
 
             if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
-                map.put(date,new OpenCloseStoreHoursDTO(8,20));
+                map.put(date,new OpenCloseStoreHoursIndexDTO(8,20));
+            }
+        }
+
+        return map;
+    }
+
+    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getClientsOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+
+        YearMonth yearMonth = YearMonth.of(year,month);
+        for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
+            LocalDate date = LocalDate.of(year,month,day);
+
+            if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
+                map.put(date,new OpenCloseStoreHoursIndexDTO(9,20));
             }
         }
 

@@ -1,6 +1,5 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
-import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -17,25 +16,24 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
-    private final HolidayManager holidayManager;
+public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     @Override
-    public AnalyzeType getSupportedType() {
-        return AnalyzeType.MANAGER_OPENING_HOUR;
+    public ShiftAnalyzeType getSupportedType() {
+        return ShiftAnalyzeType.MANAGER_CLOSING_HOUR;
     }
 
     @Override
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees) {
         Map<LocalDate, int[]> originalStoreDraft = context.getUneditedOriginalDateStoreDraft();
 
-        int targetHour =  findStoreOpenHour(originalStoreDraft,day);
+        int targetHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day).closeHour();
 
-        int targetHourDemandDraftValue = originalStoreDraft.getOrDefault(day,new int[24])[targetHour];
+        int targetHourDemandDraftValue = originalStoreDraft.getOrDefault(day, new int[24])[targetHour];
 
         int[] arrayDailyProposalsCount = new int[24];
         int proposalEmployeesCanOpenCloseStoreCount = 0;
-        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,new HashMap<>());
+        Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, Collections.emptyMap());
         List<Employee> employeesWithOpenCloseStoreProposals = new ArrayList<>();
 
         for (Map.Entry<Employee, int[]> proposalEntry : dailyProposals.entrySet()){
@@ -58,45 +56,41 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
 
         int targetHourProposalsCount = arrayDailyProposalsCount[targetHour];
 
-        return new ManagerOpeningHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
-
+        return new ManagerClosingHourAnalysisResult(targetHour,targetHourDemandDraftValue,targetHourProposalsCount,proposalEmployeesCanOpenCloseStoreCount,employeesWithOpenCloseStoreProposals,shifts);
     }
 
     @Override
     public boolean hasProblem(ScheduleAnalysisResult result) {
-        return ((ManagerOpeningHourAnalysisResult) result).hasProblem();
+        return ((ManagerClosingHourAnalysisResult) result).hasProblem();
     }
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
-        List<Shift> shifts = ((ManagerOpeningHourAnalysisResult) result).shifts();
-
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
+        List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
 
-        Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerOpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
-                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl,0)));
+        Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerClosingHourAnalysisResult) result).employeesWithCloseStoreProposals().stream()
+                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl, 0)));
 
-        if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
-            if (!holidayManager.isHoliday(day)) {
-                log.info("Brak dostępnego pracownika w dniu {},", day);
+        if (employeeWithHighestMonthlyWorkingHours.isEmpty()) {
+            log.info("Brak dostępnego pracownika w dniu {},", day);
 
-                context.registerMessageOnSchedule(
-                        new CreateScheduleMessageDTO(
-                                ScheduleMessageType.WARNING,
-                                ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                                "Brak dostępnego pracownika w dniu: " + day,
-                                null,
-                                day
-                        )
-                );
-            }
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                            "Brak dostępnego pracownika w dniu: " + day,
+                            null,
+                            day
+                    )
+            );
             return;
         }
 
-        Optional<Shift> shiftToChangeStartHour = shifts.stream()
-                .min(longestOpenStoreShift());
+        Optional<Shift> shiftToChangeEndHour = shifts.stream()
+                .min(longestCloseStoreShift());
 
-        if (shiftToChangeStartHour.isEmpty()){
+        if (shiftToChangeEndHour.isEmpty()){
             log.info("Brak dostępnej zmiany w dniu {}", day);
 
             context.registerMessageOnSchedule(
@@ -114,37 +108,27 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         Employee chosenEmployee = employeeWithHighestMonthlyWorkingHours.get();
 
         Shift originalProposalShift = context.findShiftByArray(dailyProposals.getOrDefault(chosenEmployee, new int[24]));
-        Shift shiftToChange = shiftToChangeStartHour.get();
+        log.info("originalProposalShift: {}-{}", originalProposalShift.getStartHour(), originalProposalShift.getEndHour());
 
-        Shift changedProposalShift = context.findShiftByHours(shiftToChange.getStartHour(), originalProposalShift.getEndHour());
+        Shift shiftToChange = shiftToChangeEndHour.get();
+        log.info("shiftToChange z shiftsSorted: {}-{}", shiftToChange.getStartHour(),shiftToChange.getEndHour());
 
+        Shift changedProposalShift = context.findShiftByHours(originalProposalShift.getStartHour(),shiftToChange.getEndHour());
         changeProposalShiftInSchedule(day,chosenEmployee,context,originalProposalShift,changedProposalShift);
         context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(changedProposalShift));
 
-        shiftToChangeStartHour.get().setStartHour(originalProposalShift.getStartHour());
-    }
-
-    private int findStoreOpenHour(Map<LocalDate, int[]> originalStoreDrafts, LocalDate day) {
-        int targetHour = 0;
-
-        for (int i = 0; i < 24; i++){
-            if (originalStoreDrafts.getOrDefault(day,new int[24])[i] > 0){
-                targetHour = i;
-                break;
-            }
-        }
-        return targetHour;
+        shiftToChangeEndHour.get().setEndHour(originalProposalShift.getEndHour());
     }
 
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {
         context.updateShiftOnSchedule(date,employee,newShift);
         context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
-}
+    }
 
-    private static Comparator<Shift> longestOpenStoreShift() {
+    private Comparator<Shift> longestCloseStoreShift() {
         return Comparator.comparingInt(
-                        (Shift shift) -> shift.getStartHour().getHour()
-                )
+                        (Shift shift) -> shift.getEndHour().getHour()
+                ).reversed()
                 .thenComparing(
                         Comparator.comparingInt(
                                 (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()

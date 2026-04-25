@@ -11,9 +11,9 @@ import java.util.Map;
 public interface StoreOpeningHoursService {
     Map<DayOfWeek, DayHours> getHoursForStore(@NotNull Long storeId);
 
-    DayHours getHoursForDay(@NotNull Long storeId, @NotNull DayOfWeek day);
+    DayHours getHoursForDayOfWeek(@NotNull Long storeId, @NotNull DayOfWeek day);
 
-    void updateHoursForDay(@NotNull Long storeId, @NotNull DayOfWeek day, @NotNull DayHours hours);
+    void updateHoursForDayOfWeek(@NotNull Long storeId, @NotNull DayOfWeek day, @NotNull DayHours hours);
 
     void initializeDefaultHours(@NotNull Store store);
 }

@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 public record HoursSwapperAnalysisResult(
         int employeeLowestValueOfWorkingHours,

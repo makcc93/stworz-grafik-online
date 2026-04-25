@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalResult;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyDayOffProposalStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalResult;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;

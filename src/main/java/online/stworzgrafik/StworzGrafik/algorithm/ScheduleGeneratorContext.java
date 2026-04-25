@@ -4,7 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -27,7 +28,9 @@ public class ScheduleGeneratorContext {
     private final Integer month;
     private final Schedule schedule;
     private final Store store;
-    private final Map<LocalDate, OpenCloseStoreHoursDTO> storeOpenCloseHoursByDate;
+    private final Map<Integer, PeriodDateDTO> periodWeek;
+    private final Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate;
+    private final Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate;
     private final List<Employee> storeActiveEmployees;
     private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
     private final LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
@@ -152,8 +155,12 @@ public class ScheduleGeneratorContext {
         addWorkingInformation(employee,shift,dayOfWeek);
     }
 
-    public OpenCloseStoreHoursDTO getStoreOpenCloseHoursByDate(LocalDate date){
-        return storeOpenCloseHoursByDate.getOrDefault(date, new OpenCloseStoreHoursDTO(0,0));
+    public OpenCloseStoreHoursIndexDTO getStoreOpenCloseHoursIndexForClientsByDate(LocalDate date){
+        return storeOpenCloseHoursForClientsByDate.getOrDefault(date, new OpenCloseStoreHoursIndexDTO(0,0));
+    }
+
+    public OpenCloseStoreHoursIndexDTO getStoreOpenCloseHoursIndexForEmployeesByDate(LocalDate date){
+        return storeOpenCloseHoursForEmployeesByDate.getOrDefault(date, new OpenCloseStoreHoursIndexDTO(0,0));
     }
 
     public boolean isEmployeeWorkingInWarehouse(Employee employee, LocalDate date){

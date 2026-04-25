@@ -1,6 +1,6 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
-public enum AnalyzeType {
+public enum ShiftAnalyzeType {
     MANAGER_OPENING_HOUR,
     MANAGER_CLOSING_HOUR,
     MANAGER_FROM_OPEN_TO_CLOSE,

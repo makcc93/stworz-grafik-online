@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 @Service
 public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
     @Override
-    public AnalyzeType getSupportedType() {
-        return AnalyzeType.UNDERSTAFFED;
+    public ShiftAnalyzeType getSupportedType() {
+        return ShiftAnalyzeType.UNDERSTAFFED;
     }
 
     @Override

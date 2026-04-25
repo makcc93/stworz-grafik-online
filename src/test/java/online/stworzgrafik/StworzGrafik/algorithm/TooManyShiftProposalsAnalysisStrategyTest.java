@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyShiftProposalsAnalysisResult;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.TooManyShiftProposalsAnalysisStrategy;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyShiftProposalsAnalysisResult;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyShiftProposalsAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import org.junit.jupiter.api.Test;

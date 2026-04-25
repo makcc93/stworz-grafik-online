@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Component
 public class ScheduleAnalyzer {
 
-    private Map<AnalyzeType, ScheduleAnalysisStrategy> strategies;
+    private Map<ShiftAnalyzeType, ScheduleAnalysisStrategy> strategies;
 
     public ScheduleAnalyzer(List<ScheduleAnalysisStrategy> strategies){
         this.strategies = strategies.stream()
@@ -25,7 +25,7 @@ public class ScheduleAnalyzer {
                 );
     }
 
-    public void analyzeAndResolve(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees, AnalyzeType type){
+    public void analyzeAndResolve(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> availableEmployees, ShiftAnalyzeType type){
         ScheduleAnalysisStrategy scheduleAnalysisStrategy = strategies.get(type);
 
         ScheduleAnalysisResult result = scheduleAnalysisStrategy.analyze(context, day,shifts,availableEmployees);

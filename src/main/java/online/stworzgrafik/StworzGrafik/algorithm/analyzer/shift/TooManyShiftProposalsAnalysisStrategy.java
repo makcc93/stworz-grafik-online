@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.analyzer;
+package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ import java.util.Optional;
 public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     @Override
-    public AnalyzeType getSupportedType() {
-        return AnalyzeType.TOO_MANY_SHIFT_PROPOSALS;
+    public ShiftAnalyzeType getSupportedType() {
+        return ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS;
     }
 
     @Override
