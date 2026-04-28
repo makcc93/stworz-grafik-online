@@ -9,10 +9,12 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -46,23 +48,45 @@ public class WeeklyThirtyFiveHoursRestAnalyzer implements RestAnalyzerStrategy{
                     Employee employee = employeeShiftEntry.getKey();
                     Shift shift = employeeShiftEntry.getValue();
 
-                    int[] currentShiftCount = employeeWeeklyShiftCountAsArray
-                            .computeIfAbsent(employee, k -> new int[24]);
+                    int[] currentShiftCount = employeeWeeklyShiftCountAsArray.getOrDefault(employee,new int[0]);
 
-                    for (int i = 0; i < currentShiftCount.length; i++) {
-                        currentShiftCount[i] += context.shiftAsArray(shift)[i];
-                    }
+                    int[] shiftAsArray = shift.equals(context.getDefaultVacationShift()) ? new int[24] : context.shiftAsArray(shift);
 
+                    int[] updatedShiftCount = IntStream.concat(IntStream.of(currentShiftCount),IntStream.of(shiftAsArray)).toArray();
+
+                    employeeWeeklyShiftCountAsArray.put(employee,updatedShiftCount);
                 }
+
                 currentDate = currentDate.plusDays(1);
             }
 
             employeeWeeklyShiftCountAsArray.forEach((empl, shiftCount) -> {
-                log.info("TYDZIEN: {}, Pracownik: {}-{}, SumaZmian: {}", weekIndex, empl.getFirstName(), empl.getLastName(),Arrays.toString(shiftCount));
+                log.info("TYDZIEN: {} ({} - {}), Pracownik: {}-{}, Rozmiar tablicy: {}, Suma Tablicy: {}", weekIndex,periodStartDate,periodEndDate, empl.getFirstName(), empl.getLastName(),shiftCount.length, Arrays.stream(shiftCount).sum());
             });
-        }
 
-        return new WeeklyThirtyFiveHoursRestResult(new int[24]); //ok dziala ale trzeba zrobic nie sume tylko dodanie do siebie tych zmian i urlopy potraktowac jak 0, a nie 1
+            for (Map.Entry<Employee, int[]> shiftArrayEntry : employeeWeeklyShiftCountAsArray.entrySet()){
+                Employee employee = shiftArrayEntry.getKey();
+                int[] weeklyShiftArray = shiftArrayEntry.getValue();
+
+                int maxFreeHoursInARow = 0;
+                int freeHours = 0;
+                for (int i = 0; i < weeklyShiftArray.length; i++){
+                        if (weeklyShiftArray[i] == 0){
+                            freeHours++;
+
+                            if (freeHours > maxFreeHoursInARow){
+                                maxFreeHoursInARow = freeHours;
+                            }
+                        } else {
+                            freeHours = 0;
+                        }
+                }
+
+                log.info("      WEEK {}, EMPLOYEE {}, WeeklyArraySize {}, MAX FREE HOURS IN A ROW: {}", weekIndex,employee.getLastName(),weeklyShiftArray.length,maxFreeHoursInARow);
+            }
+
+        }
+        return new WeeklyThirtyFiveHoursRestResult(new int[24]);
     }
 
     @Override

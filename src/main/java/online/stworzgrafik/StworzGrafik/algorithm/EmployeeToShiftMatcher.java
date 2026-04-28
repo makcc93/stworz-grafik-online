@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,7 +75,7 @@ public class EmployeeToShiftMatcher {
                 applyAfternoonCreditEmployee(context, availableEmployees, shiftsSorted, date);
             }
 
-            assignEmployeesToCreditSchedule(context,date,uneditedOriginalStoreDailyDraft);
+//            assignEmployeesToCreditSchedule(context,date);
 
             while (!shiftsSorted.isEmpty()) {
 
@@ -124,24 +125,21 @@ public class EmployeeToShiftMatcher {
             log.info("");
             log.info("");
 
-            if (date.equals(LocalDate.of(2026,5,28))){
-                for (Employee employee : context.getStoreActiveEmployees()){
-                    if (employee.isCanOperateCredit()){
-                        log.info("Pracownik {} {} ma rat {}",employee.getFirstName(),employee.getLastName(),context.getEmployeeCreditDays().getOrDefault(employee,new ArrayList<>()).size());
-                    }
-                }
-            }
-            log.info("");
-            log.info("");
-
             while (shiftsSorted.size() > availableEmployees.size()){
                 log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", date);
                 scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.UNDERSTAFFED);
             }
+
+        }
+
+        for (int day = 1; day < YearMonth.of(context.getYear(),context.getMonth()).lengthOfMonth(); day++){
+            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
+
+            assignEmployeesToCreditSchedule(context,date);
         }
     }
 
-    private void assignEmployeesToCreditSchedule(ScheduleGeneratorContext context, LocalDate date, int[] dailyDraft){
+    private void assignEmployeesToCreditSchedule(ScheduleGeneratorContext context, LocalDate date){
         log.info("\n TWORZENIE GRAFIKA NA RATY");
         Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
         List<Employee> operateCreditEmployees = new ArrayList<>();
@@ -169,8 +167,17 @@ public class EmployeeToShiftMatcher {
                 .filter(empl -> !context.isEmployeeWorkingInWarehouse(empl,date))
                 .filter(empl -> context.employeeIsWorking(empl,date))
                 .filter(empl -> !context.employeeHasProposalDaysOff(empl,date))
-                .sorted(Comparator.comparingInt(empl -> context.getEmployeeCreditDays().getOrDefault(empl, new ArrayList<>()).size()))
+                .sorted(Comparator.comparingInt(empl -> context.getEmployeeCreditDays().getOrDefault(empl, List.of()).size())
+                        .thenComparingInt(empl -> context.getVacationDaysCount().getOrDefault(empl,0)))
                 .toList();
+
+        //todo zacznijmy od rozwiazania problemu sprawiedliwego dzielania na raty, jak tkos ma 2tyg urlopu to musi miec 1/2 tego co ktos nie ma
+        //potem grafik na otwarcie zamkniecie
+        //potem grafik na kase
+
+        //potem aktualizacja dzielnia godzin, szatkowania dni
+
+        //potem 35h odpoczynku
 
         int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
         int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
@@ -181,13 +188,11 @@ public class EmployeeToShiftMatcher {
         boolean morningCreditAssigned = false;
         boolean afternoonCreditAssigned = false;
         for (Employee employee : sortedEmployees){
-            Shift shift = context.getFinalSchedule().getOrDefault(date, new HashMap<>()).getOrDefault(employee, context.getDefaultDaysOffShift());
+            Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).getOrDefault(employee, context.getDefaultDaysOffShift());
             int[] shiftAsArray = context.shiftAsArray(shift);
-//todo teraz czas szatkowac zmiany pomiedzy wszystkimi ktorzy nie sa isOpenCloseStore i nie maja dzisiaj zmiany ratalnej (lepiej powinno rodzielic polowki)
-            //potem dodanie sprwadzenia 35h odpoczynku
+
             if (!morningCreditAssigned) {
-//                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0) {
-                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0 && shiftAsArray[closeHour] == 0 || shiftAsArray[closeForClientsHour] == 0){
+                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0){
                     log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
                             employee.getFirstName(),
                             employee.getLastName(),
@@ -209,8 +214,7 @@ public class EmployeeToShiftMatcher {
             }
 
             if (!afternoonCreditAssigned) {
-//                if (shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0) {
-                if (shiftAsArray[openHour] == 0 || shiftAsArray[openForClientsHour] == 0 && shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0){
+                if (shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0){
                     log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
                             employee.getFirstName(),
                             employee.getLastName(),
@@ -235,54 +239,6 @@ public class EmployeeToShiftMatcher {
             }
 
         }
-//na razie to nie dziala, dodaj .peek do listy i zobaczmy co tam jest
-//
-//
-//
-//
-//        Iterator<Employee> iterator = sortedEmployees.iterator();
-//            if (iterator.hasNext()){
-//                Employee employee = iterator.next();
-//                Shift shift = context.getFinalSchedule().getOrDefault(date, new HashMap<>()).getOrDefault(employee, context.getDefaultDaysOffShift());
-//                int[] shiftAsArray = context.shiftAsArray(shift);
-//
-//                int openHourIndex = openForEmployeesHourIndex(dailyDraft);
-//                int closeHourIndex = closeForEmployeesHourIndex(dailyDraft);
-//                log.info("1. {} {}, wakacje: {}, magazyn: {}, wartosc w shiftArray[]: {}, sam openHourIndex: {}",
-//                        employee.getFirstName(),
-//                        employee.getLastName(),
-//                        context.employeeIsOnVacation(employee,date.getDayOfMonth()),
-//                        context.isEmployeeWorkingInWarehouse(employee,date),
-//                        shiftAsArray[openHourIndex],
-//                        openHourIndex);
-//
-//                if (shiftAsArray[openHourIndex] > 0 || shiftAsArray[closeHourIndex] > 0){
-//                        context.assignEmployeeToCredit(date,employee,shift);
-//                        log.info("\n Dopisuje 1. pracownika {} {} na grafik ratalny w dniu {}", employee.getFirstName(),employee.getLastName(),date);
-//                }
-//            }
-////todo tak to trzeba wymyslec zeby przejsc po pracownikach i sprawdzic kto jest rano i zapisac potem popoludniu i zapisac
-//            if (iterator.hasNext()){
-//                Employee employee = iterator.next();
-//                Shift shift = context.getFinalSchedule().getOrDefault(date, new HashMap<>()).getOrDefault(employee, context.getDefaultDaysOffShift());
-//                int[] shiftAsArray = context.shiftAsArray(shift);
-//
-//                int closeHourIndex = closeForEmployeesHourIndex(dailyDraft);
-//                log.info("2. {} {}, wakacje: {}, magazyn: {}, wartosc w shiftArray[]: {}, sam openHourIndex: {}",
-//                        employee.getFirstName(),
-//                        employee.getLastName(),
-//                        context.employeeIsOnVacation(employee,date.getDayOfMonth()),
-//                        context.isEmployeeWorkingInWarehouse(employee,date),
-//                        shiftAsArray[closeHourIndex],
-//                        closeHourIndex);
-//
-//                if (shiftAsArray[closeHourIndex] > 0 &&
-//                        !context.employeeIsOnVacation(employee,date.getDayOfMonth()) &&
-//                        !context.isEmployeeWorkingInWarehouse(employee,date)){
-//                    context.assignEmployeeToCredit(date,employee,shift);
-//                    log.info("Dopisuje 2. pracownika {} {} na grafik ratalny w dniu {} \n", employee.getFirstName(),employee.getLastName(),date);
-//                }
-//            }
             log.info("");
     }
 
@@ -494,6 +450,7 @@ public class EmployeeToShiftMatcher {
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
         Optional<Employee> employeeToCloseStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
+                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
                 .findFirst();
 
         if (employeeToCloseStore.isEmpty()) {
@@ -614,10 +571,10 @@ public class EmployeeToShiftMatcher {
         LocalDate oneDayAfter = date.plusDays(1);
         LocalDate twoDaysAfter = date.plusDays(2);
 
-        Shift twoDaysBeforeShift = context.getFinalSchedule().getOrDefault(twoDaysBefore, new HashMap<>()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift oneDayBeforeShift = context.getFinalSchedule().getOrDefault(oneDayBefore, new HashMap<>()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift oneDayAfterShift = context.getFinalSchedule().getOrDefault(oneDayAfter, new HashMap<>()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift twoDaysAfterShift = context.getFinalSchedule().getOrDefault(twoDaysAfter, new HashMap<>()).getOrDefault(empl, context.getDefaultDaysOffShift());
+        Shift twoDaysBeforeShift = context.getFinalSchedule().getOrDefault(twoDaysBefore, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
+        Shift oneDayBeforeShift = context.getFinalSchedule().getOrDefault(oneDayBefore, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
+        Shift oneDayAfterShift = context.getFinalSchedule().getOrDefault(oneDayAfter, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
+        Shift twoDaysAfterShift = context.getFinalSchedule().getOrDefault(twoDaysAfter, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
 
         return getShiftLength(twoDaysBeforeShift) + getShiftLength(oneDayBeforeShift) + getShiftLength(oneDayAfterShift) + getShiftLength(twoDaysAfterShift);
     }
@@ -677,7 +634,9 @@ public class EmployeeToShiftMatcher {
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 return Comparator.<Employee>comparingInt(
                                 emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
+                        .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
                         .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
+                        .thenComparingInt(emp -> context.getEmployeeHours().getOrDefault(emp,0))
                         .compare(e1, e2);
             } else {
                 return employeeWithLowestHours(context,date).compare(e1, e2);

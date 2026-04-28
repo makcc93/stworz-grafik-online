@@ -276,7 +276,7 @@ public class ScheduleGeneratorContext {
     }
 
     private void addEmployeeWorkingOnWeekend(Employee employee,Shift shift, DayOfWeek dayOfWeek){
-        if (!shift.equals(this.defaultDaysOffShift) && dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY){
+        if (Arrays.stream(shiftAsArray(shift)).sum() > 0 && (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY)){
             workingOnWeekendCount.merge(employee,1, Integer::sum);
         }
     }

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 class MonthlyStoreScheduleGenerator {
@@ -34,6 +36,7 @@ class MonthlyStoreScheduleGenerator {
     private final ExcelExport excelExport;
     private final ScheduleAnalyzer scheduleAnalyzer;
     private final RestAnalyzer restAnalyzer;
+    private final EmptyDaysMatcher emptyDaysMatcher;
 
 
     @Async
@@ -52,6 +55,8 @@ class MonthlyStoreScheduleGenerator {
 
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+
+        emptyDaysMatcher.completeEmptyDaysWithDayOffShift(context);
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 

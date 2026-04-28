@@ -84,7 +84,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
 
         boolean result = managersSplitShifts(context,monthlyMaxWorkingDays);
-        result |= creditEmployeesSplitShifts(context, monthlyMaxWorkingDays);
+//        result |= creditEmployeesSplitShifts(context, monthlyMaxWorkingDays);
         result |= otherEmployeesSplitShifts(context,monthlyMaxWorkingDays);
 
         return result;
@@ -95,23 +95,23 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Employee::isCanOpenCloseStore);
     }
 
-    private boolean creditEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
-        return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
-                empl -> empl.isCanOperateCredit() && !empl.isCanOpenCloseStore());
-    }
+//    private boolean creditEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
+//        return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
+//                empl -> empl.isCanOperateCredit() && !empl.isCanOpenCloseStore());
+//    }
 
     private boolean otherEmployeesSplitShifts(ScheduleGeneratorContext context, int monthlyMaxWorkingDays) {
         return splitShiftsByCriteria(context, monthlyMaxWorkingDays,
                 empl ->
                         !empl.isCanOpenCloseStore()
-                        && !empl.isCanOperateCredit()
+//                        && !empl.isCanOperateCredit()
                         && !empl.isWarehouseman()
         );
     }
 
     private boolean splitShiftsByCriteria(ScheduleGeneratorContext context, int monthlyMaxWorkingDays, Predicate<Employee> employeeFilter) {
         boolean anySwapDone = false;
-        int wantedMaxWorkingDays = monthlyMaxWorkingDays -1;
+        int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
         List<Employee> employees = context.getStoreActiveEmployees().stream()
                 .filter(employeeFilter)
@@ -128,7 +128,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.employeeIsOnVacation(employee, day)) continue;
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
-                if (context.isEmployeeWorkingInWarehouse(employee,date)) continue;
+                if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
 
                 Shift shift = context.getFinalSchedule()
                         .getOrDefault(date, new HashMap<>())
@@ -182,14 +183,15 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 // re-walidacja dni
                 if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
-                if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
+                if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays)
+                    continue;
 
                 // re-walidacja kolizji po poprzednich swapach
                 if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                 if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
-                if (context.isEmployeeWorkingInWarehouse(originalEmployee,originalEmployeeDate)) continue;
-                if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap,otherEmployeeDateForSwap)) continue;
+                if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
+                if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
                 // re-walidacja zmiany — pobierz AKTUALNĄ zmianę z contextu, nie z sortedData
                 Shift currentShiftOnDate = context.getFinalSchedule()
@@ -208,12 +210,13 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (getShiftLength(otherCurrentShiftOnDate) < 10) continue;
 
                 // divide na aktualnej zmianie, nie candidate.swappingShift()
-                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate,originalEmployeeDate,otherEmployeeDateForSwap)) {
+                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate, originalEmployeeDate, otherEmployeeDateForSwap)) {
                     anySwapDone = true;
                     break;
                 }
             }
         }
+
         return anySwapDone;
     }
 
@@ -228,6 +231,16 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDate)) return false;
         if (context.employeeHasProposalDaysOff(otherEmployee,otherEmployeeDate)) return false;
         if (context.employeeHasProposalDaysOff(otherEmployee,originalEmployeeDate)) return false;
+
+        if (context.isEmployeeWorkingOnCredit(originalEmployee,originalEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCredit(originalEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCredit(otherEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCredit(otherEmployee,originalEmployeeDate)) return false;
+
+        if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate.getDayOfMonth())) return false;
+        if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDate.getDayOfMonth())) return false;
+        if (context.employeeIsOnVacation(otherEmployee,otherEmployeeDate.getDayOfMonth())) return false;
+        if (context.employeeIsOnVacation(otherEmployee,originalEmployeeDate.getDayOfMonth())) return false;
 
         if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
             return false;

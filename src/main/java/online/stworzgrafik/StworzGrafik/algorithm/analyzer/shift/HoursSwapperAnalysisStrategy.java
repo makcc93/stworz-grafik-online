@@ -25,7 +25,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     @Override
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
-        int maxHoursDifference = 3;
+        int maxHoursDifference = 1;
 
         int employeeLowestValueOfWorkingHours = employees.stream()
                 .filter(empl -> !empl.isWarehouseman())
@@ -82,7 +82,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
             boolean resolved = swapHoursOnManagers(context);
 
-            resolved |= swapHoursOnCreditEmployees(context);
+//            resolved |= swapHoursOnCreditEmployees(context);
             resolved |= swapHoursOnOthers(context);
 
             if (resolved) break;
@@ -115,7 +115,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 .filter(empl -> !empl.isCashier())
                 .filter(empl -> !empl.isWarehouseman())
                 .filter(empl -> !empl.isPok())
-                .filter(empl -> !empl.isCanOperateCredit())
+//                .filter(empl -> !empl.isCanOperateCredit())
                 .toList();
 
         return swapHours(context, employees);
@@ -123,11 +123,12 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean swapHours(ScheduleGeneratorContext context, List<Employee> employees) {
         boolean anySwapDone = false;
-        int timesRepeat = 10;
+        int timesToRepeat = 5;
 
         YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
 
-        for (int repeat = 1; repeat <= timesRepeat; repeat++){
+
+        for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
@@ -142,6 +143,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.employeeHasProposalDaysOff(employee, date)) continue;
                     if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
                     if (context.employeeIsOnVacation(employee, day)) continue;
+                    if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
                     if (!context.employeeIsWorking(employee, date)) continue;
 
                     employeeHours.put(employee, context.getEmployeeHours().getOrDefault(employee, 0));
