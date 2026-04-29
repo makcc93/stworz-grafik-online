@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ManagerOpeningHourAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalStrategy;
@@ -399,9 +399,9 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isNotEmpty();
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> generateOpenCloseStoreHoursByDate(LocalDate date){
-    Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
-    map.put(date, new OpenCloseStoreHoursIndexDTO(8,20));
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursByDate(LocalDate date){
+    Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
+    map.put(date, new OpenCloseHoursForEmployeeIndexDTO(8,20));
 
     return map;
     }

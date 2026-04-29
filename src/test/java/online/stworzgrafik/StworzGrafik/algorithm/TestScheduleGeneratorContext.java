@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
@@ -24,8 +24,8 @@ public class TestScheduleGeneratorContext {
     private Integer month =3;
     private Store store = new TestStoreBuilder().build();
     private Map<Integer, PeriodDateDTO> periodWeek;
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate;
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate;
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;
     private Schedule schedule = new TestScheduleBuilder().withStore(store).build();
     private List<Employee> storeActiveEmployees = new ArrayList<>();
     private Map<LocalDate, int[]> uneditedOriginalDateStoreDraft = new HashMap<>();
@@ -40,6 +40,8 @@ public class TestScheduleGeneratorContext {
     private Map<LocalDate, List<Shift>> generatedShiftsByDay = new HashMap<>();
     private Map<Employee, List<LocalDate>> employeeAssignToWarehouse = new HashMap<>();
     private Map<Employee, List<LocalDate>> employeeAssignToCredit = new HashMap<>();
+    private Map<Employee, List<LocalDate>> employeeAssignToCheckout = new HashMap<>();
+    private Map<Employee, List<LocalDate>> employeeAssignToOpenClose = new HashMap<>();
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12,0)).withEndHour(LocalTime.of(20,0)).build();
     private Shift defaultDaysOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0,0)).withEndHour(LocalTime.of(0,0)).build();
     private List<Shift> allShifts = new ArrayList<>();
@@ -50,6 +52,7 @@ public class TestScheduleGeneratorContext {
     private LinkedHashMap<LocalDate, Map<Employee, Shift>> finalSchedule = new LinkedHashMap<>();
     private List<CreateScheduleMessageDTO> finalScheduleMessages = new ArrayList<>();
     private boolean storeHasDedicatedWarehouseman = true;
+    private boolean storeHasDedicatedCashier = true;
 
     public TestScheduleGeneratorContext withStoreId(Long storeId){
         this.storeId = storeId;
@@ -76,12 +79,12 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
-    public TestScheduleGeneratorContext withStoreOpenCloseHoursForEmployeesByDate(Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate){
+    public TestScheduleGeneratorContext withStoreOpenCloseHoursForEmployeesByDate(Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate){
         this.storeOpenCloseHoursForEmployeesByDate = storeOpenCloseHoursForEmployeesByDate;
         return this;
     }
 
-    public TestScheduleGeneratorContext withStoreOpenCloseHoursForClientsByDate(Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate){
+    public TestScheduleGeneratorContext withStoreOpenCloseHoursForClientsByDate(Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate){
         this.storeOpenCloseHoursForClientsByDate = storeOpenCloseHoursForClientsByDate;
         return this;
     }
@@ -219,6 +222,8 @@ public class TestScheduleGeneratorContext {
                 generatedShiftsByDay,
                 employeeAssignToWarehouse,
                 employeeAssignToCredit,
+                employeeAssignToCheckout,
+                employeeAssignToOpenClose,
                 allShifts,
                 defaultVacationShift,
                 defaultDaysOffShift,
@@ -228,7 +233,8 @@ public class TestScheduleGeneratorContext {
                 standardShiftTypeConfig,
                 finalSchedule,
                 finalScheduleMessages,
-                storeHasDedicatedWarehouseman
+                storeHasDedicatedWarehouseman,
+                storeHasDedicatedCashier
         );
     }
 }

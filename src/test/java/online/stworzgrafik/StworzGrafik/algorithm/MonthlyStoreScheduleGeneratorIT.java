@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
@@ -144,7 +144,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 6;
+    private final int month = 5;
 
     Employee damMro;
     Employee monBar;
@@ -249,6 +249,8 @@ class MonthlyStoreScheduleGeneratorIT {
                 getShiftsForEveryDay(year,month),
                 new HashMap<>(),
                 new HashMap<>(),
+                new HashMap<>(),
+                new HashMap<>(),
                 generateAllShifts(),
                 defaultVacationShift,
                 defaultDayOffShift,
@@ -258,12 +260,9 @@ class MonthlyStoreScheduleGeneratorIT {
                 shiftTypeConfigService.save(standardTypeConfig),
                 new LinkedHashMap<>(),
                 new ArrayList<>(),
+                true,
                 true
         );
-
-//        storeDelivery = new TestStoreDeliveryBuilder().withStore(store).withPrimaryEmployee(employees.stream().filter(Employee::isWarehouseman).toList().getFirst()).build();
-//        storeDeliveryEntityService.save(storeDelivery);
-
     }
 
     @Test
@@ -804,30 +803,30 @@ class MonthlyStoreScheduleGeneratorIT {
         return map;
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getEmployeesOpenCloseHour(Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> getEmployeesOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
 
             if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
-                map.put(date,new OpenCloseStoreHoursIndexDTO(8,20));
+                map.put(date,new OpenCloseHoursForEmployeeIndexDTO(8,20));
             }
         }
 
         return map;
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getClientsOpenCloseHour(Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> getClientsOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
 
             if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
-                map.put(date,new OpenCloseStoreHoursIndexDTO(9,20));
+                map.put(date,new OpenCloseHoursForEmployeeIndexDTO(9,20));
             }
         }
 

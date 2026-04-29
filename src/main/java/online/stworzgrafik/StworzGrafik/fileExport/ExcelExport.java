@@ -38,6 +38,8 @@ public class ExcelExport implements ExportFile{
         Map<Employee, Integer> employeeVacationsCount = context.getVacationDaysCount();
         Map<Employee, List<LocalDate>> employeeWarehouseCount = context.getEmployeeWarehouseDays();
         Map<Employee, List<LocalDate>> employeeCreditCount = context.getEmployeeCreditDays();
+        Map<Employee, List<LocalDate>> employeeCheckoutCount = context.getEmployeeCheckoutDays();
+        Map<Employee, List<LocalDate>> employeeOpenCloseCount = context.getEmployeeOpenCloseDays();
 
         LinkedHashMap<LocalDate, Map<Employee,Shift>> finalScheduleSortedByDate = context.getFinalSchedule().entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getDayOfMonth()))
@@ -68,7 +70,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell cell = headerRow.createCell(columnIndex++);
                 cell.setCellValue(day + " " + yearMonth.getMonth().toString());
-                cell.setCellStyle(determineCellStyle(workbook,headerStyle,date,false,false,false,false, false));
+                cell.setCellStyle(determineCellStyle(workbook,headerStyle,date,false,false,false,false, false, false,false));
             }
 
             Cell totalHoursCell = headerRow.createCell(columnIndex++);
@@ -96,20 +98,20 @@ public class ExcelExport implements ExportFile{
             totalCreditsCell.setCellValue("RATY");
             totalCreditsCell.setCellStyle(headerStyle);
 
+            Cell totalCheckoutCell = headerRow.createCell(columnIndex);
+            totalCheckoutCell.setCellValue("KASA");
+            totalCheckoutCell.setCellStyle(headerStyle);
+
             int rowNumber = 1;
             Row row = sheet.createRow(rowNumber++);
-
 
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(year, month, day);
 
                 Cell employeeName = row.createCell(day);
                 employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, new Locale("pl", "PL")));
-                employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false));
+                employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false, false,false));
             }
-
-
-
 
             for (Employee employee : employees){
                 row = sheet.createRow(rowNumber++);
@@ -127,7 +129,7 @@ public class ExcelExport implements ExportFile{
 
                     if (!scheduleContainsDate(finalScheduleSortedByDate, date)) {
                         cell.setCellValue("w");
-                        cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, false, false,false,false, false));
+                        cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, false, false,false,false, false, false,false));
                         continue;
                     }
 
@@ -141,6 +143,8 @@ public class ExcelExport implements ExportFile{
                     boolean isShiftProposal = context.employeeHasProposalShift(employee,date);
                     boolean isDayOffProposal = context.employeeHasProposalDaysOff(employee,date);
                     boolean isCredit = employeeCreditCount.getOrDefault(employee,List.of()).contains(date);
+                    boolean isCheckout = employeeCheckoutCount.getOrDefault(employee,List.of()).contains(date);
+                    boolean isOpenClose = employeeOpenCloseCount.getOrDefault(employee,List.of()).contains(date);
 
                     if (shift.getStartHour().getHour() == 0) {
                         if (shift.getEndHour().getHour() == 0) {
@@ -153,7 +157,7 @@ public class ExcelExport implements ExportFile{
                         cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
                     }
 
-                    cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isWarehouse,isShiftProposal,isDayOffProposal,isCredit));
+                    cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isWarehouse,isShiftProposal,isDayOffProposal,isCredit,isCheckout,isOpenClose));
                 }
 
                 Integer workedHours = employeeHours.getOrDefault(employee, 0);
@@ -176,14 +180,19 @@ public class ExcelExport implements ExportFile{
                 vacationsCell.setCellValue(vacations);
                 vacationsCell.setCellStyle(totalStyle);
 
-                int warehouse = employeeWarehouseCount.getOrDefault(employee, new ArrayList<>()).size();
+                int warehouse = employeeWarehouseCount.getOrDefault(employee, List.of()).size();
                 Cell warehouseCell = row.createCell(cellIndex++);
                 warehouseCell.setCellValue(warehouse);
                 warehouseCell.setCellStyle(totalStyle);
 
-                int credits = employeeCreditCount.getOrDefault(employee,new ArrayList<>()).size();
-                Cell creditsCell = row.createCell(cellIndex);
+                int credits = employeeCreditCount.getOrDefault(employee,List.of()).size();
+                Cell creditsCell = row.createCell(cellIndex++);
                 creditsCell.setCellValue(credits);
+                creditsCell.setCellStyle(totalStyle);
+
+                int checkouts = employeeCheckoutCount.getOrDefault(employee,List.of()).size();
+                Cell checkoutCell = row.createCell(cellIndex);
+                checkoutCell.setCellValue(checkouts);
                 creditsCell.setCellStyle(totalStyle);
             }
 
@@ -204,7 +213,7 @@ public class ExcelExport implements ExportFile{
 
                     Cell cell = row.createCell(cellIndex++);
                     cell.setCellValue(dailyShiftsCount[i]);
-                    cell.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false));
+                    cell.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false, false,false));
                 }
             }
             createLegend(sheet,workbook);
@@ -320,7 +329,9 @@ public class ExcelExport implements ExportFile{
                                          boolean isWarehouse,
                                          boolean isProposal,
                                          boolean isDayOffProposal,
-                                         boolean isCredit) {
+                                         boolean isCredit,
+                                         boolean isCheckout,
+                                         boolean isOpenClose) {
         IndexedColors color = null;
 
         if (date.getDayOfWeek() == DayOfWeek.SATURDAY
@@ -330,7 +341,7 @@ public class ExcelExport implements ExportFile{
         }
 
         if (isWarehouse) {
-            color = IndexedColors.LIGHT_ORANGE; // lub LIGHT_TURQUOISE
+            color = IndexedColors.LIGHT_ORANGE;
         }
 
         if (isProposal || isDayOffProposal){
@@ -338,11 +349,15 @@ public class ExcelExport implements ExportFile{
         }
 
         if (isVacation) {
-            color = IndexedColors.SEA_GREEN; // lub LIGHT_BLUE
+            color = IndexedColors.SEA_GREEN;
         }
 
         if (isCredit){
             color = IndexedColors.TURQUOISE1;
+        }
+
+        if (isCheckout){
+            color = IndexedColors.CORNFLOWER_BLUE;
         }
 
         if (color == null) return baseStyle;
@@ -351,12 +366,21 @@ public class ExcelExport implements ExportFile{
         updatedStyle.cloneStyleFrom(baseStyle);
         updatedStyle.setFillForegroundColor(color.getIndex());
         updatedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+
+        if (isOpenClose){
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            boldFont.setItalic(true);
+            updatedStyle.setFont(boldFont);
+        }
+
         return updatedStyle;
     }
 
     private void createLegend(Sheet sheet, Workbook workbook) {
         int startRow = 2;
-        int startCol = 38;
+        int startCol = 40;
 
         record LegendEntry(String label, IndexedColors color) {}
 
@@ -365,7 +389,8 @@ public class ExcelExport implements ExportFile{
                 new LegendEntry("URLOP", IndexedColors.SEA_GREEN),
                 new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
                 new LegendEntry("RATY", IndexedColors.TURQUOISE1),
-                new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT)
+                new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT),
+                new LegendEntry("KASA", IndexedColors.CORNFLOWER_BLUE)
         );
 
         for (int i = 0; i < entries.size(); i++) {

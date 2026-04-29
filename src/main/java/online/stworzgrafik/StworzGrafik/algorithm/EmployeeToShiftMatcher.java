@@ -3,8 +3,9 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -57,25 +58,31 @@ public class EmployeeToShiftMatcher {
             scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_OPENING_HOUR);
             scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_CLOSING_HOUR);
 
-            if (!morningOpenStoreEmployeeAlreadyInSchedule(context,date,uneditedOriginalStoreDailyDraft)) {
+            if (!morningOpenStoreEmployeeAlreadyInSchedule(context,date)) {
                 applyOpenStoreEmployee(context, date, availableEmployees, shiftsSorted);
             }
 
-            if (!afternoonCloseStoreEmployeeAlreadyInSchedule(context,date,uneditedOriginalStoreDailyDraft)) {
+            if (!afternoonCloseStoreEmployeeAlreadyInSchedule(context,date)) {
                 applyCloseStoreEmployee(context, date, availableEmployees, shiftsSorted);
             }
 
             applyCashierIfPresent(context, date, availableEmployees, shiftsSorted);
 
-            if (!morningCreditEmployeeAlreadyInSchedule(context,date,uneditedOriginalStoreDailyDraft)){
+            if (!morningCreditEmployeeAlreadyInSchedule(context,date)){
                 applyMorningCreditEmployee(context, availableEmployees, shiftsSorted, date);
             }
 
-            if (!afternoonCreditEmployeeAlreadyInSchedule(context,date,uneditedOriginalStoreDailyDraft)){
+            if (!afternoonCreditEmployeeAlreadyInSchedule(context,date)){
                 applyAfternoonCreditEmployee(context, availableEmployees, shiftsSorted, date);
             }
 
-//            assignEmployeesToCreditSchedule(context,date);
+            if (!morningCheckoutEmployeeAlreadyInSchedule(context,date)){
+                applyMorningCheckoutEmployee(context,availableEmployees,shiftsSorted,date);
+            }
+
+            if (!afternoonCheckoutEmployeeAlreadyInSchedule(context,date)){
+                applyAfternoonCheckoutEmployee(context,availableEmployees,shiftsSorted,date);
+            }
 
             while (!shiftsSorted.isEmpty()) {
 
@@ -131,117 +138,7 @@ public class EmployeeToShiftMatcher {
             }
 
         }
-
-        for (int day = 1; day < YearMonth.of(context.getYear(),context.getMonth()).lengthOfMonth(); day++){
-            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
-
-            assignEmployeesToCreditSchedule(context,date);
-        }
     }
-
-    private void assignEmployeesToCreditSchedule(ScheduleGeneratorContext context, LocalDate date){
-        log.info("\n TWORZENIE GRAFIKA NA RATY");
-        Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
-        List<Employee> operateCreditEmployees = new ArrayList<>();
-
-        for(Map.Entry<Employee,Shift> entry : dailySchedule.entrySet()){
-            Employee employee = entry.getKey();
-            if (employee.isCanOperateCredit()) {
-                operateCreditEmployees.add(employee);
-            }
-        }
-
-        if (operateCreditEmployees.isEmpty()) {
-            log.info("W dniu {} nie ma żadnych pracowników ratalnych", date);
-        }
-
-        List<Employee> sortedEmployees = operateCreditEmployees.stream()
-                .peek(empl -> log.info("%%% Pracownik: {} {}, magazyn = {}, pracuje = {}, proposal = {}, iloscRat = {}",
-                        empl.getFirstName(),
-                        empl.getLastName(),
-                        context.isEmployeeWorkingInWarehouse(empl,date),
-                        context.employeeIsWorking(empl,date),
-                        context.employeeHasProposalDaysOff(empl,date),
-                        context.getEmployeeCreditDays().getOrDefault(empl, new ArrayList<>()).size()
-                        ))
-                .filter(empl -> !context.isEmployeeWorkingInWarehouse(empl,date))
-                .filter(empl -> context.employeeIsWorking(empl,date))
-                .filter(empl -> !context.employeeHasProposalDaysOff(empl,date))
-                .sorted(Comparator.comparingInt(empl -> context.getEmployeeCreditDays().getOrDefault(empl, List.of()).size())
-                        .thenComparingInt(empl -> context.getVacationDaysCount().getOrDefault(empl,0)))
-                .toList();
-
-        //todo zacznijmy od rozwiazania problemu sprawiedliwego dzielania na raty, jak tkos ma 2tyg urlopu to musi miec 1/2 tego co ktos nie ma
-        //potem grafik na otwarcie zamkniecie
-        //potem grafik na kase
-
-        //potem aktualizacja dzielnia godzin, szatkowania dni
-
-        //potem 35h odpoczynku
-
-        int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
-        int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
-
-        int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
-        int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
-
-        boolean morningCreditAssigned = false;
-        boolean afternoonCreditAssigned = false;
-        for (Employee employee : sortedEmployees){
-            Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).getOrDefault(employee, context.getDefaultDaysOffShift());
-            int[] shiftAsArray = context.shiftAsArray(shift);
-
-            if (!morningCreditAssigned) {
-                if (shiftAsArray[openHour] > 0 || shiftAsArray[openForClientsHour] > 0){
-                    log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
-                            employee.getFirstName(),
-                            employee.getLastName(),
-                            date,
-                            openHour,
-                            shiftAsArray[openHour],
-                            openForClientsHour,
-                            shiftAsArray[openForClientsHour],
-                            closeHour,
-                            shiftAsArray[closeHour],
-                            closeForClientsHour,
-                            shiftAsArray[closeForClientsHour]);
-
-                    context.assignEmployeeToCredit(date, employee, shift);
-                    morningCreditAssigned = true;
-
-                    continue;
-                }
-            }
-
-            if (!afternoonCreditAssigned) {
-                if (shiftAsArray[closeHour] > 0 || shiftAsArray[closeForClientsHour] > 0){
-                    log.info("\n Dopisuje PORANNEGO pracownika {} {} na grafik ratalny w dniu {}, shiftAsArray[{}]={}, shiftAsArray[{}]={},shiftAsArray[{}]={},shiftAsArray[{}]={}",
-                            employee.getFirstName(),
-                            employee.getLastName(),
-                            date,
-                            openHour,
-                            shiftAsArray[openHour],
-                            openForClientsHour,
-                            shiftAsArray[openForClientsHour],
-                            closeHour,
-                            shiftAsArray[closeHour],
-                            closeForClientsHour,
-                            shiftAsArray[closeForClientsHour]);
-
-                    context.assignEmployeeToCredit(date, employee, shift);
-                    afternoonCreditAssigned = true;
-
-                }
-            }
-
-            if (morningCreditAssigned && afternoonCreditAssigned) {
-                break;
-            }
-
-        }
-            log.info("");
-    }
-
 
     private void showShiftsInLog(List<Shift> shifts){
         String shiftsAsString = shifts.stream()
@@ -284,20 +181,70 @@ public class EmployeeToShiftMatcher {
         );
     }
 
-    private boolean afternoonCloseStoreEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, Shift> employeeShift = context.getFinalSchedule().getOrDefault(day, new HashMap<>());
+    private boolean afternoonCloseStoreEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date) {
+        Map<Employee, Shift> employeeShift = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
         for (Map.Entry<Employee, Shift> entry : employeeShift.entrySet()) {
             Employee employee = entry.getKey();
             if (!employee.isCanOpenCloseStore()) continue;
 
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
+            int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
 
-            int lastHourIndex = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day).closeHour();
-
-            if (shiftAsArray[lastHourIndex] > 0) return true;
+            if (shiftAsArray[closeHour] > 0){
+                log.info("PRACOWNIK {} mogący zamknąć sklep w dniu {} jest już w grafiku", employee.getLastName(),date);
+                return true;}
         }
 
         return false;
+    }
+
+    private void applyAfternoonCheckoutEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees,List<Shift> shiftsSorted, LocalDate date){
+        log.info("POPOŁUDNIU - KASA {}", date);
+        Optional<Employee> employeeToOperateAfternoonCheckout = availableEmployees.stream()
+                .filter(Employee::isCanOperateCheckout)
+                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
+                .findFirst();
+
+        if (employeeToOperateAfternoonCheckout.isEmpty()){
+            log.info("Brak pracownika");
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                            "Brak pracownika obsługującego kasę popołudniu w dniu: " + date,
+                            null,
+                            date
+                    )
+            );
+            return;
+        }
+
+        Optional<Shift> afternoonCheckoutShift = shiftsSorted.stream().min(longestCloseStoreShift());
+
+        if (afternoonCheckoutShift.isEmpty()){
+            log.info("Brak zmiany");
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_SHIFT,
+                            "Brak dostępnej popołudniowej zmiany w dniu: " + date,
+                            null,
+                            date
+                    )
+            );
+            return;
+        }
+
+        Employee employeeToOperateCheckout = employeeToOperateAfternoonCheckout.get();
+        Shift checkoutShift = afternoonCheckoutShift.get();
+
+        whenEmployeeHoursExceeded(context, date, employeeToOperateCheckout);
+        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCheckout);
+
+        context.registerShiftOnSchedule(date, employeeToOperateCheckout, checkoutShift,date.getDayOfWeek());
+
+        shiftsSorted.remove(checkoutShift);
+        availableEmployees.remove(employeeToOperateCheckout);
     }
 
     private void applyAfternoonCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date) {
@@ -329,7 +276,7 @@ public class EmployeeToShiftMatcher {
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_SHIFT,
-                            "Brak dostępnej popołudniowej zmiany do zamknięcia w dniu: " + date,
+                            "Brak dostępnej popołudniowej zmiany w dniu: " + date,
                             null,
                             date
                     )
@@ -347,6 +294,55 @@ public class EmployeeToShiftMatcher {
 
         shiftsSorted.remove(creditShift);
         availableEmployees.remove(employeeToOperateCredit);
+    }
+
+    private void applyMorningCheckoutEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date){
+        log.info("RANO - KASA {}", date);
+        Optional<Employee> employeeToOperateMorningCheckout = availableEmployees.stream()
+                .filter(Employee::isCanOperateCheckout)
+                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
+                .findFirst();
+
+        if (employeeToOperateMorningCheckout.isEmpty()){
+            log.info("Brak pracownika");
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
+                            "Brak pracownika obsługującego kasę rano w dniu: " + date,
+                            null,
+                            date
+                    )
+            );
+            return;
+        }
+
+        Optional<Shift> morningCheckoutShift = shiftsSorted.stream().min(longestOpenStoreShift());
+
+        if (morningCheckoutShift.isEmpty()){
+            log.info("Brak zmiany");
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_SHIFT,
+                            "Brak dostępnej zmiany w dniu: " + date,
+                            null,
+                            date
+                    )
+            );
+            return;
+        }
+
+        Shift checkoutShift = morningCheckoutShift.get();
+        Employee employeeToOperateCheckout = employeeToOperateMorningCheckout.get();
+
+        whenEmployeeHoursExceeded(context, date, employeeToOperateCheckout);
+        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCheckout);
+
+        context.registerShiftOnSchedule(date, employeeToOperateCheckout,checkoutShift,date.getDayOfWeek());
+
+        shiftsSorted.remove(checkoutShift);
+        availableEmployees.remove(employeeToOperateCheckout);
     }
 
     private void applyMorningCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date) {
@@ -398,49 +394,95 @@ public class EmployeeToShiftMatcher {
         availableEmployees.remove(employeeToOperateCredit);
     }
 
-    private boolean afternoonCreditEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(day, new HashMap<>());
+    private boolean afternoonCreditEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date) {
+        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
 
         for (Map.Entry<Employee, Shift> entry : map.entrySet()) {
             Employee employee = entry.getKey();
             if (!employee.isCanOperateCredit()) continue;
 
-            int[] employeeProposal = context.shiftAsArray(entry.getValue());
+            int[] employeeShiftAsArray = context.shiftAsArray(entry.getValue());
 
-            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
-            if (employeeProposal[openCloseHoursForEmployees.closeHour()] > 1){
+            int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
+            int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
+
+            if (employeeShiftAsArray[closeHour] > 0 || employeeShiftAsArray[closeForClientsHour] > 0){
+                log.info("PRACOWNIK {} mogący obsugiwać kredyt popołudniu w dniu {} jest już w grafiku", employee.getLastName(),date);
                 return true;
             }
         }
         return false;
     }
 
-    private boolean morningOpenStoreEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, Shift> employeeShift = context.getFinalSchedule().getOrDefault(day,new HashMap<>());
+    private boolean morningOpenStoreEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date) {
+        Map<Employee, Shift> employeeShift = context.getFinalSchedule().getOrDefault(date,Map.of());
         for (Map.Entry<Employee, Shift> entry : employeeShift.entrySet()) {
             Employee employee = entry.getKey();
             if (!employee.isCanOpenCloseStore()) continue;
 
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
+            int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
 
-            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
+            if (shiftAsArray[openHour] > 0) {
+                log.info("PRACOWNIK {} mogący otworzyć sklep w dniu {} jest już w grafiku", employee.getLastName(),date);
+                return true;
+            }
 
-            if (shiftAsArray[openCloseHoursForEmployees.openHour()] > 0) return true;
         }
         return false;
     }
 
-    private boolean morningCreditEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate day, int[]dailyDraft) {
-        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(day, new HashMap<>());
+    private boolean morningCheckoutEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date){
+        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(date, Map.of());
+        for (Map.Entry<Employee, Shift> entry : map.entrySet()) {
+            Employee employee = entry.getKey();
+            if (!employee.isCanOperateCheckout()) continue;
+
+            int[] employeeProposal = context.shiftAsArray(entry.getValue());
+
+            int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
+            int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
+
+            if(employeeProposal[openHour] > 0 || employeeProposal[openForClientsHour] > 0){
+                log.info("PRACOWNIK {} mogący obsługiwać kasę rano w dniu {} jest już w grafiku", employee.getLastName(),date);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean afternoonCheckoutEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date){
+        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
+        for (Map.Entry<Employee, Shift> entry : map.entrySet()) {
+            Employee employee = entry.getKey();
+            if (!employee.isCanOperateCheckout()) continue;
+
+            int[] employeeProposal = context.shiftAsArray(entry.getValue());
+
+            int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
+            int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
+
+            if(employeeProposal[closeHour] > 0 || employeeProposal[closeForClientsHour] > 0){
+                log.info("PRACOWNIK {} mogący obsługiwać kasę popołudniu w dniu {} jest już w grafiku", employee.getLastName(),date);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean morningCreditEmployeeAlreadyInSchedule(ScheduleGeneratorContext context, LocalDate date) {
+        Map<Employee, Shift> map = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
         for (Map.Entry<Employee, Shift> entry : map.entrySet()) {
             Employee employee = entry.getKey();
             if (!employee.isCanOperateCredit()) continue;
 
-            int[] employeeProposal = context.shiftAsArray(entry.getValue());
+            int[] employeeShiftAsArray = context.shiftAsArray(entry.getValue());
 
-            OpenCloseStoreHoursIndexDTO openCloseHoursForEmployees = context.getStoreOpenCloseHoursIndexForEmployeesByDate(day);
+            int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
+            int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
 
-            if(employeeProposal[openCloseHoursForEmployees.openHour()] > 1){
+            if(employeeShiftAsArray[openHour] > 0 || employeeShiftAsArray[openForClientsHour] > 0){
+                log.info("PRACOWNIK {} mogący obsugiwać kredyt rano w dniu {} jest już w grafiku", employee.getLastName(),date);
                 return true;
             }
         }
@@ -554,7 +596,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private Shift getShiftFromOpenToCloseStoreHours(ScheduleGeneratorContext context, LocalDate date){
-        OpenCloseStoreHoursIndexDTO dto = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date);
+        OpenCloseHoursForEmployeeIndexDTO dto = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date);
 
         return context.findShiftByHours(LocalTime.of(dto.openHour(), 0), LocalTime.of(dto.closeHour(), 0));
     }

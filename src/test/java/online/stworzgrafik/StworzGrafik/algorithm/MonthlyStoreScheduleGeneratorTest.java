@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -138,15 +138,15 @@ class MonthlyStoreScheduleGeneratorTest {
         );
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHour(Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> getStoreOpenCloseHour(Integer year, Integer month){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
 
             if (date.getDayOfWeek() != DayOfWeek.SUNDAY){
-                map.put(date,new OpenCloseStoreHoursIndexDTO(8,20));
+                map.put(date,new OpenCloseHoursForEmployeeIndexDTO(8,20));
             }
         }
 
