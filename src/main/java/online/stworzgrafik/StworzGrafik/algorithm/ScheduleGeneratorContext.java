@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
@@ -29,8 +29,8 @@ public class ScheduleGeneratorContext {
     private final Schedule schedule;
     private final Store store;
     private final Map<Integer, PeriodDateDTO> periodWeek;
-    private final Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForEmployeesByDate;
-    private final Map<LocalDate, OpenCloseStoreHoursIndexDTO> storeOpenCloseHoursForClientsByDate;
+    private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
+    private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;
     private final List<Employee> storeActiveEmployees;
     private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
     private final LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
@@ -44,6 +44,8 @@ public class ScheduleGeneratorContext {
     private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
     private final Map<Employee, List<LocalDate>> employeeWarehouseDays;
     private final Map<Employee, List<LocalDate>> employeeCreditDays;
+    private final Map<Employee, List<LocalDate>> employeeCheckoutDays;
+    private final Map<Employee, List<LocalDate>> employeeOpenCloseDays;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -54,6 +56,7 @@ public class ScheduleGeneratorContext {
     private final LinkedHashMap<LocalDate,Map<Employee,Shift>> finalSchedule;
     private final List<CreateScheduleMessageDTO> finalScheduleMessages;
     private final boolean storeHasDedicatedWarehouseman;
+    private final boolean storeHasDedicatedCashier;
 
     public Shift findShiftByArray(int[] array){
         if (array.length != 24){
@@ -131,7 +134,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void deleteShiftFromSchedule(LocalDate date, Employee employee){
-        Map<Employee, Shift> dailySchedule = finalSchedule.getOrDefault(date, new HashMap<>());
+        Map<Employee, Shift> dailySchedule = finalSchedule.getOrDefault(date, Map.of());
 
         if (!dailySchedule.isEmpty()){
             dailySchedule.remove(employee);
@@ -155,16 +158,16 @@ public class ScheduleGeneratorContext {
         addWorkingInformation(employee,shift,dayOfWeek);
     }
 
-    public OpenCloseStoreHoursIndexDTO getStoreOpenCloseHoursIndexForClientsByDate(LocalDate date){
-        return storeOpenCloseHoursForClientsByDate.getOrDefault(date, new OpenCloseStoreHoursIndexDTO(0,0));
+    public OpenCloseHoursForEmployeeIndexDTO getStoreOpenCloseHoursIndexForClientsByDate(LocalDate date){
+        return storeOpenCloseHoursForClientsByDate.getOrDefault(date, new OpenCloseHoursForEmployeeIndexDTO(0,0));
     }
 
-    public OpenCloseStoreHoursIndexDTO getStoreOpenCloseHoursIndexForEmployeesByDate(LocalDate date){
-        return storeOpenCloseHoursForEmployeesByDate.getOrDefault(date, new OpenCloseStoreHoursIndexDTO(0,0));
+    public OpenCloseHoursForEmployeeIndexDTO getStoreOpenCloseHoursIndexForEmployeesByDate(LocalDate date){
+        return storeOpenCloseHoursForEmployeesByDate.getOrDefault(date, new OpenCloseHoursForEmployeeIndexDTO(0,0));
     }
 
     public boolean isEmployeeWorkingInWarehouse(Employee employee, LocalDate date){
-        return employeeWarehouseDays.getOrDefault(employee,new ArrayList<>()).contains(date);
+        return employeeWarehouseDays.getOrDefault(employee,List.of()).contains(date);
     }
 
     public void assignEmployeeToWarehouse(LocalDate date, Employee employee, Shift shift){
@@ -175,8 +178,32 @@ public class ScheduleGeneratorContext {
         }
     }
 
+    public boolean isEmployeeOpenClose(Employee employee, LocalDate date){
+        return employeeOpenCloseDays.getOrDefault(employee,List.of()).contains(date);
+    }
+
+    public void assignEmployeeToOpenClose(LocalDate date, Employee employee, Shift shift){
+        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+            employeeOpenCloseDays
+                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .add(date);
+        }
+    }
+
+    public boolean isEmployeeWorkingOnCheckout(Employee employee, LocalDate date){
+        return employeeCheckoutDays.getOrDefault(employee,List.of()).contains(date);
+    }
+
+    public void assignEmployeeToCheckout(LocalDate date, Employee employee, Shift shift){
+        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+            employeeCheckoutDays
+                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .add(date);
+        }
+    }
+
     public boolean isEmployeeWorkingOnCredit(Employee employee, LocalDate date){
-        return employeeCreditDays.getOrDefault(employee,new ArrayList<>()).contains(date);
+        return employeeCreditDays.getOrDefault(employee,List.of()).contains(date);
     }
 
     public void assignEmployeeToCredit(LocalDate date, Employee employee, Shift shift){

@@ -2,7 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseStoreHoursIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
@@ -76,6 +76,8 @@ public class ScheduleGeneratorContextFactory {
                 .generatedShiftsByDay(new HashMap<>())
                 .employeeWarehouseDays(new HashMap<>())
                 .employeeCreditDays(new HashMap<>())
+                .employeeCheckoutDays(new HashMap<>())
+                .employeeOpenCloseDays(new HashMap<>())
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
@@ -86,7 +88,19 @@ public class ScheduleGeneratorContextFactory {
                 .finalSchedule(new LinkedHashMap<>())
                 .finalScheduleMessages(new ArrayList<>())
                 .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))
+                .storeHasDedicatedCashier(isCashierInStore(storeId))
                 .build();
+    }
+
+    private boolean isCashierInStore(Long storeId){
+        List<Employee> employees = employeeEntityService.findAllStoreActiveEmployees(storeId);
+        for (Employee employee : employees){
+            if (employee.isCashier()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Map<Integer, PeriodDateDTO> calculatePeriodWeeks(Integer year,Integer month){
@@ -138,15 +152,15 @@ public class ScheduleGeneratorContextFactory {
         return shiftEntityService.getAll();
     }
 
-    private Map<LocalDate,OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHourForClients(Long storeId, Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursIndexDTO> openCloseHoursIndexByDate = new HashMap<>();
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> getStoreOpenCloseHourForClients(Long storeId, Integer year, Integer month){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> openCloseHoursIndexByDate = new HashMap<>();
 
         for (DayOfWeek dayOfWeek : DayOfWeek.values()){
             DayHours hoursForDayOfWeek = storeOpeningHoursService.getHoursForDayOfWeek(storeId, dayOfWeek);
             LocalTime openHour = hoursForDayOfWeek.open();
             LocalTime closeHour = hoursForDayOfWeek.close();
 
-            OpenCloseStoreHoursIndexDTO hoursIndexDTO = new OpenCloseStoreHoursIndexDTO(openHour.getHour(), closeHour.getHour() - 1);
+            OpenCloseHoursForEmployeeIndexDTO hoursIndexDTO = new OpenCloseHoursForEmployeeIndexDTO(openHour.getHour(), closeHour.getHour() - 1);
 
             List<Integer> dayNumbersByDayOfWeek = calendarCalculation.getDayNumbersByDayOfWeek(year, month, dayOfWeek);
             for (int day : dayNumbersByDayOfWeek){
@@ -158,8 +172,8 @@ public class ScheduleGeneratorContextFactory {
         return openCloseHoursIndexByDate;
     }
 
-    private Map<LocalDate, OpenCloseStoreHoursIndexDTO> getStoreOpenCloseHourForEmployees(Long storeId, Integer year, Integer month){
-        Map<LocalDate, OpenCloseStoreHoursIndexDTO> map = new HashMap<>();
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> getStoreOpenCloseHourForEmployees(Long storeId, Integer year, Integer month){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
 
         YearMonth yearMonth = YearMonth.of(year,month);
 
@@ -185,7 +199,7 @@ public class ScheduleGeneratorContextFactory {
                 }
             }
 
-            map.put(date,new OpenCloseStoreHoursIndexDTO(openHour,closeHour));
+            map.put(date,new OpenCloseHoursForEmployeeIndexDTO(openHour,closeHour));
         }
 
         return map;
