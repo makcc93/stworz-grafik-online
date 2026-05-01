@@ -46,6 +46,7 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, List<LocalDate>> employeeCreditDays;
     private final Map<Employee, List<LocalDate>> employeeCheckoutDays;
     private final Map<Employee, List<LocalDate>> employeeOpenCloseDays;
+    private final Map<Employee, List<LocalDate>> employeeWeeklyRestRequirementDaysOff;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -178,6 +179,30 @@ public class ScheduleGeneratorContext {
         }
     }
 
+    public boolean isEmployeeOnRestRequirementDayOff(Employee employee, LocalDate date){
+        return employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,List.of()).contains(date);
+    }
+
+    public boolean isEmployeeOnRestRequirementDayOff(Employee employee, LocalDate startDate, LocalDate endDate){
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)){
+            if (employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,List.of()).contains(currentDate)){
+                return true;
+            }
+
+            currentDate = currentDate.plusDays(1);
+        }
+        return false;
+    }
+
+    public void assignEmployeeToRestRequirementDayOff(Employee employee, LocalDate date){
+        employeeWeeklyRestRequirementDaysOff
+                .computeIfAbsent(employee, k -> new ArrayList<>())
+                .add(date);
+
+    }
+
     public boolean isEmployeeOpenClose(Employee employee, LocalDate date){
         return employeeOpenCloseDays.getOrDefault(employee,List.of()).contains(date);
     }
@@ -262,10 +287,17 @@ public class ScheduleGeneratorContext {
         return Arrays.stream(vacations).sum() > 0;
     }
 
-    public boolean employeeIsOnVacation(Employee employee, int day){
-        int[]  vacations = monthlyEmployeesVacation.getOrDefault(employee,new int[31]);
+//    public boolean employeeIsOnVacation(Employee employee, int day){
+//        int[]  vacations = monthlyEmployeesVacation.getOrDefault(employee,new int[31]);
+//
+//        return vacations[day-1] == 1;
+//    }
 
-        return vacations[day-1] == 1;
+    public boolean employeeIsOnVacation(Employee employee, LocalDate date){
+        int[]  vacations = monthlyEmployeesVacation.getOrDefault(employee,new int[31]);
+        int dayOfMonth = date.getDayOfMonth();
+
+        return vacations[dayOfMonth-1] == 1;
     }
 
     private void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){

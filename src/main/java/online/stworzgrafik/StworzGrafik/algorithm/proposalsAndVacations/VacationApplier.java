@@ -38,7 +38,7 @@ public class VacationApplier {
             }
 
             for (Employee employee : employeesWithVacation) {
-                if (context.employeeIsOnVacation(employee, day)) {
+                if (context.employeeIsOnVacation(employee, date)) {
                     context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
                     context.addEmployeeVacationDay(employee,1);
                 }

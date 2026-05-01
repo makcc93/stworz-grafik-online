@@ -57,7 +57,7 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(warehouseman,day) || context.employeeHasProposalDaysOff(warehouseman,date)){
+                if (context.employeeIsOnVacation(warehouseman,date) || context.employeeHasProposalDaysOff(warehouseman,date)){
                     coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }
@@ -71,7 +71,7 @@ public void generate(ScheduleGeneratorContext context){
     private void coverDeliveryByOtherEmployee(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift, DayOfWeek dayOfWeek,ShiftTypeConfig shiftTypeConfig) {
         Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
                 .filter(Employee::isCanOperateDelivery)
-                .filter(empl -> !context.employeeIsOnVacation(empl, date.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnVacation(empl, date))
                 .filter(empl -> !context.employeeHasProposalDaysOff(empl, date))
                 .filter(empl -> !context.employeeHasProposalShift(empl, date))
                 .filter(empl -> !empl.getId().equals(employee.getId()))

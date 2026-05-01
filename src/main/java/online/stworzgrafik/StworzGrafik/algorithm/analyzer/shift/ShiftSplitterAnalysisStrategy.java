@@ -125,11 +125,12 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
             LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
             for (Employee employee : employees) {
                 if (!context.employeeIsWorking(employee, date)) continue;
-                if (context.employeeIsOnVacation(employee, day)) continue;
+                if (context.employeeIsOnVacation(employee, date)) continue;
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
                 if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
                 if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
+                if (context.isEmployeeWorkingOnCheckout(employee,date)) continue;
 
                 Shift shift = context.getFinalSchedule()
                         .getOrDefault(date, new HashMap<>())
@@ -193,6 +194,12 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                 if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
+                if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
+                if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
+                if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
                 // re-walidacja zmiany — pobierz AKTUALNĄ zmianę z contextu, nie z sortedData
                 Shift currentShiftOnDate = context.getFinalSchedule()
                         .getOrDefault(originalEmployeeDate, new HashMap<>())
@@ -237,10 +244,15 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         if (context.isEmployeeWorkingOnCredit(otherEmployee,otherEmployeeDate)) return false;
         if (context.isEmployeeWorkingOnCredit(otherEmployee,originalEmployeeDate)) return false;
 
-        if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate.getDayOfMonth())) return false;
-        if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDate.getDayOfMonth())) return false;
-        if (context.employeeIsOnVacation(otherEmployee,otherEmployeeDate.getDayOfMonth())) return false;
-        if (context.employeeIsOnVacation(otherEmployee,originalEmployeeDate.getDayOfMonth())) return false;
+        if (context.isEmployeeWorkingOnCheckout(originalEmployee,originalEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCheckout(originalEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCheckout(otherEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeWorkingOnCheckout(otherEmployee,originalEmployeeDate)) return false;
+
+        if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) return false;
+        if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDate)) return false;
+        if (context.employeeIsOnVacation(otherEmployee,otherEmployeeDate)) return false;
+        if (context.employeeIsOnVacation(otherEmployee,originalEmployeeDate)) return false;
 
         if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
             return false;

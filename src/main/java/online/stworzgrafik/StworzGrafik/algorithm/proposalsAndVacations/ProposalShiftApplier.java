@@ -41,7 +41,7 @@ public class ProposalShiftApplier {
 
             for (Employee employee : employees){
                 if (context.employeeHasProposalShift(employee,date)){
-                    if (employeeIsOnVacation(context, employee, day, date)) continue;
+                    if (employeeIsOnVacation(context, employee, date)) continue;
                     if (employeeIsOnDayOff(context, employee, date)) continue;
 
                     scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
@@ -74,8 +74,8 @@ public class ProposalShiftApplier {
         return false;
     }
 
-    private static boolean employeeIsOnVacation(ScheduleGeneratorContext context, Employee employee, int day, LocalDate date) {
-        if (context.employeeIsOnVacation(employee, day)){
+    private static boolean employeeIsOnVacation(ScheduleGeneratorContext context, Employee employee,LocalDate date) {
+        if (context.employeeIsOnVacation(employee, date)){
             context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.INFO,

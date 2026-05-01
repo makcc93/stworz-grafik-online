@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
@@ -88,6 +89,9 @@ class MonthlyStoreScheduleGeneratorIT {
     private EmployeeEntityService employeeEntityService;
 
     @Autowired
+    private HolidayManager holidayManager;
+
+    @Autowired
     private ShiftEntityService shiftEntityService;
 
     @Autowired
@@ -144,7 +148,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 5;
+    private final int month = 6;
 
     Employee damMro;
     Employee monBar;
@@ -247,6 +251,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 new HashMap<>(),
                 new HashMap<>(),
                 getShiftsForEveryDay(year,month),
+                new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
@@ -356,6 +361,13 @@ class MonthlyStoreScheduleGeneratorIT {
         generateVacation(filKam,firstTwoWeeks);
         generateVacation(marNow,secondTwoWeeks);
         generateVacation(karNak,secondTwoWeeks);
+
+        generateDayOffProposals(matKru,List.of(3,10,17,24));
+        generateDayOffProposals(monBar,List.of(2,9,16,23));
+
+        //todo koncze na tym ze shift splitter dziala ok na managerach ale z martyna jest problem (moze sortowanie po weekendach??????) potem przyjrzyj sie reszcie
+
+        //dalej hours splitter
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -768,6 +780,11 @@ class MonthlyStoreScheduleGeneratorIT {
         YearMonth yearMonth = YearMonth.of(year,month);
         for (int day = 1; day <= yearMonth.lengthOfMonth();day++){
             LocalDate date = LocalDate.of(year,month,day);
+
+            if (holidayManager.isHoliday(date)){
+                map.put(date,new int[24]);
+                demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(date,new int[24]));
+            }
 
             if (date.getDayOfWeek() == DayOfWeek.MONDAY){
                 map.put(date,mondayDraft);

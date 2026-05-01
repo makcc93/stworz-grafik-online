@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.RestAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.WeeklyRequirementRest;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
@@ -48,6 +49,7 @@ class MonthlyStoreScheduleGenerator {
     private final CreditMatcher creditMatcher;
     private final CheckoutMatcher checkoutMatcher;
     private final OpenCloseMatcher openCloseMatcher;
+    private final WeeklyRequirementRest weeklyRequirementRest;
 
 
     @Async
@@ -58,6 +60,7 @@ class MonthlyStoreScheduleGenerator {
         daysOffApplier.applyDaysOffToSchedule(context);
         proposalShiftApplier.applyProposalShiftsToSchedule(context);
 
+        weeklyRequirementRest.proceed(context);
 
         warehousemanScheduleGenerator.generate(context);
 
@@ -70,7 +73,7 @@ class MonthlyStoreScheduleGenerator {
         openCloseMatcher.assignForMonth(context);
 
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+//        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
         emptyDaysMatcher.completeEmptyDaysWithDayOffShift(context);
 

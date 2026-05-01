@@ -49,7 +49,7 @@ public class ScheduleGeneratorContextFactory {
     private final StoreDeliveryService storeDeliveryService;
     private final StoreOpeningHoursService storeOpeningHoursService;
     private final CalendarCalculation calendarCalculation;
-    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.SUNDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
+    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.MONDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);
@@ -78,6 +78,7 @@ public class ScheduleGeneratorContextFactory {
                 .employeeCreditDays(new HashMap<>())
                 .employeeCheckoutDays(new HashMap<>())
                 .employeeOpenCloseDays(new HashMap<>())
+                .employeeWeeklyRestRequirementDaysOff(new HashMap<>())
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
@@ -115,10 +116,12 @@ public class ScheduleGeneratorContextFactory {
         LocalDate firstFullWeekStart = firstDayOfMonth.plusDays(daysDifference);
 
         int weekIndex = 1;
-        periodWeek.put(
-                weekIndex++,
-                new PeriodDateDTO(firstDayOfMonth,firstFullWeekStart.minusDays(1))
-        );
+        if (daysDifference > 0) {
+            periodWeek.put(
+                    weekIndex++,
+                    new PeriodDateDTO(firstDayOfMonth, firstFullWeekStart.minusDays(1))
+            );
+        }
 
 
         LocalDate currentStart = firstFullWeekStart;

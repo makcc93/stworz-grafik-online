@@ -162,10 +162,11 @@ public class EmployeeToShiftMatcher {
     private ArrayList<Employee> getAvailableEmployees(ScheduleGeneratorContext context, List<Employee> storeActiveEmployees, LocalDate day) {
         return new ArrayList<>(storeActiveEmployees.stream()
                 .filter(empl -> !context.employeeHasProposalDaysOff(empl, day))
-                .filter(empl -> !context.employeeIsOnVacation(empl, day.getDayOfMonth()))
+                .filter(empl -> !context.employeeIsOnVacation(empl, day))
                 .filter(empl -> !context.employeeHasProposalShift(empl, day))
                 .filter(empl -> !empl.isWarehouseman())
                 .filter(empl -> !context.isEmployeeWorkingInWarehouse(empl,day))
+                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl,day))
                 .filter(empl ->
                         calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth()) > context.getWorkingDaysCount().getOrDefault(empl,0))
                 .toList()
