@@ -37,14 +37,16 @@ public class WeeklyRequirementRest {
             log.info("###### WEEK INDEX: {}, START: {}({}), END: {}({})", weekIndex,periodStartDate,periodStartDayOfMonth,periodEndDate,periodEndDayOfMonth);
             log.info("");
 
-            boolean assignedToDayOff = checkZeroDraftRequirementDay(context, periodStartDayOfMonth, periodEndDayOfMonth, periodStartDate, periodEndDate,employees);
+            boolean assignedToDayOff = checkZeroDraftRequirementDay(context, periodDateDTO,employees);
             if(assignedToDayOff) continue;
 
-            checkVacationAndDayOffProposal(context, periodStartDayOfMonth, periodEndDayOfMonth, periodStartDate, periodEndDate, employees);
+            checkVacationAndDayOffProposal(context, periodDateDTO, employees);
 
             Map<LocalDate, Double> daysScoring = calculateDatesScoring(context, periodStartDayOfMonth, periodEndDayOfMonth, periodStartDate);
 
-            assignEmployeesToRestDays(context, employees, periodStartDate, periodEndDate, daysScoring);
+            checkShiftsProposal(context,employees, periodDateDTO, daysScoring);
+
+            assignEmployeesToRestDays(context, employees, periodDateDTO, daysScoring);
         }
 
         log.info("");
@@ -55,28 +57,37 @@ public class WeeklyRequirementRest {
         log.info("");
     }
 
-    private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, LocalDate periodStartDate, LocalDate periodEndDate, Map<LocalDate, Double> daysScoring) {
+    private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
+        LocalDate periodStartDate = periodDateDTO.startDate();
+        LocalDate periodEndDate = periodDateDTO.endDate();
+
         List<Employee> filteredEmployees = employees.stream()
                 .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
                 .toList();
 
-        for (Employee employee : filteredEmployees){
-            Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
-                    .sorted(Comparator.comparingDouble(
-                            Map.Entry::getValue
-                    ))
-                    .map(Map.Entry::getKey)
-                    .findFirst();
+            for (Employee employee : filteredEmployees) {
+                Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
+                        .sorted(Comparator.comparingDouble(
+                                Map.Entry::getValue
+                        ))
+                        .map(Map.Entry::getKey)
+                        .findFirst();
 
-            if (lowestScoringDate.isEmpty()){
-                log.info("Nie odnaleziono dnia z najniższym scoringiem");
-                continue;
+                if (lowestScoringDate.isEmpty()) {
+                    log.info("Nie odnaleziono dnia z najniższym scoringiem");
+                    continue;
+                }
+
+                if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
+
+                context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
+                log.info("");
+                log.info("LAST_STEP LAST_STEP LAST_STEP DOPISUJE {} DO DATY {}", employee.getLastName(),lowestScoringDate.get());
+                log.info("LAST_STEP LAST_STEP LAST_STEP BEFORE DATE {} SCORING: {}", lowestScoringDate.get(),daysScoring.getOrDefault(lowestScoringDate.get(),0.00));
+                daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
+                log.info("LAST_STEP LAST_STEP LAST_STEP AFTER DATE {} SCORING: {}", lowestScoringDate.get(),daysScoring.getOrDefault(lowestScoringDate.get(),0.00));
+                log.info("");
             }
-
-            context.assignEmployeeToRestRequirementDayOff(employee,lowestScoringDate.get());
-
-            daysScoring.merge(lowestScoringDate.get(),1.0,Double::sum);
-        }
     }
 
     private static Map<LocalDate, Double> calculateDatesScoring(ScheduleGeneratorContext context, int periodStartDayOfMonth, int periodEndDayOfMonth, LocalDate periodStartDate) {
@@ -86,17 +97,65 @@ public class WeeklyRequirementRest {
 
             if (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY) continue;
 
+            double vacationAndDaysOffValue = 0.00;
+            for (Employee employee : context.getStoreActiveEmployees()){
+                if (context.employeeIsOnVacation(employee,currentDate)){
+                    vacationAndDaysOffValue += 2.00;
+                }
+
+                if (context.employeeHasProposalDaysOff(employee,currentDate)){
+                    vacationAndDaysOffValue += 2.00;
+                }
+            }
+
             double divideBy = 8;
             double dailySum = Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(currentDate, new int[24])).sum();
-            double dailyScoring = dailySum / divideBy;
+            double dailyScoring = (dailySum / divideBy) + vacationAndDaysOffValue;
 
-            log.info("!!!!!!!!! DATA: {}, SCORING: {}", currentDate,dailyScoring);
+            log.info("!!!!!!!!! DATA: {}, SCORING: {} (W TYM WAKACJE/DNI WOLNE: {})", currentDate,dailyScoring, vacationAndDaysOffValue);
             daysScoring.put(currentDate,dailyScoring);
         }
         return daysScoring;
     }
 
-    private static void checkVacationAndDayOffProposal(ScheduleGeneratorContext context, int periodStartDayOfMonth, int periodEndDayOfMonth, LocalDate periodStartDate, LocalDate periodEndDate, List<Employee> employees) {
+    private static void checkShiftsProposal(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO dto, Map<LocalDate, Double> daysScoring){
+        LocalDate periodStartDate = dto.startDate();
+        LocalDate periodEndDate = dto.endDate();
+
+        List<Employee> filteredEmployeesWithShiftProposal = employees.stream()
+                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
+                .filter(empl -> context.employeeHasProposalShift(empl,dto))
+                .toList();
+
+        log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT EMPLOYEES: {}", filteredEmployeesWithShiftProposal.toArray());
+
+        for (Employee employee : filteredEmployeesWithShiftProposal){
+            log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT SPRAWDZAM PRACOWNIKA {}",employee.getLastName());
+
+            for (LocalDate currentDate : daysScoring.keySet()) {
+                if (!context.employeeHasProposalShift(employee, currentDate)) {
+                    context.assignEmployeeToRestRequirementDayOff(employee, currentDate);
+                    log.info("");
+                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT  DOPISUJE {} DO DATY {} BO NIE MA WTEDY PROPOZYCJI", employee.getLastName(), currentDate);
+                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT DAY SCORING BEFORE: {}", daysScoring.getOrDefault(currentDate, 0.00));
+                    daysScoring.merge(currentDate, 1.0, Double::sum);
+                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT DAY SCORING AFFTER: {}", daysScoring.getOrDefault(currentDate, 0.00));
+                    log.info("");
+                    break;
+                }
+            }
+        }
+
+    }
+
+
+    private static void checkVacationAndDayOffProposal(ScheduleGeneratorContext context, PeriodDateDTO dto, List<Employee> employees) {
+        LocalDate periodStartDate = dto.startDate();
+        LocalDate periodEndDate = dto.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
         for (int day = (periodStartDayOfMonth +1); day < periodEndDayOfMonth; day++) {
             LocalDate currentDate = LocalDate.of(periodStartDate.getYear(), periodStartDate.getMonth(), day);
 
@@ -117,7 +176,13 @@ public class WeeklyRequirementRest {
         }
     }
 
-    private static boolean checkZeroDraftRequirementDay(ScheduleGeneratorContext context, int periodStartDayOfMonth, int periodEndDayOfMonth, LocalDate periodStartDate, LocalDate periodEndDate, List<Employee> employees) {
+    private static boolean checkZeroDraftRequirementDay(ScheduleGeneratorContext context, PeriodDateDTO dto, List<Employee> employees) {
+        LocalDate periodStartDate = dto.startDate();
+        LocalDate periodEndDate = dto.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
         for (int day = (periodStartDayOfMonth +1); day < periodEndDayOfMonth; day++){
             LocalDate currentDate = LocalDate.of(periodStartDate.getYear(), periodStartDate.getMonth(),day);
 
