@@ -131,6 +131,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
                 if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
                 if (context.isEmployeeWorkingOnCheckout(employee,date)) continue;
+                if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
 
                 Shift shift = context.getFinalSchedule()
                         .getOrDefault(date, new HashMap<>())
@@ -238,6 +239,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDate)) return false;
         if (context.employeeHasProposalDaysOff(otherEmployee,otherEmployeeDate)) return false;
         if (context.employeeHasProposalDaysOff(otherEmployee,originalEmployeeDate)) return false;
+
+        if (context.isEmployeeOnRestRequirementDayOff(originalEmployee,originalEmployeeDate)) return false;
+        if (context.isEmployeeOnRestRequirementDayOff(originalEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeOnRestRequirementDayOff(otherEmployee,otherEmployeeDate)) return false;
+        if (context.isEmployeeOnRestRequirementDayOff(otherEmployee,originalEmployeeDate)) return false;
 
         if (context.isEmployeeWorkingOnCredit(originalEmployee,originalEmployeeDate)) return false;
         if (context.isEmployeeWorkingOnCredit(originalEmployee,otherEmployeeDate)) return false;

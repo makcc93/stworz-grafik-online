@@ -21,6 +21,7 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -491,10 +492,27 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
-        Optional<Employee> employeeToCloseStore = availableEmployees.stream()
+        log.info("===========================");
+        Optional <Employee> employeeToCloseStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
                 .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
                 .findFirst();
+
+        //
+        List<Employee> testList = availableEmployees.stream()
+                .filter(Employee::isCanOpenCloseStore)
+                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
+                .toList();
+
+        testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
+                date,
+                emp.getLastName(),
+                context.getEmployeeHours().getOrDefault(emp, 0),
+                context.getWorkingDaysCount().getOrDefault(emp, 9),
+                context.getVacationDaysCount().getOrDefault(emp, 0),
+                context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
+
+        //
 
         if (employeeToCloseStore.isEmpty()) {
             log.info("Brak dostępnego pracownika mogącego zamknąć sklep w dniu {}", date);
@@ -529,6 +547,7 @@ public class EmployeeToShiftMatcher {
         context.registerShiftOnSchedule(date,employeeClosingStore,closingShift,date.getDayOfWeek());
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
+        log.info("==================");
     }
 
     private void modifyOpenStoreEmployeeHoursToAllDayShift(ScheduleGeneratorContext context, LocalDate date){
@@ -604,8 +623,9 @@ public class EmployeeToShiftMatcher {
 
     private Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context, LocalDate date) {
         return (Comparator.comparingInt(
-                (Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl))
-                .thenComparingInt(empl -> context.getEmployeeHours().getOrDefault(empl,0)));
+                empl -> context.getEmployeeHours().getOrDefault(empl,0)));
+//                (Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl))
+//                .thenComparingInt((Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl));
     }
 
     private int calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(ScheduleGeneratorContext context, LocalDate date, Employee empl) {
@@ -622,19 +642,29 @@ public class EmployeeToShiftMatcher {
         return getShiftLength(twoDaysBeforeShift) + getShiftLength(oneDayBeforeShift) + getShiftLength(oneDayAfterShift) + getShiftLength(twoDaysAfterShift);
     }
 
-    private Comparator<Employee> employeeWithLowestWorkedAroundDays(ScheduleGeneratorContext context, LocalDate date) {
-        return Comparator.comparingInt(
-                empl -> {
-                    return calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl);
-                });
-    }
-
 
     private void applyOpenStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
+       log.info("");
         Optional<Employee> employeeToOpenStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
                 .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
                 .findFirst();
+
+        //
+        List<Employee> testList = availableEmployees.stream()
+                .filter(Employee::isCanOpenCloseStore)
+                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
+                .toList();
+
+        testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
+                date,
+                emp.getLastName(),
+                context.getEmployeeHours().getOrDefault(emp, 0),
+                context.getWorkingDaysCount().getOrDefault(emp, 9),
+                context.getVacationDaysCount().getOrDefault(emp, 0),
+                context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
+
+        //
 
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", date);
@@ -670,6 +700,7 @@ public class EmployeeToShiftMatcher {
         context.registerShiftOnSchedule(date,employeeToOpenStore.get(),openShift.get(),date.getDayOfWeek());
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
+        log.info("");
     }
 
     private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date) {

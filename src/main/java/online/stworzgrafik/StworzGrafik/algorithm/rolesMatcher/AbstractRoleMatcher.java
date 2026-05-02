@@ -17,7 +17,7 @@ import java.util.Map;
 public abstract class AbstractRoleMatcher implements RoleMatcher{
 
     @Override
-    public void assignForMonth(ScheduleGeneratorContext context) {
+    public void assignRolesForMonth(ScheduleGeneratorContext context) {
         for (int day = 1; day <= YearMonth.of(context.getYear(), context.getMonth()).lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
             match(context, date);

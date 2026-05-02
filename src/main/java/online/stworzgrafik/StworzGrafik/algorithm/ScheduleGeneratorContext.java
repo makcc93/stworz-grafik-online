@@ -12,6 +12,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import org.springframework.cglib.core.Local;
 
 
 import java.time.DayOfWeek;
@@ -254,6 +255,21 @@ public class ScheduleGeneratorContext {
         return Arrays.stream(shift).sum() > 0;
     }
 
+    public boolean employeeHasProposalShift(Employee employee, PeriodDateDTO dto){
+        LocalDate startDate = dto.startDate();
+        LocalDate endDate = dto.endDate();
+
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)){
+            if (employeeHasProposalShift(employee,currentDate)) return true;
+
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return false;
+    }
+
     public boolean employeeIsWorking(Employee employee, LocalDate date){
         Shift shift = finalSchedule.getOrDefault(date, new HashMap<>()).getOrDefault(employee, findShiftByArray(new int[24]));
 
@@ -286,12 +302,6 @@ public class ScheduleGeneratorContext {
 
         return Arrays.stream(vacations).sum() > 0;
     }
-
-//    public boolean employeeIsOnVacation(Employee employee, int day){
-//        int[]  vacations = monthlyEmployeesVacation.getOrDefault(employee,new int[31]);
-//
-//        return vacations[day-1] == 1;
-//    }
 
     public boolean employeeIsOnVacation(Employee employee, LocalDate date){
         int[]  vacations = monthlyEmployeesVacation.getOrDefault(employee,new int[31]);

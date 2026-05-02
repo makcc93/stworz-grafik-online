@@ -148,7 +148,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 6;
+    private final int month = 5;
 
     Employee damMro;
     Employee monBar;

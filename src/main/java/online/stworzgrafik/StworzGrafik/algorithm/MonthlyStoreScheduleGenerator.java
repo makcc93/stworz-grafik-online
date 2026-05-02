@@ -68,12 +68,12 @@ class MonthlyStoreScheduleGenerator {
 
         employeeToShiftMatcher.matchEmployeeToShift(context);
 
-        creditMatcher.assignForMonth(context);
-        checkoutMatcher.assignForMonth(context);
-        openCloseMatcher.assignForMonth(context);
+        creditMatcher.assignRolesForMonth(context);
+        checkoutMatcher.assignRolesForMonth(context);
+        openCloseMatcher.assignRolesForMonth(context);
 
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
-//        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
         emptyDaysMatcher.completeEmptyDaysWithDayOffShift(context);
 
