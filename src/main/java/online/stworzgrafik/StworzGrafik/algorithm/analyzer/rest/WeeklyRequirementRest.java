@@ -42,7 +42,7 @@ public class WeeklyRequirementRest {
 
             checkVacationAndDayOffProposal(context, periodDateDTO, employees);
 
-            Map<LocalDate, Double> daysScoring = calculateDatesScoring(context, periodStartDayOfMonth, periodEndDayOfMonth, periodStartDate);
+            Map<LocalDate, Double> daysScoring = calculateDatesScoring(context, periodDateDTO);
 
             checkShiftsProposal(context,employees, periodDateDTO, daysScoring);
 
@@ -90,7 +90,14 @@ public class WeeklyRequirementRest {
             }
     }
 
-    private static Map<LocalDate, Double> calculateDatesScoring(ScheduleGeneratorContext context, int periodStartDayOfMonth, int periodEndDayOfMonth, LocalDate periodStartDate) {
+    private static Map<LocalDate, Double> calculateDatesScoring(ScheduleGeneratorContext context, PeriodDateDTO dto) {
+
+        LocalDate periodStartDate = dto.startDate();
+        LocalDate periodEndDate  = dto.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
         Map<LocalDate,Double> daysScoring = new HashMap<>();
         for (int day = (periodStartDayOfMonth +1); day < periodEndDayOfMonth; day++){
             LocalDate currentDate = LocalDate.of(periodStartDate.getYear(), periodStartDate.getMonth(),day);
