@@ -14,6 +14,7 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.TestShiftTypeConfi
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -33,7 +34,7 @@ public class TestScheduleGeneratorContext {
     private Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesProposalDayOff = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesVacation = new HashMap<>();
-    private Map<Employee, Integer> employeeHours = new HashMap<>();
+    private Map<Employee, BigDecimal> employeeHours = new HashMap<>();
     private Map<Employee, Integer> workingOnWeekendCount = new HashMap<>();
     private Map<Employee, Integer> workingDaysCount = new HashMap<>();
     private Map<Employee, Integer> vacationDaysCount = new HashMap<>();
@@ -120,7 +121,7 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
-    public TestScheduleGeneratorContext withEmployeeHours(Map<Employee, Integer> employeeHours) {
+    public TestScheduleGeneratorContext withEmployeeHours(Map<Employee, BigDecimal> employeeHours) {
         this.employeeHours = employeeHours;
         return this;
     }

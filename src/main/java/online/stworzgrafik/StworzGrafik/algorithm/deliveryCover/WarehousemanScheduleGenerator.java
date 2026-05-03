@@ -16,6 +16,7 @@ import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreWeeklyDeliverySchedule;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -78,9 +79,9 @@ public void generate(ScheduleGeneratorContext context){
                 .min(Comparator.comparingInt(
                                 empl ->
                                         context.getEmployeeWarehouseDays().getOrDefault(empl, new ArrayList<>()).size())
-                        .thenComparingInt(
+                        .thenComparing(
                                 empl ->
-                                        context.getEmployeeHours().getOrDefault(empl, 0)
+                                        context.getEmployeeHours().getOrDefault(empl, BigDecimal.ZERO)
                         )
                 );
 

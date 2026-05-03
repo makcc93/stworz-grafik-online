@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -214,11 +215,11 @@ public class EmployeeToShiftMatcherTest {
         //then
     }
 
-    private Map<Employee, Integer> generateEmployeeWorkingHours(List<Employee> employees){
-        Map<Employee, Integer> map = new HashMap<>();
+    private Map<Employee, BigDecimal> generateEmployeeWorkingHours(List<Employee> employees){
+        Map<Employee, BigDecimal> map = new HashMap<>();
 
         for (Employee e : employees){
-            map.put(e,50);
+            map.put(e,BigDecimal.valueOf(50));
         }
 
         return map;

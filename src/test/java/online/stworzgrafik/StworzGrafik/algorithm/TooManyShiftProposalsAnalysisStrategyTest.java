@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -52,11 +53,11 @@ class TooManyShiftProposalsAnalysisStrategyTest {
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
         when(context.getStoreActiveEmployees()).thenReturn(List.of(emp1, emp2,empCantOpenStoreWithHighestHours, emp4));
 
-        Map<Employee, Integer> employeeHours = new HashMap<>();
-        employeeHours.put(emp1, 100);
-        employeeHours.put(emp2, 15);
-        employeeHours.put(empCantOpenStoreWithHighestHours, 95);
-        employeeHours.put(emp4, 35);
+        Map<Employee, BigDecimal> employeeHours = new HashMap<>();
+        employeeHours.put(emp1, BigDecimal.valueOf(100));
+        employeeHours.put(emp2, BigDecimal.valueOf(15));
+        employeeHours.put(empCantOpenStoreWithHighestHours, BigDecimal.valueOf(95));
+        employeeHours.put(emp4, BigDecimal.valueOf(35));
         when(context.getEmployeeHours()).thenReturn(employeeHours);
 
         int[] emp1Proposal = new int[24]; emp1Proposal[targetHour] = 1;

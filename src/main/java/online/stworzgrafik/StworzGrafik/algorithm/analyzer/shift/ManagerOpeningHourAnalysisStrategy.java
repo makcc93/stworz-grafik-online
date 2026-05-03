@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -74,7 +75,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
 
         Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerOpeningHourAnalysisResult) result).employeesWithOpenStoreProposals().stream()
-                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl,0)));
+                .max(Comparator.comparing(empl -> context.getEmployeeHours().getOrDefault(empl, BigDecimal.ZERO)));
 
         if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
             if (!holidayManager.isHoliday(day)) {

@@ -38,6 +38,7 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigSer
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import org.assertj.core.api.BigDecimalAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -406,11 +408,11 @@ public class EmployeeToShiftMatcherIT {
     return map;
     }
 
-    private Map<Employee, Integer> generateEmployeeHours(List<Employee> employees){
-        Map<Employee, Integer> map = new HashMap<>();
+    private Map<Employee, BigDecimal> generateEmployeeHours(List<Employee> employees){
+        Map<Employee, BigDecimal> map = new HashMap<>();
 
         for (Employee e : employees){
-            map.put(e,0);
+            map.put(e,BigDecimal.ZERO);
         }
 
         return map;

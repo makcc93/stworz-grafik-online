@@ -15,6 +15,7 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import org.springframework.cglib.core.Local;
 
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -38,7 +39,7 @@ public class ScheduleGeneratorContext {
     private final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate;
     private final Map<Employee, int[]> monthlyEmployeesProposalDayOff;
     private final Map<Employee, int[]> monthlyEmployeesVacation;
-    private final Map<Employee, Integer> employeeHours;
+    private final Map<Employee, BigDecimal> employeeHours;
     private final Map<Employee, Integer> workingOnWeekendCount;
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
@@ -321,25 +322,25 @@ public class ScheduleGeneratorContext {
     }
 
     private void updateEmployeeHours(Employee employee, Shift oldShift, Shift newShift){
-        int currentEmployeeHoursValue = employeeHours.getOrDefault(employee, 0);
+        BigDecimal currentEmployeeHoursValue = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
 
 
-        int oldShiftLengthHours = computeShiftHours(oldShift.getEndHour().getHour(), oldShift.getStartHour().getHour());
-        int newShiftLengthHours = computeShiftHours(newShift.getEndHour().getHour(), newShift.getStartHour().getHour());
+        BigDecimal oldShiftLengthHours = computeShiftHours(BigDecimal.valueOf(oldShift.getEndHour().getHour()), BigDecimal.valueOf(oldShift.getStartHour().getHour()));
+        BigDecimal newShiftLengthHours = computeShiftHours(BigDecimal.valueOf(newShift.getEndHour().getHour()), BigDecimal.valueOf(newShift.getStartHour().getHour()));
 
-        int shiftHoursDifference = newShiftLengthHours - oldShiftLengthHours;
+        BigDecimal shiftHoursDifference = newShiftLengthHours.subtract(oldShiftLengthHours);
 
-        int newValueOfEmployeeHours = currentEmployeeHoursValue + shiftHoursDifference;
+        BigDecimal newValueOfEmployeeHours = currentEmployeeHoursValue.add(shiftHoursDifference);
 
         employeeHours.put(employee,newValueOfEmployeeHours);
         log.info("AKTUALIZACJA GODZIN pracownika {} {}, poprzednia liczba godzin: {}, nowa: {}",employee.getFirstName(),employee.getLastName(),currentEmployeeHoursValue,newValueOfEmployeeHours);
     }
 
     private void addEmployeeHours(Employee employee, Shift shift){
-        int shiftHours = computeShiftHours(shift.getEndHour().getHour(), shift.getStartHour().getHour());
+        BigDecimal shiftHours = computeShiftHours(BigDecimal.valueOf(shift.getEndHour().getHour()), BigDecimal.valueOf(shift.getStartHour().getHour()));
 
-        int employeeHoursValue = this.employeeHours.getOrDefault(employee, 0);
-        int newValueOfEmployeeHours = employeeHoursValue + shiftHours;
+        BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
+        BigDecimal newValueOfEmployeeHours = employeeHoursValue.add(shiftHours);
 
         employeeHours.put(employee,newValueOfEmployeeHours);
     }
@@ -356,11 +357,11 @@ public class ScheduleGeneratorContext {
         }
     }
 
-    private static int computeShiftHours(int shiftEndHour, int shiftsStartHour){
-        if (shiftEndHour < shiftsStartHour){
-            return (24 - shiftsStartHour) + shiftEndHour;
+    private static BigDecimal computeShiftHours(BigDecimal shiftEndHour, BigDecimal shiftsStartHour){
+        if (shiftEndHour.compareTo(shiftsStartHour) < 0){
+            return (BigDecimal.valueOf(24).subtract(shiftsStartHour).add(shiftEndHour));
         }
 
-        return shiftEndHour - shiftsStartHour;
+        return shiftEndHour.subtract(shiftsStartHour);
     }
 }

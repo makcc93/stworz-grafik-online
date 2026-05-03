@@ -15,6 +15,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -507,7 +508,7 @@ public class EmployeeToShiftMatcher {
         testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
                 date,
                 emp.getLastName(),
-                context.getEmployeeHours().getOrDefault(emp, 0),
+                context.getEmployeeHours().getOrDefault(emp, BigDecimal.ZERO),
                 context.getWorkingDaysCount().getOrDefault(emp, 9),
                 context.getVacationDaysCount().getOrDefault(emp, 0),
                 context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
@@ -622,8 +623,8 @@ public class EmployeeToShiftMatcher {
     }
 
     private Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context, LocalDate date) {
-        return (Comparator.comparingInt(
-                empl -> context.getEmployeeHours().getOrDefault(empl,0)));
+        return (Comparator.comparing(
+                empl -> context.getEmployeeHours().getOrDefault(empl,BigDecimal.ZERO)));
 //                (Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl))
 //                .thenComparingInt((Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl));
     }
@@ -659,7 +660,7 @@ public class EmployeeToShiftMatcher {
         testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
                 date,
                 emp.getLastName(),
-                context.getEmployeeHours().getOrDefault(emp, 0),
+                context.getEmployeeHours().getOrDefault(emp, BigDecimal.ZERO),
                 context.getWorkingDaysCount().getOrDefault(emp, 9),
                 context.getVacationDaysCount().getOrDefault(emp, 0),
                 context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
@@ -710,7 +711,7 @@ public class EmployeeToShiftMatcher {
                                 emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
                         .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
                         .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
-                        .thenComparingInt(emp -> context.getEmployeeHours().getOrDefault(emp,0))
+                        .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO))
                         .compare(e1, e2);
             } else {
                 return employeeWithLowestHours(context,date).compare(e1, e2);
@@ -791,7 +792,8 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean whenEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getEmployeeHours().getOrDefault(employee,0) >= calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth())) {
+        if (context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO)
+                .compareTo(BigDecimal.valueOf(calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth()))) >= 0) {
             log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {}", employee.getFirstName(),employee.getLastName(),day);
 
             return true;

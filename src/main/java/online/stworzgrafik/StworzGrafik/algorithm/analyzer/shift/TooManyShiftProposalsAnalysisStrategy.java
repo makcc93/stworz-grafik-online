@@ -10,6 +10,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +70,7 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
                             return proposal != null && proposal[indexHour] > 0;
                         }
                 )
-                .min((empl1, empl2) -> context.getEmployeeHours().getOrDefault(empl2, 0).compareTo(context.getEmployeeHours().getOrDefault(empl1, 0)));
+                .min((empl1, empl2) -> context.getEmployeeHours().getOrDefault(empl2, BigDecimal.ZERO).compareTo(context.getEmployeeHours().getOrDefault(empl1, BigDecimal.ZERO)));
 
         if (employeeWithHighestWorkingHoursCannotOpenStore.isEmpty()){
             context.registerMessageOnSchedule(

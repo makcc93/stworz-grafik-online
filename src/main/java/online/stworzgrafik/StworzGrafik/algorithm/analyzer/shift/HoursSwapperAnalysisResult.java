@@ -1,11 +1,13 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
+import java.math.BigDecimal;
+
 public record HoursSwapperAnalysisResult(
-        int employeeLowestValueOfWorkingHours,
-        int employeeHighestValueOfWorkingHours,
-        int maxHoursDifference
+        BigDecimal employeeLowestValueOfWorkingHours,
+        BigDecimal employeeHighestValueOfWorkingHours,
+        BigDecimal maxHoursDifference
 ) implements ScheduleAnalysisResult{
     public boolean hasProblem() {
-        return (employeeHighestValueOfWorkingHours - employeeLowestValueOfWorkingHours) > maxHoursDifference;
+        return employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours).compareTo(maxHoursDifference) > 0;
     }
 }

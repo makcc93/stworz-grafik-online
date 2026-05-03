@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -70,7 +71,7 @@ public class PdfExport implements ExportFile {
                     .flatMap(m -> m.keySet().stream())
                     .collect(Collectors.toSet());
 
-            Map<Employee, Integer>         empHours     = context.getEmployeeHours();
+            Map<Employee, BigDecimal>      empHours     = context.getEmployeeHours();
             Map<Employee, Integer>         empWorkDays  = context.getWorkingDaysCount();
             Map<Employee, Integer>         empWeekends  = context.getWorkingOnWeekendCount();
             Map<Employee, Integer>         empVacations = context.getVacationDaysCount();
@@ -126,7 +127,7 @@ public class PdfExport implements ExportFile {
             for (int d = 1; d <= daysInMonth; d++) {
                 LocalDate date    = LocalDate.of(year, month, d);
                 String    abbr    = date.getDayOfWeek()
-                        .getDisplayName(TextStyle.NARROW_STANDALONE, new Locale("pl"));
+                        .getDisplayName(TextStyle.NARROW_STANDALONE, Locale.of("pl"));
                 Color     bg      = isWeekendOrHoliday(date) ? COLOR_WEEKEND : COLOR_HEADER_BG;
                 PdfPCell  hc      = styledCell(d + "\n" + abbr, hdrFont, bg, Element.ALIGN_CENTER);
                 hc.setPadding(HDR_PAD);
@@ -177,7 +178,7 @@ public class PdfExport implements ExportFile {
                             isVac, isWh, isPrS, isPrO, isCred, isChk));
                 }
 
-                mainTable.addCell(statCell(String.valueOf(empHours.getOrDefault(emp, 0)),          statFont));
+                mainTable.addCell(statCell(String.valueOf(empHours.getOrDefault(emp, BigDecimal.ZERO)),          statFont));
                 mainTable.addCell(statCell(String.valueOf(empWorkDays.getOrDefault(emp, 0)
                         - empVacations.getOrDefault(emp, 0)),                     statFont));
                 mainTable.addCell(statCell(String.valueOf(empWeekends.getOrDefault(emp, 0)),        statFont));

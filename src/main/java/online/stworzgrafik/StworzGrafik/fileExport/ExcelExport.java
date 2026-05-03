@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -32,7 +33,7 @@ public class ExcelExport implements ExportFile{
                 .flatMap(map -> map.keySet().stream())
                 .collect(Collectors.toSet());
 
-        Map<Employee, Integer> employeeHours = context.getEmployeeHours();
+        Map<Employee, BigDecimal> employeeHours = context.getEmployeeHours();
         Map<Employee, Integer> employeeWorkingDaysCount = context.getWorkingDaysCount();
         Map<Employee, Integer> employeeWorkingWeekendsCount = context.getWorkingOnWeekendCount();
         Map<Employee, Integer> employeeVacationsCount = context.getVacationDaysCount();
@@ -109,7 +110,7 @@ public class ExcelExport implements ExportFile{
                 LocalDate date = LocalDate.of(year, month, day);
 
                 Cell employeeName = row.createCell(day);
-                employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, new Locale("pl", "PL")));
+                employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.of("pl", "PL")));
                 employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false, false,false));
             }
 
@@ -160,9 +161,9 @@ public class ExcelExport implements ExportFile{
                     cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isWarehouse,isShiftProposal,isDayOffProposal,isCredit,isCheckout,isOpenClose));
                 }
 
-                Integer workedHours = employeeHours.getOrDefault(employee, 0);
+                BigDecimal workedHours = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
                 Cell workedHoursCell = row.createCell(cellIndex++);
-                workedHoursCell.setCellValue(workedHours);
+                workedHoursCell.setCellValue(workedHours.doubleValue());
                 workedHoursCell.setCellStyle(totalStyle);
 
                 int workedDays = employeeWorkingDaysCount.getOrDefault(employee, 0) - employeeVacationsCount.getOrDefault(employee,0);

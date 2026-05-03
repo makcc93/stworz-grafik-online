@@ -10,6 +10,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -70,7 +71,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
 
         Optional<Employee> employeeWithHighestMonthlyWorkingHours = ((ManagerClosingHourAnalysisResult) result).employeesWithCloseStoreProposals().stream()
-                .max(Comparator.comparingInt(empl -> context.getEmployeeHours().getOrDefault(empl, 0)));
+                .max(Comparator.comparing(empl -> context.getEmployeeHours().getOrDefault(empl, BigDecimal.ZERO)));
 
         if (employeeWithHighestMonthlyWorkingHours.isEmpty()) {
             log.info("Brak dostępnego pracownika w dniu {},", day);
