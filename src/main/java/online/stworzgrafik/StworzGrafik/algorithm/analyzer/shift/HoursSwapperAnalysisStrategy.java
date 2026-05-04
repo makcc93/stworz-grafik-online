@@ -60,7 +60,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         while (true) {
             BigDecimal employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
+//                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparing(Map.Entry::getValue))
@@ -69,7 +69,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     .orElse(BigDecimal.ZERO);
 
             BigDecimal employeeHighestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
+//                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparing(
@@ -81,49 +81,15 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
             if ((employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours)).compareTo(maxHoursDifference) <= 0) break;
 
-            boolean resolved = swapHoursOnManagers(context);
-
-//            resolved |= swapHoursOnCreditEmployees(context);
-            resolved |= swapHoursOnOthers(context);
+            boolean resolved = swapHours(context);
 
             if (resolved) break;
         }
     }
 
-    private boolean swapHoursOnManagers(ScheduleGeneratorContext context){
-        List<Employee> employees = context.getStoreActiveEmployees().stream()
-                .filter(Employee::isCanOpenCloseStore)
-                .toList();
-
-        return swapHours(context, employees);
-    }
-
-    private boolean swapHoursOnCreditEmployees(ScheduleGeneratorContext context){
-        List<Employee> employees = context.getStoreActiveEmployees().stream()
-                .filter(empl -> !empl.isCanOpenCloseStore())
-                .filter(empl -> !empl.isCashier())
-                .filter(empl -> !empl.isWarehouseman())
-                .filter(empl -> !empl.isPok())
-                .filter(Employee::isCanOperateCredit)
-                .toList();
-
-        return swapHours(context, employees);
-    }
-
-    private boolean swapHoursOnOthers(ScheduleGeneratorContext context){
-        List<Employee> employees = context.getStoreActiveEmployees().stream()
-                .filter(empl -> !empl.isCanOpenCloseStore())
-                .filter(empl -> !empl.isCashier())
-                .filter(empl -> !empl.isWarehouseman())
-                .filter(empl -> !empl.isPok())
-//                .filter(empl -> !empl.isCanOperateCredit())
-                .toList();
-
-        return swapHours(context, employees);
-    }
-
-    private boolean swapHours(ScheduleGeneratorContext context, List<Employee> employees) {
+    private boolean swapHours(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
+        List<Employee> employees = context.getStoreActiveEmployees();
         int timesToRepeat = 5;
 
         YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
@@ -140,11 +106,16 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Map<Employee, Shift> employeeShift = new HashMap<>();
 
                 for (Employee employee : employees) {
+                    if (employee.isCashier())  continue;
+                    if (employee.isWarehouseman()) continue;
                     if (context.employeeHasProposalShift(employee, date)) continue;
                     if (context.employeeHasProposalDaysOff(employee, date)) continue;
                     if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
                     if (context.employeeIsOnVacation(employee, date)) continue;
                     if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(employee,date)) continue;
+                    if (context.isEmployeeOpenClose(employee,date)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
                     if (!context.employeeIsWorking(employee, date)) continue;
 
                     employeeHours.put(employee, context.getEmployeeHours().getOrDefault(employee, BigDecimal.ZERO));

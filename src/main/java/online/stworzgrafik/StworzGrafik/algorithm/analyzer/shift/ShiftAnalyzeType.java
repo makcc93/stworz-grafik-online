@@ -9,5 +9,6 @@ public enum ShiftAnalyzeType {
     TOO_MANY_DAY_OFF_PROPOSALS,
     UNDERSTAFFED,
     SHIFT_SPLITTER,
-    HOURS_SWAPPER
+    HOURS_SWAPPER,
+    SHIFT_SWAPPER
 }
