@@ -49,7 +49,7 @@ public class ScheduleGeneratorContextFactory {
     private final StoreDeliveryService storeDeliveryService;
     private final StoreOpeningHoursService storeOpeningHoursService;
     private final CalendarCalculation calendarCalculation;
-    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.SUNDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
+    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.MONDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);

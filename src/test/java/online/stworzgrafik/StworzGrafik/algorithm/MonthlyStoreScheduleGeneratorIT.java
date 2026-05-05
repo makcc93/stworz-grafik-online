@@ -148,7 +148,7 @@ class MonthlyStoreScheduleGeneratorIT {
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 5;
+    private final int month = 6;
 
     Employee damMro;
     Employee monBar;
@@ -364,10 +364,6 @@ class MonthlyStoreScheduleGeneratorIT {
 
         generateDayOffProposals(matKru,List.of(3,10,17,24));
         generateDayOffProposals(monBar,List.of(2,9,16,23));
-
-        //todo koncze na tym ze shift splitter dziala ok na managerach ale z martyna jest problem (moze sortowanie po weekendach??????) potem przyjrzyj sie reszcie
-
-        //dalej hours splitter
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);

@@ -16,6 +16,7 @@ import org.springframework.cglib.core.Local;
 
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -309,6 +310,22 @@ public class ScheduleGeneratorContext {
         int dayOfMonth = date.getDayOfMonth();
 
         return vacations[dayOfMonth-1] == 1;
+    }
+
+    public BigDecimal getShiftLength(Shift shift){
+        BigDecimal decimalEndHour = BigDecimal.valueOf(shift.getEndHour().getHour())
+                .add(BigDecimal.valueOf(shift.getEndHour().getMinute())
+                        .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+        BigDecimal decimalStartHour = BigDecimal.valueOf(shift.getStartHour().getHour())
+                .add(BigDecimal.valueOf(shift.getStartHour().getMinute())
+                        .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+        if (decimalEndHour.compareTo(decimalStartHour) < 0){
+            return (BigDecimal.valueOf(24).subtract(decimalStartHour).add(decimalEndHour));
+        }
+
+        return decimalEndHour.subtract(decimalStartHour);
     }
 
     private void addWorkingInformation(Employee employee, Shift shift, DayOfWeek dayOfWeek){

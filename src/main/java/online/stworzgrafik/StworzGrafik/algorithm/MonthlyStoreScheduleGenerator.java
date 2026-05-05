@@ -79,16 +79,7 @@ class MonthlyStoreScheduleGenerator {
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
-        YearMonth ym = YearMonth.of(context.getYear(),context.getMonth());
-        for (int day = 1; day <= ym.lengthOfMonth(); day++){
-            log.info("");
-            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
-            for (Employee e : context.getStoreActiveEmployees().stream().filter(Employee::isCanOpenCloseStore).toList()) {
-
-                log.info("{}                EMPL: {}, Otwarcie: {}",date, e.getLastName(), context.getEmployeeOpenCloseDays().getOrDefault(e, List.of()).contains(date) ? 1 : 0);
-            }
-            log.info("");
-        }
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
 
         byte[] excelExport = this.excelExport.export(context);
         Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");
