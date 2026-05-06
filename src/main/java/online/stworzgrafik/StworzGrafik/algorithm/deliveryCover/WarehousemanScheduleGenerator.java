@@ -78,7 +78,7 @@ public void generate(ScheduleGeneratorContext context){
                 .filter(empl -> !empl.getId().equals(employee.getId()))
                 .min(Comparator.comparingInt(
                                 empl ->
-                                        context.getEmployeeWarehouseDays().getOrDefault(empl, new ArrayList<>()).size())
+                                        context.getEmployeeWarehouseDays().getOrDefault(empl, new HashSet<>()).size())
                         .thenComparing(
                                 empl ->
                                         context.getEmployeeHours().getOrDefault(empl, BigDecimal.ZERO)

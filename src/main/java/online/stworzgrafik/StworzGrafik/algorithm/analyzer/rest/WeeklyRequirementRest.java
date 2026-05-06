@@ -52,7 +52,7 @@ public class WeeklyRequirementRest {
         log.info("");
         context.getStoreActiveEmployees().forEach(empl -> log.info("EEEEEEEEEEEEEEEMPL: {}, Dni: {}",
                 empl.getLastName(),
-                context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, List.of()).toArray()));
+                context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
 
         log.info("");
     }

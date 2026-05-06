@@ -12,7 +12,6 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
-import org.springframework.cglib.core.Local;
 
 
 import java.math.BigDecimal;
@@ -45,11 +44,11 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
     private final Map<LocalDate, List<Shift>> generatedShiftsByDay;
-    private final Map<Employee, List<LocalDate>> employeeWarehouseDays;
-    private final Map<Employee, List<LocalDate>> employeeCreditDays;
-    private final Map<Employee, List<LocalDate>> employeeCheckoutDays;
-    private final Map<Employee, List<LocalDate>> employeeOpenCloseDays;
-    private final Map<Employee, List<LocalDate>> employeeWeeklyRestRequirementDaysOff;
+    private final Map<Employee, Set<LocalDate>> employeeWarehouseDays;
+    private final Map<Employee, Set<LocalDate>> employeeCreditDays;
+    private final Map<Employee, Set<LocalDate>> employeeCheckoutDays;
+    private final Map<Employee, Set<LocalDate>> employeeOpenCloseDays;
+    private final Map<Employee, Set<LocalDate>> employeeWeeklyRestRequirementDaysOff;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -171,26 +170,26 @@ public class ScheduleGeneratorContext {
     }
 
     public boolean isEmployeeWorkingInWarehouse(Employee employee, LocalDate date){
-        return employeeWarehouseDays.getOrDefault(employee,List.of()).contains(date);
+        return employeeWarehouseDays.getOrDefault(employee,Set.of()).contains(date);
     }
 
     public void assignEmployeeToWarehouse(LocalDate date, Employee employee, Shift shift){
         if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
             employeeWarehouseDays
-                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
         }
     }
 
     public boolean isEmployeeOnRestRequirementDayOff(Employee employee, LocalDate date){
-        return employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,List.of()).contains(date);
+        return employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,Set.of()).contains(date);
     }
 
     public boolean isEmployeeOnRestRequirementDayOff(Employee employee, LocalDate startDate, LocalDate endDate){
         LocalDate currentDate = startDate;
 
         while (!currentDate.isAfter(endDate)){
-            if (employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,List.of()).contains(currentDate)){
+            if (employeeWeeklyRestRequirementDaysOff.getOrDefault(employee,Set.of()).contains(currentDate)){
                 return true;
             }
 
@@ -201,45 +200,60 @@ public class ScheduleGeneratorContext {
 
     public void assignEmployeeToRestRequirementDayOff(Employee employee, LocalDate date){
         employeeWeeklyRestRequirementDaysOff
-                .computeIfAbsent(employee, k -> new ArrayList<>())
+                .computeIfAbsent(employee, k -> new HashSet<>())
                 .add(date);
 
     }
 
-    public boolean isEmployeeOpenClose(Employee employee, LocalDate date){
-        return employeeOpenCloseDays.getOrDefault(employee,List.of()).contains(date);
+    public boolean isOpeningOrClosingStore(Employee employee, LocalDate date){
+        return employeeOpenCloseDays.getOrDefault(employee,Set.of()).contains(date);
     }
 
     public void assignEmployeeToOpenClose(LocalDate date, Employee employee, Shift shift){
         if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
             employeeOpenCloseDays
-                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
         }
     }
 
+    public void deleteEmployeeToOpenClose(LocalDate date, Employee employee){
+        employeeOpenCloseDays.computeIfAbsent(employee, k -> new HashSet<>())
+                .remove(date);
+    }
+
     public boolean isEmployeeWorkingOnCheckout(Employee employee, LocalDate date){
-        return employeeCheckoutDays.getOrDefault(employee,List.of()).contains(date);
+        return employeeCheckoutDays.getOrDefault(employee,Set.of()).contains(date);
     }
 
     public void assignEmployeeToCheckout(LocalDate date, Employee employee, Shift shift){
         if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
             employeeCheckoutDays
-                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
         }
     }
 
+    public void deleteEmployeeFromCheckout(LocalDate date, Employee employee){
+        employeeCheckoutDays.computeIfAbsent(employee, k -> new HashSet<>())
+                .remove(date);
+    }
+
     public boolean isEmployeeWorkingOnCredit(Employee employee, LocalDate date){
-        return employeeCreditDays.getOrDefault(employee,List.of()).contains(date);
+        return employeeCreditDays.getOrDefault(employee,Set.of()).contains(date);
     }
 
     public void assignEmployeeToCredit(LocalDate date, Employee employee, Shift shift){
         if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
             employeeCreditDays
-                    .computeIfAbsent(employee, k -> new ArrayList<>())
+                    .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
         }
+    }
+
+    public void deleteEmployeeFromCredit(LocalDate date, Employee employee){
+        employeeCreditDays.computeIfAbsent(employee, k -> new HashSet<>())
+                .remove(date);
     }
 
     public void addShiftsToDay(LocalDate date, List<Shift> shifts){

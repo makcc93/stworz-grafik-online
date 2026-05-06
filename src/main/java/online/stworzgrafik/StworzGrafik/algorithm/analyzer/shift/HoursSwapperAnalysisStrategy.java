@@ -114,7 +114,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.employeeIsOnVacation(employee, date)) continue;
                     if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
                     if (context.isEmployeeWorkingOnCheckout(employee,date)) continue;
-                    if (context.isEmployeeOpenClose(employee,date)) continue;
+                    if (context.isOpeningOrClosingStore(employee,date)) continue;
                     if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
                     if (!context.employeeIsWorking(employee, date)) continue;
 

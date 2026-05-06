@@ -6,10 +6,7 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -49,7 +46,7 @@ public class CreditMatcher extends AbstractRoleMatcher{
                     List<LocalDate> lastSeven = new ArrayList<>();
                     for (int i = 1; i <= 7; i++){
                         LocalDate subtractedDate = date.minusDays(i);
-                        if (context.getEmployeeCreditDays().getOrDefault(empl,List.of()).contains(subtractedDate)){
+                        if (context.getEmployeeCreditDays().getOrDefault(empl, Set.of()).contains(subtractedDate)){
                             lastSeven.add(date.minusDays(i));
                         }
                     }

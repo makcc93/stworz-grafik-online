@@ -75,10 +75,10 @@ public class PdfExport implements ExportFile {
             Map<Employee, Integer>         empWorkDays  = context.getWorkingDaysCount();
             Map<Employee, Integer>         empWeekends  = context.getWorkingOnWeekendCount();
             Map<Employee, Integer>         empVacations = context.getVacationDaysCount();
-            Map<Employee, List<LocalDate>> empWarehouse = context.getEmployeeWarehouseDays();
-            Map<Employee, List<LocalDate>> empCredit    = context.getEmployeeCreditDays();
-            Map<Employee, List<LocalDate>> empCheckout  = context.getEmployeeCheckoutDays();
-            Map<Employee, List<LocalDate>> empOpenClose = context.getEmployeeOpenCloseDays();
+            Map<Employee, Set<LocalDate>> empWarehouse = context.getEmployeeWarehouseDays();
+            Map<Employee, Set<LocalDate>> empCredit    = context.getEmployeeCreditDays();
+            Map<Employee, Set<LocalDate>> empCheckout  = context.getEmployeeCheckoutDays();
+            Map<Employee, Set<LocalDate>> empOpenClose = context.getEmployeeOpenCloseDays();
 
             LinkedHashMap<LocalDate, Map<Employee, Shift>> sched =
                     context.getFinalSchedule().entrySet().stream()
@@ -151,12 +151,12 @@ public class PdfExport implements ExportFile {
                     Shift                shift   = dayMap.getOrDefault(emp, context.getDefaultDaysOffShift());
 
                     boolean isVac  = false;
-                    boolean isWh   = empWarehouse.getOrDefault(emp, List.of()).contains(date);
+                    boolean isWh   = empWarehouse.getOrDefault(emp, Set.of()).contains(date);
                     boolean isPrS  = context.employeeHasProposalShift(emp, date);
                     boolean isPrO  = context.employeeHasProposalDaysOff(emp, date);
-                    boolean isCred = empCredit.getOrDefault(emp, List.of()).contains(date);
-                    boolean isChk  = empCheckout.getOrDefault(emp, List.of()).contains(date);
-                    boolean isOC   = empOpenClose.getOrDefault(emp, List.of()).contains(date);
+                    boolean isCred = empCredit.getOrDefault(emp, Set.of()).contains(date);
+                    boolean isChk  = empCheckout.getOrDefault(emp, Set.of()).contains(date);
+                    boolean isOC   = empOpenClose.getOrDefault(emp, Set.of()).contains(date);
 
                     String val;
                     if (!sched.containsKey(date)) {
@@ -183,9 +183,9 @@ public class PdfExport implements ExportFile {
                         - empVacations.getOrDefault(emp, 0)),                     statFont));
                 mainTable.addCell(statCell(String.valueOf(empWeekends.getOrDefault(emp, 0)),        statFont));
                 mainTable.addCell(statCell(String.valueOf(empVacations.getOrDefault(emp, 0)),       statFont));
-                mainTable.addCell(statCell(String.valueOf(empWarehouse.getOrDefault(emp, List.of()).size()), statFont));
-                mainTable.addCell(statCell(String.valueOf(empCredit.getOrDefault(emp, List.of()).size()),    statFont));
-                mainTable.addCell(statCell(String.valueOf(empCheckout.getOrDefault(emp, List.of()).size()),  statFont));
+                mainTable.addCell(statCell(String.valueOf(empWarehouse.getOrDefault(emp, Set.of()).size()), statFont));
+                mainTable.addCell(statCell(String.valueOf(empCredit.getOrDefault(emp, Set.of()).size()),    statFont));
+                mainTable.addCell(statCell(String.valueOf(empCheckout.getOrDefault(emp, Set.of()).size()),  statFont));
             }
             document.add(mainTable);
 

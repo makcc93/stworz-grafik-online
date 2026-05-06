@@ -43,7 +43,7 @@ public class CheckoutMatcher extends AbstractRoleMatcher{
                     .thenComparingInt(empl -> {
                         int checkoutLastSevenDays = 0;
                         for (int i = 1; i <= 7; i++) {
-                            if (context.getEmployeeCheckoutDays().getOrDefault(empl, List.of()).contains(date.minusDays(i))) {
+                            if (context.getEmployeeCheckoutDays().getOrDefault(empl, Set.of()).contains(date.minusDays(i))) {
                                 checkoutLastSevenDays++;
                             }
                         }

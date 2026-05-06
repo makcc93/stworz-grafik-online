@@ -37,10 +37,10 @@ public class ExcelExport implements ExportFile{
         Map<Employee, Integer> employeeWorkingDaysCount = context.getWorkingDaysCount();
         Map<Employee, Integer> employeeWorkingWeekendsCount = context.getWorkingOnWeekendCount();
         Map<Employee, Integer> employeeVacationsCount = context.getVacationDaysCount();
-        Map<Employee, List<LocalDate>> employeeWarehouseCount = context.getEmployeeWarehouseDays();
-        Map<Employee, List<LocalDate>> employeeCreditCount = context.getEmployeeCreditDays();
-        Map<Employee, List<LocalDate>> employeeCheckoutCount = context.getEmployeeCheckoutDays();
-        Map<Employee, List<LocalDate>> employeeOpenCloseCount = context.getEmployeeOpenCloseDays();
+        Map<Employee, Set<LocalDate>> employeeWarehouseCount = context.getEmployeeWarehouseDays();
+        Map<Employee, Set<LocalDate>> employeeCreditCount = context.getEmployeeCreditDays();
+        Map<Employee, Set<LocalDate>> employeeCheckoutCount = context.getEmployeeCheckoutDays();
+        Map<Employee, Set<LocalDate>> employeeOpenCloseCount = context.getEmployeeOpenCloseDays();
 
         LinkedHashMap<LocalDate, Map<Employee,Shift>> finalScheduleSortedByDate = context.getFinalSchedule().entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getDayOfMonth()))
@@ -139,13 +139,13 @@ public class ExcelExport implements ExportFile{
 
                     boolean isVacation = false;
                     boolean isWarehouse = employeeWarehouseCount
-                            .getOrDefault(employee, List.of())
+                            .getOrDefault(employee, Set.of())
                             .contains(date);
                     boolean isShiftProposal = context.employeeHasProposalShift(employee,date);
                     boolean isDayOffProposal = context.employeeHasProposalDaysOff(employee,date);
-                    boolean isCredit = employeeCreditCount.getOrDefault(employee,List.of()).contains(date);
-                    boolean isCheckout = employeeCheckoutCount.getOrDefault(employee,List.of()).contains(date);
-                    boolean isOpenClose = employeeOpenCloseCount.getOrDefault(employee,List.of()).contains(date);
+                    boolean isCredit = employeeCreditCount.getOrDefault(employee,Set.of()).contains(date);
+                    boolean isCheckout = employeeCheckoutCount.getOrDefault(employee,Set.of()).contains(date);
+                    boolean isOpenClose = employeeOpenCloseCount.getOrDefault(employee,Set.of()).contains(date);
 
                     if (shift.getStartHour().getHour() == 0) {
                         if (shift.getEndHour().getHour() == 0) {
@@ -181,17 +181,17 @@ public class ExcelExport implements ExportFile{
                 vacationsCell.setCellValue(vacations);
                 vacationsCell.setCellStyle(totalStyle);
 
-                int warehouse = employeeWarehouseCount.getOrDefault(employee, List.of()).size();
+                int warehouse = employeeWarehouseCount.getOrDefault(employee, Set.of()).size();
                 Cell warehouseCell = row.createCell(cellIndex++);
                 warehouseCell.setCellValue(warehouse);
                 warehouseCell.setCellStyle(totalStyle);
 
-                int credits = employeeCreditCount.getOrDefault(employee,List.of()).size();
+                int credits = employeeCreditCount.getOrDefault(employee,Set.of()).size();
                 Cell creditsCell = row.createCell(cellIndex++);
                 creditsCell.setCellValue(credits);
                 creditsCell.setCellStyle(totalStyle);
 
-                int checkouts = employeeCheckoutCount.getOrDefault(employee,List.of()).size();
+                int checkouts = employeeCheckoutCount.getOrDefault(employee,Set.of()).size();
                 Cell checkoutCell = row.createCell(cellIndex);
                 checkoutCell.setCellValue(checkouts);
                 creditsCell.setCellStyle(totalStyle);
