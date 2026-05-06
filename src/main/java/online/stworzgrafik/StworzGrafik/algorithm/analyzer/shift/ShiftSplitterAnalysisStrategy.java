@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -70,23 +71,168 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
         int monthlyMaxWorkingDays = ((ShiftSplitterAnalysisResult) result).monthlyMaxWorkingDays();
-
         while (context.getWorkingDaysCount().entrySet().stream()
                 .anyMatch(e -> e.getValue() <= monthlyMaxWorkingDays - 2)) {
-            boolean resolved = splitShiftsByCriteria(context);
+            boolean resolved = splitShiftsForManagers(context);
+                    resolved |= splitShiftsForCredits(context);
+                    resolved |= splitShiftsForCheckouts(context);
+                    resolved |= splitShiftsForOthers(context);
 
             if (!resolved) break;
         }
     }
 
-    private boolean splitShiftsByCriteria(ScheduleGeneratorContext context) {
-        boolean anySwapDone = false;
+    private boolean splitShiftsForManagers(ScheduleGeneratorContext context){
+        log.info("");
+        log.info("");
+        log.info("splitForManagers");
+            boolean anySwapDone = false;
+            int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+            int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
+            List<Employee> managers = context.getStoreActiveEmployees().stream()
+                    .filter(Employee::isCanOpenCloseStore)
+                    .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
+                    .toList();
+
+            Map<Employee, Map<LocalDate, Shift>> daysWithShiftsToSplit = new HashMap<>();
+            YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
+
+            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+                LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
+                for (Employee employee : managers) {
+                    if (!context.employeeIsWorking(employee, date)) continue;
+//                if (!context.isOpeningOrClosingStore(employee, date)) continue;
+                    if (context.employeeIsOnVacation(employee, date)) continue;
+                    if (context.employeeHasProposalShift(employee, date)) continue;
+                    if (context.employeeHasProposalDaysOff(employee, date)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                    if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(employee, date)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(employee, date)) continue;
+
+                    Shift shift = context.getFinalSchedule()
+                            .getOrDefault(date, new HashMap<>())
+                            .getOrDefault(employee, context.findShiftByArray(new int[24]));
+
+                    daysWithShiftsToSplit
+                            .computeIfAbsent(employee, k -> new HashMap<>())
+                            .put(date, shift);
+                }
+            }
+
+            LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
+                    .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue().entrySet().stream()
+                                    .sorted((a, b) -> context.getShiftLength(b.getValue()).compareTo(context.getShiftLength(a.getValue())))
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new
+                    ));
+
+            for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
+                Employee employee = entry.getKey();
+                Map<LocalDate, Shift> employeeDateShift = entry.getValue();
+
+                List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
+                        .flatMap(insideEntry -> {
+                            LocalDate insideDate = insideEntry.getKey();
+                            Shift insideShift = insideEntry.getValue();
+
+                            return managers.stream()
+                                    .filter(empl -> !empl.equals(employee))
+                                    .filter(sortedData::containsKey)
+                                    .filter(empl -> !context.employeeIsWorking(empl, insideDate))
+                                    .flatMap(empl -> sortedData.get(empl).entrySet().stream()
+                                            .filter(otherEmplEntry -> {
+                                                LocalDate otherDate = otherEmplEntry.getKey();
+                                                Shift otherShift = otherEmplEntry.getValue();
+                                                return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
+                                                        && context.getShiftLength(insideShift).compareTo(BigDecimal.valueOf(9)) > 0;
+                                            })
+                                            .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
+                        }).toList();
+
+                for (ShiftSwapCandidate candidate : swapCandidates) {
+                    Employee originalEmployee = candidate.originalEmployee();
+                    Employee otherEmployeeForSwap = candidate.employeeForSwapShift();
+                    LocalDate originalEmployeeDate = candidate.originalDateForSwap();
+                    LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
+
+                    if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
+                    if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays)
+                        continue;
+
+                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
+                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
+
+                    Shift currentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(originalEmployeeDate, new HashMap<>())
+                            .get(originalEmployee);
+
+                    if (currentShiftOnDate == null) continue;
+                    if (context.getShiftLength(currentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                    Shift otherCurrentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
+                            .get(otherEmployeeForSwap);
+
+                    if (otherCurrentShiftOnDate == null) continue;
+                    if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
+                        log.info("WEEKEND OR HOLIDAY BREAK");
+                        continue;
+                    }
+
+                    DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
+
+                    Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
+                    Shift shiftForOther = originalEmployee.isCashier() ? dividedShiftDTO.morningShift() : dividedShiftDTO.afternoonShift();
+
+                    context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
+                    context.assignEmployeeToOpenClose(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther);
+
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                    context.assignEmployeeToOpenClose(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal);
+
+                    anySwapDone = true;
+                    break;
+                }
+
+                log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
+            }
+
+            log.info("");
+            log.info("");
+            log.info("");
+            return anySwapDone;
+    }
+
+
+    private boolean splitShiftsForCredits(ScheduleGeneratorContext context) {
+        boolean anySwapDone = false;
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
-        List<Employee> employees = context.getStoreActiveEmployees().stream()
-                .filter(empl -> !empl.isWarehouseman())
+        List<Employee> creditEmployees = context.getStoreActiveEmployees().stream()
+                .filter(Employee::isCanOperateCredit)
                 .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
                 .toList();
 
@@ -95,15 +241,287 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
-            for (Employee employee : employees) {
+            for (Employee employee : creditEmployees) {
                 if (!context.employeeIsWorking(employee, date)) continue;
+                if (!context.isEmployeeWorkingOnCredit(employee, date)) continue;
                 if (context.employeeIsOnVacation(employee, date)) continue;
                 if (context.employeeHasProposalShift(employee, date)) continue;
                 if (context.employeeHasProposalDaysOff(employee, date)) continue;
                 if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                if (context.isOpeningOrClosingStore(employee, date)) continue;
+                if (context.isEmployeeWorkingOnCheckout(employee, date)) continue;
+                if (context.isEmployeeOnRestRequirementDayOff(employee, date)) continue;
+
+                Shift shift = context.getFinalSchedule()
+                        .getOrDefault(date, new HashMap<>())
+                        .getOrDefault(employee, context.findShiftByArray(new int[24]));
+
+                daysWithShiftsToSplit
+                        .computeIfAbsent(employee, k -> new HashMap<>())
+                        .put(date, shift);
+            }
+            LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
+                    .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue().entrySet().stream()
+                                    .sorted((a, b) -> context.getShiftLength(b.getValue()).compareTo(context.getShiftLength(a.getValue())))
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new
+                    ));
+
+            for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
+                Employee employee = entry.getKey();
+                Map<LocalDate, Shift> employeeDateShift = entry.getValue();
+
+                List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
+                        .flatMap(insideEntry -> {
+                            LocalDate insideDate = insideEntry.getKey();
+                            Shift insideShift = insideEntry.getValue();
+
+                            return creditEmployees.stream()
+                                    .filter(empl -> !empl.equals(employee))
+                                    .filter(sortedData::containsKey)
+                                    .filter(empl -> !context.employeeIsWorking(empl, insideDate))
+                                    .flatMap(empl -> sortedData.get(empl).entrySet().stream()
+                                            .filter(otherEmplEntry -> {
+                                                LocalDate otherDate = otherEmplEntry.getKey();
+                                                Shift otherShift = otherEmplEntry.getValue();
+                                                return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
+                                                        && context.getShiftLength(insideShift).compareTo(BigDecimal.valueOf(9)) > 0;
+                                            })
+                                            .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
+                        }).toList();
+
+                for (ShiftSwapCandidate candidate : swapCandidates) {
+                    Employee originalEmployee = candidate.originalEmployee();
+                    Employee otherEmployeeForSwap = candidate.employeeForSwapShift();
+                    LocalDate originalEmployeeDate = candidate.originalDateForSwap();
+                    LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
+
+                    if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
+                    if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
+
+                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
+                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isOpeningOrClosingStore(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isOpeningOrClosingStore(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
+
+                    Shift currentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(originalEmployeeDate, new HashMap<>())
+                            .get(originalEmployee);
+
+                    if (currentShiftOnDate == null) continue;
+                    if (context.getShiftLength(currentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                    Shift otherCurrentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
+                            .get(otherEmployeeForSwap);
+
+                    if (otherCurrentShiftOnDate == null) continue;
+                    if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
+                        log.info("WEEKEND OR HOLIDAY BREAK");
+                        continue;
+                    }
+
+                    DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
+
+                    Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
+                    Shift shiftForOther    = originalEmployee.isCashier() ? dividedShiftDTO.morningShift()   : dividedShiftDTO.afternoonShift();
+
+                    context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
+                    context.assignEmployeeToCredit(candidate.originalDateForSwap(),otherEmployeeForSwap,shiftForOther);
+
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                    context.assignEmployeeToCredit(candidate.otherEmployeeDateForSwap(),originalEmployee,shiftForOriginal);
+
+                    anySwapDone = true;
+                    break;
+                }
+                if (anySwapDone) break;
+            }
+        }
+        return anySwapDone;
+    }
+
+
+    private boolean splitShiftsForCheckouts(ScheduleGeneratorContext context){
+                boolean anySwapDone = false;
+                int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+                int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
+
+                List<Employee> checkoutEmployees = context.getStoreActiveEmployees().stream()
+                        .filter(Employee::isCanOperateCheckout)
+                        .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
+                        .toList();
+
+                Map<Employee, Map<LocalDate, Shift>> daysWithShiftsToSplit = new HashMap<>();
+                YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
+
+                for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+                    LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
+                    for (Employee employee : checkoutEmployees) {
+                        if (!context.employeeIsWorking(employee, date)) continue;
+                        if (!context.isEmployeeWorkingOnCheckout(employee, date)) continue;
+                        if (context.employeeIsOnVacation(employee, date)) continue;
+                        if (context.employeeHasProposalShift(employee, date)) continue;
+                        if (context.employeeHasProposalDaysOff(employee, date)) continue;
+                        if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                        if (context.isOpeningOrClosingStore(employee, date)) continue;
+                        if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
+                        if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
+
+                        Shift shift = context.getFinalSchedule()
+                                .getOrDefault(date, new HashMap<>())
+                                .getOrDefault(employee, context.findShiftByArray(new int[24]));
+
+                        daysWithShiftsToSplit
+                                .computeIfAbsent(employee, k -> new HashMap<>())
+                                .put(date, shift);
+                    }
+                    LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
+                            .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    entry -> entry.getValue().entrySet().stream()
+                                            .sorted((a, b) -> context.getShiftLength(b.getValue()).compareTo(context.getShiftLength(a.getValue())))
+                                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
+                                    (v1, v2) -> v1,
+                                    LinkedHashMap::new
+                            ));
+
+                    for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
+                        Employee employee = entry.getKey();
+                        Map<LocalDate, Shift> employeeDateShift = entry.getValue();
+
+                        List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
+                                .flatMap(insideEntry -> {
+                                    LocalDate insideDate = insideEntry.getKey();
+                                    Shift insideShift = insideEntry.getValue();
+
+                                    return checkoutEmployees.stream()
+                                            .filter(empl -> !empl.equals(employee))
+                                            .filter(sortedData::containsKey)
+                                            .filter(empl -> !context.employeeIsWorking(empl, insideDate))
+                                            .flatMap(empl -> sortedData.get(empl).entrySet().stream()
+                                                    .filter(otherEmplEntry -> {
+                                                        LocalDate otherDate = otherEmplEntry.getKey();
+                                                        Shift otherShift = otherEmplEntry.getValue();
+                                                        return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
+                                                                && context.getShiftLength(insideShift).compareTo(BigDecimal.valueOf(9)) > 0;
+                                                    })
+                                                    .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
+                                }).toList();
+
+                        for (ShiftSwapCandidate candidate : swapCandidates) {
+                            Employee originalEmployee = candidate.originalEmployee();
+                            Employee otherEmployeeForSwap = candidate.employeeForSwapShift();
+                            LocalDate originalEmployeeDate = candidate.originalDateForSwap();
+                            LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
+
+                            if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
+                            if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
+
+                            if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
+                            if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
+
+                            if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
+                            if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                            if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
+                            if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                            if (context.isOpeningOrClosingStore(originalEmployee, originalEmployeeDate)) continue;
+                            if (context.isOpeningOrClosingStore(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+
+                            if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
+                            if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
+
+                            Shift currentShiftOnDate = context.getFinalSchedule()
+                                    .getOrDefault(originalEmployeeDate, new HashMap<>())
+                                    .get(originalEmployee);
+
+                            if (currentShiftOnDate == null) continue;
+                            if (context.getShiftLength(currentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                            Shift otherCurrentShiftOnDate = context.getFinalSchedule()
+                                    .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
+                                    .get(otherEmployeeForSwap);
+
+                            if (otherCurrentShiftOnDate == null) continue;
+                            if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
+
+                            if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
+                                log.info("WEEKEND OR HOLIDAY BREAK");
+                                continue;
+                            }
+
+                            DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
+
+                            Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
+                            Shift shiftForOther    = originalEmployee.isCashier() ? dividedShiftDTO.morningShift()   : dividedShiftDTO.afternoonShift();
+
+                            context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
+                            context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
+                            context.assignEmployeeToCheckout(candidate.originalDateForSwap(),otherEmployeeForSwap,shiftForOther);
+
+                            context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
+                            context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                            context.assignEmployeeToCheckout(candidate.otherEmployeeDateForSwap(),originalEmployee,shiftForOriginal);
+
+                            anySwapDone = true;
+                            break;
+                        }
+                        if (anySwapDone) break;
+                    }
+                }
+        return anySwapDone;
+    }
+
+
+    private boolean splitShiftsForOthers(ScheduleGeneratorContext context){
+        boolean anySwapDone = false;
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
+
+        List<Employee> others = context.getStoreActiveEmployees().stream()
+                .filter(empl -> !empl.isCanOperateCheckout())
+                .filter(empl -> !empl.isCanOperateCredit())
+                .filter(empl -> !empl.isCanOpenCloseStore())
+                .filter(empl -> !empl.isWarehouseman())
+                .filter(empl -> !empl.isCashier())
+                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
+                .toList();
+
+        Map<Employee, Map<LocalDate, Shift>> daysWithShiftsToSplit = new HashMap<>();
+        YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());
+
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
+            for (Employee employee : others) {
+                if (!context.employeeIsWorking(employee, date)) continue;
+                if (context.isEmployeeWorkingOnCheckout(employee, date)) continue;
+                if (context.employeeIsOnVacation(employee, date)) continue;
+                if (context.employeeHasProposalShift(employee, date)) continue;
+                if (context.employeeHasProposalDaysOff(employee, date)) continue;
+                if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
+                if (context.isOpeningOrClosingStore(employee, date)) continue;
                 if (context.isEmployeeWorkingOnCredit(employee, date)) continue;
-                if (context.isEmployeeWorkingOnCheckout(employee,date)) continue;
-                if (context.isEmployeeOpenClose(employee,date)) continue;
                 if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
 
                 Shift shift = context.getFinalSchedule()
@@ -114,145 +532,104 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .computeIfAbsent(employee, k -> new HashMap<>())
                         .put(date, shift);
             }
-        }
+            LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
+                    .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue().entrySet().stream()
+                                    .sorted((a, b) -> context.getShiftLength(b.getValue()).compareTo(context.getShiftLength(a.getValue())))
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new
+                    ));
 
-        LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
-                .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().entrySet().stream()
-                                .sorted((a, b) -> getShiftLength(b.getValue()) - getShiftLength(a.getValue()))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)),
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new
-                ));
+            for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
+                Employee employee = entry.getKey();
+                Map<LocalDate, Shift> employeeDateShift = entry.getValue();
 
-        for (Map.Entry<Employee, Map<LocalDate, Shift>> entry : sortedData.entrySet()) {
-            Employee employee = entry.getKey();
-            Map<LocalDate, Shift> employeeDateShift = entry.getValue();
+                List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
+                        .flatMap(insideEntry -> {
+                            LocalDate insideDate = insideEntry.getKey();
+                            Shift insideShift = insideEntry.getValue();
 
-            List<ShiftSwapCandidate> swapCandidates = employeeDateShift.entrySet().stream()
-                    .flatMap(insideEntry -> {
-                        LocalDate insideDate = insideEntry.getKey();
-                        Shift insideShift = insideEntry.getValue();
+                            return others.stream()
+                                    .filter(empl -> !empl.equals(employee))
+                                    .filter(sortedData::containsKey)
+                                    .filter(empl -> !context.employeeIsWorking(empl, insideDate))
+                                    .flatMap(empl -> sortedData.get(empl).entrySet().stream()
+                                            .filter(otherEmplEntry -> {
+                                                LocalDate otherDate = otherEmplEntry.getKey();
+                                                Shift otherShift = otherEmplEntry.getValue();
+                                                return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
+                                                        && context.getShiftLength(insideShift).compareTo(BigDecimal.valueOf(9)) > 0;
+                                            })
+                                            .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
+                        }).toList();
 
-                        return employees.stream()
-                                .filter(empl -> !empl.equals(employee))
-                                .filter(sortedData::containsKey)
-                                .filter(empl -> !context.employeeIsWorking(empl, insideDate))
-                                .flatMap(empl -> sortedData.get(empl).entrySet().stream()
-                                        .filter(otherEmplEntry -> {
-                                            LocalDate otherDate = otherEmplEntry.getKey();
-                                            Shift otherShift = otherEmplEntry.getValue();
-                                            return insideShift.equals(otherShift) && !context.employeeIsWorking(employee, otherDate)
-                                                    && getShiftLength(insideShift) > 9;
-                                        })
-                                        .map(otherEmplEntry -> new ShiftSwapCandidate(employee, empl, insideDate, otherEmplEntry.getKey(), insideShift)));
-                    }).toList();
+                for (ShiftSwapCandidate candidate : swapCandidates) {
+                    Employee originalEmployee = candidate.originalEmployee();
+                    Employee otherEmployeeForSwap = candidate.employeeForSwapShift();
+                    LocalDate originalEmployeeDate = candidate.originalDateForSwap();
+                    LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
 
-            for (ShiftSwapCandidate candidate : swapCandidates) {
-                Employee originalEmployee = candidate.originalEmployee();
-                Employee otherEmployeeForSwap = candidate.employeeForSwapShift();
-                LocalDate originalEmployeeDate = candidate.originalDateForSwap();
-                LocalDate otherEmployeeDateForSwap = candidate.otherEmployeeDateForSwap();
+                    if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
+                    if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
 
-                if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
-                if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays)
-                    continue;
+                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
+                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
-                if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
-                if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
-                if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+                    if (context.isOpeningOrClosingStore(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isOpeningOrClosingStore(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
-                if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
-                if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
+                    if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, originalEmployeeDate)) continue;
-                if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
+                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
 
-                Shift currentShiftOnDate = context.getFinalSchedule()
-                        .getOrDefault(originalEmployeeDate, new HashMap<>())
-                        .get(originalEmployee);
+                    Shift currentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(originalEmployeeDate, new HashMap<>())
+                            .get(originalEmployee);
 
-                if (currentShiftOnDate == null) continue;
-                if (getShiftLength(currentShiftOnDate) < 10) continue;
+                    if (currentShiftOnDate == null) continue;
+                    if (context.getShiftLength(currentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                Shift otherCurrentShiftOnDate = context.getFinalSchedule()
-                        .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
-                        .get(otherEmployeeForSwap);
+                    Shift otherCurrentShiftOnDate = context.getFinalSchedule()
+                            .getOrDefault(otherEmployeeDateForSwap, new HashMap<>())
+                            .get(otherEmployeeForSwap);
 
-                if (otherCurrentShiftOnDate == null) continue;
-                if (getShiftLength(otherCurrentShiftOnDate) < 10) continue;
+                    if (otherCurrentShiftOnDate == null) continue;
+                    if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                if (processCandidate(candidate, context, monthlyMaxWorkingDays, currentShiftOnDate, originalEmployeeDate, otherEmployeeDateForSwap)) {
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
+                        log.info("WEEKEND OR HOLIDAY BREAK");
+                        continue;
+                    }
+
+                    DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
+
+                    Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
+                    Shift shiftForOther    = originalEmployee.isCashier() ? dividedShiftDTO.morningShift()   : dividedShiftDTO.afternoonShift();
+
+                    context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
+
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+
                     anySwapDone = true;
                     break;
                 }
+                if (anySwapDone) break;
             }
         }
-
         return anySwapDone;
-    }
-
-    private boolean processCandidate(ShiftSwapCandidate candidate, ScheduleGeneratorContext context, int maxDays, Shift currentShift, LocalDate originalEmployeeDate, LocalDate otherEmployeeDate) {
-        Employee originalEmployee = candidate.originalEmployee();
-        Employee otherEmployee = candidate.employeeForSwapShift();
-
-        if (assignedForRolesAndVacation(context, maxDays, originalEmployeeDate, otherEmployeeDate, originalEmployee, otherEmployee))
-            return false;
-
-        if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
-            return false;
-        }
-
-        DividedShiftDTO dividedShiftDTO = divideShift(currentShift, context);
-
-        Shift shiftForOriginal = originalEmployee.isCashier() ? dividedShiftDTO.afternoonShift() : dividedShiftDTO.morningShift();
-        Shift shiftForOther    = originalEmployee.isCashier() ? dividedShiftDTO.morningShift()   : dividedShiftDTO.afternoonShift();
-
-        context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
-        context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployee, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
-
-        context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployee, shiftForOther);
-        context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
-
-        return true;
-    }
-
-    private static boolean assignedForRolesAndVacation(ScheduleGeneratorContext context, int maxDays, LocalDate originalEmployeeDate, LocalDate otherEmployeeDate, Employee originalEmployee, Employee otherEmployee) {
-        if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= maxDays) return true;
-        if (context.getWorkingDaysCount().getOrDefault(otherEmployee, 0) >= maxDays) return true;
-
-        if (context.employeeHasProposalDaysOff(originalEmployee, originalEmployeeDate)) return true;
-        if (context.employeeHasProposalDaysOff(originalEmployee, otherEmployeeDate)) return true;
-        if (context.employeeHasProposalDaysOff(otherEmployee, otherEmployeeDate)) return true;
-        if (context.employeeHasProposalDaysOff(otherEmployee, originalEmployeeDate)) return true;
-
-        if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, originalEmployeeDate)) return true;
-        if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeOnRestRequirementDayOff(otherEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeOnRestRequirementDayOff(otherEmployee, originalEmployeeDate)) return true;
-
-        if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCredit(originalEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCredit(otherEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCredit(otherEmployee, originalEmployeeDate)) return true;
-
-        if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCheckout(originalEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCheckout(otherEmployee, otherEmployeeDate)) return true;
-        if (context.isEmployeeWorkingOnCheckout(otherEmployee, originalEmployeeDate)) return true;
-
-        if (context.employeeIsOnVacation(originalEmployee, originalEmployeeDate)) return true;
-        if (context.employeeIsOnVacation(originalEmployee, otherEmployeeDate)) return true;
-        if (context.employeeIsOnVacation(otherEmployee, otherEmployeeDate)) return true;
-        if (context.employeeIsOnVacation(otherEmployee, originalEmployeeDate)) return true;
-        return false;
     }
 
     private boolean isWeekendOrHoliday(LocalDate date) {
@@ -263,15 +640,18 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private DividedShiftDTO divideShift(Shift shift, ScheduleGeneratorContext context){
         int startHour = shift.getStartHour().getHour();
+        int startMinute = shift.getStartHour().getMinute();
+
         int endHour = shift.getEndHour().getHour();
+        int endMinute = shift.getEndHour().getMinute();
 
         int midHour = (startHour + endHour) / 2;
 
         if (midHour < 13) midHour = 13;
         if (midHour > 16) midHour = 16;
 
-        Shift morningShift = context.findShiftByHours(LocalTime.of(startHour, 0), LocalTime.of(midHour, 0));
-        Shift afternoonShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, 0));
+        Shift morningShift = context.findShiftByHours(LocalTime.of(startHour, startMinute), LocalTime.of(midHour, 0));
+        Shift afternoonShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, endMinute));
         log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),morningShift.getStartHour(),morningShift.getEndHour(),afternoonShift.getStartHour(),afternoonShift.getEndHour());
 
         return new DividedShiftDTO(
@@ -280,7 +660,4 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         );
     }
 
-    private int getShiftLength(Shift shift){
-        return shift.getEndHour().getHour() - shift.getStartHour().getHour();
-    }
 }
