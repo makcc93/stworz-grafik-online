@@ -60,7 +60,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         while (true) {
             BigDecimal employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-//                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparing(Map.Entry::getValue))
@@ -69,7 +68,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     .orElse(BigDecimal.ZERO);
 
             BigDecimal employeeHighestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-//                    .filter(entry -> entry.getKey().isCanOpenCloseStore()) //for test
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparing(
@@ -88,6 +86,9 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     }
 
     private boolean swapHours(ScheduleGeneratorContext context) {
+        log.info("");
+        log.info("");
+        log.info("swapHours");
         boolean anySwapDone = false;
         List<Employee> employees = context.getStoreActiveEmployees();
         int timesToRepeat = 5;
@@ -162,6 +163,8 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 }
             }
         }
+        log.info("");
+        log.info("");
         return anySwapDone;
     }
 

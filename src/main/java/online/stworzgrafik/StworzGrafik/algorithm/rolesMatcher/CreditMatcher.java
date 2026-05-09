@@ -12,6 +12,11 @@ import java.util.stream.Collectors;
 @Component
 public class CreditMatcher extends AbstractRoleMatcher{
     @Override
+    protected void clearAssignment(ScheduleGeneratorContext context) {
+        context.getEmployeeCreditDays().clear();
+    }
+
+    @Override
     protected boolean specialCheckoutRule() {
         return false;
     }

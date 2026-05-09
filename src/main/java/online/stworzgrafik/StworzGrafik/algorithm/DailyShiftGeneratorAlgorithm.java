@@ -15,6 +15,36 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DailyShiftGeneratorAlgorithm {
 
+    public void modifyStartEndHours(ScheduleGeneratorContext context){
+        Map<LocalTime, LocalTime> hoursToModify = context.getHoursToModify();
+        LinkedHashMap<LocalDate, Map<Employee, Shift>> schedule = context.getFinalSchedule();
+
+        for (Map.Entry<LocalDate, Map<Employee,Shift>> entry : schedule.entrySet()){
+            LocalDate date = entry.getKey();
+            Map<Employee, Shift> employeeShift = entry.getValue();
+
+            for (Map.Entry<Employee, Shift> employeeEntry : employeeShift.entrySet()){
+                Employee employee = employeeEntry.getKey();
+                Shift shift = employeeEntry.getValue();
+
+                if (!context.getEmployeesToModifyHours().contains(employee)) {
+                    log.info("POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOMIJAM {}", employee.getLastName());
+                    continue;}
+
+                if (hoursToModify.containsKey(shift.getStartHour())){
+                    Shift updatedShift = context.findShiftByHours(hoursToModify.get(shift.getStartHour()), shift.getEndHour());
+                    context.updateShiftOnSchedule(date,employee,updatedShift);
+                }
+
+                if (hoursToModify.containsKey(shift.getEndHour())){
+                    Shift potentialUpdatedStartHourShift = context.getFinalSchedule().getOrDefault(date,Map.of()).getOrDefault(employee,context.getDefaultDaysOffShift());
+                    Shift updatedShift = context.findShiftByHours(potentialUpdatedStartHourShift.getStartHour(),hoursToModify.get(shift.getEndHour()));
+                    context.updateShiftOnSchedule(date,employee,updatedShift);
+                }
+            }
+        }
+    }
+
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
         List<Employee> employees = context.getStoreActiveEmployees();

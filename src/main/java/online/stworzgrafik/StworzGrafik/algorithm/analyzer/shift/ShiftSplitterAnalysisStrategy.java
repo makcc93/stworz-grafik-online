@@ -168,6 +168,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                     if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
+                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
@@ -227,6 +232,9 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
 
     private boolean splitShiftsForCredits(ScheduleGeneratorContext context) {
+        log.info("");
+        log.info("");
+        log.info("splitForCredits");
         boolean anySwapDone = false;
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -306,6 +314,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                     if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
+                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
@@ -356,11 +369,17 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (anySwapDone) break;
             }
         }
+        log.info("");
+        log.info("");
+        log.info("");
         return anySwapDone;
     }
 
 
     private boolean splitShiftsForCheckouts(ScheduleGeneratorContext context){
+        log.info("");
+        log.info("");
+        log.info("splitForCkeckouts");
                 boolean anySwapDone = false;
                 int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
                 int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -440,6 +459,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                             if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
+                            if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
+                            if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+                            if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
+                            if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+
                             if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                             if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
@@ -487,14 +511,21 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             anySwapDone = true;
                             break;
                         }
+                        log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
                         if (anySwapDone) break;
                     }
                 }
+        log.info("");
+        log.info("");
+        log.info("");
         return anySwapDone;
     }
 
 
     private boolean splitShiftsForOthers(ScheduleGeneratorContext context){
+        log.info("");
+        log.info("");
+        log.info("splitForOthers");
         boolean anySwapDone = false;
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -578,6 +609,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
                     if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
 
+                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
+                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
+
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
@@ -626,9 +662,13 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     anySwapDone = true;
                     break;
                 }
+                log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
                 if (anySwapDone) break;
             }
         }
+        log.info("");
+        log.info("");
+        log.info("");
         return anySwapDone;
     }
 

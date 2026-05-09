@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -203,6 +204,20 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
     @Override
     public List<Shift> getAll() {
         return shiftRepository.findAll();
+    }
+
+    @Override
+    public BigDecimal calculateShiftLength(Shift shift) {
+        BigDecimal endHour = BigDecimal.valueOf(shift.getEndHour().getHour());
+        BigDecimal endMinute = BigDecimal.valueOf(shift.getEndHour().getMinute());
+        BigDecimal endShiftValue = endHour.add(endMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+
+        BigDecimal startHour = BigDecimal.valueOf(shift.getStartHour().getHour());
+        BigDecimal startMinute = BigDecimal.valueOf(shift.getStartHour().getMinute());
+        BigDecimal startShiftValue = startHour.add(startMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+        return endShiftValue.subtract(startShiftValue);
     }
 
     private void checkNull(LocalTime startHour, LocalTime endHour){

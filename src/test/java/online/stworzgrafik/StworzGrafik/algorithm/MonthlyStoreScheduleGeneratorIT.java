@@ -8,6 +8,8 @@ import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanSche
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.VacationApplier;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfig;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
@@ -50,6 +52,10 @@ import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDT
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ExcludedEmployeesRequest;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourMappingRequest;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,13 +148,19 @@ class MonthlyStoreScheduleGeneratorIT {
     @Autowired
     private ExcelExport excelExport;
 
+    @Autowired
+    private ShiftHourModificationService shiftHourModificationService;
+
+    @Autowired
+    private BillingPeriodConfigService billingPeriodConfigService;
+
     private StoreDelivery storeDelivery;
 
     @MockitoBean
     private UserAuthorizationService userAuthorizationService;
 
     private final int year = 2026;
-    private final int month = 5;
+    private final int month = 6;
 
     Employee damMro;
     Employee monBar;
@@ -208,6 +220,13 @@ class MonthlyStoreScheduleGeneratorIT {
 
     @BeforeEach
     void setup() {
+        billingPeriodConfigService.saveAll(List.of(
+                BillingPeriodConfig.builder().startMonth(3).durationMonths(3).build(),
+                BillingPeriodConfig.builder().startMonth(6).durationMonths(3).build(),
+                BillingPeriodConfig.builder().startMonth(9).durationMonths(3).build(),
+                BillingPeriodConfig.builder().startMonth(12).durationMonths(3).build()
+        ));
+
         position = positionEntityService.saveEntity(position);
 
         region = new TestRegionBuilder().build();
@@ -216,7 +235,6 @@ class MonthlyStoreScheduleGeneratorIT {
         branch = new TestBranchBuilder().withRegion(region).build();
         branchEntityService.saveEntity(branch);
 
-//        store = new TestStoreBuilder().withBranch(branch).build();
         store = storeEntityService.createEntityStore(new CreateStoreDTO("NAME","00","WARSAW", branch.getId()));
         storeId = store.getId();
 
@@ -256,6 +274,8 @@ class MonthlyStoreScheduleGeneratorIT {
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
+                getHoursToModify(storeId),
+                getEmployeesToModifyHours(storeId),
                 generateAllShifts(),
                 defaultVacationShift,
                 defaultDayOffShift,
@@ -375,9 +395,11 @@ class MonthlyStoreScheduleGeneratorIT {
     void generateMonthlySchedule_warehousemanOnVacationOtherEmployeeTakesHisShifts() throws IOException {
         //given
         generateVacation(damMro,firstTwoWeeks);
+        generateVacation(micWoc,firstTwoWeeks);
         generateVacation(filKam,firstTwoWeeks);
         generateVacation(marNow,secondTwoWeeks);
         generateVacation(emiMia,secondTwoWeeks);
+        generateVacation(karNak,secondTwoWeeks);
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
@@ -553,7 +575,32 @@ class MonthlyStoreScheduleGeneratorIT {
         //then
     }
 
+    private List<Employee> getEmployeesToModifyHours(Long storeId){
+        List<Employee> excludedEmployees = this.employees.stream()
+                .filter(empl -> empl.isCashier() || empl.isWarehouseman())
+                .toList();
 
+        List<Long> excludedEmployeesIds = excludedEmployees.stream()
+                        .map(Employee::getId)
+                        .toList();
+
+        shiftHourModificationService.updateExcludedEmployees(storeId,new ExcludedEmployeesRequest(excludedEmployeesIds));
+
+        return employees.stream()
+                .filter(empl -> !excludedEmployees.contains(empl))
+                .toList();
+    }
+
+    private Map<LocalTime,LocalTime> getHoursToModify(Long storeId){
+        Map<LocalTime, LocalTime> hoursToModify = new HashMap<>();
+        LocalTime startHourToChange = LocalTime.of(9, 0);
+        LocalTime changedStartHour = LocalTime.of(8,30);
+        hoursToModify.put(startHourToChange, changedStartHour);
+
+        shiftHourModificationService.updateHours(storeId,new ShiftHourMappingRequest(List.of(new ShiftHourModificationDTO(startHourToChange, changedStartHour))));
+
+        return hoursToModify;
+    }
 
     private void generateShiftProposal(Employee employee, LocalDate date, int[] shiftAsArray){
         employeeProposalShiftsService.createEmployeeProposalShift(
@@ -652,20 +699,28 @@ class MonthlyStoreScheduleGeneratorIT {
 
     private List<Shift> generateAllShifts() {
         List<Shift> shifts = new ArrayList<>();
-        for (int startHour = 0; startHour <= 23; startHour++) {
-            LocalTime start = LocalTime.of(startHour, 0);
-            for (int endHour = 0; endHour <= 23; endHour++) {
-                LocalTime end = LocalTime.of(endHour, 0);
-                Shift shift = new TestShiftBuilder()
-                        .withStartHour(start)
-                        .withEndHour(end)
-                        .build();
+        int[] minutes = {0, 15, 30, 45};
 
-                shifts.add(shift);
+        for (int startHour = 0; startHour <= 23; startHour++) {
+            for (int startMinute : minutes) {
+                LocalTime start = LocalTime.of(startHour, startMinute);
+                for (int endHour = 0; endHour <= 23; endHour++) {
+                    for (int endMinute : minutes) {
+                        LocalTime end = LocalTime.of(endHour, endMinute);
+                        Shift shift = new TestShiftBuilder()
+                                .withStartHour(start)
+                                .withEndHour(end)
+                                .build();
+
+                            shifts.add(shift);
+                    }
+                }
             }
         }
+        shiftEntityService.saveAll(shifts);
+        shifts.forEach(s -> log.debug("  dostępna zmiana: {} - {}", s.getStartHour(), s.getEndHour()));
 
-        return shiftEntityService.saveAll(shifts);
+        return shifts;
     }
 
     private Map<LocalDate, List<Shift>> getShiftsForEveryDay(Integer year, Integer month){
@@ -713,6 +768,7 @@ class MonthlyStoreScheduleGeneratorIT {
 
         return generateShiftEndHours(shiftsSortedDesc, dailyDemandDraft);
     }
+
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc, int[] dailyDemandDraft) {
         int index = 0;

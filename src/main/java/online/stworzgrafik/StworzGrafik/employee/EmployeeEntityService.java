@@ -17,4 +17,5 @@ public interface EmployeeEntityService {
    Employee getEntityById(@NotNull Long id);
    Page<Employee> findEntityByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable);
    List<Employee> findAllStoreActiveEmployees(@NotNull Long storeId);
+    List<Employee> findAllByIds(List<Long> ids);
 }

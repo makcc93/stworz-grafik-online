@@ -20,7 +20,6 @@ import java.util.*;
 public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
     private final CalendarCalculation calendarCalculation;
     private final int timesToRepeat = 3;
-    private boolean anySwapDone = false;
 
     @Override
     public ShiftAnalyzeType getSupportedType() {
@@ -93,6 +92,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     private boolean swapManagerShifts(ScheduleGeneratorContext context){
         log.info("                              MANAGERS");
+        boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
@@ -180,6 +180,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     private boolean swapCreditShifts(ScheduleGeneratorContext context) {
         log.info("                              CREDITS");
+        boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
@@ -253,6 +254,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
                     context.deleteEmployeeFromCredit(date,highestHoursCreditEmployee);
                     context.assignEmployeeToCredit(date,lowestHoursCreditEmployee,highestHoursCreditEmployeeShift);
+
+                    anySwapDone = true;
                 }
             }
         }
@@ -261,7 +264,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     private boolean swapCheckoutShifts(ScheduleGeneratorContext context) {
         log.info("                              CHECKOUTS");
-
+        boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
@@ -335,6 +338,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
                     context.deleteEmployeeFromCheckout(date,highestHoursCheckoutEmployee);
                     context.assignEmployeeToCheckout(date,lowestHoursCheckoutEmployee,highestHoursCheckoutEmployeeShift);
+
+                    anySwapDone = true;
                 }
             }
         }
@@ -344,6 +349,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     private boolean swapOthersShifts(ScheduleGeneratorContext context){
         log.info("                              OTHERS");
+        boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
@@ -414,6 +420,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                     );
                     context.updateShiftOnSchedule(date, highestHoursEmployee, context.getDefaultDaysOffShift());
                     context.registerShiftOnSchedule(date, lowestHoursEmployee, highestHoursEmployeeShift, date.getDayOfWeek());
+
+                    anySwapDone = true;
                 }
             }
 

@@ -13,6 +13,11 @@ import java.util.Map;
 @Component
 public class OpenCloseMatcher extends AbstractRoleMatcher{
     @Override
+    protected void clearAssignment(ScheduleGeneratorContext context) {
+        context.getEmployeeOpenCloseDays().clear();
+    }
+
+    @Override
     protected boolean specialCheckoutRule() {
         return false;
     }

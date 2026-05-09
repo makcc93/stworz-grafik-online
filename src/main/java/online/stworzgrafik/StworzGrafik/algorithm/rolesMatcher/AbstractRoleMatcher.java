@@ -17,6 +17,13 @@ import java.util.Map;
 public abstract class AbstractRoleMatcher implements RoleMatcher{
 
     @Override
+    public void reassignRolesForMonth(ScheduleGeneratorContext context){
+        clearAssignment(context);
+
+        assignRolesForMonth(context);
+    }
+
+    @Override
     public void assignRolesForMonth(ScheduleGeneratorContext context) {
         for (int day = 1; day <= YearMonth.of(context.getYear(), context.getMonth()).lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
@@ -67,6 +74,7 @@ public abstract class AbstractRoleMatcher implements RoleMatcher{
         }
     }
 
+    protected abstract void clearAssignment(ScheduleGeneratorContext context);
     protected abstract boolean specialCheckoutRule();
     protected abstract void performSave(ScheduleGeneratorContext context, LocalDate date, Employee employee, Shift shift);
     protected abstract boolean morningHoursCondition(ScheduleGeneratorContext context, LocalDate date, int[] shiftAsArray);

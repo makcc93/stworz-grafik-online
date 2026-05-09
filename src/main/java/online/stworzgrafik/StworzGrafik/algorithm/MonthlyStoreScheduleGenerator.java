@@ -14,7 +14,6 @@ import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.Vacation
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CheckoutMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
-import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
 import org.springframework.scheduling.annotation.Async;
@@ -26,10 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -76,11 +72,17 @@ class MonthlyStoreScheduleGenerator {
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
+        dailyShiftGeneratorAlgorithm.modifyStartEndHours(context);
+
         emptyDaysMatcher.completeEmptyDaysWithDayOffShift(context);
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
+
+        creditMatcher.reassignRolesForMonth(context);
+        checkoutMatcher.reassignRolesForMonth(context);
+        openCloseMatcher.reassignRolesForMonth(context);
 
         byte[] excelExport = this.excelExport.export(context);
         Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");

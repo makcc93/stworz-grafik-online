@@ -166,6 +166,7 @@ public class ExcelExport implements ExportFile{
                 workedHoursCell.setCellValue(workedHours.doubleValue());
                 workedHoursCell.setCellStyle(totalStyle);
 
+
                 int workedDays = employeeWorkingDaysCount.getOrDefault(employee, 0) - employeeVacationsCount.getOrDefault(employee,0);
                 Cell workedDaysCell = row.createCell(cellIndex++);
                 workedDaysCell.setCellValue(workedDays);
@@ -314,12 +315,12 @@ public class ExcelExport implements ExportFile{
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
-        style.setAlignment(HorizontalAlignment.RIGHT);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         Font font = workbook.createFont();
         font.setBold(true);
         style.setFont(font);
+
         return style;
     }
 
@@ -361,20 +362,16 @@ public class ExcelExport implements ExportFile{
             color = IndexedColors.CORNFLOWER_BLUE;
         }
 
+        if (isOpenClose){
+            color = IndexedColors.BROWN;
+        }
+
         if (color == null) return baseStyle;
 
         CellStyle updatedStyle = workbook.createCellStyle();
         updatedStyle.cloneStyleFrom(baseStyle);
         updatedStyle.setFillForegroundColor(color.getIndex());
         updatedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-
-        if (isOpenClose){
-            Font boldFont = workbook.createFont();
-            boldFont.setBold(true);
-            boldFont.setItalic(true);
-            updatedStyle.setFont(boldFont);
-        }
 
         return updatedStyle;
     }
@@ -391,7 +388,8 @@ public class ExcelExport implements ExportFile{
                 new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
                 new LegendEntry("RATY", IndexedColors.TURQUOISE1),
                 new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT),
-                new LegendEntry("KASA", IndexedColors.CORNFLOWER_BLUE)
+                new LegendEntry("KASA", IndexedColors.CORNFLOWER_BLUE),
+                new LegendEntry("OTWIERA/ZAMYKA", IndexedColors.BROWN)
         );
 
         for (int i = 0; i < entries.size(); i++) {

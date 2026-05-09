@@ -11,6 +11,11 @@ import java.util.*;
 @Component
 public class CheckoutMatcher extends AbstractRoleMatcher{
     @Override
+    protected void clearAssignment(ScheduleGeneratorContext context) {
+        context.getEmployeeCheckoutDays().clear();
+    }
+
+    @Override
     protected boolean specialCheckoutRule() {
         return true;
     }

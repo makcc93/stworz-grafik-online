@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -17,4 +18,5 @@ public interface ShiftEntityService {
     Shift getArrayAsShift(@NotNull int[] array);
     Shift updateShift(ShiftHoursDTO dto, Shift shift);
     List<Shift> getAll();
+    BigDecimal calculateShiftLength(@NotNull Shift shift);
 }
