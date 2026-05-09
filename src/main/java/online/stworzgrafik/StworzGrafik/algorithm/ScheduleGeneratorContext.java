@@ -49,6 +49,8 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Set<LocalDate>> employeeCheckoutDays;
     private final Map<Employee, Set<LocalDate>> employeeOpenCloseDays;
     private final Map<Employee, Set<LocalDate>> employeeWeeklyRestRequirementDaysOff;
+    private final Map<LocalTime, LocalTime> hoursToModify;
+    private final List<Employee> employeesToModifyHours;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
@@ -106,7 +108,7 @@ public class ScheduleGeneratorContext {
 
     public Shift findShiftByHours(LocalTime startHour, LocalTime endHour){
         for (Shift shift : allShifts){
-            if (shift.getStartHour() == startHour && shift.getEndHour() == endHour){
+            if (shift.getStartHour().equals(startHour) && shift.getEndHour().equals(endHour)){
                 return shift;
             }
         }
@@ -257,7 +259,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void addShiftsToDay(LocalDate date, List<Shift> shifts){
-        getGeneratedShiftsByDay().put(date,shifts);
+        generatedShiftsByDay.put(date,shifts);
     }
 
     public int[] employeeProposalShiftAsArray(Employee employee, LocalDate date){
@@ -356,8 +358,8 @@ public class ScheduleGeneratorContext {
         BigDecimal currentEmployeeHoursValue = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
 
 
-        BigDecimal oldShiftLengthHours = computeShiftHours(BigDecimal.valueOf(oldShift.getEndHour().getHour()), BigDecimal.valueOf(oldShift.getStartHour().getHour()));
-        BigDecimal newShiftLengthHours = computeShiftHours(BigDecimal.valueOf(newShift.getEndHour().getHour()), BigDecimal.valueOf(newShift.getStartHour().getHour()));
+        BigDecimal oldShiftLengthHours = calculateShiftLength(oldShift);
+        BigDecimal newShiftLengthHours = calculateShiftLength(newShift);
 
         BigDecimal shiftHoursDifference = newShiftLengthHours.subtract(oldShiftLengthHours);
 
@@ -368,7 +370,7 @@ public class ScheduleGeneratorContext {
     }
 
     private void addEmployeeHours(Employee employee, Shift shift){
-        BigDecimal shiftHours = computeShiftHours(BigDecimal.valueOf(shift.getEndHour().getHour()), BigDecimal.valueOf(shift.getStartHour().getHour()));
+        BigDecimal shiftHours = calculateShiftLength(shift);
 
         BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
         BigDecimal newValueOfEmployeeHours = employeeHoursValue.add(shiftHours);
@@ -388,11 +390,16 @@ public class ScheduleGeneratorContext {
         }
     }
 
-    private static BigDecimal computeShiftHours(BigDecimal shiftEndHour, BigDecimal shiftsStartHour){
-        if (shiftEndHour.compareTo(shiftsStartHour) < 0){
-            return (BigDecimal.valueOf(24).subtract(shiftsStartHour).add(shiftEndHour));
-        }
+    public BigDecimal calculateShiftLength(Shift shift) {
+        BigDecimal endHour = BigDecimal.valueOf(shift.getEndHour().getHour());
+        BigDecimal endMinute = BigDecimal.valueOf(shift.getEndHour().getMinute());
+        BigDecimal endShiftValue = endHour.add(endMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
 
-        return shiftEndHour.subtract(shiftsStartHour);
+
+        BigDecimal startHour = BigDecimal.valueOf(shift.getStartHour().getHour());
+        BigDecimal startMinute = BigDecimal.valueOf(shift.getStartHour().getMinute());
+        BigDecimal startShiftValue = startHour.add(startMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+        return endShiftValue.subtract(startShiftValue);
     }
 }

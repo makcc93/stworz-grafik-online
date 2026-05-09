@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
@@ -22,6 +23,9 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationConfigResponse;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
 import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
 import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
 import org.springframework.stereotype.Component;
@@ -49,7 +53,8 @@ public class ScheduleGeneratorContextFactory {
     private final StoreDeliveryService storeDeliveryService;
     private final StoreOpeningHoursService storeOpeningHoursService;
     private final CalendarCalculation calendarCalculation;
-    private final DayOfWeek dayOfWeekStartingPeriod = DayOfWeek.SUNDAY; //pobierz z data base, trzeba to napiasc i zaimplementowac
+    private final ShiftHourModificationService shiftHourModificationService;
+    private final BillingPeriodConfigService billingPeriodConfigService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);
@@ -79,6 +84,8 @@ public class ScheduleGeneratorContextFactory {
                 .employeeCheckoutDays(new HashMap<>())
                 .employeeOpenCloseDays(new HashMap<>())
                 .employeeWeeklyRestRequirementDaysOff(new HashMap<>())
+                .hoursToModify(getHoursToModify(storeId,year,month))
+                .employeesToModifyHours(getEmployeesToModifyHours(storeId))
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
@@ -91,6 +98,25 @@ public class ScheduleGeneratorContextFactory {
                 .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))
                 .storeHasDedicatedCashier(isCashierInStore(storeId))
                 .build();
+    }
+
+    private List<Employee> getEmployeesToModifyHours(Long storeId){
+        List<Employee> employees = employeeEntityService.findAllStoreActiveEmployees(storeId);
+        List<Long> excludedEmployeeIds = shiftHourModificationService.getExcludedEmployees(storeId).excludedEmployeeIds();
+
+        return employees.stream()
+                .filter(empl -> !excludedEmployeeIds.contains(empl.getId()))
+                .toList();
+    }
+
+    private Map<LocalTime, LocalTime> getHoursToModify(Long storeId, Integer year, Integer month){
+        List<ShiftHourModificationDTO> hours = shiftHourModificationService.getHours(storeId).hours();
+
+        return hours.stream()
+                .collect(Collectors.toMap(
+                        ShiftHourModificationDTO::originalHour,
+                        ShiftHourModificationDTO::modifiedHour
+                ));
     }
 
     private boolean isCashierInStore(Long storeId){
@@ -106,13 +132,14 @@ public class ScheduleGeneratorContextFactory {
 
     private Map<Integer, PeriodDateDTO> calculatePeriodWeeks(Integer year,Integer month){
         Map<Integer, PeriodDateDTO> periodWeek = new LinkedHashMap<>();
+        DayOfWeek startingPeriodDayOfWeek = billingPeriodConfigService.getDayOfWeekStartingPeriod(year,month);
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate firstDayOfMonth = yearMonth.atDay(1);
         LocalDate lastDayOfMonth = yearMonth.atEndOfMonth();
 
 
-        int daysDifference = (dayOfWeekStartingPeriod.getValue() - firstDayOfMonth.getDayOfWeek().getValue() + 7) % 7;
+        int daysDifference = (startingPeriodDayOfWeek.getValue() - firstDayOfMonth.getDayOfWeek().getValue() + 7) % 7;
         LocalDate firstFullWeekStart = firstDayOfMonth.plusDays(daysDifference);
 
         int weekIndex = 1;
