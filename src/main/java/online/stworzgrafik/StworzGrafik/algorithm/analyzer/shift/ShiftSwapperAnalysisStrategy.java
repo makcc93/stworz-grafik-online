@@ -17,7 +17,7 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
+public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     private final CalendarCalculation calendarCalculation;
     private final int timesToRepeat = 3;
 
@@ -30,25 +30,19 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
         BigDecimal minHoursDifference = BigDecimal.valueOf(8);
 
-        BigDecimal employeeLowestValueOfWorkingHours = employees.stream()
-                .filter(empl -> !empl.isWarehouseman())
-                .sorted(Comparator.comparing(
-                        e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO)
-                ))
-                .findFirst()
+        BigDecimal lowestHours = employees.stream()
+                .filter(e -> !e.isWarehouseman())
                 .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .min(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
 
-        BigDecimal employeeHighestValueOfWorkingHours = employees.stream()
-                .filter(empl -> !empl.isWarehouseman())
-                .sorted(Comparator.comparing(
-                        e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO)
-                ).reversed())
-                .findFirst()
+        BigDecimal highestHours = employees.stream()
+                .filter(e -> !e.isWarehouseman())
                 .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .max(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
 
-        return new ShiftSwapperAnalysisResult(employeeLowestValueOfWorkingHours,employeeHighestValueOfWorkingHours,minHoursDifference);
+        return new ShiftSwapperAnalysisResult(lowestHours, highestHours, minHoursDifference);
     }
 
     @Override
@@ -58,29 +52,15 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate date) {
+        log.info("PRÓBA ZAMIANY ZMIAN");
         BigDecimal minHoursDifference = ((ShiftSwapperAnalysisResult) result).minHoursDifference();
 
         while (true) {
-            BigDecimal employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-                    .filter(entry -> !entry.getKey().isWarehouseman())
-                    .filter(entry -> !entry.getKey().isCashier())
-                    .sorted(Comparator.comparing(Map.Entry::getValue))
-                    .findFirst()
-                    .map(Map.Entry::getValue)
-                    .orElse(BigDecimal.ZERO);
+            BigDecimal lowestHours = lowestNonSpecialistHours(context);
+            BigDecimal highestHours = highestNonSpecialistHours(context);
 
-            BigDecimal employeeHighestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
-                    .filter(entry -> !entry.getKey().isWarehouseman())
-                    .filter(entry -> !entry.getKey().isCashier())
-                    .sorted(Comparator.comparing(
-                            (Map.Entry<Employee, BigDecimal> entry) -> entry.getValue()
-                    ).reversed())
-                    .findFirst()
-                    .map(Map.Entry::getValue)
-                    .orElse(BigDecimal.ZERO);
+            if (highestHours.subtract(lowestHours).compareTo(minHoursDifference) <= 0) break;
 
-            if ((employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours)).compareTo(minHoursDifference) <= 0)
-                break;
             boolean resolved = swapManagerShifts(context);
             resolved |= swapCreditShifts(context);
             resolved |= swapCheckoutShifts(context);
@@ -90,20 +70,17 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
         }
     }
 
-    private boolean swapManagerShifts(ScheduleGeneratorContext context){
-        log.info("                              MANAGERS");
+    private boolean swapManagerShifts(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
-
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
         YearMonth yearMonth = YearMonth.of(year, month);
+
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(year, month, day);
-                if (Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1 ||
-                        date.getDayOfWeek() == DayOfWeek.SATURDAY ||
-                        date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+                if (isNotWorkingDay(context, date)) continue;
 
                 Optional<Employee> highestHoursWorkingManager = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
@@ -119,12 +96,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (highestHoursWorkingManager.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
-
-
+                if (highestHoursWorkingManager.isEmpty()) continue;
 
                 Optional<Employee> lowestHoursNotWorkingManager = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOpenCloseStore())
@@ -137,61 +109,37 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (lowestHoursNotWorkingManager.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (lowestHoursNotWorkingManager.isEmpty()) continue;
 
                 Employee highestHoursManager = highestHoursWorkingManager.get();
-                Shift highestHoursManagerShift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursManager);
-                BigDecimal highestHoursManagerMonthlyHours = context.getEmployeeHours().getOrDefault(highestHoursManager, BigDecimal.ZERO);
-
                 Employee lowestHoursManager = lowestHoursNotWorkingManager.get();
-                BigDecimal lowestHoursManagerMonthlyHours = context.getEmployeeHours().getOrDefault(lowestHoursManager, BigDecimal.ZERO);
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursManager);
+                BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursManager, BigDecimal.ZERO);
+                BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursManager, BigDecimal.ZERO);
 
-                BigDecimal managersHoursDifference = highestHoursManagerMonthlyHours.subtract(lowestHoursManagerMonthlyHours);
+                if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
+                if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
 
-                if (lowestEmployeeHasMoreHoursThanHighest(highestHoursManagerMonthlyHours, lowestHoursManagerMonthlyHours, highestHoursManager, lowestHoursManager))
-                    continue;
-
-                if (context.getShiftLength(highestHoursManagerShift).compareTo(managersHoursDifference) < 0) {
-                    log.info("          {} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
-                            date,
-                            highestHoursManagerShift.getStartHour(),
-                            highestHoursManagerShift.getEndHour(),
-                            highestHoursManager.getLastName(),
-                            highestHoursManagerMonthlyHours,
-                            lowestHoursManager.getLastName(),
-                            lowestHoursManagerMonthlyHours
-                    );
-                    context.updateShiftOnSchedule(date, highestHoursManager, context.getDefaultDaysOffShift());
-                    context.registerShiftOnSchedule(date, lowestHoursManager, highestHoursManagerShift, date.getDayOfWeek());
-
-                    context.deleteEmployeeToOpenClose(date, highestHoursManager);
-                    context.assignEmployeeToOpenClose(date, lowestHoursManager, highestHoursManagerShift);
-
-                    anySwapDone = true;
-                }
+                executeSwap(context, date, highestHoursManager, lowestHoursManager, shift);
+                context.deleteEmployeeToOpenClose(date, highestHoursManager);
+                context.assignEmployeeToOpenClose(date, lowestHoursManager, shift);
+                anySwapDone = true;
             }
         }
-
         return anySwapDone;
     }
 
     private boolean swapCreditShifts(ScheduleGeneratorContext context) {
-        log.info("                              CREDITS");
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
-
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
         YearMonth yearMonth = YearMonth.of(year, month);
+
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(year, month, day);
-                if (Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1 ||
-                        date.getDayOfWeek() == DayOfWeek.SATURDAY ||
-                        date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+                if (isNotWorkingDay(context, date)) continue;
 
                 Optional<Employee> highestHoursWorkingCreditEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
@@ -207,10 +155,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (highestHoursWorkingCreditEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (highestHoursWorkingCreditEmployee.isEmpty()) continue;
 
                 Optional<Employee> lowestHoursNotWorkingCreditEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCredit())
@@ -223,59 +168,37 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (lowestHoursNotWorkingCreditEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (lowestHoursNotWorkingCreditEmployee.isEmpty()) continue;
 
                 Employee highestHoursCreditEmployee = highestHoursWorkingCreditEmployee.get();
-                Shift highestHoursCreditEmployeeShift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCreditEmployee);
-                BigDecimal highestHoursCreditEmployeeMonthlyHoursCount = context.getEmployeeHours().getOrDefault(highestHoursCreditEmployee, BigDecimal.ZERO);
-
                 Employee lowestHoursCreditEmployee = lowestHoursNotWorkingCreditEmployee.get();
-                BigDecimal lowestHoursCreditEmployeeMonthlyHoursCount = context.getEmployeeHours().getOrDefault(lowestHoursCreditEmployee, BigDecimal.ZERO);
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCreditEmployee);
+                BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursCreditEmployee, BigDecimal.ZERO);
+                BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursCreditEmployee, BigDecimal.ZERO);
 
-                BigDecimal creditEmployeesHoursDifference = highestHoursCreditEmployeeMonthlyHoursCount.subtract(lowestHoursCreditEmployeeMonthlyHoursCount);
-                if (lowestEmployeeHasMoreHoursThanHighest(highestHoursCreditEmployeeMonthlyHoursCount, lowestHoursCreditEmployeeMonthlyHoursCount, highestHoursCreditEmployee, lowestHoursCreditEmployee))
-                    continue;
+                if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
+                if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
 
-                if (context.getShiftLength(highestHoursCreditEmployeeShift).compareTo(creditEmployeesHoursDifference) < 0) {
-                    log.info("          {} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
-                            date,
-                            highestHoursCreditEmployeeShift.getStartHour(),
-                            highestHoursCreditEmployeeShift.getEndHour(),
-                            highestHoursCreditEmployee.getLastName(),
-                            highestHoursCreditEmployeeMonthlyHoursCount,
-                            lowestHoursCreditEmployee.getLastName(),
-                            lowestHoursCreditEmployeeMonthlyHoursCount
-                    );
-                    context.updateShiftOnSchedule(date, highestHoursCreditEmployee, context.getDefaultDaysOffShift());
-                    context.registerShiftOnSchedule(date, lowestHoursCreditEmployee, highestHoursCreditEmployeeShift, date.getDayOfWeek());
-
-                    context.deleteEmployeeFromCredit(date,highestHoursCreditEmployee);
-                    context.assignEmployeeToCredit(date,lowestHoursCreditEmployee,highestHoursCreditEmployeeShift);
-
-                    anySwapDone = true;
-                }
+                executeSwap(context, date, highestHoursCreditEmployee, lowestHoursCreditEmployee, shift);
+                context.deleteEmployeeFromCredit(date, highestHoursCreditEmployee);
+                context.assignEmployeeToCredit(date, lowestHoursCreditEmployee, shift);
+                anySwapDone = true;
             }
         }
         return anySwapDone;
     }
 
     private boolean swapCheckoutShifts(ScheduleGeneratorContext context) {
-        log.info("                              CHECKOUTS");
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
-
         YearMonth yearMonth = YearMonth.of(year, month);
+
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(year, month, day);
-                if (Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1 ||
-                        date.getDayOfWeek() == DayOfWeek.SATURDAY ||
-                        date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+                if (isNotWorkingDay(context, date)) continue;
 
                 Optional<Employee> highestHoursWorkingCheckoutEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
@@ -291,10 +214,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (highestHoursWorkingCheckoutEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (highestHoursWorkingCheckoutEmployee.isEmpty()) continue;
 
                 Optional<Employee> lowestHoursNotWorkingCheckoutEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCheckout())
@@ -307,60 +227,37 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (lowestHoursNotWorkingCheckoutEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (lowestHoursNotWorkingCheckoutEmployee.isEmpty()) continue;
 
                 Employee highestHoursCheckoutEmployee = highestHoursWorkingCheckoutEmployee.get();
-                Shift highestHoursCheckoutEmployeeShift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCheckoutEmployee);
-                BigDecimal highestHoursCheckoutEmployeeMonthlyHoursCount = context.getEmployeeHours().getOrDefault(highestHoursCheckoutEmployee, BigDecimal.ZERO);
-
                 Employee lowestHoursCheckoutEmployee = lowestHoursNotWorkingCheckoutEmployee.get();
-                BigDecimal lowestHoursCheckoutEmployeeMonthlyHoursCount = context.getEmployeeHours().getOrDefault(lowestHoursCheckoutEmployee, BigDecimal.ZERO);
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCheckoutEmployee);
+                BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursCheckoutEmployee, BigDecimal.ZERO);
+                BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursCheckoutEmployee, BigDecimal.ZERO);
 
-                BigDecimal checkoutEmployeesHoursDifference = highestHoursCheckoutEmployeeMonthlyHoursCount.subtract(lowestHoursCheckoutEmployeeMonthlyHoursCount);
-                if (lowestEmployeeHasMoreHoursThanHighest(highestHoursCheckoutEmployeeMonthlyHoursCount, lowestHoursCheckoutEmployeeMonthlyHoursCount, highestHoursCheckoutEmployee, lowestHoursCheckoutEmployee))
-                    continue;
+                if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
+                if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
 
-                if (context.getShiftLength(highestHoursCheckoutEmployeeShift).compareTo(checkoutEmployeesHoursDifference) < 0) {
-                    log.info("          {} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
-                            date,
-                            highestHoursCheckoutEmployeeShift.getStartHour(),
-                            highestHoursCheckoutEmployeeShift.getEndHour(),
-                            highestHoursCheckoutEmployee.getLastName(),
-                            highestHoursCheckoutEmployeeMonthlyHoursCount,
-                            lowestHoursCheckoutEmployee.getLastName(),
-                            lowestHoursCheckoutEmployeeMonthlyHoursCount
-                    );
-                    context.updateShiftOnSchedule(date, highestHoursCheckoutEmployee, context.getDefaultDaysOffShift());
-                    context.registerShiftOnSchedule(date, lowestHoursCheckoutEmployee, highestHoursCheckoutEmployeeShift, date.getDayOfWeek());
-
-                    context.deleteEmployeeFromCheckout(date,highestHoursCheckoutEmployee);
-                    context.assignEmployeeToCheckout(date,lowestHoursCheckoutEmployee,highestHoursCheckoutEmployeeShift);
-
-                    anySwapDone = true;
-                }
+                executeSwap(context, date, highestHoursCheckoutEmployee, lowestHoursCheckoutEmployee, shift);
+                context.deleteEmployeeFromCheckout(date, highestHoursCheckoutEmployee);
+                context.assignEmployeeToCheckout(date, lowestHoursCheckoutEmployee, shift);
+                anySwapDone = true;
             }
         }
         return anySwapDone;
     }
 
-
-    private boolean swapOthersShifts(ScheduleGeneratorContext context){
-        log.info("                              OTHERS");
+    private boolean swapOthersShifts(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year,month);
-
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
         YearMonth yearMonth = YearMonth.of(year, month);
+
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(year, month, day);
-                if (Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date,new int[24])).sum() < 1 ||
-                    date.getDayOfWeek() == DayOfWeek.SATURDAY ||
-                    date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+                if (isNotWorkingDay(context, date)) continue;
 
                 Optional<Employee> highestHoursWorkingEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
@@ -375,13 +272,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (highestHoursWorkingEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
-
-                Employee highestHoursEmployee = highestHoursWorkingEmployee.get();
-
+                if (highestHoursWorkingEmployee.isEmpty()) continue;
 
                 Optional<Employee> lowestHoursNotWorkingEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
@@ -395,47 +286,63 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy{
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (lowestHoursNotWorkingEmployee.isEmpty()) {
-                    log.info("Nie znaleziono pracownika do zamiany pracy");
-                    continue;
-                }
+                if (lowestHoursNotWorkingEmployee.isEmpty()) continue;
+
+                Employee highestHoursEmployee = highestHoursWorkingEmployee.get();
                 Employee lowestHoursEmployee = lowestHoursNotWorkingEmployee.get();
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursEmployee);
+                BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursEmployee, BigDecimal.ZERO);
+                BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursEmployee, BigDecimal.ZERO);
 
-                Shift highestHoursEmployeeShift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursEmployee);
-                BigDecimal lowestHoursEmployeeMonthlyHours = context.getEmployeeHours().getOrDefault(lowestHoursEmployee, BigDecimal.ZERO);
-                BigDecimal highestHoursEmployeeMonthlyHours = context.getEmployeeHours().getOrDefault(highestHoursEmployee, BigDecimal.ZERO);
-                BigDecimal employeesHoursDifference = highestHoursEmployeeMonthlyHours.subtract(lowestHoursEmployeeMonthlyHours);
+                if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
+                if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
 
-                if (lowestEmployeeHasMoreHoursThanHighest(highestHoursEmployeeMonthlyHours, lowestHoursEmployeeMonthlyHours, highestHoursEmployee, lowestHoursEmployee))
-                    continue;
-                if (context.getShiftLength(highestHoursEmployeeShift).compareTo(employeesHoursDifference) < 0) {
-                    log.info("          {} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
-                            date,
-                            highestHoursEmployeeShift.getStartHour(),
-                            highestHoursEmployeeShift.getEndHour(),
-                            highestHoursEmployee.getLastName(),
-                            highestHoursEmployeeMonthlyHours,
-                            lowestHoursEmployee.getLastName(),
-                            lowestHoursEmployeeMonthlyHours
-                    );
-                    context.updateShiftOnSchedule(date, highestHoursEmployee, context.getDefaultDaysOffShift());
-                    context.registerShiftOnSchedule(date, lowestHoursEmployee, highestHoursEmployeeShift, date.getDayOfWeek());
-
-                    anySwapDone = true;
-                }
+                executeSwap(context, date, highestHoursEmployee, lowestHoursEmployee, shift);
+                anySwapDone = true;
             }
-
         }
         return anySwapDone;
     }
+    
+    private void executeSwap(ScheduleGeneratorContext context, LocalDate date, Employee from, Employee to, Shift shift) {
+        log.info("{} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
+                date,
+                shift.getStartHour(),
+                shift.getEndHour(),
+                from.getLastName(),
+                context.getEmployeeHours().getOrDefault(from, BigDecimal.ZERO),
+                to.getLastName(),
+                context.getEmployeeHours().getOrDefault(to, BigDecimal.ZERO)
+        );
+        context.updateShiftOnSchedule(date, from, context.getDefaultDaysOffShift());
+        context.registerShiftOnSchedule(date, to, shift, date.getDayOfWeek());
+    }
 
-    private static boolean lowestEmployeeHasMoreHoursThanHighest(BigDecimal highestHoursManagerMonthlyHours, BigDecimal lowestHoursManagerMonthlyHours, Employee highestHoursManager, Employee lowestHoursManager) {
-        if (highestHoursManagerMonthlyHours.compareTo(lowestHoursManagerMonthlyHours) <= 0) {
-            log.info("Pominięto zamianę - {} ma mniej godzin ({}) niż {} ({})",
-                    highestHoursManager.getLastName(), highestHoursManagerMonthlyHours,
-                    lowestHoursManager.getLastName(), lowestHoursManagerMonthlyHours);
-            return true;
-        }
-        return false;
+    private boolean isNotWorkingDay(ScheduleGeneratorContext context, LocalDate date) {
+        return Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1
+                || date.getDayOfWeek() == DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == DayOfWeek.SUNDAY;
+    }
+
+    private BigDecimal lowestNonSpecialistHours(ScheduleGeneratorContext context) {
+        return context.getEmployeeHours().entrySet().stream()
+                .filter(e -> !e.getKey().isWarehouseman())
+                .filter(e -> !e.getKey().isCashier())
+                .map(Map.Entry::getValue)
+                .min(Comparator.naturalOrder())
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private BigDecimal highestNonSpecialistHours(ScheduleGeneratorContext context) {
+        return context.getEmployeeHours().entrySet().stream()
+                .filter(e -> !e.getKey().isWarehouseman())
+                .filter(e -> !e.getKey().isCashier())
+                .map(Map.Entry::getValue)
+                .max(Comparator.naturalOrder())
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private static boolean lowestEmployeeHasMoreHoursThanHighest(BigDecimal highestHours, BigDecimal lowestHours) {
+        return highestHours.compareTo(lowestHours) <= 0;
     }
 }
