@@ -19,6 +19,7 @@ public class DaysOffApplier {
     private final HolidayManager holidayManager;
 
     public void applyDaysOffToSchedule(ScheduleGeneratorContext context){
+        log.info("WPROWADZENIE PROPOZYCJI DNI WOLNYCH");
         Integer year = context.getYear();
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);

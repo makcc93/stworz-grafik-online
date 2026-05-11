@@ -56,6 +56,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("PRÓBA PODMIANY GODZIN");
         BigDecimal maxHoursDifference = ((HoursSwapperAnalysisResult) result).maxHoursDifference();
 
         while (true) {
@@ -86,9 +87,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     }
 
     private boolean swapHours(ScheduleGeneratorContext context) {
-        log.info("");
-        log.info("");
-        log.info("swapHours");
         boolean anySwapDone = false;
         List<Employee> employees = context.getStoreActiveEmployees();
         int timesToRepeat = 5;
@@ -126,10 +124,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     employeeShift.put(employee, shift);
                 }
 
-                if (employeeShift.size() < 2) {
-                    log.info("Brak 2 lub więcej praacowników. {}", date);
-                    continue;
-                }
+                if (employeeShift.size() < 2) continue;
 
                 Employee highestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
@@ -163,8 +158,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 }
             }
         }
-        log.info("");
-        log.info("");
         return anySwapDone;
     }
 

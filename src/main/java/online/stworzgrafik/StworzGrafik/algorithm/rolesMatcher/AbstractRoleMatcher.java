@@ -1,7 +1,5 @@
 package online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher;
 
-import com.mysql.cj.log.Log;
-import lombok.extern.flogger.Flogger;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -53,12 +51,8 @@ public abstract class AbstractRoleMatcher implements RoleMatcher{
                 performSave(context,date,employee,shift);
                 morningAssigned = true;
 
-                log.info("****** {} DOPISUJE PRACOWNIKA {} NA PORANNĄ ZMIANĘ {}-{}",date, employee.getLastName(),shift.getStartHour(),shift.getEndHour());
-
                 if (specialCheckoutRule()){
                     if (afternoonHoursCondition(context,date,shiftAsArray)){
-                        log.info("**************** {} PRACOWNIK {} BEDZIĘ MIAŁ CAŁY DZIEŃ",date,employee.getLastName());
-                        afternoonAssigned = true;
                         break;
                     }
                 }
@@ -68,8 +62,6 @@ public abstract class AbstractRoleMatcher implements RoleMatcher{
             if (!afternoonAssigned && afternoonHoursCondition(context,date,shiftAsArray)){
                 performSave(context,date,employee,shift);
                 afternoonAssigned = true;
-
-                log.info("****** {} DOPISUJE PRACOWNIKA {} NA POPOŁUDNIOWĄ ZMIANĘ {}-{}", date,employee.getLastName(),shift.getStartHour(),shift.getEndHour());
             }
         }
     }

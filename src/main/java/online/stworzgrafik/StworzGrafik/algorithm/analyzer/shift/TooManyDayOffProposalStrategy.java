@@ -36,6 +36,7 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("SPRAWDZENIE ZBYT WIELU PROPOZYCJI DNI WOLNYCH");
         List<Employee> availableEmployees = ((TooManyDayOffProposalResult) result).availableEmployees();
         List<Shift> shifts = ((TooManyDayOffProposalResult) result).shifts();
 

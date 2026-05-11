@@ -44,6 +44,7 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("SPRAWDZENIE ZBYT WIELU PROPOZYCJI ZMIAN");
         int[] originalDailyDraft = ((TooManyShiftProposalsAnalysisResult) result).originalDailyDraft();
         int[] proposalsCount = ((TooManyShiftProposalsAnalysisResult) result).proposalsCount();
 

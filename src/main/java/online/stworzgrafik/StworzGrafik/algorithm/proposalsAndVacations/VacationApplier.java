@@ -20,6 +20,7 @@ public class VacationApplier {
     private final HolidayManager holidayManager;
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
+        log.info("WPROWADZENIE URLOPÓW");
         List<Employee> employeesWithVacation = context.getStoreActiveEmployees().stream()
                 .filter(context::employeeHasPlannedVacation)
                 .toList();
@@ -43,7 +44,6 @@ public class VacationApplier {
                     context.addEmployeeVacationDay(employee,1);
                 }
             }
-
         }
     }
 }

@@ -67,6 +67,7 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("SPRAWDZENIE DOSTĘPNOŚCI ZMIANY KOŃCZĄCEJ DLA KIEROWNIKA");
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);
         List<Shift> shifts = ((ManagerClosingHourAnalysisResult) result).shifts();
 

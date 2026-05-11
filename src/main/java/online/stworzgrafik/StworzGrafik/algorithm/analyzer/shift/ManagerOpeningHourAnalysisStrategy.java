@@ -70,6 +70,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("SPRAWDZENIE DOSTĘPNOŚCI ZMIANY OTWIERAJĄCEJ DLA KIEROWNIKA");
         List<Shift> shifts = ((ManagerOpeningHourAnalysisResult) result).shifts();
 
         Map<Employee, int[]> dailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().get(day);

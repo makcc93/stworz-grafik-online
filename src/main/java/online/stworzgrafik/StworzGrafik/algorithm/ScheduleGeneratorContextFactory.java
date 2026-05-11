@@ -57,8 +57,6 @@ public class ScheduleGeneratorContextFactory {
     private final BillingPeriodConfigService billingPeriodConfigService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
-        log.info("Buduję context dla sklepu ID {} na miesiąc {}/{}", storeId,month,year);
-
         return ScheduleGeneratorContext.builder()
                 .storeId(storeId)
                 .year(year)
@@ -167,14 +165,6 @@ public class ScheduleGeneratorContextFactory {
 
             currentStart = currentStart.plusDays(7);
         }
-
-
-
-        periodWeek.entrySet()
-                .forEach(entry -> {
-                    log.info("{}  {}-{} ", entry.getKey(),entry.getValue().startDate(),entry.getValue().endDate());
-                });
-
         return periodWeek;
     }
 

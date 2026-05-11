@@ -70,6 +70,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("PRÓBA DZIELENIA ZMIAN");
         int monthlyMaxWorkingDays = ((ShiftSplitterAnalysisResult) result).monthlyMaxWorkingDays();
         while (context.getWorkingDaysCount().entrySet().stream()
                 .anyMatch(e -> e.getValue() <= monthlyMaxWorkingDays - 2)) {
@@ -83,9 +84,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     }
 
     private boolean splitShiftsForManagers(ScheduleGeneratorContext context){
-        log.info("");
-        log.info("");
-        log.info("splitForManagers");
             boolean anySwapDone = false;
             int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
             int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -102,7 +100,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
                 for (Employee employee : managers) {
                     if (!context.employeeIsWorking(employee, date)) continue;
-//                if (!context.isOpeningOrClosingStore(employee, date)) continue;
                     if (context.employeeIsOnVacation(employee, date)) continue;
                     if (context.employeeHasProposalShift(employee, date)) continue;
                     if (context.employeeHasProposalDaysOff(employee, date)) continue;
@@ -199,10 +196,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (otherCurrentShiftOnDate == null) continue;
                     if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
-                        log.info("WEEKEND OR HOLIDAY BREAK");
-                        continue;
-                    }
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) continue;
 
                     DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
 
@@ -220,21 +214,12 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     anySwapDone = true;
                     break;
                 }
-
-                log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
             }
-
-            log.info("");
-            log.info("");
-            log.info("");
             return anySwapDone;
     }
 
 
     private boolean splitShiftsForCredits(ScheduleGeneratorContext context) {
-        log.info("");
-        log.info("");
-        log.info("splitForCredits");
         boolean anySwapDone = false;
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -345,10 +330,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (otherCurrentShiftOnDate == null) continue;
                     if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
-                        log.info("WEEKEND OR HOLIDAY BREAK");
-                        continue;
-                    }
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) continue;
 
                     DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
 
@@ -369,17 +351,11 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 if (anySwapDone) break;
             }
         }
-        log.info("");
-        log.info("");
-        log.info("");
         return anySwapDone;
     }
 
 
     private boolean splitShiftsForCheckouts(ScheduleGeneratorContext context){
-        log.info("");
-        log.info("");
-        log.info("splitForCkeckouts");
                 boolean anySwapDone = false;
                 int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
                 int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -490,10 +466,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             if (otherCurrentShiftOnDate == null) continue;
                             if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                            if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
-                                log.info("WEEKEND OR HOLIDAY BREAK");
-                                continue;
-                            }
+                            if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) continue;
 
                             DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
 
@@ -511,21 +484,14 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             anySwapDone = true;
                             break;
                         }
-                        log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
                         if (anySwapDone) break;
                     }
                 }
-        log.info("");
-        log.info("");
-        log.info("");
         return anySwapDone;
     }
 
 
     private boolean splitShiftsForOthers(ScheduleGeneratorContext context){
-        log.info("");
-        log.info("");
-        log.info("splitForOthers");
         boolean anySwapDone = false;
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
@@ -643,10 +609,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (otherCurrentShiftOnDate == null) continue;
                     if (context.getShiftLength(otherCurrentShiftOnDate).compareTo(BigDecimal.valueOf(10)) < 0) continue;
 
-                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) {
-                        log.info("WEEKEND OR HOLIDAY BREAK");
-                        continue;
-                    }
+                    if (isWeekendOrHoliday(candidate.originalDateForSwap()) || isWeekendOrHoliday(candidate.otherEmployeeDateForSwap())) continue;
 
                     DividedShiftDTO dividedShiftDTO = divideShift(currentShiftOnDate, context);
 
@@ -662,13 +625,9 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     anySwapDone = true;
                     break;
                 }
-                log.info("Kandydaci dla {}: {}", employee.getLastName(), swapCandidates.size());
                 if (anySwapDone) break;
             }
         }
-        log.info("");
-        log.info("");
-        log.info("");
         return anySwapDone;
     }
 
@@ -692,7 +651,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
         Shift morningShift = context.findShiftByHours(LocalTime.of(startHour, startMinute), LocalTime.of(midHour, 0));
         Shift afternoonShift = context.findShiftByHours(LocalTime.of(midHour, 0), LocalTime.of(endHour, endMinute));
-        log.info("*** Podzielona zmana: {}-{} na zmiany: 1. {}-{}, 2. {}-{}", shift.getStartHour(),shift.getEndHour(),morningShift.getStartHour(),morningShift.getEndHour(),afternoonShift.getStartHour(),afternoonShift.getEndHour());
 
         return new DividedShiftDTO(
                 morningShift,

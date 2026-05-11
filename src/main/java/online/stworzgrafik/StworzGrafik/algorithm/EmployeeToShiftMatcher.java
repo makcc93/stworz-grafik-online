@@ -3,10 +3,9 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalysisStrategy;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -19,10 +18,8 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -33,7 +30,7 @@ public class EmployeeToShiftMatcher {
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void matchEmployeeToShift(ScheduleGeneratorContext context) {
-        Map<LocalDate, int[]> originalStoreDrafts = context.getUneditedOriginalDateStoreDraft();
+        log.info("DOPASOWANIE PRACOWNIKÓW DO ZMIAN");
         LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc = context.getEveryDayStoreDemandDraftWorkingOn();
 
         Map<LocalDate, List<Shift>> generatedShiftsByDate = context.getGeneratedShiftsByDay();
@@ -41,8 +38,6 @@ public class EmployeeToShiftMatcher {
 
         for (Map.Entry<LocalDate,int[]> entry : everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc.entrySet()) {
             LocalDate date = entry.getKey();
-
-            int[] uneditedOriginalStoreDailyDraft = originalStoreDrafts.get(date);
 
             if (dayIsHolidayOrHasEmptyDemandDraft(date, everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc)) {
                 log.info("Pomijam dzień {} ponieważ jest świętem lub brak ustalonego zapotrzebowania na pracę", date);
@@ -53,7 +48,7 @@ public class EmployeeToShiftMatcher {
             List<Employee> availableEmployees = getAvailableEmployees(context, storeActiveEmployees, date);
             List<Shift> shiftsSorted = getShiftsSortedByStartHour(generatedShiftsByDate, date);
 
-            showShiftsInLog(shiftsSorted);
+            showShiftsInLog(shiftsSorted,date);
 
             scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS);
             scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
@@ -106,8 +101,7 @@ public class EmployeeToShiftMatcher {
                 Optional<Employee> employee = availableEmployees.stream()
                         .filter(empl -> !empl.isCashier())
                         .filter(empl -> !empl.isWarehouseman())
-                        .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                        .findFirst();
+                        .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
 
                 if (employee.isEmpty()) {
@@ -131,8 +125,6 @@ public class EmployeeToShiftMatcher {
                 shiftsSorted.remove(shift.get());
                 availableEmployees.remove(employee.get());
             }
-            log.info("");
-            log.info("");
 
             while (shiftsSorted.size() > availableEmployees.size()){
                 log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", date);
@@ -142,12 +134,12 @@ public class EmployeeToShiftMatcher {
         }
     }
 
-    private void showShiftsInLog(List<Shift> shifts){
+    private void showShiftsInLog(List<Shift> shifts, LocalDate date){
         String shiftsAsString = shifts.stream()
                 .map(shift -> shift.getStartHour() + "-" + shift.getEndHour())
                 .collect(Collectors.joining(" | "));
 
-        log.info("Zmiany: {}", shiftsAsString);
+        log.info("Dzień: {} Zmiany: {}", date, shiftsAsString);
     }
 
     private static Comparator<Shift> longestShift() {
@@ -193,9 +185,7 @@ public class EmployeeToShiftMatcher {
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
             int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
 
-            if (shiftAsArray[closeHour] > 0){
-                log.info("PRACOWNIK {} mogący zamknąć sklep w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;}
+            if (shiftAsArray[closeHour] > 0) return true;
         }
 
         return false;
@@ -205,8 +195,7 @@ public class EmployeeToShiftMatcher {
         log.info("POPOŁUDNIU - KASA {}", date);
         Optional<Employee> employeeToOperateAfternoonCheckout = availableEmployees.stream()
                 .filter(Employee::isCanOperateCheckout)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToOperateAfternoonCheckout.isEmpty()){
             log.info("Brak pracownika");
@@ -251,11 +240,9 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyAfternoonCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date) {
-        log.info("POPOŁUDNIU - RATY {}", date);
         Optional<Employee> employeeToOperateAfternoonCredit = availableEmployees.stream()
                 .filter(Employee::isCanOperateCredit)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToOperateAfternoonCredit.isEmpty()){
             log.info("Brak pracownika");
@@ -300,11 +287,9 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyMorningCheckoutEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date){
-        log.info("RANO - KASA {}", date);
         Optional<Employee> employeeToOperateMorningCheckout = availableEmployees.stream()
                 .filter(Employee::isCanOperateCheckout)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToOperateMorningCheckout.isEmpty()){
             log.info("Brak pracownika");
@@ -349,11 +334,9 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyMorningCreditEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date) {
-        log.info("RANO - RATY {}", date);
         Optional<Employee> employeeToOperateMorningCredit = availableEmployees.stream()
                 .filter(Employee::isCanOperateCredit)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToOperateMorningCredit.isEmpty()){
             log.info("Brak pracownika");
@@ -409,10 +392,8 @@ public class EmployeeToShiftMatcher {
             int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
             int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
 
-            if (employeeShiftAsArray[closeHour] > 0 || employeeShiftAsArray[closeForClientsHour] > 0){
-                log.info("PRACOWNIK {} mogący obsugiwać kredyt popołudniu w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;
-            }
+            if (employeeShiftAsArray[closeHour] > 0 || employeeShiftAsArray[closeForClientsHour] > 0) return true;
+
         }
         return false;
     }
@@ -426,10 +407,7 @@ public class EmployeeToShiftMatcher {
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
             int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
 
-            if (shiftAsArray[openHour] > 0) {
-                log.info("PRACOWNIK {} mogący otworzyć sklep w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;
-            }
+            if (shiftAsArray[openHour] > 0) return true;
 
         }
         return false;
@@ -446,10 +424,7 @@ public class EmployeeToShiftMatcher {
             int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
             int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
 
-            if(employeeProposal[openHour] > 0 || employeeProposal[openForClientsHour] > 0){
-                log.info("PRACOWNIK {} mogący obsługiwać kasę rano w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;
-            }
+            if(employeeProposal[openHour] > 0 || employeeProposal[openForClientsHour] > 0) return true;
         }
         return false;
     }
@@ -465,10 +440,7 @@ public class EmployeeToShiftMatcher {
             int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
             int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
 
-            if(employeeProposal[closeHour] > 0 || employeeProposal[closeForClientsHour] > 0){
-                log.info("PRACOWNIK {} mogący obsługiwać kasę popołudniu w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;
-            }
+            if(employeeProposal[closeHour] > 0 || employeeProposal[closeForClientsHour] > 0) return true;
         }
         return false;
     }
@@ -484,36 +456,15 @@ public class EmployeeToShiftMatcher {
             int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
             int openForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).openHour();
 
-            if(employeeShiftAsArray[openHour] > 0 || employeeShiftAsArray[openForClientsHour] > 0){
-                log.info("PRACOWNIK {} mogący obsugiwać kredyt rano w dniu {} jest już w grafiku", employee.getLastName(),date);
-                return true;
-            }
+            if(employeeShiftAsArray[openHour] > 0 || employeeShiftAsArray[openForClientsHour] > 0) return true;
         }
         return false;
     }
 
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
-        log.info("===========================");
         Optional <Employee> employeeToCloseStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
-
-        //
-        List<Employee> testList = availableEmployees.stream()
-                .filter(Employee::isCanOpenCloseStore)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .toList();
-
-        testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
-                date,
-                emp.getLastName(),
-                context.getEmployeeHours().getOrDefault(emp, BigDecimal.ZERO),
-                context.getWorkingDaysCount().getOrDefault(emp, 9),
-                context.getVacationDaysCount().getOrDefault(emp, 0),
-                context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
-
-        //
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToCloseStore.isEmpty()) {
             log.info("Brak dostępnego pracownika mogącego zamknąć sklep w dniu {}", date);
@@ -548,7 +499,6 @@ public class EmployeeToShiftMatcher {
         context.registerShiftOnSchedule(date,employeeClosingStore,closingShift,date.getDayOfWeek());
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
-        log.info("==================");
     }
 
     private void modifyOpenStoreEmployeeHoursToAllDayShift(ScheduleGeneratorContext context, LocalDate date){
@@ -625,47 +575,12 @@ public class EmployeeToShiftMatcher {
     private Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context, LocalDate date) {
         return (Comparator.comparing(
                 empl -> context.getEmployeeHours().getOrDefault(empl,BigDecimal.ZERO)));
-//                (Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl))
-//                .thenComparingInt((Employee empl) -> calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(context, date, empl));
     }
-
-    private int calculateHoursCountTwoDaysBeforeAndTwoDaysAfter(ScheduleGeneratorContext context, LocalDate date, Employee empl) {
-        LocalDate twoDaysBefore = date.minusDays(2);
-        LocalDate oneDayBefore = date.minusDays(1);
-        LocalDate oneDayAfter = date.plusDays(1);
-        LocalDate twoDaysAfter = date.plusDays(2);
-
-        Shift twoDaysBeforeShift = context.getFinalSchedule().getOrDefault(twoDaysBefore, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift oneDayBeforeShift = context.getFinalSchedule().getOrDefault(oneDayBefore, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift oneDayAfterShift = context.getFinalSchedule().getOrDefault(oneDayAfter, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
-        Shift twoDaysAfterShift = context.getFinalSchedule().getOrDefault(twoDaysAfter, Map.of()).getOrDefault(empl, context.getDefaultDaysOffShift());
-
-        return getShiftLength(twoDaysBeforeShift) + getShiftLength(oneDayBeforeShift) + getShiftLength(oneDayAfterShift) + getShiftLength(twoDaysAfterShift);
-    }
-
 
     private void applyOpenStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
-       log.info("");
         Optional<Employee> employeeToOpenStore = availableEmployees.stream()
                 .filter(Employee::isCanOpenCloseStore)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .findFirst();
-
-        //
-        List<Employee> testList = availableEmployees.stream()
-                .filter(Employee::isCanOpenCloseStore)
-                .sorted(sortByWorkedHoursAndSpecialSortForWeekends(context, date))
-                .toList();
-
-        testList.forEach(emp -> log.info("Date {} | Empl {} | Godziny {} | DniPracujace {} | Urlop {} | Weekendy {}",
-                date,
-                emp.getLastName(),
-                context.getEmployeeHours().getOrDefault(emp, BigDecimal.ZERO),
-                context.getWorkingDaysCount().getOrDefault(emp, 9),
-                context.getVacationDaysCount().getOrDefault(emp, 0),
-                context.getWorkingOnWeekendCount().getOrDefault(emp, 0)));
-
-        //
+                .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", date);
@@ -701,7 +616,6 @@ public class EmployeeToShiftMatcher {
         context.registerShiftOnSchedule(date,employeeToOpenStore.get(),openShift.get(),date.getDayOfWeek());
         shiftsSorted.remove(openShift.get());
         availableEmployees.remove(employeeToOpenStore.get());
-        log.info("");
     }
 
     private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date) {
@@ -794,38 +708,14 @@ public class EmployeeToShiftMatcher {
     private boolean whenEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         if (context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO)
                 .compareTo(BigDecimal.valueOf(calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth()))) >= 0) {
-            log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {}", employee.getFirstName(),employee.getLastName(),day);
+            log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {} i wynosi {}",
+                    employee.getFirstName(),
+                    employee.getLastName(),
+                    day,
+                    context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO));
 
             return true;
         }
         return false;
     }
-
-    private int getShiftLength(Shift shift){
-        return shift.getEndHour().getHour() - shift.getStartHour().getHour();
-    }
-
-//    private int openForEmployeesHourIndex(int[] dailyDraft){
-//        int openHourIndex = 0;
-//        for (int i = 0; i < 24; i++){
-//            if (dailyDraft[i] > 0){
-//                openHourIndex = i;
-//                break;
-//            }
-//        }
-//
-//        return openHourIndex;
-//    }
-
-//    private int closeForEmployeesHourIndex(int[] dailyDraft){
-//        int lastHourIndex = 23;
-//        for (int i = 23; i >= 0; i--){
-//            if (dailyDraft[i] > 0){
-//                lastHourIndex = i;
-//                break;
-//            }
-//        }
-//
-//        return lastHourIndex;
-//    }
 }

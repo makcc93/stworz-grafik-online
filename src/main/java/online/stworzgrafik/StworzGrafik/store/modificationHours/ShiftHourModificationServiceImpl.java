@@ -42,7 +42,6 @@ class ShiftHourModificationServiceImpl implements ShiftHourModificationService {
         config.getHoursToModify().clear();
         config.getHoursToModify().putAll(mapper.toMap(request.hours()));
         repository.save(config);
-        log.info("Updated shift hour mappings for store {}", storeId);
         return new ShiftHourModificationConfigResponse(
                 mapper.toDto(config.getHoursToModify()),
                 null
@@ -72,7 +71,6 @@ class ShiftHourModificationServiceImpl implements ShiftHourModificationService {
         config.getExcludedEmployees().clear();
         config.getExcludedEmployees().addAll(excludedEmployees);
         repository.save(config);
-        log.info("Updated excluded excludedEmployees for store {}", storeId);
         return new ShiftHourModificationConfigResponse(
                 null,
                 mapper.toEmployeeIds(config.getExcludedEmployees())

@@ -60,10 +60,6 @@ public class WeeklyThirtyFiveHoursRestAnalyzer implements RestAnalyzerStrategy{
                 currentDate = currentDate.plusDays(1);
             }
 
-            employeeWeeklyShiftCountAsArray.forEach((empl, shiftCount) -> {
-                log.info("TYDZIEN: {} ({} - {}), Pracownik: {}-{}, Rozmiar tablicy: {}, Suma Tablicy: {}", weekIndex,periodStartDate,periodEndDate, empl.getFirstName(), empl.getLastName(),shiftCount.length, Arrays.stream(shiftCount).sum());
-            });
-
             for (Map.Entry<Employee, int[]> shiftArrayEntry : employeeWeeklyShiftCountAsArray.entrySet()){
                 Employee employee = shiftArrayEntry.getKey();
                 int[] weeklyShiftArray = shiftArrayEntry.getValue();
@@ -82,7 +78,7 @@ public class WeeklyThirtyFiveHoursRestAnalyzer implements RestAnalyzerStrategy{
                         }
                 }
 
-                log.info("      WEEK {}, EMPLOYEE {}, WeeklyArraySize {}, MAX FREE HOURS IN A ROW: {}", weekIndex,employee.getLastName(),weeklyShiftArray.length,maxFreeHoursInARow);
+                log.info("TYDZIEŃ {}, EMPLOYEE {} {}, WeeklyArraySize {}, MAX FREE HOURS IN A ROW: {}", weekIndex,employee.getFirstName(),employee.getLastName(),weeklyShiftArray.length,maxFreeHoursInARow);
             }
 
         }

@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
+import org.apache.poi.ss.formula.functions.Log;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class ProposalShiftApplier {
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
+        log.info("WPROWADZENIE PROPOZYCJI ZMIAN");
         List<Employee> employees = context.getStoreActiveEmployees();
 
         Integer year = context.getYear();

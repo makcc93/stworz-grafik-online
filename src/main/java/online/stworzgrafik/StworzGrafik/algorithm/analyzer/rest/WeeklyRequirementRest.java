@@ -33,10 +33,6 @@ public class WeeklyRequirementRest {
 
             if (periodEndDayOfMonth - periodStartDayOfMonth < 3 ) continue;
 
-            log.info("");
-            log.info("###### WEEK INDEX: {}, START: {}({}), END: {}({})", weekIndex,periodStartDate,periodStartDayOfMonth,periodEndDate,periodEndDayOfMonth);
-            log.info("");
-
             boolean assignedToDayOff = checkZeroDraftRequirementDay(context, periodDateDTO,employees);
             if(assignedToDayOff) continue;
 
@@ -49,12 +45,10 @@ public class WeeklyRequirementRest {
             assignEmployeesToRestDays(context, employees, periodDateDTO, daysScoring);
         }
 
-        log.info("");
-        context.getStoreActiveEmployees().forEach(empl -> log.info("EEEEEEEEEEEEEEEMPL: {}, Dni: {}",
+        log.info("ZAPLANOWANE DNI WOLNE PRACOWNIKÓW DLA 35-GODZINNEGO TYGODNIOWEGO ODPOCZYNKU");
+        context.getStoreActiveEmployees().forEach(empl -> log.info("Pracownik: {}, Dni: {}",
                 empl.getLastName(),
                 context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
-
-        log.info("");
     }
 
     private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
@@ -73,20 +67,11 @@ public class WeeklyRequirementRest {
                         .map(Map.Entry::getKey)
                         .findFirst();
 
-                if (lowestScoringDate.isEmpty()) {
-                    log.info("Nie odnaleziono dnia z najniższym scoringiem");
-                    continue;
-                }
-
+                if (lowestScoringDate.isEmpty()) continue;
                 if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
 
                 context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
-                log.info("");
-                log.info("LAST_STEP LAST_STEP LAST_STEP DOPISUJE {} DO DATY {}", employee.getLastName(),lowestScoringDate.get());
-                log.info("LAST_STEP LAST_STEP LAST_STEP BEFORE DATE {} SCORING: {}", lowestScoringDate.get(),daysScoring.getOrDefault(lowestScoringDate.get(),0.00));
                 daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
-                log.info("LAST_STEP LAST_STEP LAST_STEP AFTER DATE {} SCORING: {}", lowestScoringDate.get(),daysScoring.getOrDefault(lowestScoringDate.get(),0.00));
-                log.info("");
             }
     }
 
@@ -119,7 +104,6 @@ public class WeeklyRequirementRest {
             double dailySum = Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(currentDate, new int[24])).sum();
             double dailyScoring = (dailySum / divideBy) + vacationAndDaysOffValue;
 
-            log.info("!!!!!!!!! DATA: {}, SCORING: {} (W TYM WAKACJE/DNI WOLNE: {})", currentDate,dailyScoring, vacationAndDaysOffValue);
             daysScoring.put(currentDate,dailyScoring);
         }
         return daysScoring;
@@ -134,25 +118,16 @@ public class WeeklyRequirementRest {
                 .filter(empl -> context.employeeHasProposalShift(empl,dto))
                 .toList();
 
-        log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT EMPLOYEES: {}", filteredEmployeesWithShiftProposal.toArray());
-
         for (Employee employee : filteredEmployeesWithShiftProposal){
-            log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT SPRAWDZAM PRACOWNIKA {}",employee.getLastName());
-
             for (LocalDate currentDate : daysScoring.keySet()) {
                 if (!context.employeeHasProposalShift(employee, currentDate)) {
                     context.assignEmployeeToRestRequirementDayOff(employee, currentDate);
-                    log.info("");
-                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT  DOPISUJE {} DO DATY {} BO NIE MA WTEDY PROPOZYCJI", employee.getLastName(), currentDate);
-                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT DAY SCORING BEFORE: {}", daysScoring.getOrDefault(currentDate, 0.00));
                     daysScoring.merge(currentDate, 1.0, Double::sum);
-                    log.info("PROPOSALSHIFT_PROPOSALSHIFT_PROPOSALSHIFT DAY SCORING AFFTER: {}", daysScoring.getOrDefault(currentDate, 0.00));
-                    log.info("");
+
                     break;
                 }
             }
         }
-
     }
 
 

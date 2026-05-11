@@ -29,6 +29,7 @@ public class WarehousemanScheduleGenerator {
     private final CalendarCalculation calendarCalculation;
 
 public void generate(ScheduleGeneratorContext context){
+        log.info("GENEROWANIE GRAFIKA MAGAZYNIERA");
         if (!context.isStoreHasDedicatedWarehouseman()){
             return;
         }

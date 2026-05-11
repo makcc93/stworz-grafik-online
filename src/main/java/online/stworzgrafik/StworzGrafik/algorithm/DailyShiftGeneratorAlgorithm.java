@@ -27,9 +27,7 @@ public class DailyShiftGeneratorAlgorithm {
                 Employee employee = employeeEntry.getKey();
                 Shift shift = employeeEntry.getValue();
 
-                if (!context.getEmployeesToModifyHours().contains(employee)) {
-                    log.info("POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOMIJAM {}", employee.getLastName());
-                    continue;}
+                if (!context.getEmployeesToModifyHours().contains(employee)) continue;
 
                 if (hoursToModify.containsKey(shift.getStartHour())){
                     Shift updatedShift = context.findShiftByHours(hoursToModify.get(shift.getStartHour()), shift.getEndHour());
@@ -46,6 +44,7 @@ public class DailyShiftGeneratorAlgorithm {
     }
 
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
+        log.info("GENERAWONIE ZMIAN");
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
         List<Employee> employees = context.getStoreActiveEmployees();
 

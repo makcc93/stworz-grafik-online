@@ -34,6 +34,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
 
     @Override
     public void resolve(ScheduleAnalysisResult result, ScheduleGeneratorContext context, LocalDate day) {
+        log.info("SPRAWDZENIE ZBYT MAŁEJ ILOŚCI DOSTĘPNYCH PRACOWNIKÓW");
         List<Employee> availableEmployees = ((UnderstaffedAnalysisResult) result).availableEmployees();
         List<Shift> shifts = ((UnderstaffedAnalysisResult) result).shifts();
 

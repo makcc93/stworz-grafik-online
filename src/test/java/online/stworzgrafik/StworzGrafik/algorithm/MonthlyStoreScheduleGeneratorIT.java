@@ -718,7 +718,6 @@ class MonthlyStoreScheduleGeneratorIT {
             }
         }
         shiftEntityService.saveAll(shifts);
-        shifts.forEach(s -> log.debug("  dostępna zmiana: {} - {}", s.getStartHour(), s.getEndHour()));
 
         return shifts;
     }
