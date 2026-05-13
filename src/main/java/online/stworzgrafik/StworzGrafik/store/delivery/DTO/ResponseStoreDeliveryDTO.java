@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record ResponseStoreDeliveryDTO(
         Long id,
         Long storeId,
+        Boolean hasDedicatedWarehouseman,
         Long primaryEmployeeId,
         StoreWeeklyDeliverySchedule storeWeeklyDeliverySchedule,
         LocalDateTime createdAt,
