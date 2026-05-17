@@ -157,6 +157,7 @@ public class EmployeeToShiftMatcher {
         return new ArrayList<>(storeActiveEmployees.stream()
                 .filter(empl -> !context.employeeHasProposalDaysOff(empl, day))
                 .filter(empl -> !context.employeeIsOnVacation(empl, day))
+                .filter(empl -> !context.employeeIsOnDelegation(empl, day))
                 .filter(empl -> !context.employeeHasProposalShift(empl, day))
                 .filter(empl -> !empl.isWarehouseman())
                 .filter(empl -> !context.isEmployeeWorkingInWarehouse(empl,day))
@@ -507,10 +508,14 @@ public class EmployeeToShiftMatcher {
         Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
 
         for (Employee e : dailySchedule.keySet()){
-            if (e.isCanOpenCloseStore()){
-                employee = e;
-
-                shift = dailySchedule.get(e);
+            if (e.isCanOpenCloseStore()
+                && context.employeeIsWorking(e,date)
+                && !context.employeeIsOnDelegation(e,date)
+                && !context.employeeIsOnVacation(e,date)
+                && !context.employeeHasProposalDaysOff(e,date)
+                && !context.isEmployeeOnRestRequirementDayOff(e,date)){
+                    employee = e;
+                    shift = dailySchedule.get(e);
             }
         }
 
@@ -569,7 +574,7 @@ public class EmployeeToShiftMatcher {
     private Shift getShiftFromOpenToCloseStoreHours(ScheduleGeneratorContext context, LocalDate date){
         OpenCloseHoursForEmployeeIndexDTO dto = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date);
 
-        return context.findShiftByHours(LocalTime.of(dto.openHour(), 0), LocalTime.of(dto.closeHour(), 0));
+        return context.findShiftByHours(LocalTime.of(dto.openHour(), 0), LocalTime.of(dto.closeHour()+1, 0));
     }
 
     private Comparator<Employee> employeeWithLowestHours(ScheduleGeneratorContext context, LocalDate date) {

@@ -84,6 +84,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 Optional<Employee> highestHoursWorkingManager = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> context.isOpeningOrClosingStore(entry.getKey(), date))
                         .filter(entry -> entry.getKey().isCanOpenCloseStore())
                         .filter(entry -> !entry.getKey().isWarehouseman())
@@ -103,6 +104,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
                         .filter(entry -> !context.isEmployeeOnRestRequirementDayOff(entry.getKey(), date))
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
                         .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue())
@@ -143,6 +145,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 Optional<Employee> highestHoursWorkingCreditEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> context.isEmployeeWorkingOnCredit(entry.getKey(), date))
                         .filter(entry -> entry.getKey().isCanOperateCredit())
                         .filter(entry -> !entry.getKey().isWarehouseman())
@@ -160,6 +163,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Optional<Employee> lowestHoursNotWorkingCreditEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCredit())
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !context.isEmployeeOnRestRequirementDayOff(entry.getKey(), date))
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
@@ -202,6 +206,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 Optional<Employee> highestHoursWorkingCheckoutEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> context.isEmployeeWorkingOnCheckout(entry.getKey(), date))
                         .filter(entry -> entry.getKey().isCanOperateCheckout())
                         .filter(entry -> !entry.getKey().isWarehouseman())
@@ -219,6 +224,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Optional<Employee> lowestHoursNotWorkingCheckoutEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCheckout())
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !context.isEmployeeOnRestRequirementDayOff(entry.getKey(), date))
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
@@ -261,6 +267,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 Optional<Employee> highestHoursWorkingEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !entry.getKey().isWarehouseman())
                         .filter(entry -> !entry.getKey().isCashier())
                         .filter(entry -> !context.isEmployeeWorkingInWarehouse(entry.getKey(), date))
@@ -276,6 +283,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 Optional<Employee> lowestHoursNotWorkingEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
+                        .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !entry.getKey().isWarehouseman())
                         .filter(entry -> !entry.getKey().isCashier())
                         .filter(entry -> !context.isEmployeeOnRestRequirementDayOff(entry.getKey(), date))

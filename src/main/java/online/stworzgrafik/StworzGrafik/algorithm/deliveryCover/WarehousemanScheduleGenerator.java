@@ -59,7 +59,7 @@ public void generate(ScheduleGeneratorContext context){
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(warehouseman,date) || context.employeeHasProposalDaysOff(warehouseman,date)){
+                if (context.employeeIsOnVacation(warehouseman,date) || context.employeeHasProposalDaysOff(warehouseman,date) || context.employeeIsOnDelegation(warehouseman,date)){
                     coverDeliveryByOtherEmployee(context, warehouseman, date,shift,dayOfWeek,shiftTypeConfig);
                     continue;
                 }

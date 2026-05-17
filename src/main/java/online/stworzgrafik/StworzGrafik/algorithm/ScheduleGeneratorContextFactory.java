@@ -219,6 +219,7 @@ public class ScheduleGeneratorContextFactory {
             for (int i = 23; i >= 0; i--) {
                 if (dailyDraft[i] > 0) {
                     closeHour = i;
+                    log.info("close hour = {}", i);
                     break;
                 }
             }

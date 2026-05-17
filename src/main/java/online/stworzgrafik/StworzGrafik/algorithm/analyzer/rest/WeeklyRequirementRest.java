@@ -69,6 +69,7 @@ public class WeeklyRequirementRest {
 
                 if (lowestScoringDate.isEmpty()) continue;
                 if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
+                if (context.employeeIsOnDelegation(employee, lowestScoringDate.get())) continue;
 
                 context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
                 daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
