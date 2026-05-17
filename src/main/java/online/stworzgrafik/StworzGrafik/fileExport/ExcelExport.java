@@ -8,6 +8,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -71,7 +72,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell cell = headerRow.createCell(columnIndex++);
                 cell.setCellValue(day + " " + yearMonth.getMonth().toString());
-                cell.setCellStyle(determineCellStyle(workbook,headerStyle,date,false,false,false,false, false, false,false));
+                cell.setCellStyle(determineCellStyle(workbook,headerStyle,date,false,false,false,false,false, false, false,false));
             }
 
             Cell totalHoursCell = headerRow.createCell(columnIndex++);
@@ -111,7 +112,7 @@ public class ExcelExport implements ExportFile{
 
                 Cell employeeName = row.createCell(day);
                 employeeName.setCellValue(yearMonth.atDay(day).getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.of("pl", "PL")));
-                employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false, false,false));
+                employeeName.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false,false, false, false,false));
             }
 
             for (Employee employee : employees){
@@ -130,7 +131,7 @@ public class ExcelExport implements ExportFile{
 
                     if (!scheduleContainsDate(finalScheduleSortedByDate, date)) {
                         cell.setCellValue("w");
-                        cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, false, false,false,false, false, false,false));
+                        cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, false, false,false,false,false, false, false,false));
                         continue;
                     }
 
@@ -146,19 +147,24 @@ public class ExcelExport implements ExportFile{
                     boolean isCredit = employeeCreditCount.getOrDefault(employee,Set.of()).contains(date);
                     boolean isCheckout = employeeCheckoutCount.getOrDefault(employee,Set.of()).contains(date);
                     boolean isOpenClose = employeeOpenCloseCount.getOrDefault(employee,Set.of()).contains(date);
+                    boolean isDelegation = context.employeeIsOnDelegation(employee,date);
 
-                    if (shift.getStartHour().getHour() == 0) {
-                        if (shift.getEndHour().getHour() == 0) {
-                            cell.setCellValue("w");
-                        } else if (shift.getEndHour().getHour() == 8) {
-                            cell.setCellValue("u");
-                            isVacation = true;
-                        }
-                    } else {
+                    if (shift.equals(context.getDefaultVacationShift())){
+                        cell.setCellValue("u");
+                        isVacation = true;
+                    }
+                    else if (shift.equals(context.getDefaultDelegationShift())){
+                        cell.setCellValue("d");
+                    }
+                    else if (shift.equals(context.getDefaultDaysOffShift())){
+                        cell.setCellValue("w");
+                    }
+                    else {
                         cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());
                     }
 
-                    cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isWarehouse,isShiftProposal,isDayOffProposal,isCredit,isCheckout,isOpenClose));
+
+                    cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, isVacation, isDelegation, isWarehouse,isShiftProposal,isDayOffProposal,isCredit,isCheckout,isOpenClose));
                 }
 
                 BigDecimal workedHours = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
@@ -215,7 +221,7 @@ public class ExcelExport implements ExportFile{
 
                     Cell cell = row.createCell(cellIndex++);
                     cell.setCellValue(dailyShiftsCount[i]);
-                    cell.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false, false, false,false));
+                    cell.setCellStyle(determineCellStyle(workbook,dataStyle,date,false,false,false,false,false, false, false,false));
                 }
             }
             createLegend(sheet,workbook);
@@ -328,6 +334,7 @@ public class ExcelExport implements ExportFile{
                                          CellStyle baseStyle,
                                          LocalDate date,
                                          boolean isVacation,
+                                         boolean isDelegation,
                                          boolean isWarehouse,
                                          boolean isProposal,
                                          boolean isDayOffProposal,
@@ -366,6 +373,10 @@ public class ExcelExport implements ExportFile{
             color = IndexedColors.BROWN;
         }
 
+        if (isDelegation){
+            color = IndexedColors.INDIGO;
+        }
+
         if (color == null) return baseStyle;
 
         CellStyle updatedStyle = workbook.createCellStyle();
@@ -385,6 +396,7 @@ public class ExcelExport implements ExportFile{
         List<LegendEntry> entries = List.of(
                 new LegendEntry("PROPOZYCJA PRACOWNIKA", IndexedColors.VIOLET),
                 new LegendEntry("URLOP", IndexedColors.SEA_GREEN),
+                new LegendEntry("DELEGACJA", IndexedColors.INDIGO),
                 new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
                 new LegendEntry("RATY", IndexedColors.TURQUOISE1),
                 new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT),
