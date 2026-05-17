@@ -29,5 +29,9 @@ public record UpdateEmployeeDTO(
         boolean manager,
         boolean cashier,
         boolean warehouseman,
-        boolean pok
+        boolean pok,
+        Boolean isSpecial,
+        Long specialWorkNormId,
+        Integer etatNumerator,
+        Integer etatDenominator
 ) {}

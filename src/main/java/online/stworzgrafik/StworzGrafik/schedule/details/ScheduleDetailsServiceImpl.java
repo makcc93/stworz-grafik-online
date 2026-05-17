@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.schedule.details;
 
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -23,6 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -116,6 +116,13 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     @Override
     public ResponseScheduleDetailsDTO saveScheduleDetails(ScheduleDetails scheduleDetails) {
         return mapper.toDTO(repository.save(scheduleDetails));
+    }
+
+    @Override
+    public BigDecimal getEmployeeSumHoursByMonth(Long storeId, Long employeeId, Integer year, Integer month) {
+        verifyUserToStoreAccess(storeId);
+
+        return repository.sumHoursByStoreIdAndEmployeeIdAndYearAndMonth(storeId,employeeId,year,month);
     }
 
     private void verifyUserAccessAndData(Long storeId, Long scheduleId) {

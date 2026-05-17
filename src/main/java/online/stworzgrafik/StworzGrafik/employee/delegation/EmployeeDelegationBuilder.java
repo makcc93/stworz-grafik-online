@@ -2,7 +2,9 @@ package online.stworzgrafik.StworzGrafik.employee.delegation;
 
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.store.Store;
+import org.springframework.stereotype.Component;
 
+@Component
 class EmployeeDelegationBuilder {
     public EmployeeDelegation createEmployeeDelegation(
             Store store,

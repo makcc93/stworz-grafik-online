@@ -11,6 +11,8 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
+import online.stworzgrafik.StworzGrafik.employee.workNorm.SpecialWorkNorm;
+import online.stworzgrafik.StworzGrafik.employee.workNorm.SpecialWorkNormEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
@@ -41,6 +43,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     private final PositionService positionService;
     private final PositionEntityService positionEntityService;
     private final UserAuthorizationService userAuthorizationService;
+    private final SpecialWorkNormEntityService specialWorkNormEntityService;
 
     @Override
     public ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
@@ -68,22 +71,31 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
     }
 
     @Override
-    public ResponseEmployeeDTO updateEmployee(Long storeId, Long employeeId, UpdateEmployeeDTO updateEmployeeDTO) {
+    public ResponseEmployeeDTO updateEmployee(Long storeId, Long employeeId, UpdateEmployeeDTO dto) {
         Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
-        if (updateEmployeeDTO.firstName() != null){
-            String validatedFirstName = nameValidatorService.validate(updateEmployeeDTO.firstName(),ObjectType.PERSON);
+        if (dto.firstName() != null){
+            String validatedFirstName = nameValidatorService.validate(dto.firstName(),ObjectType.PERSON);
 
             employee.setFirstName(validatedFirstName);
         }
 
-        if (updateEmployeeDTO.lastName() != null){
-            String validatedLastName = nameValidatorService.validate(updateEmployeeDTO.lastName(),ObjectType.PERSON);
+        if (dto.lastName() != null){
+            String validatedLastName = nameValidatorService.validate(dto.lastName(),ObjectType.PERSON);
 
             employee.setLastName(validatedLastName);
         }
 
-        employeeMapper.updateEmployee(updateEmployeeDTO,employee);
+        if (dto.specialWorkNormId() != null) {
+            SpecialWorkNorm norm = specialWorkNormEntityService.getEntityById(dto.specialWorkNormId());
+            employee.setSpecialWorkNorm(norm);
+            employee.setIsSpecial(true);
+        } else {
+            employee.setSpecialWorkNorm(null);
+            employee.setIsSpecial(false);
+        }
+
+        employeeMapper.updateEmployee(dto,employee);
 
         Employee savedEmployee = employeeRepository.save(employee);
 

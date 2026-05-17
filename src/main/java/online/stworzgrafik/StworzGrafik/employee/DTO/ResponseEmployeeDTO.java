@@ -23,5 +23,10 @@ public record ResponseEmployeeDTO(
         @NotNull boolean warehouseman,
         @NotNull boolean pok,
         @NotNull LocalDateTime createdAt,
-        @Nullable LocalDateTime updatedAt
+        @Nullable LocalDateTime updatedAt,
+        @Nullable Boolean isSpecial,
+        @Nullable Long specialWorkNormId,
+        @Nullable String specialWorkNormName, // dla UI — żeby nie robić osobnego requesta
+        @Nullable Integer etatNumerator,
+        @Nullable Integer etatDenominator
 ) {}

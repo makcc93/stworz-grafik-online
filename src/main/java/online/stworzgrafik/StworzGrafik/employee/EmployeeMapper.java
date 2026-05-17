@@ -13,4 +13,8 @@ interface EmployeeMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEmployee(UpdateEmployeeDTO updateEmployeeDTO, @MappingTarget Employee employee);
+
+    @Mapping(target = "specialWorkNormId", source = "specialWorkNorm.id")
+    @Mapping(target = "specialWorkNormName", source = "specialWorkNorm.name")
+    ResponseEmployeeDTO toDto(Employee employee);
 }

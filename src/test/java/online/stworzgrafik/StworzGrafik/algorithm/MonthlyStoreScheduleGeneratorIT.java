@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.VacationApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.DaysOffApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.ProposalShiftApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.VacationApplier;
 import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfig;
 import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -21,6 +21,8 @@ import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
+import online.stworzgrafik.StworzGrafik.employee.delegation.DTO.CreateEmployeeDelegationDTO;
+import online.stworzgrafik.StworzGrafik.employee.delegation.EmployeeDelegationService;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
@@ -108,6 +110,9 @@ class MonthlyStoreScheduleGeneratorIT {
 
     @Autowired
     private EmployeeProposalShiftsService employeeProposalShiftsService;
+
+    @Autowired
+    private EmployeeDelegationService employeeDelegationService;
 
     @Autowired
     private DaysOffApplier daysOffApplier;
@@ -202,6 +207,7 @@ class MonthlyStoreScheduleGeneratorIT {
 
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
+    private Shift defaultDelegationShift = new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(18, 0)).build();
 
     private ScheduleGeneratorContext context;
     private Region region;
@@ -268,6 +274,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
+                new HashMap<>(),
                 getShiftsForEveryDay(year,month),
                 new HashMap<>(),
                 new HashMap<>(),
@@ -279,6 +286,7 @@ class MonthlyStoreScheduleGeneratorIT {
                 generateAllShifts(),
                 defaultVacationShift,
                 defaultDayOffShift,
+                defaultDelegationShift,
                 shiftTypeConfigService.save(vacationTypeConfig),
                 shiftTypeConfigService.save(dayOffTypeConfig),
                 shiftTypeConfigService.save(proposalTypeConfig),
@@ -381,6 +389,8 @@ class MonthlyStoreScheduleGeneratorIT {
         generateVacation(filKam,firstTwoWeeks);
         generateVacation(marNow,secondTwoWeeks);
         generateVacation(karNak,secondTwoWeeks);
+
+        generateDelegation(matKru,List.of(1,2));
 
         generateDayOffProposals(matKru,List.of(3,10,17,24));
         generateDayOffProposals(monBar,List.of(2,9,16,23));
@@ -639,6 +649,24 @@ class MonthlyStoreScheduleGeneratorIT {
                         year,
                         month,
                         monthlyDayOffProposal
+                )
+        );
+    }
+
+    private void generateDelegation(Employee employee, List<Integer> days){
+        int[] delegation = new int[31];
+
+        for (int day : days){
+            delegation[day-1] = 1;
+        }
+
+        employeeDelegationService.createEmployeeProposalDelegation(
+                storeId,
+                employee.getId(),
+                new CreateEmployeeDelegationDTO(
+                        year,
+                        month,
+                        delegation
                 )
         );
     }

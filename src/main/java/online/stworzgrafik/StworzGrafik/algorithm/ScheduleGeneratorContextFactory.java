@@ -10,6 +10,8 @@ import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
+import online.stworzgrafik.StworzGrafik.employee.delegation.EmployeeDelegation;
+import online.stworzgrafik.StworzGrafik.employee.delegation.EmployeeDelegationEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
@@ -23,7 +25,6 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
-import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationConfigResponse;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
 import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
@@ -48,6 +49,7 @@ public class ScheduleGeneratorContextFactory {
     private final EmployeeProposalShiftsEntityService employeeProposalShiftsEntityService;
     private final EmployeeProposalDaysOffEntityService employeeProposalDaysOffEntityService;
     private final EmployeeVacationEntityService employeeVacationEntityService;
+    private final EmployeeDelegationEntityService employeeDelegationEntityService;
     private final ShiftEntityService shiftEntityService;
     private final ShiftTypeConfigService shiftTypeConfigService;
     private final StoreDeliveryService storeDeliveryService;
@@ -71,7 +73,8 @@ public class ScheduleGeneratorContextFactory {
                 .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
                 .monthlyEmployeesProposalShiftsByDate(employeeProposalShifts(storeId,year,month))
                 .monthlyEmployeesProposalDayOff(employeeProposalDaysOff(storeId,year,month))
-                .monthlyEmployeesVacation(monthlyEmployeesVacation(storeId,year,month))
+                .monthlyEmployeesVacation(getVacation(storeId,year,month))
+                .monthlyEmployeesDelegation(getDelegation(storeId,year,month))
                 .employeeHours(new HashMap<>())
                 .workingDaysCount(new HashMap<>())
                 .workingOnWeekendCount(new HashMap<>())
@@ -87,6 +90,7 @@ public class ScheduleGeneratorContextFactory {
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
+                .defaultDelegationShift(shiftEntityService.getEntityByHours(LocalTime.of(10,0),LocalTime.of(18,0)))
                 .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))
                 .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
@@ -225,7 +229,17 @@ public class ScheduleGeneratorContextFactory {
         return map;
     }
 
-    private Map<Employee, int[]> monthlyEmployeesVacation(Long storeId, Integer year, Integer month){
+    private Map<Employee, int[]> getDelegation(Long storeId, Integer year, Integer month){
+        List<EmployeeDelegation> employeeMonthlyDelegation = employeeDelegationEntityService.getEmployeeMonthlyDelegation(storeId, year, month);
+
+        return employeeMonthlyDelegation.stream()
+                .collect(Collectors.toMap(
+                        EmployeeDelegation::getEmployee,
+                        EmployeeDelegation::getMonthlyDelegation
+                ));
+    }
+
+    private Map<Employee, int[]> getVacation(Long storeId, Integer year, Integer month){
         List<EmployeeVacation> employeesMonthlyVacation = employeeVacationEntityService.getEmployeeMonthlyVacation(storeId,year,month);
 
         return employeesMonthlyVacation.stream()

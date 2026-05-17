@@ -5,7 +5,7 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-interface ScheduleMapper {
+public interface ScheduleMapper {
 
     default ScheduleStatus stringToEnum(String scheduleStatusName){
         if (scheduleStatusName == null){

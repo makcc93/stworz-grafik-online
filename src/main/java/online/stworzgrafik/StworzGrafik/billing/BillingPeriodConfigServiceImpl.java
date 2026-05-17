@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -52,6 +54,34 @@ class BillingPeriodConfigServiceImpl implements BillingPeriodConfigService {
         int startYear = (month < config.getStartMonth()) ? year - 1 : year;
 
         return LocalDate.of(startYear, config.getStartMonth(), 1).getDayOfWeek();
+    }
+
+    @Override
+    public List<Integer> getPeriodMonths(int year, int month) {
+        List<Integer> periodMonths = new ArrayList<>();
+        BillingPeriodConfig config = repository.findAll().stream()
+                .filter(periodConfig -> belongsToPeriod(periodConfig, month))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No billing period config found for month: " + month));
+
+        int startMonth = config.getStartMonth();
+        periodMonths.add(startMonth);
+
+        for (int i = 1; i < config.getDurationMonths(); i++){
+            periodMonths.add(YearMonth.of(year, startMonth).plusMonths(i).getMonth().getValue());
+        }
+
+        return periodMonths;
+    }
+
+    @Override
+    public Integer getPeriodStartMonth(int month) {
+        BillingPeriodConfig config = repository.findAll().stream()
+                .filter(periodConfig -> belongsToPeriod(periodConfig, month))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No billing period config found for month: " + month));
+
+        return config.getStartMonth();
     }
 
     @Override

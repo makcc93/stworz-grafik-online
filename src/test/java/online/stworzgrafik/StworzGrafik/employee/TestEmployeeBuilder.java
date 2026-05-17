@@ -5,6 +5,7 @@ import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
+import online.stworzgrafik.StworzGrafik.employee.workNorm.SpecialWorkNorm;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
@@ -36,6 +37,19 @@ public class TestEmployeeBuilder {
     private List<EmployeeProposalDaysOff> employeeProposalDaysOff = Collections.emptyList();
     private List<EmployeeProposalShifts> employeeProposalShifts = Collections.emptyList();
     private List<ScheduleDetails> scheduleDetails = Collections.emptyList();
+    private boolean isSpecial = false;
+    private SpecialWorkNorm specialWorkNorm = null;
+    private Integer etatNumerator = null;
+    private Integer etatDenumerator = null;
+
+    public TestEmployeeBuilder withSpecial(boolean isSpecial, SpecialWorkNorm specialWorkNorm,Integer etatNumerator,Integer etatDenumerator){
+        this.isSpecial = isSpecial;
+        this.specialWorkNorm = specialWorkNorm;
+        this.etatNumerator = etatNumerator;
+        this.etatDenumerator = etatDenumerator;
+
+        return this;
+    }
 
     public TestEmployeeBuilder withId(Long id){
         this.id = id;
@@ -180,7 +194,11 @@ public class TestEmployeeBuilder {
                 employeeVacations,
                 employeeProposalDaysOff,
                 employeeProposalShifts,
-                scheduleDetails
+                scheduleDetails,
+                isSpecial,
+                specialWorkNorm,
+                etatNumerator,
+                etatDenumerator
         );
     }
 }

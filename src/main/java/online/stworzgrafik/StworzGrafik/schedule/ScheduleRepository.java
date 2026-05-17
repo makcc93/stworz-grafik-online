@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.schedule;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 
@@ -25,5 +27,4 @@ interface ScheduleRepository extends JpaRepository<Schedule,Long>, JpaSpecificat
     boolean existsByStoreIdAndYearAndMonth(Long storeId, Integer year, Integer month);
 
     Optional<Schedule> findByStoreIdAndYearAndMonth(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
-
 }

@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
+
 @Validated
 public interface ScheduleDetailsService {
     ResponseScheduleDetailsDTO addScheduleDetails(@NotNull Long storeId,
@@ -35,4 +37,9 @@ public interface ScheduleDetailsService {
                                @NotNull Long scheduleDetailsId);
 
     ResponseScheduleDetailsDTO saveScheduleDetails(@NotNull ScheduleDetails scheduleDetails);
+
+    BigDecimal getEmployeeSumHoursByMonth(@NotNull Long storeId,
+                                   @NotNull Long employeeId,
+                                   Integer year,
+                                   Integer month);
 }

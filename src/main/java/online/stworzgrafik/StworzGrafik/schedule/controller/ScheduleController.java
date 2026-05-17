@@ -7,6 +7,7 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleService;
+import online.stworzgrafik.StworzGrafik.schedule.generator.ScheduleGeneratorService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 class ScheduleController {
     private final ScheduleService scheduleService;
+    private final ScheduleGeneratorService scheduleGeneratorService;
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/schedules/{scheduleId}")
@@ -57,5 +59,12 @@ class ScheduleController {
         scheduleService.deleteSchedule(storeId,scheduleId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @PostMapping("/stores/{storeId}/schedules/{scheduleId}/generate")
+    ResponseEntity<ResponseScheduleDTO> generateSchedule(@PathVariable Long storeId,
+                                                         @PathVariable Long scheduleId) {
+        return ResponseEntity.ok(scheduleGeneratorService.generateSchedule(storeId, scheduleId));
     }
 }

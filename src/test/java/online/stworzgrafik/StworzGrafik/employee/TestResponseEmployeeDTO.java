@@ -23,6 +23,11 @@ public class TestResponseEmployeeDTO {
     private boolean warehouseman = true;
     private LocalDateTime createdAt = LocalDateTime.of(2000,1,1,14,0);
     private LocalDateTime updatedAt = LocalDateTime.of(2019,10,5,14,0);
+    private boolean isSpecial = false;
+    private Long specialWorkNormId = null;
+    private String specialWorkNormName = null;
+    private Integer etatNumerator = null;
+    private Integer etatDenumerator = null;
 
     public TestResponseEmployeeDTO fromEmployee(Employee employee){
         this.id = employee.getId();
@@ -145,7 +150,12 @@ public class TestResponseEmployeeDTO {
                 warehouseman,
                 pok,
                 createdAt,
-                updatedAt
+                updatedAt,
+                isSpecial,
+                specialWorkNormId,
+                specialWorkNormName,
+                etatNumerator,
+                etatDenumerator
         );
     }
 }

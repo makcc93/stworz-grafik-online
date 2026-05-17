@@ -15,7 +15,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DailyShiftGeneratorAlgorithm {
 
-    public void modifyStartEndHours(ScheduleGeneratorContext context){
+    public void modifyShiftsHours(ScheduleGeneratorContext context){
         Map<LocalTime, LocalTime> hoursToModify = context.getHoursToModify();
         LinkedHashMap<LocalDate, Map<Employee, Shift>> schedule = context.getFinalSchedule();
 

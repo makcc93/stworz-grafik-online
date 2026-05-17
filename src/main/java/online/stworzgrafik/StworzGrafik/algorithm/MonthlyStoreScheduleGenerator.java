@@ -8,9 +8,10 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.WeeklyRequiremen
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.DaysOffApplier;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.ProposalShiftApplier;
-import online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations.VacationApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.DaysOffApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.DelegationApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.ProposalShiftApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.VacationApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CheckoutMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
@@ -30,11 +31,12 @@ import java.util.ArrayList;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-class MonthlyStoreScheduleGenerator {
+public class MonthlyStoreScheduleGenerator {
     private final ScheduleGeneratorContextFactory contextFactory;
     private final WarehousemanScheduleGenerator warehousemanScheduleGenerator;
     private final VacationApplier vacationApplier;
     private final DaysOffApplier daysOffApplier;
+    private final DelegationApplier delegationApplier;
     private final ProposalShiftApplier proposalShiftApplier;
     private final DailyShiftGeneratorAlgorithm dailyShiftGeneratorAlgorithm;
     private final EmployeeToShiftMatcher employeeToShiftMatcher;
@@ -54,6 +56,7 @@ class MonthlyStoreScheduleGenerator {
         ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
 
         vacationApplier.applyVacationsToSchedule(context);
+        delegationApplier.applyDelegationToSchedule(context);
         daysOffApplier.applyDaysOffToSchedule(context);
         proposalShiftApplier.applyProposalShiftsToSchedule(context);
 
@@ -72,7 +75,7 @@ class MonthlyStoreScheduleGenerator {
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
         scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
-        dailyShiftGeneratorAlgorithm.modifyStartEndHours(context);
+        dailyShiftGeneratorAlgorithm.modifyShiftsHours(context);
 
         emptyDaysMatcher.completeEmptyDaysWithDayOffShift(context);
 

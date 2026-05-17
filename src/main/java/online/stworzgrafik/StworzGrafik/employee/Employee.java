@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacation;
+import online.stworzgrafik.StworzGrafik.employee.workNorm.SpecialWorkNorm;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.store.Store;
 
@@ -77,6 +78,15 @@ public class Employee {
 
     @OneToMany(mappedBy = "employee")
     private List<ScheduleDetails> scheduleDetails;
+
+    private Boolean isSpecial;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "special_work_norm_id", nullable = true)
+    private SpecialWorkNorm specialWorkNorm;
+
+    private Integer etatNumerator;
+    private Integer etatDenominator;
 
     @PrePersist
     void onCreate(){

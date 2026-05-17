@@ -14,5 +14,9 @@ public interface BillingPeriodConfigService {
 
     DayOfWeek getDayOfWeekStartingPeriod(int year, int month);
 
+    List<Integer> getPeriodMonths(int year, int month);
+
+    Integer getPeriodStartMonth(int month);
+
     void saveAll(List<BillingPeriodConfig> billingPeriodConfigs);
 }

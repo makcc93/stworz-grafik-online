@@ -34,6 +34,7 @@ public class TestScheduleGeneratorContext {
     private Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesProposalDayOff = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesVacation = new HashMap<>();
+    private Map<Employee, int[]> monthlyEmployeesDelegation = new HashMap<>();
     private Map<Employee, BigDecimal> employeeHours = new HashMap<>();
     private Map<Employee, Integer> workingOnWeekendCount = new HashMap<>();
     private Map<Employee, Integer> workingDaysCount = new HashMap<>();
@@ -48,6 +49,7 @@ public class TestScheduleGeneratorContext {
     private final List<Employee> employeesToModifyHours = new ArrayList<>();
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12,0)).withEndHour(LocalTime.of(20,0)).build();
     private Shift defaultDaysOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0,0)).withEndHour(LocalTime.of(0,0)).build();
+    private Shift defaultDelegationShift = new TestShiftBuilder().withStartHour(LocalTime.of(10,0)).withEndHour(LocalTime.of(18,0)).build();
     private List<Shift> allShifts = new ArrayList<>();
     private ShiftTypeConfig vacationShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.VACATION).build();
     private ShiftTypeConfig daysOffShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.DAY_OFF).build();
@@ -219,6 +221,7 @@ public class TestScheduleGeneratorContext {
                 monthlyEmployeesProposalShiftsByDate,
                 monthlyEmployeesProposalDayOff,
                 monthlyEmployeesVacation,
+                monthlyEmployeesDelegation,
                 employeeHours,
                 workingOnWeekendCount,
                 workingDaysCount,
@@ -234,6 +237,7 @@ public class TestScheduleGeneratorContext {
                 allShifts,
                 defaultVacationShift,
                 defaultDaysOffShift,
+                defaultDelegationShift,
                 vacationShiftTypeConfig,
                 daysOffShiftTypeConfig,
                 proposalShiftTypeConfig,

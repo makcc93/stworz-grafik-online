@@ -39,6 +39,7 @@ public class ScheduleGeneratorContext {
     private final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate;
     private final Map<Employee, int[]> monthlyEmployeesProposalDayOff;
     private final Map<Employee, int[]> monthlyEmployeesVacation;
+    private final Map<Employee, int[]> monthlyEmployeesDelegation;
     private final Map<Employee, BigDecimal> employeeHours;
     private final Map<Employee, Integer> workingOnWeekendCount;
     private final Map<Employee, Integer> workingDaysCount;
@@ -54,6 +55,7 @@ public class ScheduleGeneratorContext {
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;
     private final Shift defaultDaysOffShift;
+    private final Shift defaultDelegationShift;
     private final ShiftTypeConfig vacationShiftTypeConfig;
     private final ShiftTypeConfig daysOffShiftTypeConfig;
     private final ShiftTypeConfig proposalShiftTypeConfig;
@@ -313,6 +315,19 @@ public class ScheduleGeneratorContext {
         int dayIndex = date.getDayOfMonth() - 1;
 
         return proposalDaysOff[dayIndex] > 0;
+    }
+
+    public boolean employeeHasPlannedDelegation(Employee employee){
+        int[] delegation = monthlyEmployeesDelegation.getOrDefault(employee,new int[31]);
+
+        return Arrays.stream(delegation).sum() > 0;
+    }
+
+    public boolean employeeIsOnDelegation(Employee employee, LocalDate date){
+        int[]  delegation = monthlyEmployeesDelegation.getOrDefault(employee,new int[31]);
+        int dayOfMonth = date.getDayOfMonth();
+
+        return delegation[dayOfMonth-1] == 1;
     }
 
     public boolean employeeHasPlannedVacation(Employee employee){

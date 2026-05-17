@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations;
+package online.stworzgrafik.StworzGrafik.algorithm.preparation;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;

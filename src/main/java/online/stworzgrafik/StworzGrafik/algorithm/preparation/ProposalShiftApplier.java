@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.algorithm.proposalsAndVacations;
+package online.stworzgrafik.StworzGrafik.algorithm.preparation;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,6 @@ import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessa
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import org.apache.poi.ss.formula.functions.Log;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;

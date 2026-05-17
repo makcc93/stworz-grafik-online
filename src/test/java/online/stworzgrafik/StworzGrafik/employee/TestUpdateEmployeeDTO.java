@@ -17,6 +17,10 @@ public class TestUpdateEmployeeDTO {
     private boolean cashier = true;
     private boolean pok = true;
     private boolean warehouseman = true;
+    private boolean isSpecial = false;
+    private Long specialWorkNormId = null;
+    private Integer etatNumerator = null;
+    private Integer etatDenumerator = null;
 
     public TestUpdateEmployeeDTO withFirstName(String firstName){
         this.firstName = firstName;
@@ -103,7 +107,11 @@ public class TestUpdateEmployeeDTO {
                 manager,
                 cashier,
                 pok,
-                warehouseman
+                warehouseman,
+                isSpecial,
+                specialWorkNormId,
+                etatNumerator,
+                etatDenumerator
         );
     }
 }
