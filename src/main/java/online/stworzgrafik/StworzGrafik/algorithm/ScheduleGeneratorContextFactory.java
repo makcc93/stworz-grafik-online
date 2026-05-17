@@ -90,7 +90,7 @@ public class ScheduleGeneratorContextFactory {
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
                 .defaultDaysOffShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(0,0)))
-                .defaultDelegationShift(shiftEntityService.getEntityByHours(LocalTime.of(10,0),LocalTime.of(18,0)))
+                .defaultDelegationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,15),LocalTime.of(8,15)))
                 .vacationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.VACATION))
                 .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
@@ -219,7 +219,6 @@ public class ScheduleGeneratorContextFactory {
             for (int i = 23; i >= 0; i--) {
                 if (dailyDraft[i] > 0) {
                     closeHour = i;
-                    log.info("close hour = {}", i);
                     break;
                 }
             }

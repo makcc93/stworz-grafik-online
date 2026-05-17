@@ -207,7 +207,7 @@ class MonthlyStoreScheduleGeneratorIT {
 
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
-    private Shift defaultDelegationShift = new TestShiftBuilder().withStartHour(LocalTime.of(10, 0)).withEndHour(LocalTime.of(18, 0)).build();
+    private Shift defaultDelegationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 15)).withEndHour(LocalTime.of(8, 15)).build();
 
     private ScheduleGeneratorContext context;
     private Region region;
