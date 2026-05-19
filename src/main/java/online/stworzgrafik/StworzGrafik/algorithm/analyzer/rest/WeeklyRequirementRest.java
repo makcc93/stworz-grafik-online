@@ -59,6 +59,10 @@ public class WeeklyRequirementRest {
                 .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
                 .toList();
 
+        while (!filteredEmployees.stream()
+                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate,periodEndDate))
+                .toList()
+                .isEmpty()) {
             for (Employee employee : filteredEmployees) {
                 Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
                         .sorted(Comparator.comparingDouble(
@@ -68,12 +72,14 @@ public class WeeklyRequirementRest {
                         .findFirst();
 
                 if (lowestScoringDate.isEmpty()) continue;
+                if (context.isEmployeeOnRestRequirementDayOff(employee,periodStartDate,periodEndDate)) continue;
                 if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
                 if (context.employeeIsOnDelegation(employee, lowestScoringDate.get())) continue;
 
                 context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
                 daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
             }
+        }
     }
 
     private static Map<LocalDate, Double> calculateDatesScoring(ScheduleGeneratorContext context, PeriodDateDTO dto) {
