@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.fileExport;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
@@ -23,6 +24,7 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExcelExport implements ExportFile{
@@ -260,22 +262,34 @@ public class ExcelExport implements ExportFile{
             return byteArrayOutputStream.toByteArray();
         }
     }
-    private int[] sumOfDailyShiftsAsArray(ScheduleGeneratorContext context, LocalDate date, Set<Employee> employees){
+
+    private int[] sumOfDailyShiftsAsArray(ScheduleGeneratorContext context, LocalDate date, Set<Employee> employees) {
         Map<Employee, Shift> dailySchedule = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
 
         int[] shiftCount = new int[24];
-        for (int i = 0; i < 24; i++) {
-            for (Employee employee : employees) {
-                if (context.isEmployeeWorkingInWarehouse(employee,date)) continue;
 
-                Shift shift = dailySchedule.getOrDefault(employee, context.findShiftByArray(new int[24]));
+        for (Employee employee : employees) {
+            if (context.isEmployeeWorkingInWarehouse(employee, date)) continue;
 
-                if (!employee.isWarehouseman() && !shift.equals(context.getDefaultVacationShift())) {
+            Shift shift = dailySchedule.getOrDefault(employee, context.findShiftByArray(new int[24]));
 
-                    shiftCount[i] += context.shiftAsArray(shift)[i];
-                }
+            if (employee.isWarehouseman()
+                    || shift.equals(context.getDefaultVacationShift())
+                    || shift.equals(context.getDefaultDelegationShift())) {
+                continue;
+            }
+
+            LocalTime start = shift.getStartHour();
+            LocalTime end = shift.getEndHour();
+
+            int startIndex = start.getMinute() == 0 ? start.getHour() : start.getHour() + 1;
+            int endIndex = end.getMinute() == 0 ? end.getHour() : end.getHour() + 1;
+
+            for (int i = startIndex; i < endIndex && i < 24; i++) {
+                shiftCount[i]++;
             }
         }
+
         return shiftCount;
     }
 

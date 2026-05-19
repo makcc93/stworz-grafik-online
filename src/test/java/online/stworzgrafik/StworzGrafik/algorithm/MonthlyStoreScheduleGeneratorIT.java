@@ -393,6 +393,10 @@ class MonthlyStoreScheduleGeneratorIT {
         generateDelegation(matKru,List.of(1,2));
         generateDelegation(marNow,List.of(10));
         generateDelegation(wojPie,List.of(10));
+        generateDelegation(marWoj,List.of(11));
+        generateDelegation(micWoc,List.of(15));
+        generateDelegation(marPrz,List.of(16));
+        generateDelegation(micKoz,List.of(17));
 
         generateDayOffProposals(matKru,List.of(3,10,17,24));
         generateDayOffProposals(monBar,List.of(2,9,16,23));

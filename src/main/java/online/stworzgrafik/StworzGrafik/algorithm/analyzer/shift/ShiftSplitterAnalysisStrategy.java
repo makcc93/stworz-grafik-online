@@ -213,9 +213,9 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
                     context.assignEmployeeToOpenClose(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther);
 
-                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
-                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
-                    context.assignEmployeeToOpenClose(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal);
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOther, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                    context.assignEmployeeToOpenClose(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOther);
 
                     anySwapDone = true;
                     break;
