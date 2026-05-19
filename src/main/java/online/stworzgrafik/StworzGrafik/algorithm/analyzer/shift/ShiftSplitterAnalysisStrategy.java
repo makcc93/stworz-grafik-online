@@ -353,8 +353,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
                     context.assignEmployeeToCredit(candidate.originalDateForSwap(),otherEmployeeForSwap,shiftForOther);
 
-                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
-                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOther, candidate.otherEmployeeDateForSwap().getDayOfWeek());
                     context.assignEmployeeToCredit(candidate.otherEmployeeDateForSwap(),originalEmployee,shiftForOriginal);
 
                     anySwapDone = true;
@@ -495,8 +495,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
                             context.assignEmployeeToCheckout(candidate.originalDateForSwap(),otherEmployeeForSwap,shiftForOther);
 
-                            context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
-                            context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                            context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOriginal);
+                            context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOther, candidate.otherEmployeeDateForSwap().getDayOfWeek());
                             context.assignEmployeeToCheckout(candidate.otherEmployeeDateForSwap(),originalEmployee,shiftForOriginal);
 
                             anySwapDone = true;
@@ -643,8 +643,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     context.updateShiftOnSchedule(candidate.originalDateForSwap(), originalEmployee, shiftForOriginal);
                     context.registerShiftOnSchedule(candidate.originalDateForSwap(), otherEmployeeForSwap, shiftForOther, candidate.originalDateForSwap().getDayOfWeek());
 
-                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOther);
-                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOriginal, candidate.otherEmployeeDateForSwap().getDayOfWeek());
+                    context.updateShiftOnSchedule(candidate.otherEmployeeDateForSwap(), otherEmployeeForSwap, shiftForOriginal);
+                    context.registerShiftOnSchedule(candidate.otherEmployeeDateForSwap(), originalEmployee, shiftForOther, candidate.otherEmployeeDateForSwap().getDayOfWeek());
 
                     anySwapDone = true;
                     break;
