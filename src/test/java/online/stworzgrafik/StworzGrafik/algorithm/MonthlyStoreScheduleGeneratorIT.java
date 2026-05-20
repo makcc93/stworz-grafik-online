@@ -383,7 +383,7 @@ class MonthlyStoreScheduleGeneratorIT {
     }
 
     @Test
-    void generateMonthlySchedule_twoEmployeesHasVacationInSameTime() throws IOException {
+    void generateMonthlySchedule_twoEmployeesHasVacationInSameTimeAndFewDelegations() throws IOException {
         //given
         generateVacation(damMro,firstTwoWeeks);
         generateVacation(filKam,firstTwoWeeks);
