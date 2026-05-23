@@ -34,7 +34,7 @@ public class EmployeeDelegationController {
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
-    @GetMapping("/stores/{storeId}/Delegations")
+    @GetMapping("/stores/{storeId}/delegations")
     public ResponseEntity<Page<ResponseEmployeeDelegationDTO>> getByCriteria(@PathVariable Long storeId,
                                                                            EmployeeDelegationSpecificationDTO dto,
                                                                            @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){

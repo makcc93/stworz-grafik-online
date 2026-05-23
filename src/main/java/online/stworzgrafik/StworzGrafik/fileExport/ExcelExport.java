@@ -155,11 +155,11 @@ public class ExcelExport implements ExportFile{
                         cell.setCellValue("u");
                         isVacation = true;
                     }
-                    else if (shift.equals(context.getDefaultDelegationShift())){
-                        cell.setCellValue("d");
-                    }
                     else if (shift.equals(context.getDefaultDaysOffShift())){
                         cell.setCellValue("w");
+                    }
+                    else if (shift.equals(context.getDefaultDelegationShift())){
+                        cell.setCellValue("d");
                     }
                     else {
                         cell.setCellValue(shift.getStartHour() + "\n" + shift.getEndHour());

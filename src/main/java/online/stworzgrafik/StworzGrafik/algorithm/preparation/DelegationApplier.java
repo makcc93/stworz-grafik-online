@@ -8,6 +8,7 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -29,18 +30,18 @@ public class DelegationApplier {
         Integer month = context.getMonth();
         YearMonth yearMonth = YearMonth.of(year, month);
 
-        Shift vacationShift = context.getDefaultDelegationShift();
+        Shift delegationShift = context.getDefaultDelegationShift();
 
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year, month, day);
 
-            if (holidayManager.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
+            if (holidayManager.isHoliday(date)){
                 continue;
             }
 
             for (Employee employee : employeesWithDelegation) {
                 if (context.employeeIsOnDelegation(employee, date)) {
-                    context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
+                     context.registerShiftOnSchedule(date,employee,delegationShift,date.getDayOfWeek());
                 }
             }
         }

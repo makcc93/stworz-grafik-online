@@ -17,7 +17,7 @@ public record CreateEmployeeDelegationDTO(
         Integer month,
 
         @NotNull
-        @Size(min=31, max = 31, message = "Employee monthly proposal days off array must have exactly 31 elements")
+        @Size(min=31, max = 31, message = "Employee monthly delegation array must have exactly 31 elements")
         int[] monthlyDelegation
 ) {
 }

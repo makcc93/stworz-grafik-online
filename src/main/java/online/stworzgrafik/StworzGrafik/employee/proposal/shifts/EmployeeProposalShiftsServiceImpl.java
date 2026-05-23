@@ -45,9 +45,9 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 //            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
 //        }
 
-        if (repository.existsByStore_IdAndEmployee_IdAndDate(storeId,employeeId,dto.date())){ //todo PROPOZYCJE zmian nie dzialaja
-//            return mapper.toResponseEmployeeProposalShiftsDTO(repository.findByStore_IdAndEmployee_IdAndDate(storeId,employeeId,dto.date()).orElseThrow());
-            throw new EntityExistsException("Employee with ID " + employeeId + " proposal shift for date " + dto.date() + " already exists");
+        if (repository.existsByStore_IdAndEmployee_IdAndDate(storeId,employeeId,dto.date())){
+            return mapper.toResponseEmployeeProposalShiftsDTO(repository.findByStore_IdAndEmployee_IdAndDate(storeId,employeeId,dto.date()).orElseThrow());
+//            throw new EntityExistsException("Employee with ID " + employeeId + " proposal shift for date " + dto.date() + " already exists");
         }
 
         EmployeeProposalShifts employeeProposalShifts = builder.createEmployeeProposalShifts(store, employee, dto.date(), dto.dailyProposalShift());

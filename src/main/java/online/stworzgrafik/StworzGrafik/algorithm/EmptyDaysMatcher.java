@@ -30,7 +30,10 @@ public class EmptyDaysMatcher {
             }
 
             for (Employee employee : context.getStoreActiveEmployees()){
-                if (!finalSchedule.getOrDefault(date,new HashMap<>()).containsKey(employee)){
+                if (context.employeeIsOnVacation(employee,date)) continue;
+                if (context.employeeIsOnDelegation(employee,date)) continue;
+
+                if (!finalSchedule.getOrDefault(date,Map.of()).containsKey(employee)){
                     context.registerShiftOnSchedule(date,employee,context.getDefaultDaysOffShift(),date.getDayOfWeek());
                 }
             }

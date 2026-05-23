@@ -51,30 +51,16 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         Shift shiftToCover = shifts.getFirst();
         int[] shiftToCoverAsArray = context.shiftAsArray(shiftToCover);
 
-        log.info("  Zmiana, którą trzeba dopasować: {}-{}\n", shiftToCover.getStartHour(),shiftToCover.getEndHour());
-
         Map<Employee,Integer> shiftMatchingScore = new HashMap<>();
         for (Employee employee : employees){
-            log.info("---");
             int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(employee, new int[24]);
-            Shift employeeProposalShift = context.findShiftByArray(employeeProposalAsArray);
-
-            log.info("EMPL: {} {} | SHIFT: {}-{}",
-                    employee.getFirstName(),employee.getLastName(),
-                    employeeProposalShift.getStartHour(),
-                    employeeProposalShift.getEndHour());
 
             int[] summedArray = summedArrays(shiftToCoverAsArray,employeeProposalAsArray);
 
             int score = calculateMatchingScore(summedArray);
 
             shiftMatchingScore.put(employee,score);
-            log.info("SCORING: {}",
-                    score);
-
-            log.info("---");
         }
-        log.info("");
 
         Optional<Employee> highestMatchingScoreEmployee = shiftMatchingScore.entrySet().stream()
                 .sorted((key1, key2) -> key2.getValue().compareTo(key1.getValue()))
@@ -107,12 +93,6 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(chosenEmployee, new int[24]);
         Shift chosenEmployeeShift = context.findShiftByArray(employeeProposalAsArray);
 
-        log.info("  Najlepiej dopasowana zmiana do połączenia: {}-{} u {} {}",
-                chosenEmployeeShift.getStartHour(),
-                chosenEmployeeShift.getEndHour(),
-                chosenEmployee.getFirstName(),
-                chosenEmployee.getLastName());
-
         Shift joinedShift = joinShifts(context, chosenEmployeeShift, shiftToCover);
 
         context.updateShiftOnSchedule(day, chosenEmployee,joinedShift);
@@ -140,9 +120,7 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         for (int i = 0; i < 24; i++){
             result[i] = shiftToCoverAsArray[i] + employeeProposalAsArray[i];
         }
-        log.info("summedArrays shiftToCover:     {}",shiftToCoverAsArray);
-        log.info("summedArrays employeeProposal: {}", employeeProposalAsArray);
-        log.info("summedArrays RESULT:           {}", result);
+
         return result;
     }
 
@@ -151,25 +129,5 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         LocalTime endHour = (firstShift.getEndHour().getHour() > secondShift.getEndHour().getHour()) ? firstShift.getEndHour() : secondShift.getEndHour();
 
         return context.findShiftByHours(startHour,endHour);
-    }
-
-    private Map<Employee, Integer> calculateEmployeeProposalShiftCount(Set<Employee> employees, ScheduleGeneratorContext context){
-        Map<Employee, Integer> dayWithProposalCount = new HashMap<>();
-
-        for (Employee employee : employees) {
-            int value = 0;
-
-            for (Map.Entry<LocalDate, Map<Employee, int[]>> entry : context.getMonthlyEmployeesProposalShiftsByDate().entrySet()) {
-                Map<Employee, int[]> map = entry.getValue();
-
-                if (map.containsKey(employee) && Arrays.stream(map.getOrDefault(employee,new int[24])).sum() > 0){
-                    value++;
-                }
-            }
-
-            dayWithProposalCount.put(employee,value);
-        }
-
-        return dayWithProposalCount;
     }
 }

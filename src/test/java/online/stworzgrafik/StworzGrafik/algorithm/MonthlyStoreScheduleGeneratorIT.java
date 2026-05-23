@@ -197,13 +197,16 @@ class MonthlyStoreScheduleGeneratorIT {
     private int[] firstTwoWeeks = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     private int[] secondTwoWeeks = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
-    private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 7, 7, 7, 8, 8, 8, 8, 8, 7, 5, 0, 0, 0, 0};
+    private int[] mondayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 5, 0, 0, 0, 0};
+    private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 6, 6, 6, 6, 7, 7, 7, 7, 6, 5, 0, 0, 0, 0};
+    private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
+    private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
+    private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 5, 0, 0, 0, 0};
+    private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 8, 8, 8, 8, 8, 8, 8, 8, 7, 5, 0, 0, 0, 0};
+    private int[] sundayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 7, 7, 7, 7, 7, 7, 7, 4, 0, 0, 0, 0, 0};
+
+    private int[] fridayDraftPlusOne = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 7, 8, 8, 8, 8, 8, 8, 8, 8, 5, 0, 0, 0, 0};
     private int[] mondayDraftPlusOneAllDay = {0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 8, 8, 8, 9, 9, 9, 9, 9, 8, 6, 0, 0, 0, 0};
-    private int[] tuesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 7, 7, 7, 7, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
-    private int[] wednesdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 7, 7, 7, 7, 6, 4, 0, 0, 0, 0};
-    private int[] thursdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 0, 0, 0, 0};
-    private int[] fridayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 6, 7, 7, 7, 8, 8, 8, 8, 8, 5, 0, 0, 0, 0};
-    private int[] saturdayDraft = {0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 9, 9, 9, 9, 8, 8, 8, 8, 6, 4, 0, 0, 0, 0};
 
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(8, 0)).build();
     private Shift defaultDayOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0, 0)).withEndHour(LocalTime.of(0, 0)).build();
@@ -296,6 +299,98 @@ class MonthlyStoreScheduleGeneratorIT {
                 true,
                 true
         );
+    }
+
+    @Test
+    void generateMonthlySchedule_realScheduleForJune() throws IOException{
+        //given
+
+        //EXTRA WORKING SUNDAY
+        LocalDate workingSunday = LocalDate.of(year, month, 28);
+        demandDraftService.createDemandDraft(storeId,new CreateDemandDraftDTO(workingSunday,sundayDraft));
+
+        LocalDate fridayAfterDayOff = LocalDate.of(year,month,5);
+        List<DemandDraft> fridayDemandDraft = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, fridayAfterDayOff, fridayAfterDayOff);
+        demandDraftService.updateDemandDraft(storeId,fridayDemandDraft.getFirst().getId(), new UpdateDemandDraftDTO(fridayAfterDayOff,fridayDraftPlusOne));
+
+        //VACATION
+        generateVacations(filKam,14,30,null);
+        generateVacations(marNow,22,28,null);
+        generateVacations(micWoc,1,14,null);
+        generateVacations(tomZaj,3,8,null);
+        generateVacations(karNak,17,30,null);
+        generateVacations(matKru,13,19,null);
+        generateVacations(damMro,3,7,null);
+
+        //DELEGATIONS
+        generateDelegation(damMro,List.of(16,18,24,25));
+        generateDelegation(wojPie,List.of(22));
+        generateDelegation(micWoc,List.of(20));
+        generateDelegation(micKoz,List.of(24));
+        generateDelegation(marPrz,List.of(19));
+        generateDelegation(marWoj,List.of(12));
+        generateDelegation(olgDar,List.of(17));
+
+        //DAY_OFF_PROPOSAL
+        generateDayOffProposals(marWoj,List.of(1,20));
+        generateDayOffProposals(matKru,List.of(3,5,27));
+        generateDayOffProposals(wojPie,List.of(13,27,28,29));
+        generateDayOffProposals(marNow,List.of(13,27,28));
+        generateDayOffProposals(agaWar,List.of(3,25));
+        generateDayOffProposals(karNak,List.of(2,12,13));
+        generateDayOffProposals(olgDar,List.of(20));
+        generateDayOffProposals(micWoc,List.of(13));
+        generateDayOffProposals(monBar,List.of(28));
+        generateDayOffProposals(damMro,List.of(12,17,26,27,28));
+
+        //SHIFT_PROPOSAL
+        newGenerateShiftProposal(damMro,1,14,20);
+        newGenerateShiftProposal(damMro,2,8,14);
+        newGenerateShiftProposal(damMro,8,8,20);
+        newGenerateShiftProposal(damMro,9,14,20);
+        newGenerateShiftProposal(damMro,10,8,14);
+        newGenerateShiftProposal(damMro,11,8,14);
+        newGenerateShiftProposal(damMro,13,8,20);
+        newGenerateShiftProposal(damMro,15,8,20);
+        newGenerateShiftProposal(damMro,19,8,14);
+        newGenerateShiftProposal(damMro,20,8,20);
+        newGenerateShiftProposal(damMro,22,14,20);
+        newGenerateShiftProposal(damMro,23,8,14);
+        newGenerateShiftProposal(damMro,29,14,20);
+        newGenerateShiftProposal(damMro,30,8,14);
+
+        newGenerateShiftProposal(matKru,1,8,14);
+        newGenerateShiftProposal(matKru,2,8,19);
+        newGenerateShiftProposal(matKru,6,8,20);
+        newGenerateShiftProposal(matKru,25,8,14);
+        newGenerateShiftProposal(matKru,26,8,14);
+        newGenerateShiftProposal(matKru,28,9,19);
+
+        newGenerateShiftProposal(monBar,2,10,20);
+        newGenerateShiftProposal(monBar,8,8,14);
+        newGenerateShiftProposal(monBar,17,8,14);
+        newGenerateShiftProposal(monBar,18,8,14);
+        newGenerateShiftProposal(monBar,27,8,20);
+
+        newGenerateShiftProposal(wojPie,2,8,14);
+        newGenerateShiftProposal(wojPie,10,8,14);
+        newGenerateShiftProposal(wojPie,18,8,14);
+        newGenerateShiftProposal(wojPie,23,8,14);
+        newGenerateShiftProposal(wojPie,24,8,14);
+
+        newGenerateShiftProposal(marNow,2,14,20);
+        newGenerateShiftProposal(marNow,9,8,14);
+        newGenerateShiftProposal(marNow,19,14,20);
+
+        newGenerateShiftProposal(filKam,1,8,14);
+
+        newGenerateShiftProposal(agaWar,11,14,20);
+        newGenerateShiftProposal(agaWar,17,8,14);
+
+        //when
+        monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
+
+        //then
     }
 
     @Test
