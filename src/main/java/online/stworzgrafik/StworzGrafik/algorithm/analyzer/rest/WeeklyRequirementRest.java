@@ -51,35 +51,94 @@ public class WeeklyRequirementRest {
                 context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
     }
 
+//    private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
+//        LocalDate periodStartDate = periodDateDTO.startDate();
+//        LocalDate periodEndDate = periodDateDTO.endDate();
+//        int attemptCount = 0;
+//
+//        List<Employee> filteredEmployees = employees.stream()
+//                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
+//                .toList();
+//
+//        while (!filteredEmployees.stream()
+//                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate,periodEndDate))
+//                .toList()
+//                .isEmpty()) {
+//            for (Employee employee : filteredEmployees) {
+//                Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
+//                        .sorted(Comparator.comparingDouble(
+//                                Map.Entry::getValue
+//                        ))
+//                        .map(Map.Entry::getKey)
+//                        .findFirst();
+//
+//                if (lowestScoringDate.isEmpty()) continue;
+//                if (context.isEmployeeOnRestRequirementDayOff(employee,periodStartDate,periodEndDate)) continue;
+//                if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
+//                if (context.employeeIsOnDelegation(employee, lowestScoringDate.get())) continue;
+//
+//                context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
+//                daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
+//            }
+//            attemptCount++;
+//
+//            if (attemptCount > 50){
+//                log.info("WEEKLY REQUIREMENT - ZBYT WIELE PRÓB");
+//                break;
+//            }
+//        }
+//    }
+
     private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
         LocalDate periodStartDate = periodDateDTO.startDate();
         LocalDate periodEndDate = periodDateDTO.endDate();
 
+        // 1. Filtrujemy pracowników raz przed pętlą
         List<Employee> filteredEmployees = employees.stream()
                 .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
                 .toList();
 
-        while (!filteredEmployees.stream()
-                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate,periodEndDate))
-                .toList()
-                .isEmpty()) {
+        boolean addedAnyRestDay;
+
+        // 2. Wykonujemy pętlę tak długo, jak długo udaje nam się przypisać JAKIKOLWIEK dzień restu.
+        // Dzięki temu unikamy twardego licznika (attemptCount) i nieskończonej pętli.
+        do {
+            addedAnyRestDay = false;
+
             for (Employee employee : filteredEmployees) {
-                Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
-                        .sorted(Comparator.comparingDouble(
-                                Map.Entry::getValue
-                        ))
+                // Jeśli pracownik dostał już wolne w innym kroku tej pętli, pomijamy go
+                if (context.isEmployeeOnRestRequirementDayOff(employee, periodStartDate, periodEndDate)) {
+                    continue;
+                }
+
+                // 3. Kluczowa zmiana: Sortujemy WSZYSTKIE dni od najniższego scoringu
+                List<LocalDate> sortedDates = daysScoring.entrySet().stream()
+                        .sorted(Comparator.comparingDouble(Map.Entry::getValue))
                         .map(Map.Entry::getKey)
-                        .findFirst();
+                        .toList();
 
-                if (lowestScoringDate.isEmpty()) continue;
-                if (context.isEmployeeOnRestRequirementDayOff(employee,periodStartDate,periodEndDate)) continue;
-                if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
-                if (context.employeeIsOnDelegation(employee, lowestScoringDate.get())) continue;
+                // 4. Szukamy PIERWSZEGO dnia, który ten konkretny pracownik może przyjąć
+                for (LocalDate candidateDate : sortedDates) {
+                    if (context.employeeHasProposalShift(employee, candidateDate)) continue;
+                    if (context.employeeIsOnDelegation(employee, candidateDate)) continue;
 
-                context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
-                daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
+                    // Znaleźliśmy pasujący dzień o najniższym możliwym scoringu!
+                    context.assignEmployeeToRestRequirementDayOff(employee, candidateDate);
+                    daysScoring.merge(candidateDate, 1.0, Double::sum);
+
+                    addedAnyRestDay = true;
+                    break; // Przypisaliśmy dzień pracownikowi, wychodzimy z pętli dni i idziemy do nast. pracownika
+                }
             }
-        }
+
+        } while (addedAnyRestDay && !getUnassignedEmployees(context, filteredEmployees, periodStartDate, periodEndDate).isEmpty());
+    }
+
+    // Metoda pomocnicza sprawdzająca, czy ktoś jeszcze potrzebuje przypisania
+    private static List<Employee> getUnassignedEmployees(ScheduleGeneratorContext context, List<Employee> employees, LocalDate start, LocalDate end) {
+        return employees.stream()
+                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, start, end))
+                .toList();
     }
 
     private static Map<LocalDate, Double> calculateDatesScoring(ScheduleGeneratorContext context, PeriodDateDTO dto) {
