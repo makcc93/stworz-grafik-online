@@ -11,7 +11,7 @@ public class RegionNameValidator implements NameValidatorStrategy{
             throw new ValidationException("Name cannot contain illegal chars");
         }
 
-        return name.strip().replaceAll("\\s+","").toUpperCase();
+        return name.strip().toUpperCase();
     }
 
     @Override

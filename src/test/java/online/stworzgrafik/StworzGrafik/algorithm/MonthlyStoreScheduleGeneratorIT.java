@@ -182,6 +182,7 @@ class MonthlyStoreScheduleGeneratorIT {
     Employee olgDar;
     Employee karNak;
     Employee emiMia;
+    Employee pokPok;
 
     List<Employee> employees;
 
@@ -470,6 +471,12 @@ class MonthlyStoreScheduleGeneratorIT {
     @Test
     void generateMonthlySchedule_workingOn() throws IOException {
         //given
+        newGenerateShiftProposal(wojPie,1,10,18);
+        newGenerateShiftProposal(wojPie,2,10,18);
+        newGenerateShiftProposal(wojPie,3,10,18);
+        newGenerateShiftProposal(wojPie,4,10,18);
+        newGenerateShiftProposal(wojPie,5,10,18);
+
 
         //when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);

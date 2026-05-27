@@ -1,8 +1,10 @@
 package online.stworzgrafik.StworzGrafik.employee.vacation;
 
+import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayConfig;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
@@ -18,6 +20,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import static online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationSpecification.*;
@@ -32,12 +38,14 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
+    private final HolidayManager holidayManager;
 
     @Override
     public ResponseEmployeeVacationDTO createEmployeeProposalVacation(Long storeId,
                                                                       Long employeeId,
                                                                       CreateEmployeeVacationDTO dto) {
         verifyLoggedUserAccessToStore(storeId);
+
 
         Store store = storeService.getEntityById(storeId);
 
@@ -51,18 +59,22 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
             throw new EntityExistsException("Employee vacation in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
+        int[] verifiedMonthlyVacation = verifyByWeekendsAndHolidays(dto.year(),dto.month(),dto.monthlyVacation());
+
         EmployeeVacation employeeVacation = builder.createEmployeeVacation(
                 store,
                 employee,
                 dto.year(),
                 dto.month(),
-                dto.monthlyVacation()
+                verifiedMonthlyVacation
         );
 
         EmployeeVacation saved = repository.save(employeeVacation);
 
         return mapper.toResponseEmployeeVacationDTO(saved);
     }
+
+
 
     @Override
     public ResponseEmployeeVacationDTO updateEmployeeVacation(Long storeId,
@@ -82,7 +94,13 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
 //            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
 //        }
 
-        mapper.updateEmployeeVacation(dto, employeeVacation);
+        UpdateEmployeeVacationDTO verifiedDto = new UpdateEmployeeVacationDTO(
+                dto.year(),
+                dto.month(),
+                verifyByWeekendsAndHolidays(dto.year(), dto.month(), dto.monthlyVacation()),
+                LocalDateTime.now());
+
+        mapper.updateEmployeeVacation(verifiedDto, employeeVacation);
 
         EmployeeVacation saved = repository.save(employeeVacation);
 
@@ -151,5 +169,18 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
         if (!userAuthorizationService.hasAccessToStore(storeId)) {
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
+    }
+
+    private int[] verifyByWeekendsAndHolidays(int year, int month,int[] originalMonthlyVacation) {
+        int[] verifiedMonthlyVacation = new int[31];
+        YearMonth yearMonth = YearMonth.of(year, month);
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
+            LocalDate date = LocalDate.of(year, month,day);
+
+            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY && !holidayManager.isHoliday(date)) {
+                verifiedMonthlyVacation[day-1] = originalMonthlyVacation[day-1];
+            }
+        }
+        return verifiedMonthlyVacation;
     }
 }

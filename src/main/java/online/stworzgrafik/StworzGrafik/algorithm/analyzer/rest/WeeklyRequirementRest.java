@@ -51,44 +51,6 @@ public class WeeklyRequirementRest {
                 context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
     }
 
-//    private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
-//        LocalDate periodStartDate = periodDateDTO.startDate();
-//        LocalDate periodEndDate = periodDateDTO.endDate();
-//        int attemptCount = 0;
-//
-//        List<Employee> filteredEmployees = employees.stream()
-//                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate, periodEndDate))
-//                .toList();
-//
-//        while (!filteredEmployees.stream()
-//                .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl, periodStartDate,periodEndDate))
-//                .toList()
-//                .isEmpty()) {
-//            for (Employee employee : filteredEmployees) {
-//                Optional<LocalDate> lowestScoringDate = daysScoring.entrySet().stream()
-//                        .sorted(Comparator.comparingDouble(
-//                                Map.Entry::getValue
-//                        ))
-//                        .map(Map.Entry::getKey)
-//                        .findFirst();
-//
-//                if (lowestScoringDate.isEmpty()) continue;
-//                if (context.isEmployeeOnRestRequirementDayOff(employee,periodStartDate,periodEndDate)) continue;
-//                if (context.employeeHasProposalShift(employee, lowestScoringDate.get())) continue;
-//                if (context.employeeIsOnDelegation(employee, lowestScoringDate.get())) continue;
-//
-//                context.assignEmployeeToRestRequirementDayOff(employee, lowestScoringDate.get());
-//                daysScoring.merge(lowestScoringDate.get(), 1.0, Double::sum);
-//            }
-//            attemptCount++;
-//
-//            if (attemptCount > 50){
-//                log.info("WEEKLY REQUIREMENT - ZBYT WIELE PRÓB");
-//                break;
-//            }
-//        }
-//    }
-
     private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
         LocalDate periodStartDate = periodDateDTO.startDate();
         LocalDate periodEndDate = periodDateDTO.endDate();

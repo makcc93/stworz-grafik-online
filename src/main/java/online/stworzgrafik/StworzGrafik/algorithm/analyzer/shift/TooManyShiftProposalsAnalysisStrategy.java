@@ -32,7 +32,7 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
         Map<Employee, int[]> employeeDailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day,Collections.emptyMap());
         int[] proposalsCount = getEmployeesDailyProposalCount(employeeDailyProposals);
 
-        int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().get(day);
+        int[] originalDailyDraft = context.getUneditedOriginalDateStoreDraft().getOrDefault(day,new int[24]);
 
         return new TooManyShiftProposalsAnalysisResult(originalDailyDraft,proposalsCount);
     }
