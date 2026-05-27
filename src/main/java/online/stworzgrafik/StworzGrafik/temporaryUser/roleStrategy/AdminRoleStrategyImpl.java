@@ -1,10 +1,9 @@
 package online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy;
 
-import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-
+@Component("ADMIN")
 public class AdminRoleStrategyImpl implements UserRoleStrategy{
     @Override
     public Long getAccessibleUserStoreId(UserContext user, Long storeId) {
