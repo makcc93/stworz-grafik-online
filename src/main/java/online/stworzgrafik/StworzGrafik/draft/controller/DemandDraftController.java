@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -32,6 +33,14 @@ public class DemandDraftController {
     public ResponseEntity<ResponseDemandDraftDTO> findById(@PathVariable @NotNull Long storeId,
                                                            @PathVariable @NotNull Long draftId){
         return ResponseEntity.ok().body(demandDraftService.findById(storeId, draftId));
+    }
+
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/drafts/{year}/{month}/getSum")
+    public ResponseEntity<BigDecimal> getMonthDraftSum(@PathVariable @NotNull Long storeId,
+                                                       @PathVariable @NotNull Integer year,
+                                                       @PathVariable @NotNull Integer month){
+        return ResponseEntity.ok(demandDraftService.getMonthlyDraftSum(storeId,year,month));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -24,4 +25,6 @@ public interface DemandDraftService {
     Page<ResponseDemandDraftDTO> findFilteredDrafts(@NotNull Long storeId, @Nullable LocalDate startDate, @Nullable LocalDate endDate,Pageable pageable);
     boolean exists(@NotNull Long draftId);
     boolean exists(@NotNull @Valid StoreAccurateDayDemandDraftDTO dto);
+    BigDecimal getMonthlyDraftSum(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
+
 }

@@ -1,20 +1,22 @@
 package online.stworzgrafik.StworzGrafik.security.initializer;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
-import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
 import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
-import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationService;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
+import online.stworzgrafik.StworzGrafik.shift.Shift;
+import online.stworzgrafik.StworzGrafik.shift.ShiftBuilder;
+import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
@@ -25,6 +27,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -40,6 +44,7 @@ public class AppInitializer implements CommandLineRunner{
     private final EmployeeService employeeService;
     private final StoreService storeService;
     private final EmployeeVacationService employeeVacationService;
+    private final ShiftEntityService shiftEntityService;
 
     @org.springframework.beans.factory.annotation.Value("${app.admin.login}")
     private String adminLogin;
@@ -57,118 +62,43 @@ public class AppInitializer implements CommandLineRunner{
 
     @Override
     public void run(String...args){
-        ResponseRegionDTO region = regionService.createRegion(new CreateRegionDTO("WSCHÓD"));
+        ResponseRegionDTO region = createRegion();
         branchService.createBranch(new CreateBranchDTO("WARSZAWA 3",region.id()));
         createAdmin();
         createUser();
         createPositions();
-        ResponseStoreDTO store = storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 1L));
+        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 1L));
+        generateAllFifteenMinuteShifts();
     }
 
-    private void createEmployees(ResponseStoreDTO store) {
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Damian",
-                "Mrozicki",
-                10000001L,
-                1L
-        ));
+    private ResponseRegionDTO createRegion() {
+        String regionName = "WSCHÓD";
 
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Mateusz",
-                "Kruk",
-                10000002L,
-                1L
-        ));
+        if (!regionService.exists(regionName)) {
+            return regionService.createRegion(new CreateRegionDTO(regionName));
+        }
 
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Monika",
-                "Baran",
-                10000003L,
-                1L
-        ));
+        return regionService.findAll().stream().filter(region -> region.name().equals(regionName)).findFirst().orElseThrow(EntityNotFoundException::new);
+    }
 
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Filip",
-                "Kamiński",
-                10000004L,
-                1L
-        ));
+    public void generateAllFifteenMinuteShifts() {
+        List<Shift> shifts = new ArrayList<>();
+        int[] minutes = {0, 15, 30, 45};
 
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Martyna",
-                "Nowicka",
-                10000005L,
-                1L
-        ));
+        for (int startHour = 0; startHour <= 23; startHour++) {
+            for (int startMinute : minutes) {
+                LocalTime start = LocalTime.of(startHour, startMinute);
+                for (int endHour = 0; endHour <= 23; endHour++) {
+                    for (int endMinute : minutes) {
+                        LocalTime end = LocalTime.of(endHour, endMinute);
+                        Shift shift = new ShiftBuilder().createShift(start, end);
 
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Agata",
-                "Warmińska",
-                10000006L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Michał",
-                "Woch",
-                10000007L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Michał",
-                "Kozik",
-                10000008L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Marcin",
-                "Wojas",
-                10000009L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Marcin",
-                "Przepiórka",
-                10000010L,
-                1L
-        ));
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Wojciech",
-                "Pietruszka",
-                10000011L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Olga",
-                "Darewicz",
-                10000012L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Tomasz",
-                "Zając",
-                10000013L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Karolina",
-                "Nakonieczna",
-                10000014L,
-                1L
-        ));
-
-        employeeService.createEmployee(store.id(),new CreateEmployeeDTO(
-                "Emil",
-                "Miazek",
-                10000015L,
-                1L
-        ));
+                        shifts.add(shift);
+                    }
+                }
+            }
+        }
+        shiftEntityService.saveAll(shifts);
     }
 
 

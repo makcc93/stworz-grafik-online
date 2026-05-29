@@ -14,6 +14,13 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
+@Table(
+        name = "demand_draft",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_store_draft_date",
+                columnNames = {"store_id", "draft_date"}
+        )
+)
 public class DemandDraft {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

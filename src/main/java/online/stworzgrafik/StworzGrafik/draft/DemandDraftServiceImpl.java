@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
+import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -8,6 +9,7 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -15,10 +17,15 @@ import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +35,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final DemandDraftMapper demandDraftMapper;
     private final UserContext userContext;
     private final UserAuthorizationService userAuthorizationService;
+    private final HolidayManager holidayManager;
 
     @Override
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
@@ -40,10 +48,12 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
                     .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft on date " + dto.draftDate() + " for store with id " + storeId)));
         }
 
+        int[] validatedDailyDemandDraft = holidayManager.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
+
         DemandDraft demandDraft = new DemandDraftBuilder().createDemandDraft(
                 store,
                 dto.draftDate(),
-                dto.hourlyDemand()
+                validatedDailyDemandDraft
         );
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
@@ -60,8 +70,10 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         DemandDraft demandDraft = demandDraftRepository.findById(draftId).orElseThrow(() ->
                 new EntityNotFoundException("Cannot find demand draft by id " + draftId));
 
+        int[] validatedDailyDemandDraft = holidayManager.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
+        UpdateDemandDraftDTO validatedDto = new UpdateDemandDraftDTO(dto.draftDate(), validatedDailyDemandDraft);
 
-        demandDraftMapper.updateDemandDraft(dto,demandDraft);
+        demandDraftMapper.updateDemandDraft(validatedDto,demandDraft);
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 
@@ -96,7 +108,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         DemandDraft demandDraft = demandDraftRepository.findById(draftId).
                 orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft by id " + draftId));
 
-        if (demandDraft.getStore().getId().equals(storeId)){
+        if (!demandDraft.getStore().getId().equals(storeId)){
             throw new EntityNotFoundException("Demand draft does not belong to this store");
         }
 
@@ -120,6 +132,27 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
                 dto.storeId(),
                 dto.draftDate()
         );
+    }
+
+    @Override
+    public BigDecimal getMonthlyDraftSum(Long storeId, Integer year, Integer month) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)){
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+        BigDecimal draftSum = BigDecimal.ZERO;
+        YearMonth yearMonth = YearMonth.of(year,month);
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
+            LocalDate date = LocalDate.of(year,month,day);
+
+            Optional<DemandDraft> dateDraft = demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId, date, date);
+            if (dateDraft.isPresent()){
+                BigDecimal dailyDraftSum = BigDecimal.valueOf(Arrays.stream(dateDraft.get().getHourlyDemand()).sum());
+
+                draftSum = draftSum.add(dailyDraftSum);
+            }
+        }
+
+        return draftSum;
     }
 
     @Override
