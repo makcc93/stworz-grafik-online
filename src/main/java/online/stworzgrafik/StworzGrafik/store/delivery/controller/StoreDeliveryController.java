@@ -18,8 +18,8 @@ class StoreDeliveryController {
     private final StoreDeliveryService storeDeliveryService;
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
-    @GetMapping("/stores/{storeId}/deliveries/{storeDeliveryId}")
-    ResponseEntity<ResponseStoreDeliveryDTO> findById(@PathVariable @NotNull Long storeId){
+    @GetMapping("/stores/{storeId}/deliveries")
+    ResponseEntity<ResponseStoreDeliveryDTO> findById(@PathVariable @NotNull Long storeId) {
         return ResponseEntity.ok(storeDeliveryService.findByStoreId(storeId));
     }
 

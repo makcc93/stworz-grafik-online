@@ -2,6 +2,8 @@ package online.stworzgrafik.StworzGrafik.store.delivery;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
@@ -17,6 +19,7 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeli
     private final UserAuthorizationService userAuthorizationService;
     private final StoreDeliveryRepository repository;
     private final StoreDeliveryMapper mapper;
+    private final EmployeeEntityService employeeEntityService;
 
     @Override
     public ResponseStoreDeliveryDTO findByStoreId(Long storeId) {
@@ -37,16 +40,23 @@ public class StoreDeliveryServiceImpl implements StoreDeliveryService, StoreDeli
     }
 
     @Override
-    public ResponseStoreDeliveryDTO update(Long storeId,UpdateStoreDeliveryDTO dto) {
+    public ResponseStoreDeliveryDTO update(Long storeId, UpdateStoreDeliveryDTO dto) {
         verifyLoggedUserStoreAccess(storeId);
 
-        StoreDelivery storeDelivery  = repository.findByStoreId(storeId)
+        StoreDelivery storeDelivery = repository.findByStoreId(storeId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store delivery by store id " + storeId));
 
-        mapper.update(dto,storeDelivery);
+        mapper.update(dto, storeDelivery);
+
+        // ── ręczna obsługa primaryEmployee — mapper nie radzi sobie z null ──
+        if (dto.primaryEmployeeId() == null) {
+            storeDelivery.setPrimaryEmployee(null);
+        } else {
+            Employee employee = employeeEntityService.getEntityById(dto.primaryEmployeeId());
+            storeDelivery.setPrimaryEmployee(employee);
+        }
 
         StoreDelivery saved = repository.save(storeDelivery);
-
         return mapper.toDTO(saved);
     }
 

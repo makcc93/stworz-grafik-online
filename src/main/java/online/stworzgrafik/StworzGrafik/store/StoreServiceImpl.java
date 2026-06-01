@@ -1,33 +1,23 @@
 package online.stworzgrafik.StworzGrafik.store;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.DTO.*;
-import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
 import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
-import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetails;
 import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetailsService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 @Service
-@RequiredArgsConstructor
 class StoreServiceImpl implements StoreService, StoreEntityService{
     private final StoreRepository storeRepository;
     private final StoreBuilder storeBuilder;
@@ -38,6 +28,27 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     private final StoreOpeningHoursService openingHoursService;
     private final StoreDeliveryService storeDeliveryService;
     private final StoreDetailsService storeDetailsService;
+
+    public StoreServiceImpl(
+            StoreRepository storeRepository,
+            StoreBuilder storeBuilder,
+            StoreMapper storeMapper,
+            BranchEntityService branchEntityService,
+            NameValidatorService nameValidatorService,
+            UserAuthorizationService userAuthorizationService,
+            StoreOpeningHoursService openingHoursService,
+            @Lazy StoreDeliveryService storeDeliveryService,
+            StoreDetailsService storeDetailsService) {
+        this.storeRepository = storeRepository;
+        this.storeBuilder = storeBuilder;
+        this.storeMapper = storeMapper;
+        this.branchEntityService = branchEntityService;
+        this.nameValidatorService = nameValidatorService;
+        this.userAuthorizationService = userAuthorizationService;
+        this.openingHoursService = openingHoursService;
+        this.storeDeliveryService = storeDeliveryService;
+        this.storeDetailsService = storeDetailsService;
+    }
 
     @Override
     public Page<ResponseStoreDTO> findAll(Pageable pageable) {
@@ -170,7 +181,6 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-
         return storeRepository.findById(storeId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
     }
@@ -190,7 +200,6 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     private void updateBranchIfNeeded(UpdateStoreDTO updateStoreDTO,Store store) {
         if (updateStoreDTO.branchId() != null){
             Branch branch = branchEntityService.getEntityById(updateStoreDTO.branchId());
-
             store.setBranch(branch);
         }
     }

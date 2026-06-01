@@ -16,8 +16,12 @@ interface StoreDeliveryMapper {
     @Mapping(target = "store.id", source = "storeId")
     @Mapping(target = "primaryEmployee.id", source = "primaryEmployeeId")
     StoreDelivery toEntity(ResponseStoreDeliveryDTO dto);
-
-    @Mapping(target = "primaryEmployee.id", source = "primaryEmployeeId")
+    
+    @Mapping(target = "primaryEmployee", ignore = true)
+    @Mapping(
+            target = "storeWeeklyDeliverySchedule.deliverySchedule",
+            source = "deliverySchedule"
+    )
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update(UpdateStoreDeliveryDTO dto, @MappingTarget StoreDelivery storeDelivery);
 }
