@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.MonthlyNormResponseDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftService;
@@ -51,6 +52,15 @@ public class DemandDraftController {
     @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
         return ResponseEntity.ok(demandDraftService.findFilteredDrafts(storeId,startDate,endDate,pageable));
     }
+
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/drafts/{year}/{month}/monthlyNorm")
+    public ResponseEntity<MonthlyNormResponseDTO> getMonthlyNorm(@PathVariable @NotNull Long storeId,
+                                                                 @PathVariable @NotNull Integer year,
+                                                                 @PathVariable @NotNull Integer month) {
+        return ResponseEntity.ok(demandDraftService.getMonthlyNorm(storeId, year, month));
+    }
+
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/drafts")

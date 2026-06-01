@@ -5,10 +5,10 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
+import online.stworzgrafik.StworzGrafik.draft.DTO.*;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
@@ -36,6 +36,8 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final UserContext userContext;
     private final UserAuthorizationService userAuthorizationService;
     private final HolidayManager holidayManager;
+    private final CalendarCalculation calendarCalculation;
+    private final EmployeeEntityService employeeEntityService;
 
     @Override
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
@@ -153,6 +155,34 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         }
 
         return draftSum;
+    }
+
+    @Override
+    public MonthlyNormResponseDTO getMonthlyNorm(Long storeId, Integer year, Integer month) {
+        if (!userAuthorizationService.hasAccessToStore(storeId)) {
+            throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+
+        // 1. Standardowe godziny robocze (z uwzgl. świąt) — np. 160 dla maja 2026
+        int standardWorkingHours = calendarCalculation.getMonthlyStandardWorkingHours(year, month);
+
+        // 2. Aktywni pracownicy sklepu bez magazyniera
+        List<Employee> nonWarehouseEmployees = employeeEntityService
+                .findAllStoreActiveEmployees(storeId)
+                .stream()
+                .filter(e -> !e.isWarehouseman())
+                .toList();
+
+        // 3. Suma indywidualnych norm (uwzgl. wymiar etatu i ewentualne normy specjalne)
+        BigDecimal totalEmployeeNorm = nonWarehouseEmployees.stream()
+                .map(e -> calendarCalculation.getMonthlyNormForEmployee(year, month, e))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new MonthlyNormResponseDTO(
+                standardWorkingHours,
+                totalEmployeeNorm,
+                nonWarehouseEmployees.size()
+        );
     }
 
     @Override

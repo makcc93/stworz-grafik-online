@@ -3,10 +3,7 @@ package online.stworzgrafik.StworzGrafik.draft;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.StoreAccurateDayDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
-import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
+import online.stworzgrafik.StworzGrafik.draft.DTO.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
@@ -26,5 +23,5 @@ public interface DemandDraftService {
     boolean exists(@NotNull Long draftId);
     boolean exists(@NotNull @Valid StoreAccurateDayDemandDraftDTO dto);
     BigDecimal getMonthlyDraftSum(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
-
+    MonthlyNormResponseDTO getMonthlyNorm(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
 }
