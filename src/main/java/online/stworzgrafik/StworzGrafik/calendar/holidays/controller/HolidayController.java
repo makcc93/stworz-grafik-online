@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.calendar.controller;
+package online.stworzgrafik.StworzGrafik.calendar.holidays.controller;
 
 import de.focus_shift.jollyday.core.Holiday;
 import de.focus_shift.jollyday.core.HolidayManager;

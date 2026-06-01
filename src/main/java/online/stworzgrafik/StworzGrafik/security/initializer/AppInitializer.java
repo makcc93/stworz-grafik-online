@@ -91,6 +91,8 @@ public class AppInitializer implements CommandLineRunner{
                 for (int endHour = 0; endHour <= 23; endHour++) {
                     for (int endMinute : minutes) {
                         LocalTime end = LocalTime.of(endHour, endMinute);
+                        if (start.isAfter(end)) continue;
+
                         Shift shift = new ShiftBuilder().createShift(start, end);
 
                         shifts.add(shift);

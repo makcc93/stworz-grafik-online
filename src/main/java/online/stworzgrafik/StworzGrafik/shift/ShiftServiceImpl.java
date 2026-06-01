@@ -45,9 +45,9 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
         if (shiftRepository.existsByStartHourAndEndHour(startHour, endHour)){
             return shiftMapper.toShiftDto(
                     shiftRepository.findByStartHourAndEndHour(
-                            startHour,
-                            endHour)
-                    .orElseThrow());
+                                    startHour,
+                                    endHour)
+                            .orElseThrow());
         }
 
         Shift shift = shiftBuilder.createShift(
@@ -180,14 +180,14 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
 
         for (int i = 0; i < array.length; i++){
             if (array[i] != 0){
-                startHour = array[i];
+                startHour = i;
                 break;
             }
         }
 
         for (int i = 23; i >= 0; i--){
             if (array[i] != 0){
-                endHour = array[i];
+                endHour = i;
                 break;
             }
         }
