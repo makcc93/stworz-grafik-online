@@ -16,7 +16,7 @@ interface StoreDeliveryMapper {
     @Mapping(target = "store.id", source = "storeId")
     @Mapping(target = "primaryEmployee.id", source = "primaryEmployeeId")
     StoreDelivery toEntity(ResponseStoreDeliveryDTO dto);
-    
+
     @Mapping(target = "primaryEmployee", ignore = true)
     @Mapping(
             target = "storeWeeklyDeliverySchedule.deliverySchedule",
