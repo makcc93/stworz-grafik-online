@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.billing;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,22 @@ import java.util.List;
 class BillingPeriodConfigServiceImpl implements BillingPeriodConfigService {
     private final BillingPeriodConfigRepository repository;
     private final BillingPeriodConfigMapper mapper;
+
+    @Override
+    @Transactional
+    public BillingPeriodConfigResponse create(BillingPeriodConfigRequest request) {
+        Optional<BillingPeriodConfig> optionalBillingPeriodConfig = repository.findByStartMonth(request.startMonth());
+        if (optionalBillingPeriodConfig.isPresent()) throw new EntityExistsException("Billing period with start month " + request.startMonth() + " already exist");
+
+        BillingPeriodConfig billingPeriodConfig = BillingPeriodConfig.builder()
+                .startMonth(request.startMonth())
+                .durationMonths(request.durationMonths())
+                .build();
+
+        BillingPeriodConfig saved = repository.save(billingPeriodConfig);
+
+        return mapper.toResponse(saved);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -87,6 +105,14 @@ class BillingPeriodConfigServiceImpl implements BillingPeriodConfigService {
     @Override
     public void saveAll(List<BillingPeriodConfig> billingPeriodConfigs) {
         repository.saveAll(billingPeriodConfigs);
+    }
+
+    @Override
+    public void delete(Long billingPeriodConfigId) {
+        BillingPeriodConfig billingPeriodConfig = repository.findById(billingPeriodConfigId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find Billing Period by id " + billingPeriodConfigId));
+
+        repository.delete(billingPeriodConfig);
     }
 
     private boolean belongsToPeriod(BillingPeriodConfig config, int month) {

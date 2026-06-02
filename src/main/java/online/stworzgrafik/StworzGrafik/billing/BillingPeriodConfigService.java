@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface BillingPeriodConfigService {
 
+    BillingPeriodConfigResponse create(BillingPeriodConfigRequest request);
+
     List<BillingPeriodConfigResponse> getAll();
 
     BillingPeriodConfigResponse update(Long id, BillingPeriodConfigRequest request);
@@ -19,4 +21,6 @@ public interface BillingPeriodConfigService {
     Integer getPeriodStartMonth(int month);
 
     void saveAll(List<BillingPeriodConfig> billingPeriodConfigs);
+
+    void delete(Long billingPeriodConfigId);
 }
