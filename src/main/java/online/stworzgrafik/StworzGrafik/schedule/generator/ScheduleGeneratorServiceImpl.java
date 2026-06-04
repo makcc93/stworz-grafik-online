@@ -21,7 +21,7 @@ public class ScheduleGeneratorServiceImpl implements ScheduleGeneratorService{
     private final ScheduleMapper mapper;
 
     @Override
-    public ResponseScheduleDTO generateSchedule(Long storeId, Long scheduleId) {
+    public byte[] generateSchedule(Long storeId, Long scheduleId) {
             if (!userAuthorizationService.hasAccessToStore(storeId)) {
                 throw new AccessDeniedException("Access denied for store: " + storeId);
             }
@@ -29,7 +29,7 @@ public class ScheduleGeneratorServiceImpl implements ScheduleGeneratorService{
             Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
 
             try {
-                monthlyStoreScheduleGenerator.generateMonthlySchedule(
+                return monthlyStoreScheduleGenerator.generateMonthlySchedule(
                         storeId,
                         schedule.getYear(),
                         schedule.getMonth()
@@ -37,7 +37,5 @@ public class ScheduleGeneratorServiceImpl implements ScheduleGeneratorService{
             } catch (IOException e) {
                 throw new RuntimeException("Error generating schedule: " + e.getMessage(), e);
             }
-
-            return mapper.toDTO(schedule);
     }
 }

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
 import jakarta.validation.constraints.NotNull;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.DTO.ShiftTypeConfigRequest;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
@@ -13,4 +14,5 @@ public interface ShiftTypeConfigService {
     ShiftTypeConfig findById(@NotNull Long shiftTypeConfigId);
     ShiftTypeConfig saveByShiftCode(@NotNull ShiftCode shiftCode);
     ShiftTypeConfig save(@NotNull ShiftTypeConfig shiftTypeConfig);
+    ShiftTypeConfig create(@NotNull ShiftTypeConfigRequest request);
 }

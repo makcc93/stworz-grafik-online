@@ -1,6 +1,8 @@
 package online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.DTO.ShiftTypeConfigRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -46,6 +48,20 @@ public class ShiftTypeConfigServiceImpl implements ShiftTypeConfigService {
 
     @Override
     public ShiftTypeConfig save(ShiftTypeConfig shiftTypeConfig) {
+        return shiftTypeConfigRepository.save(shiftTypeConfig);
+    }
+
+    @Override
+    public ShiftTypeConfig create(ShiftTypeConfigRequest request) {
+        if (shiftTypeConfigRepository.existsByCode(request.shiftCode())) throw new EntityExistsException("Shift type config with code " + request.shiftCode() + " already exist");
+
+        ShiftTypeConfig shiftTypeConfig = ShiftTypeConfig.builder()
+                .code(request.shiftCode())
+                .namePl(request.namePl())
+                .defaultHours(request.defaultHours())
+                .countsAsWork(request.countsAsWork())
+                .build();
+
         return shiftTypeConfigRepository.save(shiftTypeConfig);
     }
 }

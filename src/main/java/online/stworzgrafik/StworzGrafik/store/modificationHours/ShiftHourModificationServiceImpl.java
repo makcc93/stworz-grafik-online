@@ -1,6 +1,9 @@
 package online.stworzgrafik.StworzGrafik.store.modificationHours;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -10,10 +13,16 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ExcludedEmployeesRequest;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourMappingRequest;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationConfigResponse;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +33,35 @@ class ShiftHourModificationServiceImpl implements ShiftHourModificationService {
     private final ShiftHourModificationConfigMapper mapper;
     private final StoreEntityService storeEntityService;
     private final EmployeeEntityService employeeEntityService;
+
+    @Override
+    public ShiftHourModificationConfigResponse create(Long storeId, ShiftHourMappingRequest request, ExcludedEmployeesRequest employeesRequest) {
+        List<@Valid ShiftHourModificationDTO> hours = request.hours();
+
+        List<Employee> excludedEmployees = new ArrayList<>();
+        for (Long employeeId : employeesRequest.excludedEmployeeIds()) {
+            excludedEmployees.add(employeeEntityService.getEntityById(employeeId));
+        }
+
+        Optional<ShiftHourModificationConfig> optionalShiftHourModificationConfig = repository.findByStoreId(storeId);
+        if (optionalShiftHourModificationConfig.isPresent()) throw new EntityExistsException("Shift modification hours for store with id " + storeId + " already exist");
+
+        HashMap<@NotNull LocalTime, @NotNull LocalTime> hoursToModify = hours.stream()
+                .collect(Collectors.toMap(
+                        ShiftHourModificationDTO::originalHour,
+                        ShiftHourModificationDTO::modifiedHour,
+                        (h1, h2) -> h1,
+                        HashMap::new
+                ));
+        ShiftHourModificationConfig shiftHourModificationConfig = ShiftHourModificationConfig.builder()
+                .hoursToModify(hoursToModify)
+                .excludedEmployees(excludedEmployees)
+                .build();
+
+        repository.save(shiftHourModificationConfig);
+
+        return new ShiftHourModificationConfigResponse(mapper.toDto(hoursToModify),mapper.toEmployeeIds(excludedEmployees));
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -75,6 +113,14 @@ class ShiftHourModificationServiceImpl implements ShiftHourModificationService {
                 null,
                 mapper.toEmployeeIds(config.getExcludedEmployees())
         );
+    }
+
+    @Override
+    public void delete(Long storeId) {
+        Optional<ShiftHourModificationConfig> optionalShiftHourModificationConfig = repository.findByStoreId(storeId);
+        if (optionalShiftHourModificationConfig.isEmpty()) throw new EntityNotFoundException("Cannot find shift hour modification config for store with id " + storeId);
+
+        repository.delete(optionalShiftHourModificationConfig.get());
     }
 
     // zwraca istniejący config lub nowy pusty obiekt (bez zapisu do DB)
