@@ -78,11 +78,17 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                     .map(Map.Entry::getValue)
                     .orElse(BigDecimal.ZERO);
 
-            if ((employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours)).compareTo(maxHoursDifference) <= 0) break;
+            if ((employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours)).compareTo(maxHoursDifference) <= 0) {
+                log.info("Różnica godzin w normie, kończę podmianę.");
+                break;
+            }
 
-            boolean resolved = swapHours(context);
+            boolean anySwapDone = swapHours(context);
 
-            if (resolved) break;
+            if (!anySwapDone) {
+                log.info("Brak możliwych zamian, kończę podmianę.");
+                break;
+            }
         }
     }
 
