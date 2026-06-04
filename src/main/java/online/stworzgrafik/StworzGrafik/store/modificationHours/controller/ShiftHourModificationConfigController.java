@@ -1,10 +1,13 @@
-package online.stworzgrafik.StworzGrafik.store.modificationHours;
+package online.stworzgrafik.StworzGrafik.store.modificationHours.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ExcludedEmployeesRequest;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourMappingRequest;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationConfigResponse;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationCreateRequest;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,5 +42,26 @@ class ShiftHourModificationConfigController {
             @RequestBody @Valid ExcludedEmployeesRequest request
     ) {
         return ResponseEntity.ok(service.updateExcludedEmployees(storeId, request));
+    }
+
+    /**
+     * Tworzy nową konfigurację godzin dla sklepu.
+     * POPRAWKA: Spring nie obsługuje dwóch @RequestBody w jednym endpoincie.
+     * Używamy połączonego DTO ShiftHourModificationCreateRequest.
+     */
+    @PostMapping
+    public ResponseEntity<ShiftHourModificationConfigResponse> create(
+            @PathVariable Long storeId,
+            @RequestBody @Valid ShiftHourModificationCreateRequest request
+    ) {
+        ShiftHourMappingRequest hoursRequest = new ShiftHourMappingRequest(request.hours());
+        ExcludedEmployeesRequest employeesRequest = new ExcludedEmployeesRequest(request.excludedEmployeeIds());
+        return ResponseEntity.ok(service.create(storeId, hoursRequest, employeesRequest));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> delete(@PathVariable Long storeId) {
+        service.delete(storeId);
+        return ResponseEntity.noContent().build();
     }
 }

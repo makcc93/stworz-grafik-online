@@ -17,15 +17,10 @@ import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Slf4j
@@ -50,9 +45,11 @@ public class MonthlyStoreScheduleGenerator {
     private final OpenCloseMatcher openCloseMatcher;
     private final WeeklyRequirementRest weeklyRequirementRest;
 
-
-    @Async
-    public void generateMonthlySchedule(Long storeId, Integer year, Integer month) throws IOException {
+    /**
+     * Generuje grafik miesięczny i zwraca plik Excel jako byte[].
+     * Nie zapisuje nic na dysk — plik jest zwracany przez HTTP.
+     */
+    public byte[] generateMonthlySchedule(Long storeId, Integer year, Integer month) throws IOException {
         ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
 
         vacationApplier.applyVacationsToSchedule(context);
@@ -72,8 +69,8 @@ public class MonthlyStoreScheduleGenerator {
         checkoutMatcher.assignRolesForMonth(context);
         openCloseMatcher.assignRolesForMonth(context);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
         dailyShiftGeneratorAlgorithm.modifyShiftsHours(context);
 
@@ -81,18 +78,12 @@ public class MonthlyStoreScheduleGenerator {
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(),new ArrayList<>(),context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
 
         creditMatcher.reassignRolesForMonth(context);
         checkoutMatcher.reassignRolesForMonth(context);
         openCloseMatcher.reassignRolesForMonth(context);
 
-        byte[] excelExport = this.excelExport.export(context);
-        Path filePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".xlsx");
-        Files.write(filePath,excelExport);
-
-        byte[] pdfExport = this.pdfExport.export(context);
-        Path pdfFilePath = Paths.get("/home/mateuszkruk/Pobrane/grafik_" + month + "_" + year + "_" + LocalDateTime.now()+ ".pdf");
-        Files.write(pdfFilePath,pdfExport);
+        return excelExport.export(context);
     }
 }

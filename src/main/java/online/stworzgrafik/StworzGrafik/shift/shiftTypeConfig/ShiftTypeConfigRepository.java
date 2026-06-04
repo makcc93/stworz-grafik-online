@@ -15,4 +15,6 @@ public interface ShiftTypeConfigRepository extends JpaRepository<ShiftTypeConfig
 
     @Query("SELECT s.countsAsWork FROM ShiftTypeConfig s WHERE s.code = :code")
     Boolean countsAsWork(ShiftCode code);
+
+    Boolean existsByCode(ShiftCode code);
 }

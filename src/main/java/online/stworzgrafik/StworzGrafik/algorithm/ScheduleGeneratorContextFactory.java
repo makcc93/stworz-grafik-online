@@ -85,7 +85,7 @@ public class ScheduleGeneratorContextFactory {
                 .employeeCheckoutDays(new HashMap<>())
                 .employeeOpenCloseDays(new HashMap<>())
                 .employeeWeeklyRestRequirementDaysOff(new HashMap<>())
-                .hoursToModify(getHoursToModify(storeId,year,month))
+                .hoursToModify(getHoursToModify(storeId))
                 .employeesToModifyHours(getEmployeesToModifyHours(storeId))
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
@@ -111,7 +111,7 @@ public class ScheduleGeneratorContextFactory {
                 .toList();
     }
 
-    private Map<LocalTime, LocalTime> getHoursToModify(Long storeId, Integer year, Integer month){
+    private Map<LocalTime, LocalTime> getHoursToModify(Long storeId){
         List<ShiftHourModificationDTO> hours = shiftHourModificationService.getHours(storeId).hours();
 
         return hours.stream()

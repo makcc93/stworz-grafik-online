@@ -3,6 +3,8 @@ package online.stworzgrafik.StworzGrafik.security.initializer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
+import online.stworzgrafik.StworzGrafik.billing.DTO.BillingPeriodConfigRequest;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
@@ -17,6 +19,9 @@ import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.DTO.ShiftTypeConfigRequest;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
@@ -27,6 +32,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +51,8 @@ public class AppInitializer implements CommandLineRunner{
     private final StoreService storeService;
     private final EmployeeVacationService employeeVacationService;
     private final ShiftEntityService shiftEntityService;
+    private final ShiftTypeConfigService shiftTypeConfigService;
+    private final BillingPeriodConfigService billingPeriodConfigService;
 
     @org.springframework.beans.factory.annotation.Value("${app.admin.login}")
     private String adminLogin;
@@ -58,8 +66,6 @@ public class AppInitializer implements CommandLineRunner{
     @org.springframework.beans.factory.annotation.Value("${app.user.password}")
     private String userPassword;
 
-    private int[] twoWeeksvacation = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-
     @Override
     public void run(String...args){
         ResponseRegionDTO region = createRegion();
@@ -69,6 +75,175 @@ public class AppInitializer implements CommandLineRunner{
         createPositions();
         storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 1L));
         generateAllFifteenMinuteShifts();
+        createShiftTypeConfigs();
+        createBillingPeriods();
+//        createStoreEmployees(1L);
+    }
+
+    private void createStoreEmployees(Long storeId){
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Damian",
+                        "Mrozicki",
+                        10000001L,
+                        1L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Monika",
+                        "Baran",
+                        10000002L,
+                        2L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Mateusz",
+                        "Kruk",
+                        10000003L,
+                        2L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Filip",
+                        "Kamiński",
+                        10000004L,
+                        5L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Martyna",
+                        "Nowicka",
+                        10000005L,
+                        5L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Wojciech",
+                        "Pietruszka",
+                        10000006L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Agata",
+                        "Warmińska",
+                        10000007L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Michał",
+                        "Woch",
+                        10000008L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Tomasz",
+                        "Zając",
+                        10000009L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Michał",
+                        "Kozik",
+                        10000010L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Marcin",
+                        "Przepiórka",
+                        10000011L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Marcin",
+                        "Wojas",
+                        10000012L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Olga",
+                        "Darewicz",
+                        10000013L,
+                        4L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Karolina",
+                        "Nakonieczna",
+                        10000014L,
+                        6L
+                ));
+
+        employeeService.createEmployee(storeId,
+                new CreateEmployeeDTO(
+                        "Emil",
+                        "Miazek",
+                        10000015L,
+                        7L
+                ));
+    }
+
+    private void createBillingPeriods(){
+        billingPeriodConfigService.create(new BillingPeriodConfigRequest(3,3));
+        billingPeriodConfigService.create(new BillingPeriodConfigRequest(6,3));
+        billingPeriodConfigService.create(new BillingPeriodConfigRequest(9,3));
+        billingPeriodConfigService.create(new BillingPeriodConfigRequest(12,3));
+    }
+
+    private void createShiftTypeConfigs(){
+        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
+                ShiftCode.VACATION,
+                "URLOP",
+                BigDecimal.valueOf(8L),
+                false
+        ));
+
+        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
+                ShiftCode.DAY_OFF,
+                "WOLNE",
+                BigDecimal.ZERO,
+                false
+        ));
+
+        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
+                ShiftCode.SICK_LEAVE,
+                "L4",
+                BigDecimal.valueOf(8L),
+                true
+        ));
+
+        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
+                ShiftCode.WORK,
+                "PRACA",
+                BigDecimal.valueOf(8L),
+                true
+        ));
+
+        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
+                ShiftCode.WORK_BY_PROPOSAL,
+                "PROPOZYCJA PRACY",
+                BigDecimal.valueOf(8L),
+                true
+        ));
     }
 
     private ResponseRegionDTO createRegion() {
@@ -81,7 +256,7 @@ public class AppInitializer implements CommandLineRunner{
         return regionService.findAll().stream().filter(region -> region.name().equals(regionName)).findFirst().orElseThrow(EntityNotFoundException::new);
     }
 
-    public void generateAllFifteenMinuteShifts() {
+    private void generateAllFifteenMinuteShifts() {
         List<Shift> shifts = new ArrayList<>();
         int[] minutes = {0, 15, 30, 45};
 
@@ -102,7 +277,6 @@ public class AppInitializer implements CommandLineRunner{
         }
         shiftEntityService.saveAll(shifts);
     }
-
 
     private void createPositions() {
         positionService.createPosition(new CreatePositionDTO("KIEROWNIK SKLEPU","Zarządza pracą danego sklepu oraz wszytskimi pracownikami jednostki"));

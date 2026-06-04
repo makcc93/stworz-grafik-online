@@ -41,7 +41,8 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(EntityExistsException.class)
     public ResponseEntity<String> entityAlreadyExist(EntityExistsException e){
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Entity with this data already exists");
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(e.getMessage());
     }
 
     @ExceptionHandler(ValidationException.class)
