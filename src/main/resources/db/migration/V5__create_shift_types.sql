@@ -1,0 +1,6 @@
+INSERT INTO shift_type_config(code, name_pl, default_hours, counts_as_work) VALUES
+('WORK','PRACA',8.0,1),
+('WORK_BY_PROPOSAL','PRACA JAKO PROPOZYCJA',8.0,1),
+('VACATION','URLOP',8.0,0),
+('DAY_OFF','WOLNE',0.0,0),
+('SICK_LEAVE','ZWOLNIENIE LEKARSKIE',8.0,1);
