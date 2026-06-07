@@ -68,16 +68,13 @@ public class AppInitializer implements CommandLineRunner{
 
     @Override
     public void run(String...args){
-        ResponseRegionDTO region = createRegion();
-        branchService.createBranch(new CreateBranchDTO("WARSZAWA 3",region.id()));
         createAdmin();
-        createUser();
-        createPositions();
-        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 1L));
+        createStore();
         generateAllFifteenMinuteShifts();
-        createShiftTypeConfigs();
-        createBillingPeriods();
-//        createStoreEmployees(1L);
+    }
+
+    private void createStore() {
+        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 3L));
     }
 
     private void createStoreEmployees(Long storeId){
@@ -202,59 +199,6 @@ public class AppInitializer implements CommandLineRunner{
                 ));
     }
 
-    private void createBillingPeriods(){
-        billingPeriodConfigService.create(new BillingPeriodConfigRequest(3,3));
-        billingPeriodConfigService.create(new BillingPeriodConfigRequest(6,3));
-        billingPeriodConfigService.create(new BillingPeriodConfigRequest(9,3));
-        billingPeriodConfigService.create(new BillingPeriodConfigRequest(12,3));
-    }
-
-    private void createShiftTypeConfigs(){
-        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
-                ShiftCode.VACATION,
-                "URLOP",
-                BigDecimal.valueOf(8L),
-                false
-        ));
-
-        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
-                ShiftCode.DAY_OFF,
-                "WOLNE",
-                BigDecimal.ZERO,
-                false
-        ));
-
-        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
-                ShiftCode.SICK_LEAVE,
-                "L4",
-                BigDecimal.valueOf(8L),
-                true
-        ));
-
-        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
-                ShiftCode.WORK,
-                "PRACA",
-                BigDecimal.valueOf(8L),
-                true
-        ));
-
-        shiftTypeConfigService.create(new ShiftTypeConfigRequest(
-                ShiftCode.WORK_BY_PROPOSAL,
-                "PROPOZYCJA PRACY",
-                BigDecimal.valueOf(8L),
-                true
-        ));
-    }
-
-    private ResponseRegionDTO createRegion() {
-        String regionName = "WSCHÓD";
-
-        if (!regionService.exists(regionName)) {
-            return regionService.createRegion(new CreateRegionDTO(regionName));
-        }
-
-        return regionService.findAll().stream().filter(region -> region.name().equals(regionName)).findFirst().orElseThrow(EntityNotFoundException::new);
-    }
 
     private void generateAllFifteenMinuteShifts() {
         List<Shift> shifts = new ArrayList<>();
@@ -276,16 +220,6 @@ public class AppInitializer implements CommandLineRunner{
             }
         }
         shiftEntityService.saveAll(shifts);
-    }
-
-    private void createPositions() {
-        positionService.createPosition(new CreatePositionDTO("KIEROWNIK SKLEPU","Zarządza pracą danego sklepu oraz wszytskimi pracownikami jednostki"));
-        positionService.createPosition(new CreatePositionDTO("KIEROWNIK SPRZEDAŻY","Zarządza pracą zespołu sprzedażowego w danej jednostce"));
-        positionService.createPosition(new CreatePositionDTO("KIEROWNIK ZMIANY","Zarządza pracą zespołu sprzedażowego w danej jednostce oraz jednocześnie pełni rolę sprzedażową"));
-        positionService.createPosition(new CreatePositionDTO("DORADCA KLIENTA","Pełni rolę sprzedawcy"));
-        positionService.createPosition(new CreatePositionDTO("DORADCA KLIENTA MANAGER","Pełni rolę sprzedawcy, a także wspomaga pracę zespołu Kierowników w danym sklepie"));
-        positionService.createPosition(new CreatePositionDTO("KASJER","Odpowiada za przyjmowanie płatności na kasie"));
-        positionService.createPosition(new CreatePositionDTO("MAGAZYNIER","Odpowiada za przyjęcie i wysyłkę towaru na sklepie"));
     }
 
     private void createAdmin() {

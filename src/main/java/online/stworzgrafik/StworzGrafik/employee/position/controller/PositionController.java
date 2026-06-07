@@ -19,7 +19,6 @@ import java.util.List;
 class PositionController {
     private final PositionService service;
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ResponsePositionDTO>> findAll(){
         return ResponseEntity.ok(service.findAll());

@@ -8,7 +8,9 @@ import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
+import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 class StoreController {
     private final StoreService storeService;
+    private final UserContext userContext;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/stores/getAll")
@@ -32,6 +35,27 @@ class StoreController {
             @PageableDefault(size = 25, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ){
         return ResponseEntity.ok(storeService.findAll(pageable));
+    }
+
+    @GetMapping("/stores/managed")
+    public ResponseEntity<Page<ResponseStoreDTO>> getManagedStores(
+            @PageableDefault(size = 100, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ){
+        List<Long> managedIds = userContext.getManagedStoreIds();
+
+        if (managedIds.isEmpty()) {
+            return ResponseEntity.ok(storeService.findAll(pageable));
+        }
+
+        List<ResponseStoreDTO> stores = managedIds.stream()
+                .map(id -> {
+                    try { return storeService.findById(id); }
+                    catch (Exception e) { return null; }
+                })
+                .filter(s -> s != null)
+                .toList();
+
+        return ResponseEntity.ok(new PageImpl<>(stores, pageable, stores.size()));
     }
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")

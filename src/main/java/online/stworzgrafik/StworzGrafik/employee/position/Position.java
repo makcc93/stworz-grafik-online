@@ -13,6 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@Table(name = "position")
 public class Position {
 
     @Id
