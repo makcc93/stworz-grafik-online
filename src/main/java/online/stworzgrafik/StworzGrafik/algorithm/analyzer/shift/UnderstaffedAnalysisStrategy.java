@@ -38,11 +38,18 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         List<Employee> availableEmployees = ((UnderstaffedAnalysisResult) result).availableEmployees();
         List<Shift> shifts = ((UnderstaffedAnalysisResult) result).shifts();
 
-        Set<Employee> employees = new HashSet<>(context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).keySet());
+        Set<Employee> employees = new HashSet<>(
+                context.getMonthlyEmployeesProposalShiftsByDate()
+                        .getOrDefault(day, new HashMap<>()).keySet()
+        );
 
-        while (shifts.size() > availableEmployees.size()) {
+        while (shifts.size() > employees.size()) {
+            if (employees.isEmpty()) {
+                log.warn("Brak dostępnych pracowników dla dnia: {}", day);
+                break;
+            }
+
             boolean resolved = modifyEmployeeProposalToCoverUnmatchedShift(employees, shifts, context, day);
-
             if (!resolved) break;
         }
     }

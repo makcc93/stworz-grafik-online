@@ -60,6 +60,7 @@ public class ScheduleGeneratorContext {
     private final ShiftTypeConfig daysOffShiftTypeConfig;
     private final ShiftTypeConfig proposalShiftTypeConfig;
     private final ShiftTypeConfig standardShiftTypeConfig;
+    private final ShiftTypeConfig delegationShiftTypeConfig;
     private final LinkedHashMap<LocalDate,Map<Employee,Shift>> finalSchedule;
     private final List<CreateScheduleMessageDTO> finalScheduleMessages;
     private final boolean storeHasDedicatedWarehouseman;
@@ -416,5 +417,13 @@ public class ScheduleGeneratorContext {
         BigDecimal startShiftValue = startHour.add(startMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
 
         return endShiftValue.subtract(startShiftValue);
+    }
+
+    public ShiftTypeConfig resolveShiftTypeConfig(Employee employee, LocalDate date, Shift shift){
+        if (shift.equals(defaultDaysOffShift))    return daysOffShiftTypeConfig;
+        if (shift.equals(defaultVacationShift))   return vacationShiftTypeConfig;
+        if (shift.equals(defaultDelegationShift)) return delegationShiftTypeConfig;
+        if (employeeHasProposalShift(employee, date)) return proposalShiftTypeConfig;
+        return standardShiftTypeConfig;
     }
 }

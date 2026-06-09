@@ -292,6 +292,7 @@ CREATE TABLE schedule_details (
     created_at          DATETIME,
     updated_at          DATETIME,
     PRIMARY KEY (id),
+    CONSTRAINT uq_schedule_employee_date UNIQUE (schedule_id, employee_id, date),
     CONSTRAINT fk_schedule_details_schedule          FOREIGN KEY (schedule_id)         REFERENCES schedule (id),
     CONSTRAINT fk_schedule_details_employee          FOREIGN KEY (employee_id)         REFERENCES employee (id),
     CONSTRAINT fk_schedule_details_shift             FOREIGN KEY (shift_id)            REFERENCES shift (id),

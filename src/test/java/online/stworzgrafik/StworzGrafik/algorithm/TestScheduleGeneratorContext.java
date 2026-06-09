@@ -55,6 +55,7 @@ public class TestScheduleGeneratorContext {
     private ShiftTypeConfig daysOffShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.DAY_OFF).build();
     private ShiftTypeConfig proposalShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK_BY_PROPOSAL).build();
     private ShiftTypeConfig standardShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.WORK).build();
+    private ShiftTypeConfig delegationShiftTypeConfig = new TestShiftTypeConfigBuilder().withCode(ShiftCode.DELEGATION).build();
     private LinkedHashMap<LocalDate, Map<Employee, Shift>> finalSchedule = new LinkedHashMap<>();
     private List<CreateScheduleMessageDTO> finalScheduleMessages = new ArrayList<>();
     private boolean storeHasDedicatedWarehouseman = true;
@@ -185,6 +186,11 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
+    public TestScheduleGeneratorContext withDelegationShiftTypeConfig(ShiftTypeConfig delegationShiftTypeConfig) {
+        this.delegationShiftTypeConfig = delegationShiftTypeConfig;
+        return this;
+    }
+
     public TestScheduleGeneratorContext withAllShifts(List<Shift> allShifts){
         this.allShifts = allShifts;
         return this;
@@ -242,6 +248,7 @@ public class TestScheduleGeneratorContext {
                 daysOffShiftTypeConfig,
                 proposalShiftTypeConfig,
                 standardShiftTypeConfig,
+                delegationShiftTypeConfig,
                 finalSchedule,
                 finalScheduleMessages,
                 storeHasDedicatedWarehouseman,

@@ -10,6 +10,7 @@ public class TestUpdateScheduleDTO {
     private String name = "Zaktualizowany harmonogram";
     private LocalDateTime updatedAt = LocalDateTime.of(2023, 6, 15, 11, 0);
     private Long updatedByUserId = 505L;
+    private String scheduleStatusName = ScheduleStatus.IN_PROGRESS.name();
 
     public TestUpdateScheduleDTO withStoreId(Long storeId) {
         this.storeId = storeId;
@@ -48,7 +49,8 @@ public class TestUpdateScheduleDTO {
                 month,
                 name,
                 updatedAt,
-                updatedByUserId
+                updatedByUserId,
+                scheduleStatusName
         );
     }
 }

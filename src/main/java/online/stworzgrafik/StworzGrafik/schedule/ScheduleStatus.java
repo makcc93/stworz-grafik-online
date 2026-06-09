@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.schedule;
 
-enum ScheduleStatus {
+public enum ScheduleStatus {
     DONE,
     IN_PROGRESS,
     DELETED,

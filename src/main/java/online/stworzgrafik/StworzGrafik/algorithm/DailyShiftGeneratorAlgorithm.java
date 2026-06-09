@@ -64,9 +64,13 @@ public class DailyShiftGeneratorAlgorithm {
             }
 
             int[] draftAfterProposals = subtractArrays(dailyDraft, employeeDailyProposalCount);
-            List<Shift> shifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
+            List<Shift> transientShifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
-            context.addShiftsToDay(date,shifts);
+            List<Shift> resolvedShifts = transientShifts.stream()
+                    .map(s -> context.findShiftByHours(s.getStartHour(), s.getEndHour()))
+                    .toList();
+
+            context.addShiftsToDay(date, resolvedShifts);
         }
     }
 

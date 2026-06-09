@@ -17,6 +17,9 @@ import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
+import online.stworzgrafik.StworzGrafik.schedule.Schedule;
+import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -44,12 +47,13 @@ public class MonthlyStoreScheduleGenerator {
     private final CheckoutMatcher checkoutMatcher;
     private final OpenCloseMatcher openCloseMatcher;
     private final WeeklyRequirementRest weeklyRequirementRest;
+    private final ScheduleDatabaseSaver scheduleDatabaseSaver;
 
     /**
      * Generuje grafik miesięczny i zwraca plik Excel jako byte[].
      * Nie zapisuje nic na dysk — plik jest zwracany przez HTTP.
      */
-    public byte[] generateMonthlySchedule(Long storeId, Integer year, Integer month) throws IOException {
+    public byte[] generateMonthlySchedule(Long storeId,Integer year, Integer month) throws IOException {
         ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
 
         vacationApplier.applyVacationsToSchedule(context);
@@ -83,6 +87,8 @@ public class MonthlyStoreScheduleGenerator {
         creditMatcher.reassignRolesForMonth(context);
         checkoutMatcher.reassignRolesForMonth(context);
         openCloseMatcher.reassignRolesForMonth(context);
+
+        scheduleDatabaseSaver.saveScheduleToDatabase(storeId,context);
 
         return excelExport.export(context);
     }

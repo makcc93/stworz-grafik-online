@@ -95,6 +95,7 @@ public class ScheduleGeneratorContextFactory {
                 .daysOffShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DAY_OFF))
                 .proposalShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK_BY_PROPOSAL))
                 .standardShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.WORK))
+                .delegationShiftTypeConfig(shiftTypeConfigService.findByCode(ShiftCode.DELEGATION))
                 .finalSchedule(new LinkedHashMap<>())
                 .finalScheduleMessages(new ArrayList<>())
                 .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))

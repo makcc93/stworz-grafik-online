@@ -25,7 +25,9 @@ interface ScheduleDetailsRepository extends JpaRepository<ScheduleDetails, Long>
     @EntityGraph(attributePaths = {"employee", "shift", "shiftTypeConfig", "schedule"})
     Page<ScheduleDetails> findAll(@Nullable Specification<ScheduleDetails> specification, @NonNull Pageable pageable);
 
-    boolean existsByEmployeeIdAndDate(Long employeeId, LocalDate date);
+    boolean existsByEmployee_IdAndDate(Long employeeId, LocalDate date);
+
+    boolean existsBySchedule_IdAndEmployee_IdAndDate(Long scheduleId, Long employeeId, LocalDate date);
 
     Optional<ScheduleDetails> findBySchedule_IdAndEmployee_IdAndDate(Long scheduleId, Long employeeId, LocalDate date);
 

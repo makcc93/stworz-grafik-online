@@ -127,8 +127,15 @@ public class EmployeeToShiftMatcher {
             }
 
             while (shiftsSorted.size() > availableEmployees.size()){
+                int sizeBefore = shiftsSorted.size();
+
                 log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", date);
                 scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.UNDERSTAFFED);
+
+                if (shiftsSorted.size() == sizeBefore) {
+                    log.warn("Nie udało się rozwiązać niedoboru pracowników dla dnia: {} - pomijam", date);
+                    break;
+                }
             }
 
         }

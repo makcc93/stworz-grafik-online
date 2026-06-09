@@ -8,6 +8,7 @@ public record UpdateScheduleDTO(
         Integer month,
         String name,
         LocalDateTime updatedAt,
-        Long updatedByUserId
+        Long updatedByUserId,
+        String scheduleStatusName
 ) {
 }

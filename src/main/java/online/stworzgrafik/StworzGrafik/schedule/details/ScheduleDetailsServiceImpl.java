@@ -154,14 +154,13 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         verifyUserToStoreAccess(storeId);
 
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
-
         verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
 
-        if (repository.existsByEmployeeIdAndDate(dto.employeeId(),dto.date())){
-            return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId,dto.employeeId(),dto.date()).orElseThrow();
+        if (repository.existsBySchedule_IdAndEmployee_IdAndDate(scheduleId, dto.employeeId(), dto.date())) {
+            return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, dto.employeeId(), dto.date()).orElseThrow();
         }
 
-        Employee employee = employeeEntityService.getEntityById(storeId);
+        Employee employee = employeeEntityService.getEntityById(dto.employeeId());
         Shift shift = shiftService.getEntityById(dto.shiftId());
         ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
 

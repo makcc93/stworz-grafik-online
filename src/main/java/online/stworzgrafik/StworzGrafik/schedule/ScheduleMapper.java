@@ -30,5 +30,6 @@ public interface ScheduleMapper {
     Schedule toEntity(ResponseScheduleDTO responseScheduleDTO);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "scheduleStatus", source = "scheduleStatusName")
     void updateSchedule(UpdateScheduleDTO dto, @MappingTarget Schedule schedule);
 }

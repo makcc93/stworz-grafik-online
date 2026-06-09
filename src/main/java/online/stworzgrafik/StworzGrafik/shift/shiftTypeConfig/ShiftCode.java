@@ -5,5 +5,6 @@ public enum ShiftCode {
     WORK_BY_PROPOSAL,
     VACATION,
     DAY_OFF,
-    SICK_LEAVE
+    SICK_LEAVE,
+    DELEGATION
 }
