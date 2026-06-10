@@ -61,7 +61,14 @@ class ScheduleDetailsController {
                                                      @PathVariable Long scheduleId,
                                                      @PathVariable Long detailsId){
         service.deleteScheduleDetails(storeId,scheduleId,detailsId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @DeleteMapping("/stores/{storeId}/schedules/{scheduleId}/details")
+    ResponseEntity<HttpStatus> deleteAllScheduleDetails(@PathVariable Long storeId,
+                                                        @PathVariable Long scheduleId){
+        service.deleteAllScheduleDetails(storeId, scheduleId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

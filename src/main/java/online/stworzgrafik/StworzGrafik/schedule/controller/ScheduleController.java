@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExportFromDatabase;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleService;
 import online.stworzgrafik.StworzGrafik.schedule.generator.ScheduleGeneratorService;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 class ScheduleController {
     private final ScheduleService scheduleService;
     private final ScheduleGeneratorService scheduleGeneratorService;
+    private final ExcelExportFromDatabase excelExportFromDatabase;
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/schedules/{scheduleId}")
@@ -84,5 +86,35 @@ class ScheduleController {
         headers.setContentLength(excelBytes.length);
 
         return ResponseEntity.ok().headers(headers).body(excelBytes);
+    }
+
+    /**
+     * Eksportuje gotowy grafik jako plik Excel na podstawie danych z bazy danych.
+     * GET /api/stores/{storeId}/schedules/{scheduleId}/export
+     *
+     * Używany przez przycisk "Pobierz Excel" w ScheduleViewer — dane są identyczne
+     * z tym co widać w podglądzie (czytane z tej samej bazy).
+     */
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/schedules/{scheduleId}/export")
+    ResponseEntity<byte[]> exportSchedule(@PathVariable Long storeId,
+                                          @PathVariable Long scheduleId) {
+        try {
+            byte[] excelBytes = excelExportFromDatabase.export(storeId, scheduleId);
+
+            ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
+            String filename = "grafik_" + schedule.month() + "_" + schedule.year() + ".xlsx";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDisposition(
+                    ContentDisposition.attachment().filename(filename).build());
+            headers.setContentLength(excelBytes.length);
+
+            return ResponseEntity.ok().headers(headers).body(excelBytes);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Błąd generowania pliku Excel: " + e.getMessage(), e);
+        }
     }
 }

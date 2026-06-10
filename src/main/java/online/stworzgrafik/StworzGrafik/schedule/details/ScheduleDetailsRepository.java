@@ -3,10 +3,7 @@ package online.stworzgrafik.StworzGrafik.schedule.details;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -32,6 +29,10 @@ interface ScheduleDetailsRepository extends JpaRepository<ScheduleDetails, Long>
     Optional<ScheduleDetails> findBySchedule_IdAndEmployee_IdAndDate(Long scheduleId, Long employeeId, LocalDate date);
 
     List<ScheduleDetails> findBySchedule_IdAndDate(Long scheduleId, LocalDate date);
+
+    @Modifying
+    @Query("DELETE FROM ScheduleDetails sd WHERE sd.schedule.id = :scheduleId")
+    void deleteAllByScheduleId(@Param("scheduleId") Long scheduleId);
 
     @Query("""
     SELECT COALESCE(SUM(

@@ -1,9 +1,12 @@
 package online.stworzgrafik.StworzGrafik.schedule.details;
 
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ResponseScheduleDetailsDTO;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class TestResponseScheduleDetailsDTO {
     private Long id = 12L;
@@ -12,6 +15,10 @@ public class TestResponseScheduleDetailsDTO {
     private LocalDate date = LocalDate.of(2022,12,10);
     private Long shiftId = 15L;
     private Long shiftTypeConfigId = 16L;
+    private LocalTime startHour = LocalTime.of(8,0);
+    private LocalTime endHour = LocalTime.of(14,0);
+    private ShiftCode shiftCode =  ShiftCode.WORK;
+    private BigDecimal defaultHours = BigDecimal.valueOf(8L);
     private LocalDateTime createdAt = LocalDateTime.of(2022,1,1,12,30);
     private LocalDateTime updatedAt = null;
 
@@ -63,6 +70,10 @@ public class TestResponseScheduleDetailsDTO {
                 date,
                 shiftId,
                 shiftTypeConfigId,
+                startHour,
+                endHour,
+                shiftCode,
+                defaultHours,
                 createdAt,
                 updatedAt
         );

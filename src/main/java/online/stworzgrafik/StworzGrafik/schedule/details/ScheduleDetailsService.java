@@ -36,10 +36,14 @@ public interface ScheduleDetailsService {
                                @NotNull Long scheduleId,
                                @NotNull Long scheduleDetailsId);
 
+
+    void deleteAllScheduleDetails(@NotNull Long storeId,
+                                  @NotNull Long scheduleId);
+
     ResponseScheduleDetailsDTO saveScheduleDetails(@NotNull ScheduleDetails scheduleDetails);
 
     BigDecimal getEmployeeSumHoursByMonth(@NotNull Long storeId,
-                                   @NotNull Long employeeId,
-                                   Integer year,
-                                   Integer month);
+                                          @NotNull Long employeeId,
+                                          Integer year,
+                                          Integer month);
 }

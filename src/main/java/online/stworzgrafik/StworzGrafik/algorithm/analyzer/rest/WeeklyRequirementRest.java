@@ -1,9 +1,14 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
+import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -12,7 +17,9 @@ import java.util.*;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class WeeklyRequirementRest {
+    private final ScheduleMessageService scheduleMessageService;
 
     public void proceed(ScheduleGeneratorContext context){
         Map<Integer, PeriodDateDTO> periodWeek = context.getPeriodWeek();
@@ -51,9 +58,22 @@ public class WeeklyRequirementRest {
                 context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
     }
 
-    private static void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
+    private void assignEmployeesToRestDays(ScheduleGeneratorContext context, List<Employee> employees, PeriodDateDTO periodDateDTO, Map<LocalDate, Double> daysScoring) {
         LocalDate periodStartDate = periodDateDTO.startDate();
         LocalDate periodEndDate = periodDateDTO.endDate();
+
+        if ((periodEndDate.getDayOfMonth() - 1)  - (periodStartDate.getDayOfMonth() + 1) == 1 &&
+                Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(periodStartDate.plusDays(1), new int[24])).sum() > 1){
+            context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                    ScheduleMessageType.WARNING,
+                    ScheduleMessageCode.NO_AVAILABLE_DAY_OFF_FOR_WEEKLY_REST,
+                    "W okresie " + periodStartDate + " do " + periodEndDate + " brak dostępnego dnia wolnego zapewniającego 35-godzinny odpoczynek, sprawdź ten okres",
+                    null,
+                    null)
+            );
+
+           return;
+        }
 
         // 1. Filtrujemy pracowników raz przed pętlą
         List<Employee> filteredEmployees = employees.stream()

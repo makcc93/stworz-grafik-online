@@ -23,7 +23,7 @@ public class ScheduleDatabaseSaver {
     private final ShiftTypeConfigService shiftTypeConfigService;
 
     void saveScheduleToDatabase(Long storeId,ScheduleGeneratorContext context){
-        Schedule schedule = scheduleEntityService.findByStoreIdAndYearAndMonth(storeId, context.getYear(), context.getMonth());
+        Schedule schedule = context.getSchedule();
 
         for (Map.Entry<LocalDate, Map<Employee, Shift>>  entry : context.getFinalSchedule().entrySet()){
             LocalDate date = entry.getKey();

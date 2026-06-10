@@ -7,6 +7,7 @@ import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleService;
+import online.stworzgrafik.StworzGrafik.schedule.ScheduleStatus;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ResponseScheduleDetailsDTO;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -114,6 +116,21 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
     }
 
     @Override
+    @Transactional
+    public void deleteAllScheduleDetails(Long storeId, Long scheduleId) {
+        verifyUserToStoreAccess(storeId);
+
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+
+        repository.deleteAllByScheduleId(scheduleId);
+
+        // Cofnij status grafiku — nie ma już wpisów, można ponownie generować
+        schedule.setScheduleStatus(ScheduleStatus.IN_PROGRESS);
+        scheduleEntityService.saveEntity(schedule);
+    }
+
+    @Override
     public ResponseScheduleDetailsDTO saveScheduleDetails(ScheduleDetails scheduleDetails) {
         return mapper.toDTO(repository.save(scheduleDetails));
     }
@@ -157,7 +174,13 @@ public class ScheduleDetailsServiceImpl implements ScheduleDetailsService, Sched
         verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
 
         if (repository.existsBySchedule_IdAndEmployee_IdAndDate(scheduleId, dto.employeeId(), dto.date())) {
-            return repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, dto.employeeId(), dto.date()).orElseThrow();
+            // Nadpisz istniejący wpis nowymi danymi (np. przy ponownym generowaniu grafiku)
+            ScheduleDetails existing = repository.findBySchedule_IdAndEmployee_IdAndDate(scheduleId, dto.employeeId(), dto.date()).orElseThrow();
+            Shift shift = shiftService.getEntityById(dto.shiftId());
+            ShiftTypeConfig shiftTypeConfig = shiftTypeConfigService.findById(dto.shiftTypeConfigId());
+            existing.setShift(shift);
+            existing.setShiftTypeConfig(shiftTypeConfig);
+            return repository.save(existing);
         }
 
         Employee employee = employeeEntityService.getEntityById(dto.employeeId());
