@@ -1,10 +1,10 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.DTO;
+package online.stworzgrafik.StworzGrafik.user.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DirectorScope;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.DirectorScope;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 
 public record CreateUserRequest(
         @NotBlank String login,

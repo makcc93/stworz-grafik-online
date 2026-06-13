@@ -46,7 +46,7 @@ CREATE TABLE store (
 -- -------------------------------------------------------------
 -- 4. position
 -- -------------------------------------------------------------
-CREATE TABLE `position` (
+CREATE TABLE positions (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     name        VARCHAR(255) NOT NULL UNIQUE,
     description VARCHAR(255),

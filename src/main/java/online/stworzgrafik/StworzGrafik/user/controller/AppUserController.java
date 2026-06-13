@@ -1,12 +1,12 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.controller;
+package online.stworzgrafik.StworzGrafik.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUserService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.ChangePasswordRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.CreateUserRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.SetEnabledRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.UserResponse;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
+import online.stworzgrafik.StworzGrafik.user.DTO.ChangePasswordRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.SetEnabledRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

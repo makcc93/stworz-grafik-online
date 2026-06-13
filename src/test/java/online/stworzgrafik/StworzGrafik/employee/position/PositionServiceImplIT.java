@@ -11,17 +11,18 @@ import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 public class PositionServiceImplIT {
 
     @Autowired
-    private PositionServiceImpl service;
+    private PositionService service;
 
     @Autowired
     private PositionMapper mapper;
@@ -41,9 +42,6 @@ public class PositionServiceImplIT {
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position position2 = new TestPositionBuilder().withName("SECOND").build();
         Position position3 = new TestPositionBuilder().withName("THIRD").build();
-        List<ResponsePositionDTO> dtos = List.of(position1,position2,position3).stream()
-                .map(mapper::toResponsePositionDTO)
-                .toList();
 
         repository.saveAll(List.of(position1,position2,position3));
 

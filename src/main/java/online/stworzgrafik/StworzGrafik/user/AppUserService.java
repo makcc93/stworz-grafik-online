@@ -1,7 +1,7 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser;
+package online.stworzgrafik.StworzGrafik.user;
 
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.CreateUserRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.UserResponse;
+import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
 
 import java.util.List;
 

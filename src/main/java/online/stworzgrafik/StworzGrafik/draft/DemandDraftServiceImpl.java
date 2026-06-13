@@ -2,22 +2,19 @@ package online.stworzgrafik.StworzGrafik.draft;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DTO.*;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
-import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
+import online.stworzgrafik.StworzGrafik.user.UserContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

@@ -1,9 +1,9 @@
 package online.stworzgrafik.StworzGrafik.security;
 
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
-import online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy.UserRoleStrategy;
-import online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy.UserRoleStrategyFactory;
+import online.stworzgrafik.StworzGrafik.user.UserContext;
+import online.stworzgrafik.StworzGrafik.user.roleStrategy.UserRoleStrategy;
+import online.stworzgrafik.StworzGrafik.user.roleStrategy.UserRoleStrategyFactory;
 import org.springframework.stereotype.Service;
 
 @Service("userAuthorizationService")

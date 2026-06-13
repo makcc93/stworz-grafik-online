@@ -1,8 +1,7 @@
 package online.stworzgrafik.StworzGrafik.store;
 
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PrePersist;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
@@ -15,6 +14,9 @@ import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.DTO.UpdateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
+import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
+import online.stworzgrafik.StworzGrafik.store.storeDetails.StoreDetailsService;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class StoreServiceImplTest {
     private StoreServiceImpl service;
 
     @Mock
-    private StoreRepository repository;
+    private StoreRepository storeRepository;
 
     @Mock
     private StoreBuilder storeBuilder;
@@ -61,8 +63,87 @@ class StoreServiceImplTest {
     @Mock
     private UserAuthorizationService userAuthorizationService;
 
+    @Mock private StoreDetailsService storeDetailsService;
+    @Mock private StoreDeliveryService storeDeliveryService;
+    @Mock private StoreOpeningHoursService openingHoursService;
+
     private Region region = new TestRegionBuilder().build();
     private Branch branch = new TestBranchBuilder().withRegion(region).build();
+
+    @Test
+    void createEntityStore_whenValidData_shouldInitializeAllAndReturnStore() {
+        // given
+        CreateStoreDTO dto = new TestCreateStoreDTO().withBranch(branch).build();
+
+        String name      = dto.name();
+        String storeCode = dto.storeCode();
+        String location  = dto.location();
+
+        // ifStoreAlreadyExist sprawdza te dwa
+        when(storeRepository.existsByName(name)).thenReturn(false);
+        when(storeRepository.existsByStoreCode(storeCode)).thenReturn(false);
+
+        when(branchEntityService.getEntityById(dto.branchId())).thenReturn(branch);
+        when(nameValidatorService.validate(name, ObjectType.STORE)).thenReturn(name);
+
+        Store builtStore = new TestStoreBuilder()
+                .withName(name).withStoreCode(storeCode)
+                .withLocation(location).withBranch(branch)
+                .build();
+
+        when(storeBuilder.createStore(name, storeCode, location, branch))
+                .thenReturn(builtStore);
+
+        // save zwraca ten sam obiekt — savedStore == builtStore
+        when(storeRepository.save(builtStore)).thenReturn(builtStore);
+
+        // serwisy void — Mockito domyślnie nic nie robi, ale @Mock MUSI istnieć
+        // doNothing() jest zbędne, pokazuję tylko dla czytelności:
+        // doNothing().when(storeDetailsService).initializeDefault(builtStore);
+
+        // when
+        Store result = service.createEntityStore(dto);
+
+        // then — wynik
+        assertNotNull(result);
+        assertEquals(name,      result.getName());
+        assertEquals(storeCode, result.getStoreCode());
+        assertEquals(location,  result.getLocation());
+        assertEquals(branch,    result.getBranch());
+
+        // then — weryfikacja wywołań serwisów inicjalizujących
+        verify(storeDetailsService).initializeDefault(builtStore);
+        verify(storeDeliveryService).initializeDefault(builtStore);
+        verify(openingHoursService).initializeDefaultHours(builtStore);
+
+        // save wywołany dokładnie raz
+        verify(storeRepository).save(builtStore);
+    }
+
+    @Test
+    void createEntityStore_whenNameAlreadyExists_shouldThrow() {
+        CreateStoreDTO dto = new TestCreateStoreDTO().withBranch(branch).build();
+        when(storeRepository.existsByName(dto.name())).thenReturn(true);
+
+        assertThrows(EntityExistsException.class,
+                () -> service.createEntityStore(dto));
+
+        // żaden serwis inicjalizujący nie może zostać wywołany
+        verify(storeRepository, never()).save(any());
+        verifyNoInteractions(storeDetailsService, storeDeliveryService, openingHoursService);
+    }
+
+    @Test
+    void createEntityStore_whenStoreCodeAlreadyExists_shouldThrow() {
+        CreateStoreDTO dto = new TestCreateStoreDTO().withBranch(branch).build();
+        when(storeRepository.existsByName(dto.name())).thenReturn(false);
+        when(storeRepository.existsByStoreCode(dto.storeCode())).thenReturn(true);
+
+        assertThrows(EntityExistsException.class,
+                () -> service.createEntityStore(dto));
+
+        verify(storeRepository, never()).save(any());
+    }
 
     @Test
     void findAll_workingTest(){
@@ -75,7 +156,7 @@ class StoreServiceImplTest {
         List<Store> stores = List.of(store1, store2, store3);
         PageImpl<Store> storesPage = new PageImpl<>(stores, pageable, stores.size());
 
-        when(repository.findAll(pageable)).thenReturn(storesPage);
+        when(storeRepository.findAll(pageable)).thenReturn(storesPage);
 
         ResponseStoreDTO responseOfStore1 = new TestResponseStoreDTO().withStoreCode("00").build();
         when(storeMapper.toResponseStoreDto(store1)).thenReturn(responseOfStore1);
@@ -93,7 +174,7 @@ class StoreServiceImplTest {
         assertEquals(3,responseDTOS.getContent().size());
         assertTrue(responseDTOS.getContent().containsAll(List.of(responseOfStore1,responseOfStore2,responseOfStore3)));
 
-        verify(repository,times(1)).findAll(pageable);
+        verify(storeRepository,times(1)).findAll(pageable);
         verify(storeMapper,atLeastOnce()).toResponseStoreDto(any(Store.class));
     }
 
@@ -106,7 +187,7 @@ class StoreServiceImplTest {
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().withName(store.getName()).build();
 
-        when(repository.findById(id)).thenReturn(Optional.of(store));
+        when(storeRepository.findById(id)).thenReturn(Optional.of(store));
 
         when(storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
 
@@ -117,60 +198,8 @@ class StoreServiceImplTest {
         assertEquals(responseStoreDTO.name(),response.name());
         assertEquals(responseStoreDTO.storeCode(),response.storeCode());
 
-        verify(repository,times(1)).findById(id);
+        verify(storeRepository,times(1)).findById(id);
         verify(storeMapper).toResponseStoreDto(any(Store.class));
-    }
-
-    @Test
-    void createStore_workingTest(){
-        //given
-        CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().withBranch(branch).build();
-        Long branchId = createStoreDTO.branchId();
-
-        String name = createStoreDTO.name();
-        when(repository.existsByName(name)).thenReturn(false);
-        String storeCode = createStoreDTO.storeCode();
-        when(repository.existsByStoreCode(storeCode)).thenReturn(false);
-
-        when(branchEntityService.getEntityById(branchId)).thenReturn(branch);
-
-        when(nameValidatorService.validate(name,ObjectType.STORE)).thenReturn(name);
-
-
-        String location = createStoreDTO.location();
-        Store store = new TestStoreBuilder()
-                .withName(name)
-                .withStoreCode(storeCode)
-                .withLocation(location)
-                .withBranch(branch)
-                .build();
-
-        when(storeBuilder.createStore(
-                name,
-                storeCode,
-                location,
-                branch
-        )).thenReturn(store);
-
-        when(repository.save(store)).thenReturn(store);
-
-        ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO()
-                .withName(name)
-                .withStoreCode(storeCode)
-                .withBranch(branch)
-                .withLocation(location)
-                .build();
-
-        when(storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
-
-        //when
-        ResponseStoreDTO serviceResponse = service.createStore(createStoreDTO);
-
-        //then
-        assertEquals(name, serviceResponse.name());
-        assertEquals(storeCode,serviceResponse.storeCode());
-        assertEquals(location,serviceResponse.location());
-        assertEquals(branch.getId(),serviceResponse.branchId());
     }
 
     @Test
@@ -182,7 +211,7 @@ class StoreServiceImplTest {
         assertThrows(NullPointerException.class,() -> service.createStore(createStoreDTO));
 
         //then
-        verify(repository,never()).save(any(Store.class));
+        verify(storeRepository,never()).save(any(Store.class));
     }
 
     @Test
@@ -190,8 +219,8 @@ class StoreServiceImplTest {
         //given
         CreateStoreDTO createStoreDTO = new TestCreateStoreDTO().build();
 
-        when(repository.existsByName(createStoreDTO.name())).thenReturn(false);
-        when(repository.existsByStoreCode(createStoreDTO.storeCode())).thenReturn(false);
+        when(storeRepository.existsByName(createStoreDTO.name())).thenReturn(false);
+        when(storeRepository.existsByStoreCode(createStoreDTO.storeCode())).thenReturn(false);
 
         when(branchEntityService.getEntityById(createStoreDTO.branchId()))
                 .thenThrow(new EntityNotFoundException("Cannot find branch by id " + createStoreDTO.branchId()));
@@ -204,7 +233,7 @@ class StoreServiceImplTest {
         assertEquals("Cannot find branch by id " + createStoreDTO.branchId(), exception.getMessage());
         verify(nameValidatorService,never()).validate(any(),any());
         verify(storeBuilder,never()).createStore(any(),any(),any(),any());
-        verify(repository,never()).save(any());
+        verify(storeRepository,never()).save(any());
         verify(storeMapper,never()).toResponseStoreDto(any());
     }
 
@@ -214,8 +243,8 @@ class StoreServiceImplTest {
         Long id = 1L;
         Long notExistingEntityId = 2L;
 
-        when(repository.existsById(id)).thenReturn(true);
-        when(repository.existsById(notExistingEntityId)).thenReturn(false);
+        when(storeRepository.existsById(id)).thenReturn(true);
+        when(storeRepository.existsById(notExistingEntityId)).thenReturn(false);
 
         //when
         boolean exists = service.existsById(id);
@@ -230,10 +259,10 @@ class StoreServiceImplTest {
     void existsByStoreNameAndStoreCode_workingTest(){
         //given
         StoreNameAndCodeDTO storeNameAndCodeDTO = new StoreNameAndCodeDTO("Best store","00");
-        when(repository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode())).thenReturn(true);
+        when(storeRepository.existsByNameAndStoreCode(storeNameAndCodeDTO.name(),storeNameAndCodeDTO.storeCode())).thenReturn(true);
 
         StoreNameAndCodeDTO notExistingStore = new StoreNameAndCodeDTO("Test","AA");
-        when(repository.existsByNameAndStoreCode(notExistingStore.name(),notExistingStore.storeCode())).thenReturn(false);
+        when(storeRepository.existsByNameAndStoreCode(notExistingStore.name(),notExistingStore.storeCode())).thenReturn(false);
 
         //when
         boolean exists = service.existsByNameAndCode(storeNameAndCodeDTO);
@@ -253,7 +282,7 @@ class StoreServiceImplTest {
         assertThrows(NullPointerException.class, () -> service.existsByNameAndCode(storeNameAndCodeDTO));
 
         //then
-        verify(repository,never()).save(any(Store.class));
+        verify(storeRepository,never()).save(any(Store.class));
     }
 
     @Test
@@ -262,13 +291,13 @@ class StoreServiceImplTest {
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
 
         Long id = 1L;
-        when(repository.existsById(id)).thenReturn(true);
+        when(storeRepository.existsById(id)).thenReturn(true);
 
         //when
         service.delete(id);
 
         //then
-        verify(repository,times(1)).deleteById(id);
+        verify(storeRepository,times(1)).deleteById(id);
     }
 
     @Test
@@ -278,7 +307,7 @@ class StoreServiceImplTest {
 
         Long id = 200L;
 
-        when(repository.existsById(id)).thenReturn(false);
+        when(storeRepository.existsById(id)).thenReturn(false);
 
         //when
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.delete(id));
@@ -291,7 +320,7 @@ class StoreServiceImplTest {
     void saveEntity_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
-        when(repository.save(store)).thenReturn(store);
+        when(storeRepository.save(store)).thenReturn(store);
 
         //when
         Store savedEntity = service.saveEntity(store);
@@ -302,7 +331,7 @@ class StoreServiceImplTest {
         assertEquals(store.getLocation(),savedEntity.getLocation());
         assertEquals(store.getBranch(),savedEntity.getBranch());
 
-        verify(repository,times(1)).save(store);
+        verify(storeRepository,times(1)).save(store);
     }
 
     @Test
@@ -310,7 +339,7 @@ class StoreServiceImplTest {
         //given
         Store store = new TestStoreBuilder().withBranch(branch).build();
 
-        when(repository.save(store)).thenReturn(store);
+        when(storeRepository.save(store)).thenReturn(store);
 
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().build();
         when (storeMapper.toResponseStoreDto(store)).thenReturn(responseStoreDTO);
@@ -322,7 +351,7 @@ class StoreServiceImplTest {
         assertEquals(responseStoreDTO.id(),returnedDto.id());
         assertEquals(responseStoreDTO.location(),returnedDto.location());
 
-        verify(repository,times(1)).save(any(Store.class));
+        verify(storeRepository,times(1)).save(any(Store.class));
     }
 
     @Test
@@ -332,7 +361,7 @@ class StoreServiceImplTest {
 
         Long id = 1L;
         Store store = new TestStoreBuilder().build();
-        when(repository.findById(id)).thenReturn(Optional.of(store));
+        when(storeRepository.findById(id)).thenReturn(Optional.of(store));
 
         UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
@@ -340,8 +369,8 @@ class StoreServiceImplTest {
 
         ResponseStoreDTO responseStoreDTO = new TestResponseStoreDTO().build();
 
-        when(repository.findById(id)).thenReturn(Optional.of(store));
-        when(repository.save(any(Store.class))).thenReturn(store);
+        when(storeRepository.findById(id)).thenReturn(Optional.of(store));
+        when(storeRepository.save(any(Store.class))).thenReturn(store);
         when(storeMapper.toResponseStoreDto(any(Store.class))).thenReturn(responseStoreDTO);
 
         //when
@@ -350,9 +379,9 @@ class StoreServiceImplTest {
         //then
         assertEquals(responseStoreDTO,updated);
 
-        verify(repository,times(1)).findById(id);
+        verify(storeRepository,times(1)).findById(id);
         verify(storeMapper,times(1)).toResponseStoreDto(store);
-        verify(repository,times(1)).save(any(Store.class));
+        verify(storeRepository,times(1)).save(any(Store.class));
     }
 
     @Test
@@ -363,13 +392,13 @@ class StoreServiceImplTest {
         Long id = 100L;
         UpdateStoreDTO updateStoreDTO = new TestUpdateStoreDTO().build();
 
-        when(repository.findById(id)).thenThrow(EntityNotFoundException.class);
+        when(storeRepository.findById(id)).thenThrow(EntityNotFoundException.class);
 
         //when
         assertThrows(EntityNotFoundException.class,() -> service.update(id,updateStoreDTO));
 
         //then
-        verify(repository,times(1)).findById(any(Long.class));
-        verify(repository,never()).save(any(Store.class));
+        verify(storeRepository,times(1)).findById(any(Long.class));
+        verify(storeRepository,never()).save(any(Store.class));
     }
 }

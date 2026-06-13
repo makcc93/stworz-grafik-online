@@ -1,7 +1,7 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy;
+package online.stworzgrafik.StworzGrafik.user.roleStrategy;
 
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

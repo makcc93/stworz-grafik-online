@@ -9,16 +9,17 @@ import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class RegionServiceImplIT {
     @Autowired
-    private RegionServiceImpl regionServiceImpl;
+    private RegionService regionService;
 
     @Autowired
     private RegionRepository regionRepository;
@@ -37,7 +38,7 @@ class RegionServiceImplIT {
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName(name).build();
 
         //when
-        ResponseRegionDTO serviceResponse = regionServiceImpl.createRegion(createRegionDTO);
+        ResponseRegionDTO serviceResponse = regionService.createRegion(createRegionDTO);
 
         //then
         assertEquals(name, serviceResponse.name());
@@ -54,7 +55,7 @@ class RegionServiceImplIT {
         CreateRegionDTO createRegionDTO = new TestCreateRegionDTO().withName(usedName).build();
 
         //when
-        EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionServiceImpl.createRegion(createRegionDTO));
+        EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionService.createRegion(createRegionDTO));
 
         //then
         assertEquals("Region with name " + usedName + " already exist", exception.getMessage());
@@ -73,7 +74,7 @@ class RegionServiceImplIT {
         UpdateRegionDTO updateRegionDTO = new TestUpdateRegionDTO().withName(newName).withIsEnable(newEnable).build();
 
         //when
-       regionServiceImpl.updateRegion(region.getId(), updateRegionDTO);
+       regionService.updateRegion(region.getId(), updateRegionDTO);
 
         //then
         assertEquals(newName,region.getName());
@@ -88,7 +89,7 @@ class RegionServiceImplIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.updateRegion(notExistingId, updateRegionDTO));
+                assertThrows(EntityNotFoundException.class, () -> regionService.updateRegion(notExistingId, updateRegionDTO));
 
         //then
         assertEquals("Cannot find region by id " + notExistingId, exception.getMessage());
@@ -107,7 +108,7 @@ class RegionServiceImplIT {
         ResponseRegionDTO responseRegionDTO3 = regionMapper.toResponseRegionDTO(region3);
 
         //when
-        List<ResponseRegionDTO> serviceResponse = regionServiceImpl.findAll();
+        List<ResponseRegionDTO> serviceResponse = regionService.findAll();
 
         //then
         assertEquals(3,serviceResponse.size());
@@ -119,7 +120,7 @@ class RegionServiceImplIT {
         //given
 
         //when
-        List<ResponseRegionDTO> emptyServiceResponse = regionServiceImpl.findAll();
+        List<ResponseRegionDTO> emptyServiceResponse = regionService.findAll();
 
         //then
         assertEquals(0,emptyServiceResponse.size());
@@ -137,7 +138,7 @@ class RegionServiceImplIT {
         regionRepository.saveAll(List.of(region1,region2,region3));
 
         //when
-        ResponseRegionDTO serviceResponse = regionServiceImpl.findById(region2.getId());
+        ResponseRegionDTO serviceResponse = regionService.findById(region2.getId());
 
         //then
         assertEquals(name,serviceResponse.name());
@@ -150,7 +151,7 @@ class RegionServiceImplIT {
         Long notExistingEntityId = 123123L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.findById(notExistingEntityId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> regionService.findById(notExistingEntityId));
 
         //then
         assertEquals("Cannot find region by id " + notExistingEntityId, exception.getMessage());
@@ -163,7 +164,7 @@ class RegionServiceImplIT {
         regionRepository.save(region);
 
         //when
-        boolean response = regionServiceImpl.exists(region.getId());
+        boolean response = regionService.exists(region.getId());
 
         //then
         assertTrue(response);
@@ -175,7 +176,7 @@ class RegionServiceImplIT {
         long notExistingEntityId = 421421L;
 
         //when
-        boolean response = assertDoesNotThrow(() -> regionServiceImpl.exists(notExistingEntityId));
+        boolean response = assertDoesNotThrow(() -> regionService.exists(notExistingEntityId));
 
         //then
         assertFalse(response);
@@ -191,7 +192,7 @@ class RegionServiceImplIT {
         regionRepository.save(region2);
 
         //when
-        regionServiceImpl.delete(region1.getId());
+        regionService.delete(region1.getId());
 
         //then
         assertFalse(regionRepository.existsById(region1.getId()));
@@ -205,7 +206,7 @@ class RegionServiceImplIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> regionServiceImpl.delete(notExistingEntityId));
+                assertThrows(EntityNotFoundException.class, () -> regionService.delete(notExistingEntityId));
 
         //then
         assertEquals("Cannot find region by id " + notExistingEntityId, exception.getMessage());

@@ -1,7 +1,7 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.DTO;
+package online.stworzgrafik.StworzGrafik.user.DTO;
 
-import online.stworzgrafik.StworzGrafik.temporaryUser.DirectorScope;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.DirectorScope;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 
 public record UserResponse(
         Long id,

@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser;
+package online.stworzgrafik.StworzGrafik.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

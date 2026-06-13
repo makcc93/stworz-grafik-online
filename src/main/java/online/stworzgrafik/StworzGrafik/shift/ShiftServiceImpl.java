@@ -50,9 +50,7 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService{
                             .orElseThrow());
         }
 
-        Shift shift = shiftBuilder.createShift(
-                startHour,
-                endHour
+        Shift shift = shiftBuilder.createShift(startHour, endHour
         );
 
         Shift savedShift = shiftRepository.save(shift);

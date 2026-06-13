@@ -1,42 +1,34 @@
 package online.stworzgrafik.StworzGrafik.security.initializer;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
-import online.stworzgrafik.StworzGrafik.billing.DTO.BillingPeriodConfigRequest;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
-import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
-import online.stworzgrafik.StworzGrafik.employee.position.DTO.CreatePositionDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacationService;
-import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
-import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.ShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
-import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.DTO.ShiftTypeConfigRequest;
-import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
-import online.stworzgrafik.StworzGrafik.store.DTO.ResponseStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUser;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUserService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Profile("!test")
 @Component
 @RequiredArgsConstructor
 @Slf4j

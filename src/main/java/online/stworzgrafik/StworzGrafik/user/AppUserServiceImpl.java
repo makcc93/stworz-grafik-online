@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser;
+package online.stworzgrafik.StworzGrafik.user;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.CreateUserRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.UserResponse;
+import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 public class BranchNameValidator implements NameValidatorStrategy {
     @Override
     public String validate(String name) {
-        if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ0-9\\t\\n ]+$")){
+        if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ0-9 ]+$")){
             throw new ValidationException("Name cannot contain illegal chars");
         }
 

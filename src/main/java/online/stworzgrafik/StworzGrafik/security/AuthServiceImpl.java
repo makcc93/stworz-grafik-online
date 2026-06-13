@@ -2,12 +2,12 @@ package online.stworzgrafik.StworzGrafik.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUser;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUserDetailsService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUserRepository;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.AuthResponse;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DTO.LoginRequest;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.AppUserDetailsService;
+import online.stworzgrafik.StworzGrafik.user.AppUserRepository;
+import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
+import online.stworzgrafik.StworzGrafik.user.DTO.LoginRequest;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;

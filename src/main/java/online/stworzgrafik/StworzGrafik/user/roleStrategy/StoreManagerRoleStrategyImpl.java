@@ -1,6 +1,6 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.roleStrategy;
+package online.stworzgrafik.StworzGrafik.user.roleStrategy;
 
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
+import online.stworzgrafik.StworzGrafik.user.UserContext;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 

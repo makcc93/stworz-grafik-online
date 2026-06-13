@@ -2,10 +2,10 @@ package online.stworzgrafik.StworzGrafik.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUser;
-import online.stworzgrafik.StworzGrafik.temporaryUser.AppUserService;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserContext;
-import online.stworzgrafik.StworzGrafik.temporaryUser.UserRole;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
+import online.stworzgrafik.StworzGrafik.user.UserContext;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.AccessDeniedException;

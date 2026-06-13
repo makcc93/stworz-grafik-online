@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.DTO;
+package online.stworzgrafik.StworzGrafik.user.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 

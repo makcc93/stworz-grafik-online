@@ -16,17 +16,18 @@ import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class BranchServiceImplIT {
 
     @Autowired
-    private BranchServiceImpl branchServiceImpl;
+    private BranchService branchService;
 
     @Autowired
     private BranchRepository branchRepository;
@@ -55,7 +56,7 @@ class BranchServiceImplIT {
         branchRepository.save(build2);
 
         //when
-        ResponseBranchDTO serviceResponse = branchServiceImpl.findById(build2.getId());
+        ResponseBranchDTO serviceResponse = branchService.findById(build2.getId());
 
         //then
         assertEquals(name, serviceResponse.name());
@@ -69,7 +70,7 @@ class BranchServiceImplIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> branchServiceImpl.findById(notExistingEntityId));
+                assertThrows(EntityNotFoundException.class, () -> branchService.findById(notExistingEntityId));
 
         //then
         assertEquals("Branch with id " + notExistingEntityId + " does not exist", exception.getMessage());
@@ -88,7 +89,7 @@ class BranchServiceImplIT {
         ResponseBranchDTO responseBranchDTO3 = branchMapper.toResponseBranchDTO(branch3);
 
         //when
-        List<ResponseBranchDTO> serviceResponse = branchServiceImpl.findAll();
+        List<ResponseBranchDTO> serviceResponse = branchService.findAll();
 
         //then
         assertEquals(3, serviceResponse.size());
@@ -100,7 +101,7 @@ class BranchServiceImplIT {
         //given
 
         //when
-        List<ResponseBranchDTO> serviceResponse = branchServiceImpl.findAll();
+        List<ResponseBranchDTO> serviceResponse = branchService.findAll();
 
         //then
         assertEquals(0,serviceResponse.size());
@@ -116,7 +117,7 @@ class BranchServiceImplIT {
         CreateBranchDTO createBranchDTO = new TestCreateBranchDTO().withName(name).withRegionId(regionId).build();
 
         //when
-        ResponseBranchDTO serviceResponse = branchServiceImpl.createBranch(createBranchDTO);
+        ResponseBranchDTO serviceResponse = branchService.createBranch(createBranchDTO);
         System.out.println(serviceResponse);
 
         //then
@@ -137,7 +138,7 @@ class BranchServiceImplIT {
 
         //when
         EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> branchServiceImpl.createBranch(createBranchDTO));
+                assertThrows(EntityExistsException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
         assertEquals("Branch with name " + previousName + " already exist", exception.getMessage());
@@ -156,7 +157,7 @@ class BranchServiceImplIT {
         String expectedSavedName = "WEIRDNAME";
 
         //when
-        ResponseBranchDTO serviceResponse = branchServiceImpl.createBranch(createBranchDTO);
+        ResponseBranchDTO serviceResponse = branchService.createBranch(createBranchDTO);
 
         //then
         assertEquals(expectedSavedName, serviceResponse.name());
@@ -174,7 +175,7 @@ class BranchServiceImplIT {
 
         //when
         ValidationException exception =
-                assertThrows(ValidationException.class, () -> branchServiceImpl.createBranch(createBranchDTO));
+                assertThrows(ValidationException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
         assertEquals("Name cannot contain illegal chars", exception.getMessage());
@@ -191,7 +192,7 @@ class BranchServiceImplIT {
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().withName(newName).build();
 
         //when
-        ResponseBranchDTO serviceResponse = branchServiceImpl.updateBranch(branch.getId(), updateBranchDTO);
+        ResponseBranchDTO serviceResponse = branchService.updateBranch(branch.getId(), updateBranchDTO);
 
         //then
         assertEquals(newName, serviceResponse.name());
@@ -206,7 +207,7 @@ class BranchServiceImplIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> branchServiceImpl.updateBranch(randomId, updateBranchDTO));
+                assertThrows(EntityNotFoundException.class, () -> branchService.updateBranch(randomId, updateBranchDTO));
 
         //then
         assertEquals("Branch with id " + randomId + " does not exist", exception.getMessage());
@@ -220,7 +221,7 @@ class BranchServiceImplIT {
         UpdateBranchDTO updateBranchDTO = new TestUpdateBranchDTO().build();
 
         //when
-        assertThrows(ConstraintViolationException.class, () -> branchServiceImpl.updateBranch(nullId, updateBranchDTO));
+        assertThrows(ConstraintViolationException.class, () -> branchService.updateBranch(nullId, updateBranchDTO));
 
         //then
     }
@@ -234,7 +235,7 @@ class BranchServiceImplIT {
         long id = branch.getId();
 
         //when
-        branchServiceImpl.delete(id);
+        branchService.delete(id);
 
         //then
         assertFalse(branchRepository.existsById(id));
@@ -246,7 +247,7 @@ class BranchServiceImplIT {
         long randomId = 12345L;
 
         //when
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> branchServiceImpl.delete(randomId));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> branchService.delete(randomId));
 
         //then
         assertEquals("Branch with id " + randomId + " does not exist", exception.getMessage());
@@ -261,7 +262,7 @@ class BranchServiceImplIT {
         long id = branch.getId();
 
         //when
-        boolean response = branchServiceImpl.exists(id);
+        boolean response = branchService.exists(id);
 
         //then
         assertTrue(response);
@@ -275,7 +276,7 @@ class BranchServiceImplIT {
         branchRepository.save(branch);
 
         //when
-        boolean response = branchServiceImpl.exists(name);
+        boolean response = branchService.exists(name);
 
         //then
         assertTrue(response);

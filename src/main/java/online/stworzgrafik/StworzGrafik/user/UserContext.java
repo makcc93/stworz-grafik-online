@@ -1,4 +1,4 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser;
+package online.stworzgrafik.StworzGrafik.user;
 
 import java.util.List;
 

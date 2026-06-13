@@ -1,7 +1,7 @@
-package online.stworzgrafik.StworzGrafik.temporaryUser.DTO;
+package online.stworzgrafik.StworzGrafik.user.DTO;
 
 import jakarta.annotation.Nullable;
-import online.stworzgrafik.StworzGrafik.temporaryUser.DirectorScope;
+import online.stworzgrafik.StworzGrafik.user.DirectorScope;
 
 public record AuthResponse(
         String token,

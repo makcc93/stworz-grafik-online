@@ -2,8 +2,6 @@ package online.stworzgrafik.StworzGrafik.schedule;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.transaction.Transactional;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
@@ -19,8 +17,6 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
-import org.junit.After;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
@@ -36,12 +33,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 class ScheduleServiceImplIT {
     @Autowired
-    private ScheduleServiceImpl scheduleService;
+    private ScheduleService scheduleService;
+
+    @Autowired
+    private ScheduleEntityService scheduleEntityService;
 
     @Autowired
     private ScheduleRepository scheduleRepository;
@@ -85,7 +85,7 @@ class ScheduleServiceImplIT {
         Long scheduleId = schedule.getId();
 
         //when
-        Schedule serviceResponse = scheduleService.findEntityById(scheduleId);
+        Schedule serviceResponse = scheduleEntityService.findEntityById(scheduleId);
 
         //then
         assertEquals(schedule,serviceResponse);
@@ -98,7 +98,7 @@ class ScheduleServiceImplIT {
 
         //when
         EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> scheduleService.findEntityById(scheduleId));
+                assertThrows(EntityNotFoundException.class, () -> scheduleEntityService.findEntityById(scheduleId));
 
         //then
         assertEquals("Cannot find schedule by id " + scheduleId, exception.getMessage());
@@ -117,7 +117,7 @@ class ScheduleServiceImplIT {
 
         //when
         AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> scheduleService.findEntityById(scheduleId));
+                assertThrows(AccessDeniedException.class, () -> scheduleEntityService.findEntityById(scheduleId));
 
         //then
         assertEquals("Access denied for store with id " + storeId, exception.getMessage());
