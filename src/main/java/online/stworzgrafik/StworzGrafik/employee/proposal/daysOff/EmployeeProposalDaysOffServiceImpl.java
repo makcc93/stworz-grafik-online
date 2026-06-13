@@ -33,7 +33,6 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
-
     @Override
     public ResponseEmployeeProposalDaysOffDTO createEmployeeProposalDaysOff(Long storeId,
                                                                             Long employeeId,
@@ -43,21 +42,13 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
         Store store = storeService.getEntityById(storeId);
 
         Employee employee = employeeService.getEntityById(employeeId);
-//
-//        if (!employee.getStore().equals(store)){
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+
+        if (!employee.getStore().equals(store)){
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
 
         if (repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())){
-            EmployeeProposalDaysOff employeeProposalDayOff = repository.findByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())
-                    .orElseThrow( () ->  new EntityExistsException("Employee proposal days off in month " + dto.month() + " of  year " + dto.year() + " already exists"));
-
-            updateEmployeeProposalDaysOff(storeId,employeeId,employeeProposalDayOff.getId(), new UpdateEmployeeProposalDaysOffDTO(
-                    dto.year(),
-                    dto.month(),
-                    dto.monthlyDaysOff(),
-                    LocalDateTime.now()
-            ));
+            throw new EntityExistsException("Employee proposal days off in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
         EmployeeProposalDaysOff employeeProposalDaysOff = builder.createEmployeeProposalDaysOff(
@@ -87,11 +78,11 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-//        if (!employee.getStore().equals(store)){
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+        if (!employee.getStore().equals(store)){
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
 
-        mapper.updateEmployeeProposalDaysOff(dto,employeeProposalDaysOff);
+        mapper.updateEmployeeProposalDaysOff(dto, employeeProposalDaysOff);
 
         EmployeeProposalDaysOff saved = repository.save(employeeProposalDaysOff);
 
