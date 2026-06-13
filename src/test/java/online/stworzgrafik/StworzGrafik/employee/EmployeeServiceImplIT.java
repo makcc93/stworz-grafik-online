@@ -172,7 +172,7 @@ public class EmployeeServiceImplIT {
     }
 
     @Test
-    void createEmployee_sapNumberLengthIsIncorrectThrowsException(){
+    void createEmployee_cannotFindEntityThrowsException(){
         //given
         Long randomPositionId = 12345L;
         CreateEmployeeDTO withoutPositionDTO = new TestCreateEmployeeDTO()

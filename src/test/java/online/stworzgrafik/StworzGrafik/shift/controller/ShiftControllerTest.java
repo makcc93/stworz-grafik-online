@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.shift.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import online.stworzgrafik.StworzGrafik.shift.*;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @ActiveProfiles("test")
 @SpringBootTest
 @Transactional
@@ -46,9 +48,8 @@ class ShiftControllerTest {
     @Test
     void getShiftById_workingTest() throws Exception {
         //given
-        LocalTime startHour = LocalTime.of(8,0);
-        LocalTime endHour = LocalTime.of(15,0);
-        int hoursDifference = endHour.getHour() - startHour.getHour();
+        LocalTime startHour = LocalTime.of(8, 0);
+        LocalTime endHour = LocalTime.of(15, 0);
 
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         shiftService.save(shift);
@@ -58,14 +59,15 @@ class ShiftControllerTest {
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andReturn();
+
+        // POPRAWKA: kontroler zwraca ResponseShiftDTO, nie Shift — deserializujemy na właściwy typ
+        ResponseShiftDTO result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseShiftDTO.class);
+
         //then
-        Shift resultAsEntity = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
-
-        assertEquals(startHour.getHour(), resultAsEntity.getStartHour().getHour());
-        assertEquals(endHour.getHour(), resultAsEntity.getEndHour().getHour());
-        assertEquals(shift.getId(),resultAsEntity.getId());
-
-        assertTrue(shiftService.exists(resultAsEntity.getId()));
+        assertEquals(startHour.getHour(), result.startHour().getHour());
+        assertEquals(endHour.getHour(), result.endHour().getHour());
+        assertEquals(shift.getId(), result.id());
+        assertTrue(shiftService.exists(result.id()));
     }
 
     @Test
@@ -81,33 +83,34 @@ class ShiftControllerTest {
     }
 
     @Test
-    void getByCriteria_workingTest() throws Exception{
+    void getByCriteria_workingTest() throws Exception {
         //given
-        LocalTime startHour = LocalTime.of(10,0);
+        LocalTime startHour = LocalTime.of(10, 0);
 
-        Shift firstShift = new TestShiftBuilder().withStartHour(startHour).withEndHour(LocalTime.of(11,0)).build();
-        Shift secondShift = new TestShiftBuilder().withStartHour(startHour).withEndHour(LocalTime.of(22,0)).build();
+        Shift firstShift = new TestShiftBuilder().withStartHour(startHour).withEndHour(LocalTime.of(11, 0)).build();
+        Shift secondShift = new TestShiftBuilder().withStartHour(startHour).withEndHour(LocalTime.of(22, 0)).build();
 
         shiftService.save(firstShift);
         shiftService.save(secondShift);
+
         //when&then
         mockMvc.perform(get("/api/shifts")
-                    .param("startHour", startHour.toString()))
+                        .param("startHour", startHour.toString()))
                 .andDo(print())
                 .andExpect(jsonPath("$.content").exists())
                 .andExpect(jsonPath("$.content.size()").value(2))
-                .andExpect(jsonPath("$.content[*].startHour").value(hasItems(startHour.toString()+":00", startHour.toString()+":00")));
+                .andExpect(jsonPath("$.content[*].startHour").value(hasItems(startHour.toString() + ":00", startHour.toString() + ":00")));
     }
 
     @Test
-    void getByCriteria_noParametersReturnAllShifts() throws Exception{
+    void getByCriteria_noParametersReturnAllShifts() throws Exception {
         //given
-        Shift firstShift = new TestShiftBuilder().withStartHour(LocalTime.of(1,0)).withEndHour(LocalTime.of(11,0)).build();
-        Shift secondShift = new TestShiftBuilder().withStartHour(LocalTime.of(2,0)).withEndHour(LocalTime.of(12,0)).build();
-        Shift thirdShift = new TestShiftBuilder().withStartHour(LocalTime.of(3,0)).withEndHour(LocalTime.of(13,0)).build();
-        Shift fourthShift = new TestShiftBuilder().withStartHour(LocalTime.of(4,0)).withEndHour(LocalTime.of(14,0)).build();
-        Shift fifthShift = new TestShiftBuilder().withStartHour(LocalTime.of(5,0)).withEndHour(LocalTime.of(15,0)).build();
-        Shift sixthShift = new TestShiftBuilder().withStartHour(LocalTime.of(6,0)).withEndHour(LocalTime.of(16,0)).build();
+        Shift firstShift  = new TestShiftBuilder().withStartHour(LocalTime.of(1, 0)).withEndHour(LocalTime.of(11, 0)).build();
+        Shift secondShift = new TestShiftBuilder().withStartHour(LocalTime.of(2, 0)).withEndHour(LocalTime.of(12, 0)).build();
+        Shift thirdShift  = new TestShiftBuilder().withStartHour(LocalTime.of(3, 0)).withEndHour(LocalTime.of(13, 0)).build();
+        Shift fourthShift = new TestShiftBuilder().withStartHour(LocalTime.of(4, 0)).withEndHour(LocalTime.of(14, 0)).build();
+        Shift fifthShift  = new TestShiftBuilder().withStartHour(LocalTime.of(5, 0)).withEndHour(LocalTime.of(15, 0)).build();
+        Shift sixthShift  = new TestShiftBuilder().withStartHour(LocalTime.of(6, 0)).withEndHour(LocalTime.of(16, 0)).build();
 
         shiftService.save(firstShift);
         shiftService.save(secondShift);
@@ -121,11 +124,11 @@ class ShiftControllerTest {
                 .andDo(print())
                 .andExpect(jsonPath("$.content").exists())
                 .andExpect(jsonPath("$.content.size()").value(6))
-                .andExpect(jsonPath("$.content[*].length").value(hasItems(10,10,10,10,10,10)));
+                .andExpect(jsonPath("$.content[*].length").value(hasItems(10.0, 10.0, 10.0, 10.0, 10.0, 10.0)));
     }
 
     @Test
-    void getByCriteria_emptyListDoesNotThrowException() throws Exception{
+    void getByCriteria_emptyListDoesNotThrowException() throws Exception {
         //given
 
         //when&then
@@ -140,7 +143,6 @@ class ShiftControllerTest {
         //given
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(14, 0);
-        int length = endHour.getHour() - startHour.getHour();
         ShiftHoursDTO shiftHoursDTO = new ShiftHoursDTO(startHour, endHour);
 
         //when
@@ -151,13 +153,13 @@ class ShiftControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
+        // POPRAWKA: deserializujemy na ResponseShiftDTO (właściwy typ zwracany przez kontroler)
+        ResponseShiftDTO responseDTO = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseShiftDTO.class);
+
         //then
-        Shift shift = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
-
-        assertEquals(startHour,shift.getStartHour());
-        assertEquals(endHour,shift.getEndHour());
-
-        assertTrue(shiftService.exists(shift.getId()));
+        assertEquals(startHour, responseDTO.startHour());
+        assertEquals(endHour, responseDTO.endHour());
+        assertTrue(shiftService.exists(responseDTO.id()));
     }
 
     @Test
@@ -196,7 +198,6 @@ class ShiftControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound());
         //then
-
     }
 
     @Test
@@ -208,7 +209,6 @@ class ShiftControllerTest {
 
         LocalTime newStartHour = LocalTime.of(15, 0);
         LocalTime newEndHour = LocalTime.of(20, 0);
-        int length = newEndHour.getHour() - newStartHour.getHour();
 
         ShiftHoursDTO dtoForUpdate = new TestShiftHoursDTO().withStartHour(newStartHour).withEndHour(newEndHour).build();
 
@@ -220,14 +220,14 @@ class ShiftControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // POPRAWKA: deserializujemy na ResponseShiftDTO (właściwy typ zwracany przez kontroler)
+        ResponseShiftDTO updatedShiftDTO = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ResponseShiftDTO.class);
+
         //then
-        Shift updatedShift = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Shift.class);
-
-        assertEquals(updatedShift.getId(), originalShift.getId());
-        assertEquals(newStartHour.getHour(),updatedShift.getStartHour().getHour());
-        assertEquals(newEndHour.getHour(),updatedShift.getEndHour().getHour());
-
-        assertTrue(shiftService.exists(updatedShift.getId()));
+        assertEquals(updatedShiftDTO.id(), originalShift.getId());
+        assertEquals(newStartHour.getHour(), updatedShiftDTO.startHour().getHour());
+        assertEquals(newEndHour.getHour(), updatedShiftDTO.endHour().getHour());
+        assertTrue(shiftService.exists(updatedShiftDTO.id()));
     }
 
     @Test
@@ -238,14 +238,14 @@ class ShiftControllerTest {
         Shift originalShift = shiftEntityService.saveEntity(new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build());
 
         //when
-       mockMvc.perform(patch("/api/shifts/" + originalShift.getId()))
+        mockMvc.perform(patch("/api/shifts/" + originalShift.getId()))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
         //then
     }
 
     @Test
-    void updateShift_bodyRequestIsNull() throws Exception{
+    void updateShift_bodyRequestIsNull() throws Exception {
         //given
         LocalTime startHour = LocalTime.of(8, 0);
         LocalTime endHour = LocalTime.of(14, 0);

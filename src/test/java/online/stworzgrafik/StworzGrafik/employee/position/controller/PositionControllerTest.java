@@ -156,7 +156,7 @@ class PositionControllerTest {
                 .andReturn();
 
         //then
-        assertEquals("Entity with this data already exists", mvcResult.getResponse().getContentAsString());
+        assertEquals("Position with name " + createPositionDTO.name() + " already exists", mvcResult.getResponse().getContentAsString());
     }
 
     @Test

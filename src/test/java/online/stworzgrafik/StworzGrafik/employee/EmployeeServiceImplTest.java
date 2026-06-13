@@ -2,12 +2,12 @@ package online.stworzgrafik.StworzGrafik.employee;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionEntityService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
 import online.stworzgrafik.StworzGrafik.employee.position.TestPositionBuilder;
+import online.stworzgrafik.StworzGrafik.employee.workNorm.SpecialWorkNormEntityService;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
@@ -18,6 +18,7 @@ import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.position.Position;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import online.stworzgrafik.StworzGrafik.validator.ObjectType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -67,13 +68,16 @@ class EmployeeServiceImplTest {
     @Mock
     private UserAuthorizationService userAuthorizationService;
 
+    @Mock
+    private SpecialWorkNormEntityService specialWorkNormEntityService;
+
     private Region region;
     private Branch branch;
     private Store store;
     private Long storeId;
     private Pageable pageable;
 
-    @PrePersist
+    @BeforeEach
     void setup(){
         region = new TestRegionBuilder().build();
         branch = new TestBranchBuilder().withRegion(region).build();
@@ -185,7 +189,6 @@ class EmployeeServiceImplTest {
         verify(employeeBuilder,never()).createEmployee(any(),any(),any(),any(),any());
         verify(employeeRepository,never()).save(any());
         verify(employeeMapper,never()).toResponseEmployeeDTO(any());
-
     }
 
     @Test
@@ -231,7 +234,9 @@ class EmployeeServiceImplTest {
         when(nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON)).thenReturn(lastName);
 
         when(storeService.existsById(storeId)).thenReturn(true);
-        when(storeEntityService.getEntityById(storeId)).thenReturn(store);
+
+        Store localStore = new TestStoreBuilder().build();
+        when(storeEntityService.getEntityById(storeId)).thenReturn(localStore);
 
         when(positionService.exists(createEmployeeDTO.positionId())).thenReturn(false);
 
@@ -311,7 +316,6 @@ class EmployeeServiceImplTest {
 
         Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.ofNullable(employee));
-
 
         //when
         employeeServiceImpl.deleteEmployee(storeId,employeeId);
@@ -449,7 +453,6 @@ class EmployeeServiceImplTest {
     void existsById_workingTest(){
         //given
         Long id = 321L;
-        Employee employee = new TestEmployeeBuilder().buildDefault();
 
         when(employeeRepository.existsById(id)).thenReturn(true);
 
@@ -465,7 +468,6 @@ class EmployeeServiceImplTest {
     void existsBySap_workingTest(){
         //given
         Long sap = 87654321L;
-        Employee employee = new TestEmployeeBuilder().withSap(sap).buildDefault();
 
         when(employeeRepository.existsBySap(sap)).thenReturn(true);
 
@@ -480,13 +482,12 @@ class EmployeeServiceImplTest {
     void existsByLastName_workingTest(){
         //given
         String lastName = "LAST-NAME";
-        Employee employee = new TestEmployeeBuilder().withLastName(lastName).buildDefault();
-        
+
         when(employeeRepository.existsByLastName(lastName)).thenReturn(true);
-        
+
         //when
         boolean serviceResponse = employeeServiceImpl.existsByLastName(lastName);
-        
+
         //then
         assertTrue(serviceResponse);
     }

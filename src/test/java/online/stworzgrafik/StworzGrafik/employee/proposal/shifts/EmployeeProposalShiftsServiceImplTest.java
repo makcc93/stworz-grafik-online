@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.shifts;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
@@ -13,6 +12,7 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -57,7 +57,7 @@ class EmployeeProposalShiftsServiceImplTest {
     private Employee employee;
     private Pageable pageable;
 
-    @PrePersist
+    @BeforeEach
     void setup(){
         store = new TestStoreBuilder().build();
         employee = new TestEmployeeBuilder().withStore(store).buildDefault();
