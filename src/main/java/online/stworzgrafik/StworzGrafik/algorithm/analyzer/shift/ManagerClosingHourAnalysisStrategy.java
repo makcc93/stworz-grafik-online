@@ -119,7 +119,16 @@ public class ManagerClosingHourAnalysisStrategy implements ScheduleAnalysisStrat
         changeProposalShiftInSchedule(day,chosenEmployee,context,originalProposalShift,changedProposalShift);
         context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(changedProposalShift));
 
-        shiftToChangeEndHour.get().setEndHour(originalProposalShift.getEndHour());
+        Shift replacementForOtherEmployee = context.findShiftByHours(
+                shiftToChange.getStartHour(), originalProposalShift.getEndHour());
+        context.getFinalSchedule()
+                .getOrDefault(day, Map.of())
+                .entrySet().stream()
+                .filter(e -> e.getValue() == shiftToChange)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .ifPresent(otherEmployee ->
+                        context.updateShiftOnSchedule(day, otherEmployee, replacementForOtherEmployee));
     }
 
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {

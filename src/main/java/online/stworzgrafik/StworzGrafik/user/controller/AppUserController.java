@@ -2,11 +2,9 @@ package online.stworzgrafik.StworzGrafik.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.user.AppUserService;
-import online.stworzgrafik.StworzGrafik.user.DTO.ChangePasswordRequest;
-import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
-import online.stworzgrafik.StworzGrafik.user.DTO.SetEnabledRequest;
-import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
+import online.stworzgrafik.StworzGrafik.user.DTO.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,5 +41,11 @@ public class AppUserController {
                                            @RequestBody @Valid SetEnabledRequest request) {
         appUserService.setEnabled(id, request.enabled());
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<UserResponse> setRole(@PathVariable Long id,
+                                                @RequestBody @Valid SetRoleRequest request){
+        return ResponseEntity.ok(appUserService.setRole(id,request));
     }
 }

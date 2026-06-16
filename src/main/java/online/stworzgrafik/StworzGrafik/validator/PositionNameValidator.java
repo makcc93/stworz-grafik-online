@@ -7,11 +7,21 @@ import org.springframework.stereotype.Service;
 public class PositionNameValidator implements NameValidatorStrategy{
     @Override
     public String validate(String name) {
-        if (!name.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")){
-            throw new ValidationException("Name cannot contain illegal chars");
+        if (name == null) {
+            throw new ValidationException("Name cannot be null");
         }
 
-        return name.strip().toUpperCase();
+        String normalized = name.strip().replaceAll("\\s+", " ");
+
+        if (normalized.isEmpty()) {
+            throw new ValidationException("Name cannot be empty or contain only spaces");
+        }
+
+        if (!normalized.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")) {
+            throw new ValidationException("Name contains illegal characters");
+        }
+
+        return normalized.toUpperCase();
     }
 
     @Override

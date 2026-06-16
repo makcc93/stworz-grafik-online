@@ -45,10 +45,10 @@ public class Schedule {
     @Enumerated(EnumType.STRING)
     private ScheduleStatus scheduleStatus;
 
-    @OneToMany(mappedBy = "schedule")
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ScheduleDetails> scheduleDetails;
 
-    @OneToMany(mappedBy = "schedule")
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private List<ScheduleMessage> messages;
 
     @PrePersist

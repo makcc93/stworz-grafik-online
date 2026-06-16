@@ -163,28 +163,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays)
                         continue;
 
-                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
-                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnDelegation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnDelegation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalDaysOff(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalDaysOff(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalShift(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalShift(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (employeesAreUnavailable(context, otherEmployeeForSwap, originalEmployeeDate, originalEmployee, otherEmployeeDateForSwap))
+                        continue;
 
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
@@ -195,8 +175,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
-                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
+
 
                     Shift currentShiftOnDate = context.getFinalSchedule()
                             .getOrDefault(originalEmployeeDate, new HashMap<>())
@@ -233,7 +212,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
             }
             return anySwapDone;
     }
-
 
     private boolean splitShiftsForCredits(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
@@ -313,28 +291,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
                     if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
 
-                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
-                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnDelegation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnDelegation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalDaysOff(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalDaysOff(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalShift(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalShift(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (employeesAreUnavailable(context, otherEmployeeForSwap, originalEmployeeDate, originalEmployee, otherEmployeeDateForSwap))
+                        continue;
 
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
@@ -345,8 +303,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.isEmployeeWorkingOnCheckout(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingOnCheckout(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
-                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
+
 
                     Shift currentShiftOnDate = context.getFinalSchedule()
                             .getOrDefault(originalEmployeeDate, new HashMap<>())
@@ -465,28 +422,9 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
                             if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
 
-                            if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
-                            if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
+                            if (employeesAreUnavailable(context, otherEmployeeForSwap, originalEmployeeDate, originalEmployee, otherEmployeeDateForSwap))
+                                continue;
 
-                            if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
-                            if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                            if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                            if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                            if (context.employeeIsOnDelegation(originalEmployee,originalEmployeeDate)) continue;
-                            if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                            if (context.employeeIsOnDelegation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                            if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                            if (context.employeeHasProposalDaysOff(originalEmployee,originalEmployeeDate)) continue;
-                            if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-                            if (context.employeeHasProposalDaysOff(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                            if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                            if (context.employeeHasProposalShift(originalEmployee,originalEmployeeDate)) continue;
-                            if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
-                            if (context.employeeHasProposalShift(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                            if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
 
                             if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                             if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
@@ -497,8 +435,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                             if (context.isOpeningOrClosingStore(originalEmployee, originalEmployeeDate)) continue;
                             if (context.isOpeningOrClosingStore(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
 
-                            if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
-                            if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
 
                             Shift currentShiftOnDate = context.getFinalSchedule()
                                     .getOrDefault(originalEmployeeDate, new HashMap<>())
@@ -621,28 +557,8 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                     if (context.getWorkingDaysCount().getOrDefault(originalEmployee, 0) >= wantedMaxWorkingDays) break;
                     if (context.getWorkingDaysCount().getOrDefault(otherEmployeeForSwap, 0) >= wantedMaxWorkingDays) continue;
 
-                    if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) continue;
-                    if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnVacation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnVacation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnVacation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeIsOnDelegation(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeIsOnDelegation(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeIsOnDelegation(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalDaysOff(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalDaysOff(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalDaysOff(originalEmployee,otherEmployeeDateForSwap)) continue;
-
-                    if (context.employeeHasProposalShift(originalEmployee,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
-                    if (context.employeeHasProposalShift(otherEmployeeForSwap,originalEmployeeDate)) continue;
-                    if (context.employeeHasProposalShift(originalEmployee,otherEmployeeDateForSwap)) continue;
+                    if (employeesAreUnavailable(context, otherEmployeeForSwap, originalEmployeeDate, originalEmployee, otherEmployeeDateForSwap))
+                        continue;
 
                     if (context.isEmployeeWorkingInWarehouse(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingInWarehouse(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
@@ -655,9 +571,6 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                     if (context.isEmployeeWorkingOnCredit(originalEmployee, originalEmployeeDate)) continue;
                     if (context.isEmployeeWorkingOnCredit(otherEmployeeForSwap, otherEmployeeDateForSwap)) continue;
-
-                    if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) continue;
-                    if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) continue;
 
                     Shift currentShiftOnDate = context.getFinalSchedule()
                             .getOrDefault(originalEmployeeDate, new HashMap<>())
@@ -722,4 +635,32 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         );
     }
 
+    private static boolean employeesAreUnavailable(ScheduleGeneratorContext context, Employee otherEmployeeForSwap, LocalDate originalEmployeeDate, Employee originalEmployee, LocalDate otherEmployeeDateForSwap) {
+        if (context.employeeIsWorking(otherEmployeeForSwap, originalEmployeeDate)) return true;
+        if (context.employeeIsWorking(originalEmployee, otherEmployeeDateForSwap)) return true;
+
+        if (context.isEmployeeOnRestRequirementDayOff(originalEmployee, otherEmployeeDateForSwap)) return true;
+        if (context.isEmployeeOnRestRequirementDayOff(otherEmployeeForSwap, originalEmployeeDate)) return true;
+
+        if (context.employeeIsOnVacation(originalEmployee, originalEmployeeDate)) return true;
+        if (context.employeeIsOnVacation(originalEmployee, otherEmployeeDateForSwap)) return true;
+        if (context.employeeIsOnVacation(otherEmployeeForSwap, originalEmployeeDate)) return true;
+        if (context.employeeIsOnVacation(otherEmployeeForSwap, otherEmployeeDateForSwap)) return true;
+
+        if (context.employeeIsOnDelegation(originalEmployee, originalEmployeeDate)) return true;
+        if (context.employeeIsOnDelegation(originalEmployee, otherEmployeeDateForSwap)) return true;
+        if (context.employeeIsOnDelegation(otherEmployeeForSwap, originalEmployeeDate)) return true;
+        if (context.employeeIsOnDelegation(otherEmployeeForSwap, otherEmployeeDateForSwap)) return true;
+
+        if (context.employeeHasProposalDaysOff(originalEmployee, originalEmployeeDate)) return true;
+        if (context.employeeHasProposalDaysOff(originalEmployee, otherEmployeeDateForSwap)) return true;
+        if (context.employeeHasProposalDaysOff(otherEmployeeForSwap, originalEmployeeDate)) return true;
+        if (context.employeeHasProposalDaysOff(otherEmployeeForSwap, otherEmployeeDateForSwap)) return true;
+
+        if (context.employeeHasProposalShift(originalEmployee, originalEmployeeDate)) return true;
+        if (context.employeeHasProposalShift(originalEmployee, otherEmployeeDateForSwap)) return true;
+        if (context.employeeHasProposalShift(otherEmployeeForSwap, originalEmployeeDate)) return true;
+        if (context.employeeHasProposalShift(otherEmployeeForSwap, otherEmployeeDateForSwap)) return true;
+        return false;
+    }
 }

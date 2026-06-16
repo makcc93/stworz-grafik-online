@@ -1,4 +1,4 @@
-INSERT INTO `position`(name,description) VALUES
+INSERT IGNORE INTO `positions`(name,description) VALUES
 ('KIEROWNIK SKLEPU','Zarządza pracą danego sklepu oraz wszytskimi pracownikami jednostki'),
 ('KIEROWNIK SPRZEDAŻY','Zarządza pracą zespołu sprzedażowego w danej jednostce'),
 ('KIEROWNIK ZMIANY','Zarządza pracą zespołu sprzedażowego w danej jednostce oraz jednocześnie pełni rolę sprzedażową'),

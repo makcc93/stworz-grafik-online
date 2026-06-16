@@ -179,7 +179,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void assignEmployeeToWarehouse(LocalDate date, Employee employee, Shift shift){
-        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+        if (!shift.equals(this.defaultDaysOffShift) && !shift.equals(this.defaultVacationShift)) {
             employeeWarehouseDays
                     .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
@@ -215,7 +215,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void assignEmployeeToOpenClose(LocalDate date, Employee employee, Shift shift){
-        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+        if (!shift.equals(this.defaultDaysOffShift) && !shift.equals(this.defaultVacationShift)) {
             employeeOpenCloseDays
                     .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
@@ -232,7 +232,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void assignEmployeeToCheckout(LocalDate date, Employee employee, Shift shift){
-        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+        if (!shift.equals(this.defaultDaysOffShift) && !shift.equals(this.defaultVacationShift)) {
             employeeCheckoutDays
                     .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
@@ -249,7 +249,7 @@ public class ScheduleGeneratorContext {
     }
 
     public void assignEmployeeToCredit(LocalDate date, Employee employee, Shift shift){
-        if (!shift.equals(this.defaultDaysOffShift) || !shift.equals(this.defaultVacationShift)) {
+        if (!shift.equals(this.defaultDaysOffShift) && !shift.equals(this.defaultVacationShift)) {
             employeeCreditDays
                     .computeIfAbsent(employee, k -> new HashSet<>())
                     .add(date);
@@ -374,8 +374,8 @@ public class ScheduleGeneratorContext {
         BigDecimal currentEmployeeHoursValue = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
 
 
-        BigDecimal oldShiftLengthHours = calculateShiftLength(oldShift);
-        BigDecimal newShiftLengthHours = calculateShiftLength(newShift);
+        BigDecimal oldShiftLengthHours = getShiftLength(oldShift);
+        BigDecimal newShiftLengthHours = getShiftLength(newShift);
 
         BigDecimal shiftHoursDifference = newShiftLengthHours.subtract(oldShiftLengthHours);
 
@@ -386,7 +386,7 @@ public class ScheduleGeneratorContext {
     }
 
     private void addEmployeeHours(Employee employee, Shift shift){
-        BigDecimal shiftHours = calculateShiftLength(shift);
+        BigDecimal shiftHours = getShiftLength(shift);
 
         BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
         BigDecimal newValueOfEmployeeHours = employeeHoursValue.add(shiftHours);
@@ -404,19 +404,6 @@ public class ScheduleGeneratorContext {
         if (!shift.equals(this.defaultDaysOffShift)) {
             workingDaysCount.merge(employee, 1, Integer::sum);
         }
-    }
-
-    public BigDecimal calculateShiftLength(Shift shift) {
-        BigDecimal endHour = BigDecimal.valueOf(shift.getEndHour().getHour());
-        BigDecimal endMinute = BigDecimal.valueOf(shift.getEndHour().getMinute());
-        BigDecimal endShiftValue = endHour.add(endMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
-
-
-        BigDecimal startHour = BigDecimal.valueOf(shift.getStartHour().getHour());
-        BigDecimal startMinute = BigDecimal.valueOf(shift.getStartHour().getMinute());
-        BigDecimal startShiftValue = startHour.add(startMinute.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
-
-        return endShiftValue.subtract(startShiftValue);
     }
 
     public ShiftTypeConfig resolveShiftTypeConfig(Employee employee, LocalDate date, Shift shift){

@@ -40,9 +40,9 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
         Long validatedStoreId = userAuthorizationService.getUserAccessibleStoreId(storeId);
 
-        Store store = storeEntityService.getEntityById(storeId);//change
+        Store store = storeEntityService.getEntityById(storeId);
 
-        if (demandDraftRepository.existsByStoreIdAndDraftDate(storeId,dto.draftDate())){
+        if (demandDraftRepository.existsByStore_IdAndDraftDate(storeId,dto.draftDate())){
             return demandDraftMapper.toResponseDemandDraftDTO(demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId,dto.draftDate(),dto.draftDate())
                     .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft on date " + dto.draftDate() + " for store with id " + storeId)));
         }
@@ -127,7 +127,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
     @Override
     public boolean exists(StoreAccurateDayDemandDraftDTO dto) {
-        return demandDraftRepository.existsByStoreIdAndDraftDate(
+        return demandDraftRepository.existsByStore_IdAndDraftDate(
                 dto.storeId(),
                 dto.draftDate()
         );

@@ -38,7 +38,7 @@ public class Employee {
     private Store store;
 
     @ManyToOne
-    @JoinColumn(name = "position_id", nullable = false)
+    @JoinColumn(name = "positions_id", nullable = false)
     private Position position;
 
     private boolean enable = true;

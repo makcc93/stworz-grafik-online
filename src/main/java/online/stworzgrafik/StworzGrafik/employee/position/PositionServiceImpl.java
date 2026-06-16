@@ -52,19 +52,22 @@ class PositionServiceImpl implements PositionService, PositionEntityService{
     }
 
     @Override
-    public ResponsePositionDTO updatePosition(Long id,  UpdatePositionDTO updatePositionDTO) {
+    public ResponsePositionDTO updatePosition(Long id, UpdatePositionDTO updatePositionDTO) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find position by id " + id));
 
-        if (updatePositionDTO.name() != null){
+        if (updatePositionDTO.name() != null) {
             String validatedName = nameValidatorService.validate(updatePositionDTO.name(), ObjectType.POSITION);
             position.setName(validatedName);
         }
 
-        positionMapper.updatePosition(updatePositionDTO,position);
+        positionMapper.updatePosition(updatePositionDTO, position);
 
-        return positionMapper.toResponsePositionDTO(position);
+        Position savedPosition = positionRepository.save(position);
+
+        return positionMapper.toResponsePositionDTO(savedPosition);
     }
+
 
     @Override
     public ResponsePositionDTO save(Position position){

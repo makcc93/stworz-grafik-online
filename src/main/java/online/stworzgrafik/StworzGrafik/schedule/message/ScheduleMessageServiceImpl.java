@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -34,13 +35,16 @@ class ScheduleMessageServiceImpl implements ScheduleMessageService {
         if (dto.employeeId() != null) {
             employee = employeeEntityService.getEntityById(dto.employeeId());
         }
+
+        LocalDate messageDate = dto.messageDate() != null ? dto.messageDate() : null;
+
         ScheduleMessage scheduleMessage = scheduleMessageBuilder.create(
                 schedule,
                 dto.scheduleMessageType(),
                 dto.scheduleMessageCode(),
                 dto.message(),
                 employee,
-                dto.messageDate()
+                messageDate
         );
 
         scheduleMessageRepository.save(scheduleMessage);

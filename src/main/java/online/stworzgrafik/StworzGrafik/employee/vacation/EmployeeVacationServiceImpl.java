@@ -4,7 +4,6 @@ import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayConfig;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
@@ -31,7 +30,7 @@ import static online.stworzgrafik.StworzGrafik.employee.vacation.EmployeeVacatio
 
 @Service
 @RequiredArgsConstructor
-class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVacationEntityService{
+class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVacationEntityService {
     private final EmployeeVacationRepository repository;
     private final EmployeeVacationMapper mapper;
     private final EmployeeVacationBuilder builder;
@@ -46,20 +45,19 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
                                                                       CreateEmployeeVacationDTO dto) {
         verifyLoggedUserAccessToStore(storeId);
 
-
         Store store = storeService.getEntityById(storeId);
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-//        if (!employee.getStore().equals(store)) {
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+        if (!employee.getStore().getId().equals(store.getId())) {
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
 
         if (repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())) {
             throw new EntityExistsException("Employee vacation in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
-        int[] verifiedMonthlyVacation = verifyByWeekendsAndHolidays(dto.year(),dto.month(),dto.monthlyVacation());
+        int[] verifiedMonthlyVacation = verifyByWeekendsAndHolidays(dto.year(), dto.month(), dto.monthlyVacation());
 
         EmployeeVacation employeeVacation = builder.createEmployeeVacation(
                 store,
@@ -74,8 +72,6 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
         return mapper.toResponseEmployeeVacationDTO(saved);
     }
 
-
-
     @Override
     public ResponseEmployeeVacationDTO updateEmployeeVacation(Long storeId,
                                                               Long employeeId,
@@ -84,20 +80,22 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
         verifyLoggedUserAccessToStore(storeId);
 
         EmployeeVacation employeeVacation = repository.findById(employeeVacationId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation with id " + employeeVacationId));
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee vacation by id " + employeeVacationId));
 
-//        Store store = storeService.getEntityById(storeId);
-//
-//        Employee employee = employeeService.getEntityById(employeeId);
-//
-//        if (!employee.getStore().equals(store)) {
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+        Store store = storeService.getEntityById(storeId);
+
+        Employee employee = employeeService.getEntityById(employeeId);
+
+        if (!employee.getStore().getId().equals(store.getId())) {
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
+
+        int[] verifiedMonthlyVacation = verifyByWeekendsAndHolidays(dto.year(), dto.month(), dto.monthlyVacation());
 
         UpdateEmployeeVacationDTO verifiedDto = new UpdateEmployeeVacationDTO(
                 dto.year(),
                 dto.month(),
-                verifyByWeekendsAndHolidays(dto.year(), dto.month(), dto.monthlyVacation()),
+                verifiedMonthlyVacation,
                 LocalDateTime.now());
 
         mapper.updateEmployeeVacation(verifiedDto, employeeVacation);
@@ -110,7 +108,6 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
     @Override
     public ResponseEmployeeVacationDTO save(EmployeeVacation employeeVacation) {
         EmployeeVacation saved = repository.save(employeeVacation);
-
         return mapper.toResponseEmployeeVacationDTO(saved);
     }
 
@@ -149,7 +146,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
                 hasMonth(dto.month())
         );
 
-        return repository.findAll(specification,pageable)
+        return repository.findAll(specification, pageable)
                 .map(mapper::toResponseEmployeeVacationDTO);
     }
 
@@ -161,8 +158,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
     @Override
     public List<EmployeeVacation> getEmployeeMonthlyVacation(Long storeId, Integer year, Integer month) {
         verifyLoggedUserAccessToStore(storeId);
-
-        return repository.findAllByStore_IdAndYearAndMonth(storeId,year,month);
+        return repository.findAllByStore_IdAndYearAndMonth(storeId, year, month);
     }
 
     private void verifyLoggedUserAccessToStore(Long storeId) {
@@ -171,14 +167,15 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService,EmployeeVac
         }
     }
 
-    private int[] verifyByWeekendsAndHolidays(int year, int month,int[] originalMonthlyVacation) {
+    private int[] verifyByWeekendsAndHolidays(int year, int month, int[] originalMonthlyVacation) {
         int[] verifiedMonthlyVacation = new int[31];
         YearMonth yearMonth = YearMonth.of(year, month);
-        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
-            LocalDate date = LocalDate.of(year, month,day);
-
-            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY && !holidayManager.isHoliday(date)) {
-                verifiedMonthlyVacation[day-1] = originalMonthlyVacation[day-1];
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = LocalDate.of(year, month, day);
+            if (date.getDayOfWeek() != DayOfWeek.SATURDAY
+                    && date.getDayOfWeek() != DayOfWeek.SUNDAY
+                    && !holidayManager.isHoliday(date)) {
+                verifiedMonthlyVacation[day - 1] = originalMonthlyVacation[day - 1];
             }
         }
         return verifiedMonthlyVacation;

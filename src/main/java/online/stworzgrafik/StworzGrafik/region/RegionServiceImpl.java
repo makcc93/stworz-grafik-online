@@ -30,7 +30,7 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     @Override
     public ResponseRegionDTO createRegion(CreateRegionDTO createRegionDTO) {
         if (regionRepository.existsByName(createRegionDTO.name())){
-            throw new EntityExistsException("Region with name " + createRegionDTO.name() + " already exist");
+            throw new EntityExistsException("Region with name " + createRegionDTO.name() + " already exists");
         }
 
         String validatedName = nameValidatorService.validate(createRegionDTO.name(), ObjectType.REGION);

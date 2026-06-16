@@ -44,7 +44,7 @@ CREATE TABLE store (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
--- 4. position
+-- 4. positions
 -- -------------------------------------------------------------
 CREATE TABLE positions (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
@@ -68,7 +68,7 @@ CREATE TABLE special_work_norm (
 
 -- -------------------------------------------------------------
 -- 6. employee
---    FK → store, position, special_work_norm
+--    FK → store, positions, special_work_norm
 -- -------------------------------------------------------------
 CREATE TABLE employee (
     id                   BIGINT       NOT NULL AUTO_INCREMENT,
@@ -76,7 +76,7 @@ CREATE TABLE employee (
     last_name            VARCHAR(255),
     sap                  BIGINT,
     store_id             BIGINT       NOT NULL,
-    position_id          BIGINT       NOT NULL,
+    positions_id          BIGINT       NOT NULL,
     enable               TINYINT(1)   NOT NULL DEFAULT 1,
     can_operate_checkout TINYINT(1)   NOT NULL DEFAULT 0,
     can_operate_credit   TINYINT(1)   NOT NULL DEFAULT 0,
@@ -95,7 +95,7 @@ CREATE TABLE employee (
     updated_at           DATETIME,
     PRIMARY KEY (id),
     CONSTRAINT fk_employee_store            FOREIGN KEY (store_id)             REFERENCES store (id),
-    CONSTRAINT fk_employee_position         FOREIGN KEY (position_id)          REFERENCES position (id),
+    CONSTRAINT fk_employee_positions         FOREIGN KEY (positions_id)          REFERENCES positions (id),
     CONSTRAINT fk_employee_special_work_norm FOREIGN KEY (special_work_norm_id) REFERENCES special_work_norm (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -274,7 +274,7 @@ CREATE TABLE schedule_message (
     message_date   DATE,
     created_at     DATETIME,
     PRIMARY KEY (id),
-    CONSTRAINT fk_schedule_message_schedule FOREIGN KEY (schedule_id) REFERENCES schedule (id),
+    CONSTRAINT fk_schedule_message_schedule FOREIGN KEY (schedule_id) REFERENCES schedule (id) ON DELETE CASCADE,
     CONSTRAINT fk_schedule_message_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -293,7 +293,7 @@ CREATE TABLE schedule_details (
     updated_at          DATETIME,
     PRIMARY KEY (id),
     CONSTRAINT uq_schedule_employee_date UNIQUE (schedule_id, employee_id, date),
-    CONSTRAINT fk_schedule_details_schedule          FOREIGN KEY (schedule_id)         REFERENCES schedule (id),
+    CONSTRAINT fk_schedule_details_schedule          FOREIGN KEY (schedule_id)         REFERENCES schedule (id) ON DELETE CASCADE,
     CONSTRAINT fk_schedule_details_employee          FOREIGN KEY (employee_id)         REFERENCES employee (id),
     CONSTRAINT fk_schedule_details_shift             FOREIGN KEY (shift_id)            REFERENCES shift (id),
     CONSTRAINT fk_schedule_details_shift_type_config FOREIGN KEY (shift_type_config_id) REFERENCES shift_type_config (id)

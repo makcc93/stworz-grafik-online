@@ -43,7 +43,7 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-        if (!employee.getStore().equals(store)){
+        if (!employee.getStore().getId().equals(store.getId())){
             throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
         }
 
@@ -72,13 +72,13 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
         verifyLoggedUserAccessToStore(storeId);
 
         EmployeeProposalDaysOff employeeProposalDaysOff = repository.findById(employeeProposalDaysOffId)
-                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off with id " + employeeProposalDaysOffId));
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find employee proposal days off by id " + employeeProposalDaysOffId));
 
         Store store = storeService.getEntityById(storeId);
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-        if (!employee.getStore().equals(store)){
+        if (!employee.getStore().getId().equals(store.getId())){
             throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
         }
 

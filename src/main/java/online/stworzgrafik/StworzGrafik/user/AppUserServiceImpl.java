@@ -4,9 +4,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
+import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
+import online.stworzgrafik.StworzGrafik.user.DTO.SetRoleRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -80,6 +82,17 @@ public class AppUserServiceImpl implements AppUserService{
 
         appUser.setEnabled(enabled);
         appUserRepository.save(appUser);
+    }
+
+    @Override
+    public UserResponse setRole(Long userId, SetRoleRequest request) {
+        AppUser appUser = appUserRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+
+        appUser.setRole(request.userRole());
+        AppUser saved = appUserRepository.save(appUser);
+
+        return toResponse(saved);
     }
 
     @Override

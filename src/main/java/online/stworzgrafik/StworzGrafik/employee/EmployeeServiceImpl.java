@@ -75,15 +75,19 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         Employee employee = getEmployeeIfBelongsToStore(storeId, employeeId);
 
         if (dto.firstName() != null){
-            String validatedFirstName = nameValidatorService.validate(dto.firstName(),ObjectType.PERSON);
-
+            String validatedFirstName = nameValidatorService.validate(dto.firstName(), ObjectType.PERSON);
             employee.setFirstName(validatedFirstName);
         }
 
         if (dto.lastName() != null){
-            String validatedLastName = nameValidatorService.validate(dto.lastName(),ObjectType.PERSON);
-
+            String validatedLastName = nameValidatorService.validate(dto.lastName(), ObjectType.PERSON);
             employee.setLastName(validatedLastName);
+        }
+
+        // POPRAWKA: aktualizacja pozycji — wcześniej positionId z DTO było ignorowane
+        if (dto.positionId() != null) {
+            Position position = positionEntityService.getEntityById(dto.positionId());
+            employee.setPosition(position);
         }
 
         if (dto.specialWorkNormId() != null) {
@@ -95,7 +99,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
             employee.setIsSpecial(false);
         }
 
-        employeeMapper.updateEmployee(dto,employee);
+        employeeMapper.updateEmployee(dto, employee);
 
         Employee savedEmployee = employeeRepository.save(employee);
 
@@ -136,7 +140,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
 
     @Override
     public Page<ResponseEmployeeDTO> findByCriteria(Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable) {
-        return findEntityByCriteria(storeId,dto,pageable)
+        return findEntityByCriteria(storeId, dto, pageable)
                 .map(employeeMapper::toResponseEmployeeDTO);
     }
 

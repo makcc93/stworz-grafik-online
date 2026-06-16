@@ -26,7 +26,7 @@ public record ResponseEmployeeDTO(
         @Nullable LocalDateTime updatedAt,
         @Nullable Boolean isSpecial,
         @Nullable Long specialWorkNormId,
-        @Nullable String specialWorkNormName, // dla UI — żeby nie robić osobnego requesta
+        @Nullable String specialWorkNormName,
         @Nullable Integer etatNumerator,
         @Nullable Integer etatDenominator
 ) {}

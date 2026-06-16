@@ -123,13 +123,22 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
         changeProposalShiftInSchedule(day,chosenEmployee,context,originalProposalShift,changedProposalShift);
         context.updateEmployeeDailyProposal(chosenEmployee,day, context.shiftAsArray(changedProposalShift));
 
-        shiftToChangeStartHour.get().setStartHour(originalProposalShift.getStartHour());
+        Shift replacementForOtherEmployee = context.findShiftByHours(
+                originalProposalShift.getStartHour(), shiftToChange.getEndHour());
+        context.getFinalSchedule()
+                .getOrDefault(day, Map.of())
+                .entrySet().stream()
+                .filter(e -> e.getValue() == shiftToChange)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .ifPresent(otherEmployee ->
+                        context.updateShiftOnSchedule(day, otherEmployee, replacementForOtherEmployee));
     }
 
     private void changeProposalShiftInSchedule(LocalDate date, Employee employee, ScheduleGeneratorContext context, Shift oldShift, Shift newShift) {
         context.updateShiftOnSchedule(date,employee,newShift);
         context.updateEmployeeDailyProposal(employee,date,context.shiftAsArray(newShift));
-}
+    }
 
     private static Comparator<Shift> longestOpenStoreShift() {
         return Comparator.comparingInt(

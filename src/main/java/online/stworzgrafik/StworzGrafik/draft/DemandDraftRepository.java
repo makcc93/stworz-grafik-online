@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 interface DemandDraftRepository extends JpaRepository<DemandDraft,Long>, JpaSpecificationExecutor<DemandDraft> {
-    boolean existsByStoreIdAndDraftDate(Long storeId, LocalDate draftDate);
+    boolean existsByStore_IdAndDraftDate(Long storeId, LocalDate draftDate);
     Page<DemandDraft> findByStore_IdAndDraftDateBetween(Long storeId, LocalDate startDate, LocalDate endDate, Pageable pageable);
     Optional<DemandDraft> findByStore_IdAndDraftDateBetween(Long storeId, LocalDate startDate, LocalDate endDate);
     List<DemandDraft> findAllByStore_IdAndDraftDateBetween(Long storeId, LocalDate startDay, LocalDate endDay);
