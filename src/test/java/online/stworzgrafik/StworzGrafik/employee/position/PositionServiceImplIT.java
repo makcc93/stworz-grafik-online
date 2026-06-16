@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @ActiveProfiles("test")
 @SpringBootTest
 @Transactional
@@ -37,13 +38,17 @@ public class PositionServiceImplIT {
     private NameValidatorService nameValidatorService;
 
     @Test
-    void findAll_workingTest(){
+    void findAll_workingTest() {
         //given
+        int positionsCountBefore = service.findAll().stream().toList().size();
+
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position position2 = new TestPositionBuilder().withName("SECOND").build();
         Position position3 = new TestPositionBuilder().withName("THIRD").build();
 
-        repository.saveAll(List.of(position1,position2,position3));
+        repository.saveAll(List.of(position1, position2, position3));
+
+        int expectedPositionsCountAfter = positionsCountBefore + 3;
 
         //when
         List<ResponsePositionDTO> responseDTOS = service.findAll();
@@ -52,27 +57,27 @@ public class PositionServiceImplIT {
         assertTrue(responseDTOS.contains(mapper.toResponsePositionDTO(position1)));
         assertTrue(responseDTOS.contains(mapper.toResponsePositionDTO(position2)));
         assertTrue(responseDTOS.contains(mapper.toResponsePositionDTO(position3)));
-        assertEquals(3, responseDTOS.size());
+        assertEquals(expectedPositionsCountAfter, responseDTOS.size());
     }
 
     @Test
-    void findById_workingTest(){
+    void findById_workingTest() {
         //given
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position position2 = new TestPositionBuilder().withName("SECOND").build();
-        repository.saveAll(List.of(position1,position2));
+        repository.saveAll(List.of(position1, position2));
 
         //when
         ResponsePositionDTO serviceResponse = service.findById(position2.getId());
 
         //then
-        assertEquals(position2.getId(),serviceResponse.id());
-        assertEquals(position2.getName(),serviceResponse.name());
-        assertEquals(position2.getDescription(),serviceResponse.description());
+        assertEquals(position2.getId(), serviceResponse.id());
+        assertEquals(position2.getName(), serviceResponse.name());
+        assertEquals(position2.getDescription(), serviceResponse.description());
     }
 
     @Test
-    void findById_entityNotExistThrowsException(){
+    void findById_entityNotExistThrowsException() {
         //given
         Long randomId = 123L;
 
@@ -85,7 +90,7 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void createPosition_workingTest(){
+    void createPosition_workingTest() {
         //given
         String name = "NEW NAME";
         String description = "NEW DESCRIPTION";
@@ -96,13 +101,13 @@ public class PositionServiceImplIT {
         ResponsePositionDTO serviceResponse = service.createPosition(createPositionDTO);
 
         //then
-        assertEquals(name,serviceResponse.name());
-        assertEquals(description,serviceResponse.description());
+        assertEquals(name, serviceResponse.name());
+        assertEquals(description, serviceResponse.description());
         assertTrue(repository.existsByName(name));
     }
 
     @Test
-    void createPosition_entityAlreadyExistsThrowsException(){
+    void createPosition_entityAlreadyExistsThrowsException() {
         //given
         String name = "NAME";
         Position position = new TestPositionBuilder().withName(name).build();
@@ -113,13 +118,14 @@ public class PositionServiceImplIT {
         //when
         EntityExistsException exception =
                 assertThrows(EntityExistsException.class, () -> service.createPosition(createPositionDTO));
+
         //then
         assertEquals("Position with name " + name + " already exists", exception.getMessage());
         assertTrue(repository.existsByName(name));
     }
 
     @Test
-    void createPosition_nameToUpperCaseValidationTest(){
+    void createPosition_nameToUpperCaseValidationTest() {
         //given
         String givenName = "manager";
         String expectedName = "MANAGER";
@@ -130,26 +136,26 @@ public class PositionServiceImplIT {
         ResponsePositionDTO serviceResponse = service.createPosition(createPositionDTO);
 
         //then
-        assertEquals(expectedName,serviceResponse.name());
+        assertEquals(expectedName, serviceResponse.name());
     }
 
     @Test
-    void createPosition_illegalCharsInNameThrowsException(){
+    void createPosition_illegalCharsInNameThrowsException() {
         //given
         String name = "!@#$%^&*(){}";
 
         CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(name).build();
 
         //when
-       ValidationException exception =
+        ValidationException exception =
                 assertThrows(ValidationException.class, () -> service.createPosition(createPositionDTO));
 
         //then
-        assertEquals("Name cannot contain illegal chars", exception.getMessage());
+        assertEquals("Name contains illegal characters", exception.getMessage());
     }
 
     @Test
-    void updatePosition_workingTest(){
+    void updatePosition_workingTest() {
         //given
         String oldName = "OLD NAME";
         String oldDescription = "OLD DESCRIPTION";
@@ -163,13 +169,35 @@ public class PositionServiceImplIT {
         ResponsePositionDTO onlyNameUpdated = service.updatePosition(position.getId(), updatePositionDTO);
 
         //then
-        assertEquals(position.getId(),onlyNameUpdated.id());
-        assertEquals(newName,onlyNameUpdated.name());
-        assertEquals(oldDescription,onlyNameUpdated.description());
+        assertEquals(position.getId(), onlyNameUpdated.id());
+        assertEquals(newName, onlyNameUpdated.name());
+
+        assertEquals(oldDescription, onlyNameUpdated.description());
     }
 
     @Test
-    void updatePosition_entityDoesNotExistThrowsException(){
+    void updatePosition_bothFieldsUpdated() {
+        //given
+        String oldName = "OLD NAME";
+        String oldDescription = "OLD DESCRIPTION";
+        Position position = new TestPositionBuilder().withName(oldName).withDescription(oldDescription).build();
+        repository.save(position);
+
+        String newName = "NEW NAME";
+        String newDescription = "NEW DESCRIPTION";
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).withDescription(newDescription).build();
+
+        //when
+        ResponsePositionDTO fullyUpdated = service.updatePosition(position.getId(), updatePositionDTO);
+
+        //then
+        assertEquals(position.getId(), fullyUpdated.id());
+        assertEquals(newName, fullyUpdated.name());
+        assertEquals(newDescription, fullyUpdated.description());
+    }
+
+    @Test
+    void updatePosition_entityDoesNotExistThrowsException() {
         //given
         Long randomId = 12345L;
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
@@ -184,12 +212,12 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void delete_workingTest(){
+    void delete_workingTest() {
         //given
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position positionToDelete = new TestPositionBuilder().withName("SECOND").build();
         Position position2 = new TestPositionBuilder().withName("THIRD").build();
-        repository.saveAll(List.of(position1,positionToDelete,position2));
+        repository.saveAll(List.of(position1, positionToDelete, position2));
 
         //when
         service.delete(positionToDelete.getId());
@@ -201,7 +229,7 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void delete_entityDoesNotExistThrowsException(){
+    void delete_entityDoesNotExistThrowsException() {
         //given
         Long randomId = 12345L;
 
@@ -215,7 +243,7 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void existsById_workingTest(){
+    void existsById_workingTest() {
         //given
         String name = "NAME";
         Position position = new TestPositionBuilder().withName(name).build();
@@ -231,7 +259,7 @@ public class PositionServiceImplIT {
     }
 
     @Test
-    void existsByName_workingTest(){
+    void existsByName_workingTest() {
         //given
         String name = "NAME";
         Position position = new TestPositionBuilder().withName(name).build();

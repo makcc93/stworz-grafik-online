@@ -78,7 +78,7 @@ class RegionServiceImplTest {
         EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionServiceImpl.createRegion(createRegionDTO));
 
         //then
-        assertEquals("Region with name " + name + " already exist", exception.getMessage());
+        assertEquals("Region with name " + name + " already exists", exception.getMessage());
     }
 
     @Test

@@ -39,8 +39,8 @@ class BranchNameValidatorTest {
     @Test
     void validate_deleteAllSpacesTest(){
         //given
-        String givenName = " \t   W A R S Z A W A 1 2      3   \n" ;
-        String expectedName = "WARSZAWA123";
+        String givenName = "          WARSZAWA 123           " ;
+        String expectedName = "WARSZAWA 123";
 
         //when
         String serviceResponse = branchNameValidator.validate(givenName);

@@ -41,6 +41,8 @@ class ShiftServiceImplTest {
         LocalTime startHour = LocalTime.of(14,0);
         LocalTime endHour = LocalTime.of(20,0);
 
+        when(shiftRepository.existsByStartHourAndEndHour(startHour, endHour)).thenReturn(false);
+
         Shift shift = new TestShiftBuilder().withStartHour(startHour).withEndHour(endHour).build();
         when(shiftRepository.save(shift)).thenReturn(shift);
 
@@ -56,6 +58,7 @@ class ShiftServiceImplTest {
         assertEquals(shift.getStartHour(),serviceResponse.startHour());
         assertEquals(shift.getEndHour(),serviceResponse.endHour());
 
+        verify(shiftRepository,times(1)).existsByStartHourAndEndHour(startHour, endHour);
         verify(shiftRepository,times(1)).save(shift);
     }
 

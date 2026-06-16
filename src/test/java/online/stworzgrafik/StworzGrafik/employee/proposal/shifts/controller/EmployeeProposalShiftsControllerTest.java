@@ -57,7 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@WithMockUser(roles = "ADMIN")
+@WithMockUser(authorities = "ADMIN")
 class EmployeeProposalShiftsControllerTest {
 
     @Autowired

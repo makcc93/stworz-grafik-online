@@ -38,7 +38,6 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigSer
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
-import org.assertj.core.api.BigDecimalAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,6 +114,9 @@ public class EmployeeToShiftMatcherIT {
     @Autowired
     private ScheduleMessageService scheduleMessageService;
 
+    @Autowired
+    private ScheduleDatabaseSaver scheduleDatabaseSaver;
+
     @MockitoBean
     private UserAuthorizationService userAuthorizationService;
 
@@ -126,6 +128,7 @@ public class EmployeeToShiftMatcherIT {
     private int year = 2026;
     private int month = 3;
     private List<Employee> employees;
+    private List<Shift> allShifts;
     private ShiftTypeConfig standardWorkShiftTypeConfig;
     private ShiftTypeConfig workByProposalShiftTypeConfig;
     private ShiftTypeConfig dayOffShiftTypeConfig;
@@ -153,6 +156,7 @@ public class EmployeeToShiftMatcherIT {
         positionEntityService.saveEntity(position);
 
         generateAndSaveAllShifts(shiftEntityService);
+        allShifts = shiftEntityService.getAll();
 
         standardWorkShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.WORK);
         workByProposalShiftTypeConfig = shiftTypeConfigService.saveByShiftCode(ShiftCode.WORK_BY_PROPOSAL);
@@ -194,17 +198,18 @@ public class EmployeeToShiftMatcherIT {
                 .withWorkingDaysCount(workingDaysCount(employees))
                 .withUneditedOriginalDateStoreDraft(Map.of(date,originalDemandDraft))
                 .withEmployeeHours(generateEmployeeHours(employees))
-                .withStandardShiftTypeConfig(ShiftTypeConfig.builder().code(ShiftCode.WORK).build())
                 .withStandardShiftTypeConfig(standardWorkShiftTypeConfig)
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursForEmployeesByDate(date))
+                .withStoreOpenCloseHoursForClientsByDate(generateOpenCloseStoreHoursForClientsByDate(date))
+                .withAllShifts(allShifts)
                 .build();
-
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -215,7 +220,7 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isNotEmpty();
     }
 
-    
+
     @Test
     void matchEmployeeToShift_onlyOneManagerAvailableGiveAllDaysShiftToHim(){
         //given
@@ -230,7 +235,6 @@ public class EmployeeToShiftMatcherIT {
                 employeesWithOnlyOneManager.add(e);
             }
         }
-
         employeesWithOnlyOneManager.add(theOnlyOneManager.get());
 
         int[] originalDemandDraft = {0,0,0,0,0,0,0,0,3,6,7,7,7,7,9,9,9,9,9,6,0,0,0,0};
@@ -256,17 +260,18 @@ public class EmployeeToShiftMatcherIT {
                 .withWorkingDaysCount(workingDaysCount(employees))
                 .withUneditedOriginalDateStoreDraft(Map.of(date,originalDemandDraft))
                 .withEmployeeHours(generateEmployeeHours(employees))
-                .withStandardShiftTypeConfig(ShiftTypeConfig.builder().code(ShiftCode.WORK).build())
                 .withStandardShiftTypeConfig(standardWorkShiftTypeConfig)
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursForEmployeesByDate(date))
+                .withStoreOpenCloseHoursForClientsByDate(generateOpenCloseStoreHoursForClientsByDate(date))
+                .withAllShifts(allShifts)
                 .build();
-
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -281,7 +286,6 @@ public class EmployeeToShiftMatcherIT {
 
         assertTrue(isTheOnlyOneManagerWorking);
     }
-
     
     @Test
     void matchEmployeeToShift_zeroDemandDraftDay() {
@@ -317,7 +321,9 @@ public class EmployeeToShiftMatcherIT {
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursForEmployeesByDate(date))
+                .withStoreOpenCloseHoursForClientsByDate(generateOpenCloseStoreHoursForClientsByDate(date))
+                .withAllShifts(allShifts)
                 .build();
 
 
@@ -334,9 +340,8 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isEmpty();
     }
 
-    
     @Test
-    void matchEmployeeToShift_understaffedAddEmployeeToAvailable(){ //todo Cannot find schedule details for schedule id...
+    void matchEmployeeToShift_understaffedAddEmployeeToAvailable(){
         //given
         LocalDate date = LocalDate.of(year,month,26);
         employees = generateAndSaveAllEmployees(employeeEntityService);
@@ -365,8 +370,6 @@ public class EmployeeToShiftMatcherIT {
             }
         }
 
-
-
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
                 .withStoreId(store.getId())
                 .withYear(year)
@@ -380,18 +383,19 @@ public class EmployeeToShiftMatcherIT {
                 .withWorkingDaysCount(workingDaysCount(employees))
                 .withUneditedOriginalDateStoreDraft(Map.of(date,originalDemandDraft))
                 .withEmployeeHours(generateEmployeeHours(employees))
-                .withStandardShiftTypeConfig(ShiftTypeConfig.builder().code(ShiftCode.WORK).build())
                 .withStandardShiftTypeConfig(standardWorkShiftTypeConfig)
                 .withProposalShiftTypeConfig(workByProposalShiftTypeConfig)
                 .withDaysOffShiftTypeConfig(dayOffShiftTypeConfig)
                 .withVacationShiftTypeConfig(vacationShiftTypeConfig)
-                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursByDate(date))
+                .withStoreOpenCloseHoursForEmployeesByDate(generateOpenCloseStoreHoursForEmployeesByDate(date))
+                .withStoreOpenCloseHoursForClientsByDate(generateOpenCloseStoreHoursForClientsByDate(date))
                 .withMonthlyEmployeesProposalDayOff(employeesDaysOffProposal)
+                .withAllShifts(allShifts)
                 .build();
-
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -402,11 +406,18 @@ public class EmployeeToShiftMatcherIT {
         assertThat(savedDetails).isNotEmpty();
     }
 
-    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursByDate(LocalDate date){
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursForEmployeesByDate(LocalDate date){
     Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
     map.put(date, new OpenCloseHoursForEmployeeIndexDTO(8,20));
 
     return map;
+    }
+
+    private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursForClientsByDate(LocalDate date){
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
+        map.put(date, new OpenCloseHoursForEmployeeIndexDTO(9,20));
+
+        return map;
     }
 
     private Map<Employee, BigDecimal> generateEmployeeHours(List<Employee> employees){
@@ -519,16 +530,6 @@ public class EmployeeToShiftMatcherIT {
                 ))
                 .collect(Collectors.toList());
     }
-
-//    private List<Shift> generateLowestPersonNeededDailyShifts(int[] dailyDemandDraft) {
-//        List<Shift> startHoursShifts = generateShiftStartHours(dailyDemandDraft);
-//
-//        List<Shift> shiftsSortedDesc = startHoursShifts.stream()
-//                .sorted(Comparator.comparing(Shift::getStartHour).reversed())
-//                .toList();
-//
-//        return generateShiftEndHours(shiftsSortedDesc, dailyDemandDraft);
-//    }
 
     private List<Shift> generateShiftEndHours(List<Shift> shiftsSortedDesc, int[] dailyDemandDraft) {
         int index = 0;

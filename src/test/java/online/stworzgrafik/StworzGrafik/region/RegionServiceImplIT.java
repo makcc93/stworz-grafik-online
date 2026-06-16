@@ -58,7 +58,7 @@ class RegionServiceImplIT {
         EntityExistsException exception = assertThrows(EntityExistsException.class, () -> regionService.createRegion(createRegionDTO));
 
         //then
-        assertEquals("Region with name " + usedName + " already exist", exception.getMessage());
+        assertEquals("Region with name " + usedName + " already exists", exception.getMessage());
     }
 
     @Test
@@ -98,6 +98,8 @@ class RegionServiceImplIT {
     @Test
     void findAll_workingTest(){
         //given
+        int regionsCountBefore = regionService.findAll().stream().toList().size();
+
         Region region1 = new TestRegionBuilder().withName("FIRST").build();
         Region region2 = new TestRegionBuilder().withName("SECOND").build();
         Region region3 = new TestRegionBuilder().withName("THIRD").build();
@@ -107,24 +109,25 @@ class RegionServiceImplIT {
         ResponseRegionDTO responseRegionDTO2 = regionMapper.toResponseRegionDTO(region2);
         ResponseRegionDTO responseRegionDTO3 = regionMapper.toResponseRegionDTO(region3);
 
+        int expectedRegionsCountAfter = regionsCountBefore + 3;
         //when
         List<ResponseRegionDTO> serviceResponse = regionService.findAll();
 
         //then
-        assertEquals(3,serviceResponse.size());
+        assertEquals(expectedRegionsCountAfter,serviceResponse.size());
         assertTrue(serviceResponse.containsAll(List.of(responseRegionDTO1,responseRegionDTO2,responseRegionDTO3)));
     }
 
     @Test
     void findAll_emptyListDoesNotThrowException(){
         //given
+        int regionsCountBefore = regionService.findAll().stream().toList().size();
 
         //when
-        List<ResponseRegionDTO> emptyServiceResponse = regionService.findAll();
+        List<ResponseRegionDTO> serviceResponse = regionService.findAll();
 
         //then
-        assertEquals(0,emptyServiceResponse.size());
-        assertTrue(emptyServiceResponse.isEmpty());
+        assertEquals(regionsCountBefore,serviceResponse.size());
     }
 
     @Test

@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@WithMockUser(roles = "ADMIN")
+@WithMockUser(authorities = "ADMIN")
 class EmployeeProposalDaysOffControllerTest {
 
     @Autowired
@@ -318,7 +318,7 @@ class EmployeeProposalDaysOffControllerTest {
 
         //when
         mockMvc.perform(get(
-                "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + checkedYear)
+                        "/api/stores/" + storeId + "/proposalDaysOff?employeeId=" + employeeId + "&year=" + checkedYear)
                         .param("employeeId",employeeId.toString())
                         .param("year",checkedYear.toString()))
                 .andDo(print())

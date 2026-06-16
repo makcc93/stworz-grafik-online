@@ -96,8 +96,9 @@ class ScheduleServiceImplTest {
         //given
         Long scheduleId = 54321L;
 
-        Store store = new TestStoreBuilder().build();
-        Long storeId = store.getId();
+        Store store = mock(Store.class);
+        when(store.getId()).thenReturn(99L);
+        Long storeId = 99L;
 
         Schedule schedule = new TestScheduleBuilder().withStore(store).build();
 
@@ -478,8 +479,11 @@ class ScheduleServiceImplTest {
     @Test
     void saveSchedule_workingTest(){
         //given
-        Schedule schedule = new TestScheduleBuilder().build();
-        Long storeId = schedule.getStore().getId();
+        Store store = mock(Store.class);
+        when(store.getId()).thenReturn(99L);
+        Long storeId = 99L;
+
+        Schedule schedule = new TestScheduleBuilder().withStore(store).build();
 
         ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO().withId(schedule.getId()).withName(schedule.getName()).withYear(schedule.getYear()).withMonth(schedule.getMonth()).build();
 
@@ -502,8 +506,11 @@ class ScheduleServiceImplTest {
     @Test
     void saveSchedule_loggedUserHasNotAccessToThisStoreThrowsException(){
         //given
-        Schedule schedule = new TestScheduleBuilder().build();
-        Long storeId = schedule.getStore().getId();
+        Store store = mock(Store.class);
+        when(store.getId()).thenReturn(99L);
+        Long storeId = 99L;
+
+        Schedule schedule = new TestScheduleBuilder().withStore(store).build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
 

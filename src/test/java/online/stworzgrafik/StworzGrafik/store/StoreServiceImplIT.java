@@ -247,7 +247,7 @@ class StoreServiceImplIT {
                 assertThrows(ValidationException.class, () -> storeService.createStore(createStoreDTO));
 
         //then
-        assertEquals("Name cannot contain illegal chars", exception.getMessage());
+        assertEquals("Name contains illegal characters", exception.getMessage());
     }
 
     @Test
@@ -351,7 +351,7 @@ class StoreServiceImplIT {
                 assertThrows(ValidationException.class, () -> storeService.update(id,updateStoreDTO));
 
         //then
-        assertEquals("Name cannot contain illegal chars", exception.getMessage());
+        assertEquals("Name contains illegal characters", exception.getMessage());
     }
 
     @Test

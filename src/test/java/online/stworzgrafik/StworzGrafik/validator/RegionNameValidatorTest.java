@@ -39,8 +39,8 @@ class RegionNameValidatorTest {
     @Test
     void validate_deleteAllSpacesTest(){
         //given
-        String givenName = " \t\n W      SC H O D 1 1 1 \n  " ;
-        String expectedName = "WSCHOD111";
+        String givenName = " \t\n WSCHOD                 111\n" ;
+        String expectedName = "WSCHOD 111";
 
         //when
         String serviceResponse = regionNameValidator.validate(givenName);

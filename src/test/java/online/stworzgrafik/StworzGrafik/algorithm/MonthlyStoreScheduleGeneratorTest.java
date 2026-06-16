@@ -1,6 +1,12 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.rest.WeeklyRequirementRest;
+import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.DaysOffApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.DelegationApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.ProposalShiftApplier;
+import online.stworzgrafik.StworzGrafik.algorithm.preparation.VacationApplier;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -43,6 +49,24 @@ class MonthlyStoreScheduleGeneratorTest {
 
     @Mock
     private ScheduleGeneratorContextFactory contextFactory;
+
+    @Mock
+    private VacationApplier vacationApplier;
+
+    @Mock
+    private DelegationApplier delegationApplier;
+
+    @Mock
+    private DaysOffApplier daysOffApplier;
+
+    @Mock
+    private ProposalShiftApplier proposalShiftApplier;
+
+    @Mock
+    private WeeklyRequirementRest weeklyRequirementRest;
+
+    @Mock
+    private WarehousemanScheduleGenerator warehousemanScheduleGenerator;
 
     private final int year = 2026;
     private final int month = 3;
@@ -101,7 +125,6 @@ class MonthlyStoreScheduleGeneratorTest {
         when(contextFactory.create(any(),any(),any())).thenReturn(context);
     }
 
-    //todo zmien na IT zeby sprawdzic czy grafik powstanie a jak tak to jak to wyglada
     @Test
     void generateMonthlySchedule_workingTest() throws IOException {
         //given

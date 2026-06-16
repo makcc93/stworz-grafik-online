@@ -37,19 +37,19 @@ class PositionServiceImplTest {
     private NameValidatorService nameValidatorService;
 
     @Test
-    void findAll_workingTest(){
+    void findAll_workingTest() {
         //given
         Position position1 = new TestPositionBuilder().withName("FIRST").build();
         Position position2 = new TestPositionBuilder().withName("SECOND").build();
         Position position3 = new TestPositionBuilder().withName("THIRD").build();
-        List<Position> positions = List.of(position1,position2,position3);
+        List<Position> positions = List.of(position1, position2, position3);
 
         when(positionRepository.findAll()).thenReturn(positions);
 
         ResponsePositionDTO responsePositionDTO1 = new TestResponsePositionDTO().withName(position1.getName()).build();
         ResponsePositionDTO responsePositionDTO2 = new TestResponsePositionDTO().withName(position2.getName()).build();
         ResponsePositionDTO responsePositionDTO3 = new TestResponsePositionDTO().withName(position3.getName()).build();
-        List<ResponsePositionDTO> responseDTOS = List.of(responsePositionDTO1,responsePositionDTO2,responsePositionDTO3);
+        List<ResponsePositionDTO> responseDTOS = List.of(responsePositionDTO1, responsePositionDTO2, responsePositionDTO3);
 
         when(positionMapper.toResponsePositionDTO(position1)).thenReturn(responsePositionDTO1);
         when(positionMapper.toResponsePositionDTO(position2)).thenReturn(responsePositionDTO2);
@@ -62,28 +62,29 @@ class PositionServiceImplTest {
         assertTrue(serviceResponse.contains(responsePositionDTO1));
         assertTrue(serviceResponse.contains(responsePositionDTO2));
         assertTrue(serviceResponse.contains(responsePositionDTO3));
-        assertEquals(3,serviceResponse.size());
+        assertEquals(3, serviceResponse.size());
     }
 
     @Test
-    void findAll_emptyListDoesNotThrowException(){
+    void findAll_emptyListDoesNotThrowException() {
         //given
+        when(positionRepository.findAll()).thenReturn(List.of());
 
         //when
         List<ResponsePositionDTO> serviceResponse = positionServiceImpl.findAll();
 
         //then
-        assertEquals(0,serviceResponse.size());
+        assertEquals(0, serviceResponse.size());
         verify(positionRepository).findAll();
     }
 
     @Test
-    void findById_workingTest(){
+    void findById_workingTest() {
         //given
         Long id = 1L;
         Position position = new TestPositionBuilder().withName("POSITION").build();
 
-        when(positionRepository.findById(id)).thenReturn(Optional.ofNullable(position));
+        when(positionRepository.findById(id)).thenReturn(Optional.of(position));
 
         ResponsePositionDTO responsePositionDTO = new TestResponsePositionDTO().withId(id).withName(position.getName()).build();
 
@@ -93,16 +94,18 @@ class PositionServiceImplTest {
         ResponsePositionDTO serviceResponse = positionServiceImpl.findById(id);
 
         //then
-        assertEquals(id,serviceResponse.id());
-        assertEquals(position.getName(),serviceResponse.name());
+        assertEquals(id, serviceResponse.id());
+        assertEquals(position.getName(), serviceResponse.name());
 
-        verify(positionRepository,times(1)).findById(any(Long.class));
+        verify(positionRepository, times(1)).findById(any(Long.class));
     }
 
     @Test
-    void findById_entityNotExistingThrowsException(){
+    void findById_entityNotExistingThrowsException() {
         //given
         Long randomId = 123123L;
+
+        when(positionRepository.findById(randomId)).thenReturn(Optional.empty());
 
         //when
         EntityNotFoundException exception =
@@ -110,11 +113,11 @@ class PositionServiceImplTest {
 
         //then
         assertEquals("Cannot find position by id " + randomId, exception.getMessage());
-        verify(positionRepository,times(1)).findById(randomId);
+        verify(positionRepository, times(1)).findById(randomId);
     }
 
     @Test
-    void createPosition_workingTest(){
+    void createPosition_workingTest() {
         //given
         String name = "NEW POSITION";
         String description = "This is new position";
@@ -123,7 +126,7 @@ class PositionServiceImplTest {
         when(positionRepository.existsByName(name)).thenReturn(false);
 
         Position position = new TestPositionBuilder().withName(name).withDescription(description).build();
-        when(positionBuilder.createPosition(any(),any())).thenReturn(position);
+        when(positionBuilder.createPosition(any(), any())).thenReturn(position);
 
         when(nameValidatorService.validate(name, ObjectType.POSITION)).thenReturn(name);
 
@@ -136,16 +139,16 @@ class PositionServiceImplTest {
         ResponsePositionDTO serviceResponse = positionServiceImpl.createPosition(createRegionDTO);
 
         //then
-        assertEquals(name,serviceResponse.name());
-        assertEquals(description,serviceResponse.description());
+        assertEquals(name, serviceResponse.name());
+        assertEquals(description, serviceResponse.description());
 
-        verify(positionRepository,times(1)).existsByName(any());
-        verify(positionBuilder,times(1)).createPosition(any(),any());
-        verify(positionMapper,times(1)).toResponsePositionDTO(any());
+        verify(positionRepository, times(1)).existsByName(any());
+        verify(positionBuilder, times(1)).createPosition(any(), any());
+        verify(positionMapper, times(1)).toResponsePositionDTO(any());
     }
 
     @Test
-    void createPosition_entityWithThisNameAlreadyExistsThrowsException(){
+    void createPosition_entityWithThisNameAlreadyExistsThrowsException() {
         //given
         String name = "ALREADY EXISTS";
         when(positionRepository.existsByName(name)).thenReturn(true);
@@ -160,12 +163,12 @@ class PositionServiceImplTest {
         assertEquals("Position with name " + name + " already exists", exception.getMessage());
 
         verify(positionRepository, times(1)).existsByName(name);
-        verify(positionBuilder, never()).createPosition(any(),any());
-        verify(positionMapper,never()).toResponsePositionDTO(any());
+        verify(positionBuilder, never()).createPosition(any(), any());
+        verify(positionMapper, never()).toResponsePositionDTO(any());
     }
 
     @Test
-    void createPosition_dtoIsNullThrowsException(){
+    void createPosition_dtoIsNullThrowsException() {
         //given
         CreatePositionDTO createPositionDTO = null;
 
@@ -173,13 +176,13 @@ class PositionServiceImplTest {
         assertThrows(NullPointerException.class, () -> positionServiceImpl.createPosition(createPositionDTO));
 
         //then
-        verify(positionRepository,never()).existsByName(any());
-        verify(positionBuilder,never()).createPosition(any(),any());
-        verify(positionMapper,never()).toResponsePositionDTO(any());
+        verify(positionRepository, never()).existsByName(any());
+        verify(positionBuilder, never()).createPosition(any(), any());
+        verify(positionMapper, never()).toResponsePositionDTO(any());
     }
 
     @Test
-    void updatePosition_workingTest(){
+    void updatePosition_workingTest() {
         //given
         Long id = 1L;
         String originalName = "ORIGINAL NAME";
@@ -190,7 +193,8 @@ class PositionServiceImplTest {
         String newDescription = "UPDATE DESCRIPTION";
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName(newName).withDescription(newDescription).build();
 
-        when(positionRepository.findById(id)).thenReturn(Optional.ofNullable(position));
+        when(positionRepository.findById(id)).thenReturn(Optional.of(position));
+        when(positionRepository.save(position)).thenReturn(position);
 
         when(nameValidatorService.validate(newName, ObjectType.POSITION)).thenReturn(newName);
 
@@ -203,30 +207,60 @@ class PositionServiceImplTest {
         ResponsePositionDTO updated = positionServiceImpl.updatePosition(id, updatePositionDTO);
 
         //then
-        assertEquals(newName,updated.name());
-        assertEquals(newDescription,updated.description());
+        assertEquals(newName, updated.name());
+        assertEquals(newDescription, updated.description());
         assertEquals(id, updated.id());
+
+        verify(positionRepository, times(1)).save(position);
     }
 
     @Test
-    void updatePosition_entityDoesNotExistThrowsException(){
+    void updatePosition_entityDoesNotExistThrowsException() {
         //given
         Long id = 0L;
-        when(positionRepository.findById(id)).thenThrow(EntityNotFoundException.class);
+
+        when(positionRepository.findById(id)).thenReturn(Optional.empty());
 
         UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().build();
 
         //when
-        assertThrows(EntityNotFoundException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
+        EntityNotFoundException exception =
+                assertThrows(EntityNotFoundException.class, () -> positionServiceImpl.updatePosition(id, updatePositionDTO));
 
         //then
-        verify(positionRepository,times(1)).findById(id);
-        verify(positionMapper, never()).updatePosition(any(),any());
-        verify(positionMapper,never()).toResponsePositionDTO(any());
+        assertEquals("Cannot find position by id " + id, exception.getMessage());
+        verify(positionRepository, times(1)).findById(id);
+        verify(positionMapper, never()).updatePosition(any(), any());
+        verify(positionMapper, never()).toResponsePositionDTO(any());
     }
 
     @Test
-    void delete_workingTest(){
+    void updatePosition_onlyNameUpdated_descriptionRemains() {
+        //given
+        Long id = 1L;
+        String originalDescription = "ORIGINAL DESCRIPTION";
+        Position position = new TestPositionBuilder().withName("OLD NAME").withDescription(originalDescription).build();
+
+        UpdatePositionDTO updatePositionDTO = new TestUpdatePositionDTO().withName("NEW NAME").withDescription(null).build();
+
+        when(positionRepository.findById(id)).thenReturn(Optional.of(position));
+        when(positionRepository.save(position)).thenReturn(position);
+        when(nameValidatorService.validate("NEW NAME", ObjectType.POSITION)).thenReturn("NEW NAME");
+
+        ResponsePositionDTO responsePositionDTO =
+                new TestResponsePositionDTO().withName("NEW NAME").withDescription(originalDescription).withId(id).build();
+        when(positionMapper.toResponsePositionDTO(position)).thenReturn(responsePositionDTO);
+
+        //when
+        ResponsePositionDTO updated = positionServiceImpl.updatePosition(id, updatePositionDTO);
+
+        //then
+        assertEquals("NEW NAME", updated.name());
+        assertEquals(originalDescription, updated.description());
+    }
+
+    @Test
+    void delete_workingTest() {
         //given
         Long id = 1L;
 
@@ -240,7 +274,7 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void delete_entityDoesNotExistThrowsException(){
+    void delete_entityDoesNotExistThrowsException() {
         //given
         Long id = 1L;
 
@@ -253,11 +287,11 @@ class PositionServiceImplTest {
         //then
         assertEquals("Position with id " + id + " does not exist", exception.getMessage());
 
-        verify(positionRepository,never()).deleteById(any());
+        verify(positionRepository, never()).deleteById(any());
     }
 
     @Test
-    void existsById_workingTest(){
+    void existsById_workingTest() {
         //given
         Long id = 1L;
         when(positionRepository.existsById(id)).thenReturn(true);
@@ -270,7 +304,7 @@ class PositionServiceImplTest {
     }
 
     @Test
-    void existsByName_workingTest(){
+    void existsByName_workingTest() {
         //given
         String name = "NAME";
         when(positionRepository.existsByName(name)).thenReturn(true);

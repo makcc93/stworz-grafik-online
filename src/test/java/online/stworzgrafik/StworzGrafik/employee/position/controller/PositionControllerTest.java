@@ -15,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -30,8 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @SpringBootTest
 @Transactional
+// POPRAWKA: usunięto @DirtiesContext — niszczyło ApplicationContext po każdym teście,
+// co przy create-drop powodowało DROP wszystkich tabel (w tym positions).
+// Następna klasa testowa (np. PositionServiceImplIT) dostawała pusty schemat → błąd.
+// @Transactional w zupełności wystarczy — każdy test dostaje rollback po zakończeniu,
+// więc dane między testami są izolowane bez niszczenia schematu.
 @AutoConfigureMockMvc(addFilters = false)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(authorities = "ADMIN")
 class PositionControllerTest {
     @Autowired
@@ -56,10 +59,13 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<ResponsePositionDTO> responsePositionDTOS = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponsePositionDTO>>() {});
+        List<ResponsePositionDTO> responsePositionDTOS = mapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<List<ResponsePositionDTO>>() {}
+        );
 
         //then
-        assertEquals(3,responsePositionDTOS.size());
+        assertEquals(3, responsePositionDTOS.size());
         assertTrue(responsePositionDTOS.contains(first));
         assertTrue(responsePositionDTOS.contains(second));
         assertTrue(responsePositionDTOS.contains(third));
@@ -75,7 +81,10 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<ResponsePositionDTO> responsePositionDTOS = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponsePositionDTO>>() {});
+        List<ResponsePositionDTO> responsePositionDTOS = mapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                new TypeReference<List<ResponsePositionDTO>>() {}
+        );
 
         //then
         assertEquals(0, responsePositionDTOS.size());
@@ -94,22 +103,27 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ResponsePositionDTO controllerResponse = mapper.readValue(mvcResult.getResponse().getContentAsString(), ResponsePositionDTO.class);
+        ResponsePositionDTO controllerResponse = mapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                ResponsePositionDTO.class
+        );
 
         //then
-        assertEquals(responsePositionDTO.id(),controllerResponse.id());
-        assertEquals(responsePositionDTO.name(),controllerResponse.name());
-        assertEquals(responsePositionDTO.description(),controllerResponse.description());
+        assertEquals(responsePositionDTO.id(), controllerResponse.id());
+        assertEquals(responsePositionDTO.name(), controllerResponse.name());
+        assertEquals(responsePositionDTO.description(), controllerResponse.description());
     }
 
     @Test
-    void findById_entityDoesNotExistThrowsException() throws Exception{
+    void findById_entityDoesNotExistThrowsException() throws Exception {
         //given
         long randomId = 123456L;
+
         //when
         mockMvc.perform(get("/api/positions/" + randomId))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+
         //then
         assertFalse(service.exists(randomId));
     }
@@ -129,16 +143,19 @@ class PositionControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        ResponsePositionDTO responsePositionDTO = mapper.readValue(mvcResult.getResponse().getContentAsString(), ResponsePositionDTO.class);
+        ResponsePositionDTO responsePositionDTO = mapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                ResponsePositionDTO.class
+        );
 
         //then
         assertEquals(name, responsePositionDTO.name());
-        assertEquals(description,responsePositionDTO.description());
+        assertEquals(description, responsePositionDTO.description());
         assertTrue(service.exists(name));
     }
 
     @Test
-    void createPosition_entityWithThisNameAlreadyExistsThrowsException() throws Exception{
+    void createPosition_entityWithThisNameAlreadyExistsThrowsException() throws Exception {
         //given
         String oldName = "OLD NAME";
         CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(oldName).build();
@@ -160,7 +177,7 @@ class PositionControllerTest {
     }
 
     @Test
-    void createPosition_dtoIsNullThrowsException() throws Exception{
+    void createPosition_dtoIsNullThrowsException() throws Exception {
         //given
         CreatePositionDTO createPositionDTO = null;
 
@@ -177,7 +194,7 @@ class PositionControllerTest {
     }
 
     @Test
-    void updatePosition_workingTest() throws Exception{
+    void updatePosition_workingTest() throws Exception {
         //given
         String oldName = "OLDNAME";
         CreatePositionDTO createPositionDTO = new TestCreatePositionDTO().withName(oldName).build();
@@ -196,11 +213,15 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ResponsePositionDTO responsePositionDTO = mapper.readValue(mvcResult.getResponse().getContentAsString(), ResponsePositionDTO.class);
+        ResponsePositionDTO responsePositionDTO = mapper.readValue(
+                mvcResult.getResponse().getContentAsString(),
+                ResponsePositionDTO.class
+        );
 
         //then
-        assertEquals(newName,responsePositionDTO.name());
+        assertEquals(newName, responsePositionDTO.name());
         assertTrue(service.exists(originalEntityId));
+        assertTrue(service.exists(newName));
         assertFalse(service.exists(oldName));
     }
 
@@ -225,12 +246,10 @@ class PositionControllerTest {
                         .content(mapper.writeValueAsString(updatePositionDTO)))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
-
-        //then
     }
 
     @Test
-    void updatePosition_cannotFindEntityByIdThrowsException() throws Exception{
+    void updatePosition_cannotFindEntityByIdThrowsException() throws Exception {
         //given
         long randomId = 1234L;
 
@@ -238,16 +257,14 @@ class PositionControllerTest {
 
         //when
         mockMvc.perform(patch("/api/positions/" + randomId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(updatePositionDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updatePositionDTO)))
                 .andDo(print())
                 .andExpect(status().isNotFound());
-
-        //then
     }
 
     @Test
-    void updatePosition_dtoIsNullThrowsException() throws Exception{
+    void updatePosition_dtoIsNullThrowsException() throws Exception {
         //given
         long randomId = 1112233L;
         UpdatePositionDTO updatePositionDTO = null;
@@ -261,18 +278,17 @@ class PositionControllerTest {
                 .andReturn();
 
         //then
-        assertEquals("Request body is missing or json is incorrect",mvcResult.getResponse().getContentAsString());
+        assertEquals("Request body is missing or json is incorrect", mvcResult.getResponse().getContentAsString());
     }
 
     @Test
-    void deletePosition_workingTest() throws Exception{
+    void deletePosition_workingTest() throws Exception {
         //given
         CreatePositionDTO firstDto = new TestCreatePositionDTO().withName("FIRST").build();
         ResponsePositionDTO firstPosition = service.createPosition(firstDto);
 
         CreatePositionDTO secondDto = new TestCreatePositionDTO().withName("SECOND").build();
         ResponsePositionDTO secondPosition = service.createPosition(secondDto);
-
 
         Long firstId = firstPosition.id();
         Long secondId = secondPosition.id();
@@ -288,7 +304,7 @@ class PositionControllerTest {
     }
 
     @Test
-    void deletePosition_entityToDeleteNotFoundThrowsException() throws Exception{
+    void deletePosition_entityToDeleteNotFoundThrowsException() throws Exception {
         //given
         long randomId = 12345L;
 
@@ -299,6 +315,6 @@ class PositionControllerTest {
                 .andReturn();
 
         //then
-        assertEquals("Position with id " + randomId + " does not exist",mvcResult.getResponse().getContentAsString());
+        assertEquals("Position with id " + randomId + " does not exist", mvcResult.getResponse().getContentAsString());
     }
 }

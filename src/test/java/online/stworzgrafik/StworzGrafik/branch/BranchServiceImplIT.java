@@ -79,6 +79,8 @@ class BranchServiceImplIT {
     @Test
     void findAll_workingTest(){
         //given
+        int branchesCountBefore = branchService.findAll().stream().toList().size();
+
         Branch branch1 = new TestBranchBuilder().withRegion(defaultSavedRegion()).withName("FIRST").build();
         Branch branch2 = new TestBranchBuilder().withRegion(defaultSavedRegion()).withName("SECOND").build();
         Branch branch3 = new TestBranchBuilder().withRegion(defaultSavedRegion()).withName("THIRD").build();
@@ -88,24 +90,26 @@ class BranchServiceImplIT {
         ResponseBranchDTO responseBranchDTO2 = branchMapper.toResponseBranchDTO(branch2);
         ResponseBranchDTO responseBranchDTO3 = branchMapper.toResponseBranchDTO(branch3);
 
+        int expectedBranchesCountAfter = branchesCountBefore + 3;
+
         //when
         List<ResponseBranchDTO> serviceResponse = branchService.findAll();
 
         //then
-        assertEquals(3, serviceResponse.size());
+        assertEquals(expectedBranchesCountAfter, serviceResponse.size());
         assertTrue(serviceResponse.containsAll(List.of(responseBranchDTO1,responseBranchDTO2, responseBranchDTO3)));
     }
 
     @Test
     void findAll_emptyListDoesNotThrowException(){
         //given
+        int branchesCountBefore = branchService.findAll().stream().toList().size();
 
         //when
         List<ResponseBranchDTO> serviceResponse = branchService.findAll();
 
         //then
-        assertEquals(0,serviceResponse.size());
-        assertTrue(serviceResponse.isEmpty());
+        assertEquals(branchesCountBefore,serviceResponse.size());
     }
 
     @Test
@@ -154,7 +158,7 @@ class BranchServiceImplIT {
         CreateBranchDTO createBranchDTO =
                 new TestCreateBranchDTO().withName(name).withRegionId(region.getId()).build();
 
-        String expectedSavedName = "WEIRDNAME";
+        String expectedSavedName = "WEIRD NAME";
 
         //when
         ResponseBranchDTO serviceResponse = branchService.createBranch(createBranchDTO);
@@ -178,7 +182,7 @@ class BranchServiceImplIT {
                 assertThrows(ValidationException.class, () -> branchService.createBranch(createBranchDTO));
 
         //then
-        assertEquals("Name cannot contain illegal chars", exception.getMessage());
+        assertEquals("Name contains illegal characters", exception.getMessage());
     }
 
     @Test

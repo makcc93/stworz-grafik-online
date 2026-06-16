@@ -64,7 +64,11 @@ class EmployeeProposalDaysOffServiceImplTest {
     void createEmployeeProposalDaysOff_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
         Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
+        employee.setId(employeeId);
+
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyDaysOff = {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1};
@@ -182,7 +186,11 @@ class EmployeeProposalDaysOffServiceImplTest {
     void createEmployeeProposalDaysOff_proposalForThisDayAlreadyExistsThrowsException(){
         //given
         Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
         Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
+        employee.setId(employeeId);
+
         Integer year = 2025;
         Integer month = 12;
 
@@ -217,7 +225,11 @@ class EmployeeProposalDaysOffServiceImplTest {
     void updateEmployeeProposalDaysOff_workingTest(){
         //given
         Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
         Employee employee = new TestEmployeeBuilder().withStore(store).buildDefault();
+        employee.setId(employeeId);
+
         Integer year = 2025;
         Integer month = 12;
         int[] monthlyDaysOff = {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1};
@@ -311,7 +323,7 @@ class EmployeeProposalDaysOffServiceImplTest {
                 assertThrows(EntityNotFoundException.class, () -> service.updateEmployeeProposalDaysOff(storeId, employeeId, employeeProposalDaysOffId,dto));
 
         //then
-        assertEquals("Cannot find employee proposal days off with id " + employeeProposalDaysOffId,exception.getMessage());
+        assertEquals("Cannot find employee proposal days off by id " + employeeProposalDaysOffId,exception.getMessage());
 
         verify(userAuthorizationService,times(1)).hasAccessToStore(storeId);
         verify(storeService,never()).getEntityById(any());
@@ -399,8 +411,14 @@ class EmployeeProposalDaysOffServiceImplTest {
     void updateEmployeeProposalDaysOff_employeeDoesNotBelongToStoreThrowsException(){
         //given
         Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
         Store differentStore = new TestStoreBuilder().build();
+        differentStore.setId(123L);
+
         Employee employee = new TestEmployeeBuilder().withStore(differentStore).buildDefault();
+        employee.setId(employeeId);
+
         Integer year = 2025;
         Integer month = 12;
 

@@ -48,11 +48,15 @@ class RegionControllerTest {
     @Test
     void getAll_workingTest() throws Exception {
         //given
+        int regionsCountBefore = regionService.findAll().stream().toList().size();
+
         CreateRegionDTO firstCreateDTO = new TestCreateRegionDTO().withName("FIRSTONE").build();
         ResponseRegionDTO firstExistingRegion = regionService.createRegion(firstCreateDTO);
 
         CreateRegionDTO secondCreateDTO = new TestCreateRegionDTO().withName("SECONDONE").build();
         ResponseRegionDTO secondExistingRegion = regionService.createRegion(secondCreateDTO);
+
+        int expectedRegionsCountAfter = regionsCountBefore + 2;
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/regions"))
@@ -64,7 +68,7 @@ class RegionControllerTest {
                 objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<ResponseRegionDTO>>() {});
 
         //then
-        assertEquals(2, responseRegionDTOS.size());
+        assertEquals(expectedRegionsCountAfter, responseRegionDTOS.size());
         assertTrue(responseRegionDTOS.containsAll(List.of(firstExistingRegion,secondExistingRegion)));
     }
 
@@ -138,7 +142,7 @@ class RegionControllerTest {
                 .andReturn();
 
         //then
-        assertEquals("Entity with this data already exists",mvcResult.getResponse().getContentAsString());
+        assertEquals("Region with name " + createRegionDTO.name() + " already exists",mvcResult.getResponse().getContentAsString());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
@@ -58,6 +59,7 @@ import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ExcludedEmpl
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourMappingRequest;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,6 +167,9 @@ class MonthlyStoreScheduleGeneratorIT {
     @MockitoBean
     private UserAuthorizationService userAuthorizationService;
 
+    @Autowired
+    private TestDatabaseCleaner cleaner;
+
     private final int year = 2026;
     private final int month = 6;
 
@@ -230,8 +235,15 @@ class MonthlyStoreScheduleGeneratorIT {
     Map<Integer, PeriodDateDTO> periodWeek = new LinkedHashMap<>();
 
 
+    @AfterEach
+    void clean() {
+        cleaner.cleanAll();
+    }
+
     @BeforeEach
     void setup() {
+        cleaner.cleanAll();
+
         billingPeriodConfigService.saveAll(List.of(
                 BillingPeriodConfig.builder().startMonth(3).durationMonths(3).build(),
                 BillingPeriodConfig.builder().startMonth(6).durationMonths(3).build(),
@@ -632,8 +644,8 @@ class MonthlyStoreScheduleGeneratorIT {
                 .toList();
 
         List<Long> excludedEmployeesIds = excludedEmployees.stream()
-                        .map(Employee::getId)
-                        .toList();
+                .map(Employee::getId)
+                .toList();
 
         shiftHourModificationService.updateExcludedEmployees(storeId,new ExcludedEmployeesRequest(excludedEmployeesIds));
 
@@ -781,7 +793,7 @@ class MonthlyStoreScheduleGeneratorIT {
                                 .withEndHour(end)
                                 .build();
 
-                            shifts.add(shift);
+                        shifts.add(shift);
                     }
                 }
             }

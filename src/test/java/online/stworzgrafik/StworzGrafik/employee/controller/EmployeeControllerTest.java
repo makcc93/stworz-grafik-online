@@ -309,7 +309,7 @@ class EmployeeControllerTest {
 
         String serviceResponse = mvcResult.getResponse().getContentAsString();
         //then
-        assertEquals("Entity with this data already exists",serviceResponse);
+        assertEquals("Employee with sap " + createEmployeeDTO.sap() + " already exists",serviceResponse);
     }
 
     @Test

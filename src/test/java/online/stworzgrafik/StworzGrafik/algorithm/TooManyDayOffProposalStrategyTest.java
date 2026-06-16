@@ -40,9 +40,9 @@ public class TooManyDayOffProposalStrategyTest {
     private ScheduleDetailsService scheduleDetailsService;
 
     @Test
-    void resolve_employeeWithMostDayOffProposalCountAddToAvailableEmployeeListAndCancelProposal(){
-        //given
-        LocalDate date = LocalDate.of(2026,3,2);
+    void resolve_employeeWithMostDayOffProposalCountAddToAvailableEmployeeListAndCancelProposal() {
+        // given
+        LocalDate date = LocalDate.of(2026, 3, 2);
         Employee emp1 = mock(Employee.class);
         Employee emp2 = mock(Employee.class);
         Employee emp3 = mock(Employee.class);
@@ -50,6 +50,10 @@ public class TooManyDayOffProposalStrategyTest {
         int[] emp1MonthlyDayOffProposal = {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         int[] emp2MonthlyDayOffProposal = {0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         int[] emp3MonthlyDayOffProposal = {0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+        when(emp1.isWarehouseman()).thenReturn(false);
+        when(emp2.isWarehouseman()).thenReturn(false);
+        when(emp3.isWarehouseman()).thenReturn(false);
 
         Schedule schedule = mock(Schedule.class);
         when(schedule.getId()).thenReturn(1L);
@@ -61,30 +65,31 @@ public class TooManyDayOffProposalStrategyTest {
         List<Employee> availableEmployees = new ArrayList<>();
         List<Shift> shifts = List.of(mock(Shift.class));
 
-        TooManyDayOffProposalResult result = new TooManyDayOffProposalResult(availableEmployees,shifts);
+        TooManyDayOffProposalResult result = new TooManyDayOffProposalResult(availableEmployees, shifts);
 
         Map<Employee, int[]> monthlyEmployeesProposalDayOff = new HashMap<>();
-        monthlyEmployeesProposalDayOff.put(emp1,emp1MonthlyDayOffProposal);
-        monthlyEmployeesProposalDayOff.put(emp2,emp2MonthlyDayOffProposal);
-        monthlyEmployeesProposalDayOff.put(emp3,emp3MonthlyDayOffProposal);
+        monthlyEmployeesProposalDayOff.put(emp1, emp1MonthlyDayOffProposal);
+        monthlyEmployeesProposalDayOff.put(emp2, emp2MonthlyDayOffProposal);
+        monthlyEmployeesProposalDayOff.put(emp3, emp3MonthlyDayOffProposal);
 
-
-        ScheduleDetails scheduleDetails = mock(ScheduleDetails.class);
-        when(scheduleDetails.getId()).thenReturn(33L);
         when(context.getMonthlyEmployeesProposalDayOff()).thenReturn(monthlyEmployeesProposalDayOff);
-        when(scheduleDetailsEntityService.findEmployeeScheduleDetailsByDay(anyLong(),anyLong(),eq(emp3),eq(date))).thenReturn(Optional.of(scheduleDetails));
 
-        //when
-        strategy.resolve(result,context,date);
+        // when
+        strategy.resolve(result, context, date);
 
-        //then
-        assertEquals(1,availableEmployees.size());
+        // then
+        assertEquals(1, availableEmployees.size());
         assertTrue(availableEmployees.contains(emp3));
 
-        verify(scheduleDetailsService).deleteScheduleDetails(eq(22L),eq(1L),eq(33L));
-        verify(scheduleMessageService).addMessage(eq(1L), argThat( message ->
+        verify(context).deleteShiftFromSchedule(eq(date), eq(emp3));
+        verify(context).deleteEmployeeDayOffProposal(eq(date), eq(emp3));
+        verify(context).registerMessageOnSchedule(argThat(message ->
                 message.scheduleMessageType() == ScheduleMessageType.INFO &&
-                message.scheduleMessageCode() == ScheduleMessageCode.UNDERSTAFFED &&
-                message.messageDate() == date));
+                        message.scheduleMessageCode() == ScheduleMessageCode.UNDERSTAFFED &&
+                        message.messageDate().equals(date)
+        ));
+
+        verify(context, never()).deleteShiftFromSchedule(eq(date), eq(emp1));
+        verify(context, never()).deleteShiftFromSchedule(eq(date), eq(emp2));
     }
 }

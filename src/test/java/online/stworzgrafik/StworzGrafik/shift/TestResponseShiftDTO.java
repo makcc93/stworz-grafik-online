@@ -9,7 +9,7 @@ public class TestResponseShiftDTO {
     private Long id = 1L;
     private LocalTime startHour = LocalTime.of(9,0);
     private LocalTime endHour = LocalTime.of(20,0);
-    private BigDecimal length = getShiftLength(startHour,endHour);
+    private BigDecimal length = null;
 
     public TestResponseShiftDTO withId(Long id){
         this.id = id;
@@ -26,17 +26,18 @@ public class TestResponseShiftDTO {
         return this;
     }
 
- public TestResponseShiftDTO withLength(BigDecimal length){
+    public TestResponseShiftDTO withLength(BigDecimal length){
         this.length = length;
         return this;
- }
+    }
 
     public ResponseShiftDTO build(){
+        BigDecimal computed = (this.length != null) ? this.length : getShiftLength(startHour, endHour);
         return new ResponseShiftDTO(
                 id,
                 startHour,
                 endHour,
-                length
+                computed
         );
     }
 

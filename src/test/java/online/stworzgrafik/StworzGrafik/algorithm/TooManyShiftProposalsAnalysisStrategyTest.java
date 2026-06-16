@@ -4,6 +4,8 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyShiftPro
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyShiftProposalsAnalysisStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
+import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +30,7 @@ class TooManyShiftProposalsAnalysisStrategyTest {
     private ScheduleMessageService scheduleMessageService;
 
     @Test
-    void resolve_reduceProposalOnEmployeeWhoCantOpenStoreWithHighestHours(){
+    void resolve_reduceProposalOnEmployeeWhoCantOpenStoreWithHighestHours() {
         // given
         LocalDate date = LocalDate.of(2024, 5, 20);
         int targetHour = 8;
@@ -37,6 +39,7 @@ class TooManyShiftProposalsAnalysisStrategyTest {
         Employee emp2 = mock(Employee.class);
         Employee empCantOpenStoreWithHighestHours = mock(Employee.class);
         Employee emp4 = mock(Employee.class);
+
         when(emp1.isCanOpenCloseStore()).thenReturn(true);
         when(emp2.isCanOpenCloseStore()).thenReturn(false);
         when(empCantOpenStoreWithHighestHours.isCanOpenCloseStore()).thenReturn(false);
@@ -48,10 +51,12 @@ class TooManyShiftProposalsAnalysisStrategyTest {
         int[] proposalCount = new int[24];
         proposalCount[targetHour] = 4;
 
-        TooManyShiftProposalsAnalysisResult result = new TooManyShiftProposalsAnalysisResult(originalDailyDraft, proposalCount);
+        TooManyShiftProposalsAnalysisResult result =
+                new TooManyShiftProposalsAnalysisResult(originalDailyDraft, proposalCount);
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
-        when(context.getStoreActiveEmployees()).thenReturn(List.of(emp1, emp2,empCantOpenStoreWithHighestHours, emp4));
+        when(context.getStoreActiveEmployees()).thenReturn(
+                List.of(emp1, emp2, empCantOpenStoreWithHighestHours, emp4));
 
         Map<Employee, BigDecimal> employeeHours = new HashMap<>();
         employeeHours.put(emp1, BigDecimal.valueOf(100));
@@ -62,23 +67,36 @@ class TooManyShiftProposalsAnalysisStrategyTest {
 
         int[] emp1Proposal = new int[24]; emp1Proposal[targetHour] = 1;
         int[] emp2Proposal = new int[24]; emp2Proposal[targetHour] = 1;
-        int[] empCantOpenStoreWithHighestHoursProposal = new int[24]; empCantOpenStoreWithHighestHoursProposal[targetHour] = 1;
+        int[] empCantOpenStoreProposal = new int[24]; empCantOpenStoreProposal[targetHour] = 1;
         int[] emp4Proposal = new int[24]; emp4Proposal[targetHour] = 1;
 
         Map<Employee, int[]> proposalsMap = new HashMap<>();
         proposalsMap.put(emp1, emp1Proposal);
         proposalsMap.put(emp2, emp2Proposal);
-        proposalsMap.put(empCantOpenStoreWithHighestHours, empCantOpenStoreWithHighestHoursProposal);
+        proposalsMap.put(empCantOpenStoreWithHighestHours, empCantOpenStoreProposal);
         proposalsMap.put(emp4, emp4Proposal);
 
-        when(context.getMonthlyEmployeesProposalShiftsByDate()).thenReturn(Map.of(date, proposalsMap));
+        when(context.getMonthlyEmployeesProposalShiftsByDate())
+                .thenReturn(Map.of(date, proposalsMap));
+
+        Shift mockShift = mock(Shift.class);
+        when(context.findShiftByArray(any())).thenReturn(mockShift);
 
         // when
         strategy.resolve(result, context, date);
 
         // then
-        verify(context).updateEmployeeDailyProposal(eq(empCantOpenStoreWithHighestHours), eq(date), any(int[].class));
+        verify(context).updateEmployeeDailyProposal(
+                eq(empCantOpenStoreWithHighestHours), eq(date), any(int[].class));
+
+        verify(context, never()).updateEmployeeDailyProposal(eq(emp1), any(), any());
+        verify(context, never()).updateEmployeeDailyProposal(eq(emp2), any(), any());
+        verify(context, never()).updateEmployeeDailyProposal(eq(emp4), any(), any());
+
         assertEquals(3, proposalCount[targetHour]);
+
+        verify(context, never()).registerMessageOnSchedule(
+                argThat(msg -> msg.scheduleMessageType() == ScheduleMessageType.WARNING));
     }
 
 }

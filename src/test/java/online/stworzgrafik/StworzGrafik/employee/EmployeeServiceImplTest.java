@@ -282,6 +282,7 @@ class EmployeeServiceImplTest {
         assertEquals(newFirstName,serviceResponse.firstName());
         assertEquals(newLastName,serviceResponse.lastName());
         assertEquals(employee.getSap(),serviceResponse.sap());
+        verify(employeeMapper, times(1)).updateEmployee(any(UpdateEmployeeDTO.class), eq(employee));
     }
 
     @Test
@@ -367,37 +368,36 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void findAll_workingTest(){
-        //given
-        String first = "FIRST";
-        String second = "SECOND";
-        String third = "THIRD";
-        Pageable pageable = PageRequest.of(1,10);
+    void findAll_workingTest() {
+        // given
+        Pageable pageable = PageRequest.of(0, 20);
+        Employee e1 = new TestEmployeeBuilder().withFirstName("FIRST").build();  // build() zamiast buildDefault()
+        Employee e2 = new TestEmployeeBuilder().withFirstName("SECOND").build();
+        Employee e3 = new TestEmployeeBuilder().withFirstName("THIRD").build();
+        List<Employee> employees = List.of(e1, e2, e3);
+        Page<Employee> employeePage = new PageImpl<>(employees, pageable, employees.size());
 
-        Employee firstEmployee = new TestEmployeeBuilder().withFirstName(first).buildDefault();
-        Employee secondEmployee = new TestEmployeeBuilder().withFirstName(second).buildDefault();
-        Employee thirdEmployee = new TestEmployeeBuilder().withFirstName(third).buildDefault();
+        when(employeeRepository.findAll(pageable)).thenReturn(employeePage);
 
-        List<Employee> employees = List.of(firstEmployee,secondEmployee,thirdEmployee);
-        Page<Employee> employeesPage = new PageImpl<>(employees,pageable,employees.size());
+        ResponseEmployeeDTO dto1 = new TestResponseEmployeeDTO().fromEmployee(e1).build();
+        ResponseEmployeeDTO dto2 = new TestResponseEmployeeDTO().fromEmployee(e2).build();
+        ResponseEmployeeDTO dto3 = new TestResponseEmployeeDTO().fromEmployee(e3).build();
+        when(employeeMapper.toResponseEmployeeDTO(e1)).thenReturn(dto1);
+        when(employeeMapper.toResponseEmployeeDTO(e2)).thenReturn(dto2);
+        when(employeeMapper.toResponseEmployeeDTO(e3)).thenReturn(dto3);
 
-        when(employeeRepository.findAll(pageable)).thenReturn(employeesPage);
+        // when
+        Page<ResponseEmployeeDTO> result = employeeServiceImpl.findAll(pageable);
 
-        ResponseEmployeeDTO firstResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(firstEmployee).build();
-        ResponseEmployeeDTO secondResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(secondEmployee).build();
-        ResponseEmployeeDTO thirdResponseEmployeeDTO = new TestResponseEmployeeDTO().fromEmployee(thirdEmployee).build();
+        // then
+        verify(employeeRepository).findAll(pageable);
+        verify(employeeMapper, times(3)).toResponseEmployeeDTO(any(Employee.class));
 
-        when(employeeMapper.toResponseEmployeeDTO(firstEmployee)).thenReturn(firstResponseEmployeeDTO);
-        when(employeeMapper.toResponseEmployeeDTO(secondEmployee)).thenReturn(secondResponseEmployeeDTO);
-        when(employeeMapper.toResponseEmployeeDTO(thirdEmployee)).thenReturn(thirdResponseEmployeeDTO);
-
-        List<ResponseEmployeeDTO> employeesDTOs = List.of(firstResponseEmployeeDTO,secondResponseEmployeeDTO,thirdResponseEmployeeDTO);
-
-        //when
-        Page<ResponseEmployeeDTO> serviceResponse = employeeServiceImpl.findAll(pageable);
-
-        //then
-        assertTrue(serviceResponse.getContent().containsAll(employeesDTOs));
+        assertEquals(3, result.getTotalElements());
+        assertEquals(3, result.getContent().size());
+        assertEquals("FIRST", result.getContent().get(0).firstName());
+        assertEquals("SECOND", result.getContent().get(1).firstName());
+        assertEquals("THIRD", result.getContent().get(2).firstName());
     }
 
     @Test

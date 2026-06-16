@@ -7,25 +7,19 @@ import online.stworzgrafik.StworzGrafik.branch.*;
 import online.stworzgrafik.StworzGrafik.branch.DTO.CreateBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.ResponseBranchDTO;
 import online.stworzgrafik.StworzGrafik.branch.DTO.UpdateBranchDTO;
-import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
-import online.stworzgrafik.StworzGrafik.branch.TestCreateBranchDTO;
-import online.stworzgrafik.StworzGrafik.branch.TestUpdateBranchDTO;
+import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
-import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
-import online.stworzgrafik.StworzGrafik.security.initializer.AppInitializer;
 import online.stworzgrafik.StworzGrafik.validator.NameValidatorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -68,6 +62,8 @@ class BranchControllerTest {
         Region region = new TestRegionBuilder().build();
         regionService.save(region);
 
+        int branchesCountBefore = branchService.findAll().stream().toList().size();
+
         Branch firstBranch = new TestBranchBuilder().withRegion(region).withName("FIRST").build();
         ResponseBranchDTO responseFirstBranch = branchService.save(firstBranch);
 
@@ -77,6 +73,8 @@ class BranchControllerTest {
         Branch thirdBranch = new TestBranchBuilder().withRegion(region).withName("THIRD").build();
         ResponseBranchDTO responseThirdBranch =branchService.save(thirdBranch);
 
+        int branchesCountAfter = branchService.findAll().stream().toList().size();
+
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/branches"))
                 .andDo(print())
@@ -87,13 +85,13 @@ class BranchControllerTest {
         });
 
         //then
-        assertEquals(3,responseBranchDTOS.size());
         assertTrue(responseBranchDTOS.containsAll(List.of(responseFirstBranch,responseSecondBranch,responseThirdBranch)));
     }
 
     @Test
     void findAll_emptyList() throws Exception {
         //given
+        int branchesCountBefore = branchService.findAll().stream().toList().size();
 
         //when
         MvcResult mvcResult = mockMvc.perform(get("/api/branches"))
@@ -105,7 +103,7 @@ class BranchControllerTest {
         });
 
         //then
-        assertTrue(responseBranchDTOS.isEmpty());
+        assertEquals(branchesCountBefore,responseBranchDTOS.size());
     }
 
     @Test

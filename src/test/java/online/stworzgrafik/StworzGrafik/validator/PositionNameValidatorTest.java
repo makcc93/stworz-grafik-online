@@ -61,7 +61,7 @@ class PositionNameValidatorTest {
                 assertThrows(ValidationException.class, () -> positionNameValidator.validate(name));
 
         //then
-        assertEquals("Name cannot contain illegal chars", exception.getMessage());
+        assertEquals("Name contains illegal characters", exception.getMessage());
     }
 
     @Test

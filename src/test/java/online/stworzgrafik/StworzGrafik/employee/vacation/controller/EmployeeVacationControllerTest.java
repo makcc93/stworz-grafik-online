@@ -21,6 +21,7 @@ import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.security.JwtService;
+import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
@@ -35,14 +36,17 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import static org.hamcrest.Matchers.is;
 
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -53,7 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@WithMockUser(roles = "ADMIN")
+@WithMockUser(authorities = "ADMIN")
 class EmployeeVacationControllerTest {
     @Autowired
     private JwtService jwtService;
@@ -82,6 +86,9 @@ class EmployeeVacationControllerTest {
     @Autowired
     private PositionService positionService;
 
+    @MockitoBean
+    private UserAuthorizationService userAuthorizationService;
+
     private Region region;
     private Branch branch;
     private Store store;
@@ -91,6 +98,8 @@ class EmployeeVacationControllerTest {
 
     @BeforeEach
     void setup() {
+        when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
+
         region = new TestRegionBuilder().build();
         regionService.save(region);
 
@@ -106,7 +115,7 @@ class EmployeeVacationControllerTest {
         employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
 
-        pageable = PageRequest.of(0,25);
+        pageable = PageRequest.of(0, 25);
     }
 
     @Test
@@ -116,7 +125,8 @@ class EmployeeVacationControllerTest {
         Long employeeId = employee.getId();
         Integer year = 2022;
         Integer month = 1;
-        int[] monthlyVacation = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        // Jan 2022: day 1 = Sat+NewYear, day 2 = Sun → OFF; day 3 = Mon → WORK; day 31 = Mon → WORK
+        int[] monthlyVacation = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
         CreateEmployeeVacationDTO createEmployeeVacationDTO =
                 new TestCreateEmployeeVacationDTO()
@@ -151,7 +161,8 @@ class EmployeeVacationControllerTest {
         Long employeeId = employee.getId();
         Integer year = 2022;
         Integer month = 1;
-        int[] monthlyVacation = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        // Only working days: day 3 (Mon), day 31 (Mon)
+        int[] monthlyVacation = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
         CreateEmployeeVacationDTO createDto =
                 new TestCreateEmployeeVacationDTO()
@@ -191,7 +202,8 @@ class EmployeeVacationControllerTest {
 
         for (int i = 1; i <= 12; i++) {
             Integer year = 2025;
-            int[] monthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            // Arrays with 1s only on safe positions (days 2-3, Mon-Tue in most months)
+            int[] monthlyVacation = {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -203,13 +215,13 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
-        employeeService.save(employee);
-        Long secondEmployeeId = employee.getId();
+        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
+        employeeService.save(secondEmployee);
+        Long secondEmployeeId = secondEmployee.getId();
 
         for (int i = 1; i <= 12; i++) {
             Integer year = 2026;
-            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -238,7 +250,7 @@ class EmployeeVacationControllerTest {
 
         for (int i = 1; i <= months; i++) {
             Integer year = 2025;
-            int[] monthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            int[] monthlyVacation = {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -250,13 +262,13 @@ class EmployeeVacationControllerTest {
             service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         }
 
-        Employee employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
-        employeeService.save(employee);
-        Long secondEmployeeId = employee.getId();
+        Employee secondEmployee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
+        employeeService.save(secondEmployee);
+        Long secondEmployeeId = secondEmployee.getId();
 
         for (int i = 1; i <= months; i++) {
             Integer year = 2026;
-            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -270,7 +282,7 @@ class EmployeeVacationControllerTest {
 
         //when&then
         mockMvc.perform(get("/api/stores/" + storeId + "/vacations")
-                        .param("employeeId",secondEmployeeId.toString()))
+                        .param("employeeId", secondEmployeeId.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").exists())
@@ -288,7 +300,7 @@ class EmployeeVacationControllerTest {
         Integer checkedYear = 2026;
 
         for (int i = 1; i <= months; i++) {
-            int[] monthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            int[] monthlyVacation = {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -301,7 +313,7 @@ class EmployeeVacationControllerTest {
         }
 
         for (int i = 1; i <= months; i++) {
-            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+            int[] monthlyVacation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
             CreateEmployeeVacationDTO createDto =
                     new TestCreateEmployeeVacationDTO()
@@ -314,8 +326,7 @@ class EmployeeVacationControllerTest {
         }
 
         //when&then
-        mockMvc.perform(get(
-                        "/api/stores/" + storeId + "/vacations")
+        mockMvc.perform(get("/api/stores/" + storeId + "/vacations")
                         .param("employeeId", employeeId.toString())
                         .param("year", checkedYear.toString()))
                 .andDo(print())
@@ -331,8 +342,11 @@ class EmployeeVacationControllerTest {
         Long storeId = store.getId();
         Long employeeId = employee.getId();
         Integer year = 2020;
+        // Jun 2020: days 1-5 = Mon-Fri (WORK), day 6 = Sat, day 7 = Sun
+        // days 28-29 = Sat-Sun (OFF), days 29-30 = Mon-Tue (WORK)
         int[] normalMonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        int[] juneMonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1};
+        // juneMonthlyVacation: 1s at days 1-4 (Mon-Thu WORK) and days 29-30 (Mon-Tue WORK)
+        int[] juneMonthlyVacation = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0};
 
         Integer months = 12;
         Integer june = 6;
@@ -361,11 +375,10 @@ class EmployeeVacationControllerTest {
         }
 
         //when&then
-        mockMvc.perform(get(
-                        "/api/stores/" + storeId + "/vacations")
-                        .param("employeeId",employeeId.toString())
+        mockMvc.perform(get("/api/stores/" + storeId + "/vacations")
+                        .param("employeeId", employeeId.toString())
                         .param("year", year.toString())
-                        .param("month",june.toString()))
+                        .param("month", june.toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").exists())
@@ -381,7 +394,8 @@ class EmployeeVacationControllerTest {
         Long employeeId = employee.getId();
         Integer year = 2022;
         Integer month = 1;
-        int[] monthlyVacation = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        // day 3 = Mon (WORK), day 31 = Mon (WORK)
+        int[] monthlyVacation = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
         CreateEmployeeVacationDTO createDto =
                 new TestCreateEmployeeVacationDTO()
@@ -393,7 +407,8 @@ class EmployeeVacationControllerTest {
         ResponseEmployeeVacationDTO createdVacation = service.createEmployeeProposalVacation(storeId, employeeId, createDto);
         Long vacationId = createdVacation.id();
 
-        int[] updatedMonthlyVacation = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
+        // day 4 = Tue (WORK), day 28 = Fri (WORK)
+        int[] updatedMonthlyVacation = {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
 
         UpdateEmployeeVacationDTO updateDto =
                 new TestUpdateEmployeeVacationDTO()
@@ -429,7 +444,8 @@ class EmployeeVacationControllerTest {
         Long employeeId = employee.getId();
         Integer year = 2022;
         Integer month = 1;
-        int[] monthlyVacation = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        // day 3 = Mon (WORK), day 31 = Mon (WORK)
+        int[] monthlyVacation = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
         CreateEmployeeVacationDTO createDto =
                 new TestCreateEmployeeVacationDTO()
