@@ -371,9 +371,9 @@ class EmployeeServiceImplTest {
     void findAll_workingTest() {
         // given
         Pageable pageable = PageRequest.of(0, 20);
-        Employee e1 = new TestEmployeeBuilder().withFirstName("FIRST").build();  // build() zamiast buildDefault()
-        Employee e2 = new TestEmployeeBuilder().withFirstName("SECOND").build();
-        Employee e3 = new TestEmployeeBuilder().withFirstName("THIRD").build();
+        Employee e1 = new TestEmployeeBuilder().withId(1L).withFirstName("FIRST").build();
+        Employee e2 = new TestEmployeeBuilder().withId(2L).withFirstName("SECOND").build();
+        Employee e3 = new TestEmployeeBuilder().withId(3L).withFirstName("THIRD").build();
         List<Employee> employees = List.of(e1, e2, e3);
         Page<Employee> employeePage = new PageImpl<>(employees, pageable, employees.size());
 

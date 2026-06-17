@@ -151,7 +151,6 @@ class ShiftServiceImplTest {
 
         // then
         assertEquals(9, serviceResponse.startHour().getHour());
-        // POPRAWKA: BigDecimal.equals() uwzględnia skalę (11 != 11.00), dlatego używamy compareTo
         assertEquals(0, serviceResponse.length().compareTo(BigDecimal.valueOf(11)));
     }
 

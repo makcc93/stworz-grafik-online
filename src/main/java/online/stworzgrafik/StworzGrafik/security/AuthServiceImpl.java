@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.AppUserDetailsService;
-import online.stworzgrafik.StworzGrafik.user.AppUserRepository;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
 import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
 import online.stworzgrafik.StworzGrafik.user.DTO.LoginRequest;
 import online.stworzgrafik.StworzGrafik.user.UserRole;
@@ -17,15 +17,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 class AuthServiceImpl implements AuthService {
-    private final AppUserRepository appUserRepository;
+    private final AppUserService appUserService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AppUserDetailsService appUserDetailsService;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
-        AppUser user = appUserRepository.findByLogin(loginRequest.login())
-                .orElseThrow(() -> new BadCredentialsException("Invalid login or password"));
+        AppUser user = appUserService.findByLogin(loginRequest.login());
 
         if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid login or password");

@@ -3,18 +3,12 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalResult;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalStrategy;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.Schedule;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
-import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -29,15 +23,6 @@ import static org.mockito.Mockito.*;
 public class TooManyDayOffProposalStrategyTest {
     @InjectMocks
     private TooManyDayOffProposalStrategy strategy;
-
-    @Mock
-    private ScheduleMessageService scheduleMessageService;
-
-    @Mock
-    private ScheduleDetailsEntityService scheduleDetailsEntityService;
-
-    @Mock
-    private ScheduleDetailsService scheduleDetailsService;
 
     @Test
     void resolve_employeeWithMostDayOffProposalCountAddToAvailableEmployeeListAndCancelProposal() {
@@ -55,12 +40,7 @@ public class TooManyDayOffProposalStrategyTest {
         when(emp2.isWarehouseman()).thenReturn(false);
         when(emp3.isWarehouseman()).thenReturn(false);
 
-        Schedule schedule = mock(Schedule.class);
-        when(schedule.getId()).thenReturn(1L);
-
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
-        when(context.getSchedule()).thenReturn(schedule);
-        when(context.getStoreId()).thenReturn(22L);
 
         List<Employee> availableEmployees = new ArrayList<>();
         List<Shift> shifts = List.of(mock(Shift.class));

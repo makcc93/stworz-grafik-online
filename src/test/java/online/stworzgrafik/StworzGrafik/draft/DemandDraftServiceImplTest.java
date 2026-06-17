@@ -128,20 +128,42 @@ class DemandDraftServiceImplTest {
     }
 
     @Test
-    void createDemandDraft_draftAlreadyExistsThrowsException() {
-        //given
+    void createDemandDraft_draftAlreadyExistsReturnsExistingDraft() {
+        // given
         when(userAuthorizationService.getUserAccessibleStoreId(storeId)).thenReturn(storeId);
         when(storeEntityService.getEntityById(any())).thenReturn(store);
         when(demandDraftRepository.existsByStore_IdAndDraftDate(any(), any())).thenReturn(true);
 
-        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO().build();
+        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO()
+                .withDraftDate(draftDate)
+                .build();
 
-        //when
-        EntityExistsException exception =
-                assertThrows(EntityExistsException.class, () -> demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO));
+        DemandDraft existingDraft = new TestDemandDraftBuilder()
+                .withStore(store)
+                .withDraftDate(draftDate)
+                .withHourlyDemand(hourlyDemand)
+                .build();
 
-        //then
-        assertEquals("Store id " + storeId + " demand draft on date " + createDemandDraftDTO.draftDate() + " already exists", exception.getMessage());
+        when(demandDraftRepository.findByStore_IdAndDraftDateBetween(
+                storeId, draftDate, draftDate))
+                .thenReturn(Optional.of(existingDraft));
+
+        ResponseDemandDraftDTO expectedResponse = new TestResponseDemandDraftDTO()
+                .withStoreId(storeId)
+                .withDraftDate(draftDate)
+                .withHourlyDemand(hourlyDemand)
+                .build();
+        when(demandDraftMapper.toResponseDemandDraftDTO(existingDraft)).thenReturn(expectedResponse);
+
+        // when
+        ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO);
+
+        // then
+        assertEquals(draftDate, serviceResponse.draftDate());
+        assertArrayEquals(hourlyDemand, serviceResponse.hourlyDemand());
+
+        verify(demandDraftRepository, never()).save(any());
+        verify(demandDraftRepository).findByStore_IdAndDraftDateBetween(storeId, draftDate, draftDate);
     }
 
     @Test
