@@ -27,7 +27,7 @@ class BillingPeriodConfigServiceImpl implements BillingPeriodConfigService {
     @Transactional
     public BillingPeriodConfigResponse create(BillingPeriodConfigRequest request) {
         Optional<BillingPeriodConfig> optionalBillingPeriodConfig = repository.findByStartMonth(request.startMonth());
-        if (optionalBillingPeriodConfig.isPresent()) throw new EntityExistsException("Billing period with start month " + request.startMonth() + " already exist");
+        if (optionalBillingPeriodConfig.isPresent()) throw new EntityExistsException("Billing period with start month " + request.startMonth() + " already exists");
 
         BillingPeriodConfig billingPeriodConfig = BillingPeriodConfig.builder()
                 .startMonth(request.startMonth())
