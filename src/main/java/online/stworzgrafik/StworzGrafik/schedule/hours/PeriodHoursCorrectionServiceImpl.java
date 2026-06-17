@@ -38,7 +38,6 @@ class PeriodHoursCorrectionServiceImpl implements PeriodHoursCorrectionService {
         return employees.stream().map(employee -> {
             BigDecimal calculated = sumFromScheduleDetails(storeId, employee.getId(), year, previousMonths);
 
-            // szukamy korekty dla każdego poprzedniego miesiąca i sumujemy
             BigDecimal corrected = previousMonths.stream()
                     .map(m -> {
                         int y = (m < getStartMonthOfPeriod(year, month)) ? year + 1 : year;
@@ -50,7 +49,6 @@ class PeriodHoursCorrectionServiceImpl implements PeriodHoursCorrectionService {
                     .filter(hours -> hours != null)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // jeśli nie ma żadnej korekty — corrected jest null
             boolean hasAnyCorrection = previousMonths.stream().anyMatch(m -> {
                 int y = (m < getStartMonthOfPeriod(year, month)) ? year + 1 : year;
                 return repository.findByStore_IdAndEmployee_IdAndYearAndMonth(
