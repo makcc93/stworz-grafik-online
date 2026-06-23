@@ -1,7 +1,12 @@
 package online.stworzgrafik.StworzGrafik.schedule.controller;
 
 import jakarta.validation.Valid;
+import jdk.jfr.ContentType;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
+import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
+import online.stworzgrafik.StworzGrafik.fileExport.r2.DTO.ExportUrlDTO;
+import online.stworzgrafik.StworzGrafik.fileExport.r2.R2StorageService;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
@@ -19,6 +24,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.Random;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -26,6 +34,14 @@ class ScheduleController {
     private final ScheduleService scheduleService;
     private final ScheduleGeneratorService scheduleGeneratorService;
     private final ExcelExportFromDatabase excelExportFromDatabase;
+    private final ExcelExport excelExport;
+    private final PdfExport pdfExport;
+    private final R2StorageService r2StorageService;
+
+    private static final String XLSX_CONTENT_TYPE =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String PDF_CONTENT_TYPE = "application/pdf";
+
 
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/schedules/{scheduleId}")
@@ -61,60 +77,82 @@ class ScheduleController {
     @DeleteMapping("/stores/{storeId}/schedules/{scheduleId}")
     ResponseEntity<HttpStatus> deleteSchedule(@PathVariable Long storeId,
                                               @PathVariable Long scheduleId) {
+
+        String folderPrefix = "exports/" + storeId + "/" + scheduleId + "/";
+        r2StorageService.deleteFolderPrefix(folderPrefix);
+
         scheduleService.deleteSchedule(storeId, scheduleId);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Generuje grafik i zwraca plik Excel (.xlsx) jako attachment do pobrania.
-     * POST /api/stores/{storeId}/schedules/{scheduleId}/generate
-     */
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @PostMapping("/stores/{storeId}/schedules/{scheduleId}/generate")
-    ResponseEntity<byte[]> generateSchedule(@PathVariable Long storeId,
-                                            @PathVariable Long scheduleId) {
-        byte[] excelBytes = scheduleGeneratorService.generateSchedule(storeId, scheduleId);
+    ResponseEntity<Void> generateSchedule(@PathVariable Long storeId, @PathVariable Long scheduleId) {
+        try {
+            ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
 
-        ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
-        String filename = "grafik_" + schedule.month() + "_" + schedule.year() + ".xlsx";
+            byte[] excelBytes = scheduleGeneratorService.generateSchedule(storeId, scheduleId);
+            String excelFile = excelFilename(schedule);
+            String excelKey = exportKey(storeId, scheduleId, excelFile);
+            r2StorageService.uploadAndPresign(excelBytes, excelKey, XLSX_CONTENT_TYPE);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.setContentDisposition(
-                ContentDisposition.attachment().filename(filename).build());
-        headers.setContentLength(excelBytes.length);
+            byte[] pdfBytes = pdfExport.export(storeId, scheduleId);
+            String pdfFile = pdfFilename(schedule);
+            String pdfKey = exportKey(storeId, scheduleId, pdfFile);
+            r2StorageService.uploadAndPresign(pdfBytes, pdfKey, PDF_CONTENT_TYPE);
 
-        return ResponseEntity.ok().headers(headers).body(excelBytes);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new RuntimeException("Błąd podczas generowania i zapisu plików grafiku: " + e.getMessage(), e);
+        }
     }
 
-    /**
-     * Eksportuje gotowy grafik jako plik Excel na podstawie danych z bazy danych.
-     * GET /api/stores/{storeId}/schedules/{scheduleId}/export
-     *
-     * Używany przez przycisk "Pobierz Excel" w ScheduleViewer — dane są identyczne
-     * z tym co widać w podglądzie (czytane z tej samej bazy).
-     */
     @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
     @GetMapping("/stores/{storeId}/schedules/{scheduleId}/export")
-    ResponseEntity<byte[]> exportSchedule(@PathVariable Long storeId,
-                                          @PathVariable Long scheduleId) {
-        try {
-            byte[] excelBytes = excelExportFromDatabase.export(storeId, scheduleId);
+    ResponseEntity<ExportUrlDTO> exportSchedule(@PathVariable Long storeId, @PathVariable Long scheduleId) {
+        ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
+        String filename = excelFilename(schedule);
+        String key = exportKey(storeId, scheduleId, filename);
 
-            ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
-            String filename = "grafik_" + schedule.month() + "_" + schedule.year() + ".xlsx";
+        String url = r2StorageService.getPresignedUrl(key);
+        return ResponseEntity.ok(new ExportUrlDTO(url, filename));
+    }
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            headers.setContentDisposition(
-                    ContentDisposition.attachment().filename(filename).build());
-            headers.setContentLength(excelBytes.length);
+    @PreAuthorize("@userAuthorizationService.hasAccessToStore(#storeId)")
+    @GetMapping("/stores/{storeId}/schedules/{scheduleId}/exportPdf")
+    ResponseEntity<ExportUrlDTO> exportPdfSchedule(@PathVariable Long storeId, @PathVariable Long scheduleId) {
+        ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
+        String filename = pdfFilename(schedule);
+        String key = exportKey(storeId, scheduleId, filename);
 
-            return ResponseEntity.ok().headers(headers).body(excelBytes);
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("Błąd generowania pliku Excel: " + e.getMessage(), e);
-        }
+        String url = r2StorageService.getPresignedUrl(key);
+        return ResponseEntity.ok(new ExportUrlDTO(url, filename));
+    }
+
+    private static String excelFilename(ResponseScheduleDTO schedule) {
+        return filenameBase(schedule) + ".xlsx";
+    }
+
+    private String pdfFilename(ResponseScheduleDTO schedule) {
+        return filenameBase(schedule) + ".pdf";
+    }
+
+    private static String filenameBase(ResponseScheduleDTO schedule){
+        return "Grafik_" +
+                schedule.month() +
+                "_" +
+                schedule.year() +
+                "_" +
+                schedule.storeId() +
+                "_" +
+                schedule.id() +
+                "_" +
+                LocalDate.now() +
+                "_" +
+                schedule.scheduleStatusName();
+    }
+
+    private String exportKey(Long storeId, Long scheduleId, String filename) {
+        return "exports/" + storeId + "/" + scheduleId + "/" + filename;
     }
 }
