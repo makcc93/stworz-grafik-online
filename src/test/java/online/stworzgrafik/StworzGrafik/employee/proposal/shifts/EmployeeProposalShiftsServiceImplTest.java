@@ -2,16 +2,21 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.shifts;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,9 +54,23 @@ class EmployeeProposalShiftsServiceImplTest {
     @Mock
     private EmployeeEntityService employeeService;
 
+    @Mock
+    private AppUser appUser;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
+    @Mock
+    private UserLabelService userLabelService;
+
     private final Long storeId              = 1L;
     private final Long employeeId           = 9L;
     private final Long employeeProposalShiftId = 21L;
+
+    @PrePersist
+    void setup(){
+        appUser = AppUser.builder().build();
+    }
 
     @Test
     void createEmployeeProposalShift_workingTest() {
@@ -77,9 +96,8 @@ class EmployeeProposalShiftsServiceImplTest {
                 .withDailyProposalShift(dailyProposalShift)
                 .build();
 
-        when(builder.createEmployeeProposalShifts(store, employee, date, dailyProposalShift))
-                .thenReturn(employeeProposalShifts);
-        when(repository.save(employeeProposalShifts)).thenReturn(employeeProposalShifts);
+        when(repository.save(any(EmployeeProposalShifts.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEmployeeProposalShiftsDTO responseDTO = new TestResponseEmployeeProposalShiftsDTO()
                 .withStoreId(store.getId())
@@ -88,12 +106,15 @@ class EmployeeProposalShiftsServiceImplTest {
                 .withDailyProposalShift(dailyProposalShift)
                 .build();
 
-        when(mapper.toResponseEmployeeProposalShiftsDTO(employeeProposalShifts)).thenReturn(responseDTO);
+        when(mapper.toResponseEmployeeProposalShiftsDTO(any(EmployeeProposalShifts.class)))
+                .thenReturn(responseDTO);
 
         CreateEmployeeProposalShiftsDTO dto = new TestCreateEmployeeProposalShiftsDTO()
                 .withDate(date)
                 .withDailyProposalShift(dailyProposalShift)
                 .build();
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         // when
         ResponseEmployeeProposalShiftsDTO serviceResponse =
@@ -288,6 +309,8 @@ class EmployeeProposalShiftsServiceImplTest {
                 .withDate(date)
                 .withDailyProposalShift(dailyProposalShift)
                 .build();
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         // when
         ResponseEmployeeProposalShiftsDTO serviceResponse =

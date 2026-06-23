@@ -9,9 +9,12 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmpl
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.EmployeeProposalDaysOffSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,15 +32,19 @@ import static online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.Employe
 class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffService,EmployeeProposalDaysOffEntityService {
     private final EmployeeProposalDaysOffRepository repository;
     private final EmployeeProposalDaysOffMapper mapper;
-    private final EmployeeProposalDaysOffBuilder builder;
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
+
     @Override
     public ResponseEmployeeProposalDaysOffDTO createEmployeeProposalDaysOff(Long storeId,
                                                                             Long employeeId,
                                                                             CreateEmployeeProposalDaysOffDTO dto) {
         verifyLoggedUserAccessToStore(storeId);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
 
         Store store = storeService.getEntityById(storeId);
 
@@ -51,13 +58,15 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
             throw new EntityExistsException("Employee proposal days off in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
-        EmployeeProposalDaysOff employeeProposalDaysOff = builder.createEmployeeProposalDaysOff(
-                store,
-                employee,
-                dto.year(),
-                dto.month(),
-                dto.monthlyDaysOff()
-        );
+        EmployeeProposalDaysOff employeeProposalDaysOff = EmployeeProposalDaysOff.builder()
+                .store(store)
+                .employee(employee)
+                .year(dto.year())
+                .month(dto.month())
+                .monthlyDaysOff(dto.monthlyDaysOff())
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         EmployeeProposalDaysOff saved = repository.save(employeeProposalDaysOff);
 
@@ -83,6 +92,10 @@ class EmployeeProposalDaysOffServiceImpl implements EmployeeProposalDaysOffServi
         }
 
         mapper.updateEmployeeProposalDaysOff(dto, employeeProposalDaysOff);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        employeeProposalDaysOff.setUpdatedByUserId(currentUser.getId());
+        employeeProposalDaysOff.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         EmployeeProposalDaysOff saved = repository.save(employeeProposalDaysOff);
 

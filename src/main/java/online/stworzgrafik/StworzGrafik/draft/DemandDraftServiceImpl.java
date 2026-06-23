@@ -8,10 +8,13 @@ import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DTO.*;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.UserContext;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,11 +38,12 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final HolidayManager holidayManager;
     private final CalendarCalculation calendarCalculation;
     private final EmployeeEntityService employeeEntityService;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
 
     @Override
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
-        Long validatedStoreId = userAuthorizationService.getUserAccessibleStoreId(storeId);
-
+        AppUser currentUser = currentUserProvider.getCurrentUser();
         Store store = storeEntityService.getEntityById(storeId);
 
         if (demandDraftRepository.existsByStore_IdAndDraftDate(storeId,dto.draftDate())){
@@ -49,11 +53,13 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
 
         int[] validatedDailyDemandDraft = holidayManager.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
 
-        DemandDraft demandDraft = new DemandDraftBuilder().createDemandDraft(
-                store,
-                dto.draftDate(),
-                validatedDailyDemandDraft
-        );
+        DemandDraft demandDraft = DemandDraft.builder()
+                .store(store)
+                .draftDate(dto.draftDate())
+                .hourlyDemand(validatedDailyDemandDraft)
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 
@@ -73,6 +79,10 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         UpdateDemandDraftDTO validatedDto = new UpdateDemandDraftDTO(dto.draftDate(), validatedDailyDemandDraft);
 
         demandDraftMapper.updateDemandDraft(validatedDto,demandDraft);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        demandDraft.setUpdatedByUserId(currentUser.getId());
+        demandDraft.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         DemandDraft savedDemandDraft = demandDraftRepository.save(demandDraft);
 

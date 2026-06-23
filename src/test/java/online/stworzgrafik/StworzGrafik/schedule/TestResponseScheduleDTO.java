@@ -15,6 +15,8 @@ public class TestResponseScheduleDTO {
     private LocalDateTime updatedAt = LocalDateTime.of(2023, 4, 28, 14, 45);
     private Long updatedByUserId = 502L;
     private String scheduleStatusName = "DONE";
+    private String createdByLabel = "KIEROWNIK SKLEPU";
+    private String updatedByLabel = null;
 
     public TestResponseScheduleDTO withId(Long id) {
         this.id = id;
@@ -75,8 +77,10 @@ public class TestResponseScheduleDTO {
                 name,
                 createdAt,
                 createdByUserId,
+                createdByLabel,
                 updatedAt,
                 updatedByUserId,
+                updatedByLabel,
                 scheduleStatusName
         );
     }

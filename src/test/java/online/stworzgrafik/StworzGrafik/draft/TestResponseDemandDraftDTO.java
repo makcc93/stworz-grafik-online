@@ -15,6 +15,10 @@ public class TestResponseDemandDraftDTO {
     private int[] hourlyDemand = {0,0,0,0,0,0,0,0,4,8,9,9,9,9,11,11,11,11,11,11,7,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2000,12,12,20,0);
     private LocalDateTime updatedAt = null;
+    private Long createdByUserId = 1L;
+    private String createdByLabel = "KIEROWNIK";
+    private Long updatedByUserId = null;
+    private String updatedByLabel = null;
 
     public TestResponseDemandDraftDTO withId(Long id){
         this.id = id;
@@ -53,8 +57,11 @@ public class TestResponseDemandDraftDTO {
                 draftDate,
                 hourlyDemand,
                 createdAt,
-                updatedAt
-
+                updatedAt,
+                createdByUserId,
+                createdByLabel,
+                updatedByUserId,
+                updatedByLabel
         );
     }
 }

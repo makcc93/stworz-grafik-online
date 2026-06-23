@@ -20,11 +20,16 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.TestUpdateEmpl
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.JwtService;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,10 +87,19 @@ class EmployeeProposalDaysOffControllerTest {
     private EmployeeService employeeService;
 
     @Autowired
+    private AppUserService appUserService;
+
+    @Autowired
     private PositionService positionService;
 
     @MockitoBean
     private UserAuthorizationService userAuthorizationService;
+
+    @MockitoBean
+    private CurrentUserProvider currentUserProvider;
+
+    @MockitoBean
+    private UserLabelService userLabelService;
 
     private Region region;
     private Branch branch;
@@ -109,6 +123,16 @@ class EmployeeProposalDaysOffControllerTest {
 
         employee = new TestEmployeeBuilder().withPosition(position).withStore(store).buildDefault();
         employeeService.save(employee);
+
+        AppUser appUser = AppUser.builder()
+                .login("login")
+                .password("password")
+                .role(UserRole.STORE_MANAGER)
+                .build();
+        appUserService.save(appUser);
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+        when(userLabelService.buildLabel(appUser)).thenReturn("testUser");
 
         when(userAuthorizationService.hasAccessToStore(any())).thenReturn(true);
     }

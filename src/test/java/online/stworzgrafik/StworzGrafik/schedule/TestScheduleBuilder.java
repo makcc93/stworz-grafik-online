@@ -15,7 +15,8 @@ public class TestScheduleBuilder {
     private Integer month = 10;
     private String name = "RANDOM SCHEDULE NAME";
     private ScheduleStatus scheduleStatus = ScheduleStatus.IN_PROGRESS;
-    private Long createByUserId = 123L;
+    private Long createdByUserId = 1L;
+    private String createdByLabel = "KIEROWNIK SKLEPU";
 
     public TestScheduleBuilder withRegion(Region region){
         this.region = region;
@@ -53,18 +54,19 @@ public class TestScheduleBuilder {
     }
 
     public TestScheduleBuilder withCreateByUserId(Long createByUserId){
-        this.createByUserId = createByUserId;
+        this.createdByUserId = createByUserId;
         return this;
     }
 
     public Schedule build(){
-        return new ScheduleBuilder().createSchedule(
-                store,
-                year,
-                month,
-                name,
-                scheduleStatus,
-                createByUserId
-        );
+        return Schedule.builder()
+                .store(store)
+                .year(year)
+                .month(month)
+                .name(name)
+                .scheduleStatus(scheduleStatus)
+                .createdByUserId(createdByUserId)
+                .createdByLabel(createdByLabel)
+                .build();
     }
 }

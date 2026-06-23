@@ -2,7 +2,6 @@ package online.stworzgrafik.StworzGrafik.employee.proposal.daysOff;
 
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class TestResponseEmployeeProposalDaysOffDTO {
@@ -15,6 +14,10 @@ public class TestResponseEmployeeProposalDaysOffDTO {
     private int[] monthlyDaysOff = {1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2010,10,10,10,10);
     private LocalDateTime updatedAt = LocalDateTime.of(2020,10,20,20,20);
+    private Long createdByUserId = 1L;
+    private String createdByLabel = "KIEROWNIK SKLEPU";
+    private Long updatedByUserId = null;
+    private String updatedByLabel = null;
 
     public TestResponseEmployeeProposalDaysOffDTO withId(Long id){
         this.id = id;
@@ -65,7 +68,11 @@ public class TestResponseEmployeeProposalDaysOffDTO {
                 month,
                 monthlyDaysOff,
                 createdAt,
-                updatedAt
+                updatedAt,
+                createdByUserId,
+                createdByLabel,
+                updatedByUserId,
+                updatedByLabel
         );
     }
 }

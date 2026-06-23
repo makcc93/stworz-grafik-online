@@ -408,12 +408,12 @@ class EmployeeControllerTest {
         //when
         MvcResult mvcResult = mockMvc.perform(delete("/api/stores/" + randomUnknownStoreId + "/employees/" + employee.getId()))
                 .andDo(print())
-                .andExpect(status().is(500))
+                .andExpect(status().is(400))
                 .andReturn();
 
         String serviceResponse = mvcResult.getResponse().getContentAsString();
 
         //then
-        assertEquals("Employee does not belong to this store", serviceResponse);
+        assertEquals("Access denied: Employee does not belong to this store", serviceResponse);
     }
 }

@@ -35,12 +35,20 @@ public class Schedule {
 
     private LocalDateTime createdAt;
 
+    @Column(name = "created_by_user_id", nullable = false, updatable = false)
     private Long createdByUserId;
+
+    @Column(name = "created_by_label", nullable = false, updatable = false)
+    private String createdByLabel;
 
     @Column(nullable = true)
     private LocalDateTime updatedAt;
 
+    @Column(name = "updated_by_user_id")
     private Long updatedByUserId;
+
+    @Column(name = "updated_by_label")
+    private String updatedByLabel;
 
     @Enumerated(EnumType.STRING)
     private ScheduleStatus scheduleStatus;

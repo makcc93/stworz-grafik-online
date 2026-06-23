@@ -7,9 +7,12 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,6 +29,8 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     private final ScheduleMapper mapper;
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeEntityService;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
 
     @Override
     public Schedule findEntityById(Long scheduleId) {
@@ -60,7 +65,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public Schedule findByStoreIdAndYearAndMonth(Long storeId, Integer year, Integer month) {
         verifyStoreAccess(storeId);
 
-        return repository.findByStoreIdAndYearAndMonth(storeId,year,month)
+        return repository.findByStore_IdAndYearAndMonth(storeId,year,month)
                 .orElseGet(() -> mapper.toEntity(
                         createSchedule(
                                 storeId,
@@ -68,7 +73,6 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
                                         year,
                                         month,
                                         null,
-                                        userAuthorizationService.getUserId(),
                                         "IN_PROGRESS")
                         )
                 ));
@@ -83,7 +87,9 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public ResponseScheduleDTO createSchedule(Long storeId, CreateScheduleDTO dto) {
         verifyStoreAccess(storeId);
 
-        if (repository.existsByStoreIdAndYearAndMonth(storeId,dto.year(),dto.month())){
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+
+        if (repository.existsByStore_IdAndYearAndMonth(storeId,dto.year(),dto.month())){
             throw new EntityExistsException("Schedule for store id " + storeId
                     + " in " + dto.year()
                     + " and month " + dto.month()
@@ -93,14 +99,15 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
         Store store = storeEntityService.getEntityById(storeId);
         ScheduleStatus scheduleStatus = mapper.stringToEnum(dto.scheduleStatusName());
 
-        Schedule schedule = builder.createSchedule(
-                store,
-                dto.year(),
-                dto.month(),
-                dto.name(),
-                scheduleStatus,
-                dto.createdByUserId()
-        );
+        Schedule schedule = Schedule.builder()
+                .store(store)
+                .year(dto.year())
+                .month(dto.month())
+                .name(dto.name())
+                .scheduleStatus(scheduleStatus)
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         Schedule saved = repository.save(schedule);
 
@@ -114,6 +121,10 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
         Schedule schedule = getSchedule(scheduleId);
 
         mapper.updateSchedule(dto,schedule);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        schedule.setUpdatedByUserId(currentUser.getId());
+        schedule.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         Schedule saved = repository.save(schedule);
 

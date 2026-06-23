@@ -377,17 +377,17 @@ public class ExcelExport implements ExportFile{
             color = IndexedColors.SEA_GREEN;
         }
 
-        if (isCredit){
-            color = IndexedColors.TURQUOISE1;
-        }
-
-        if (isCheckout){
-            color = IndexedColors.CORNFLOWER_BLUE;
-        }
-
-        if (isOpenClose){
-            color = IndexedColors.BROWN;
-        }
+//        if (isCredit){
+//            color = IndexedColors.TURQUOISE1;
+//        }
+//
+//        if (isCheckout){
+//            color = IndexedColors.CORNFLOWER_BLUE;
+//        }
+//
+//        if (isOpenClose){
+//            color = IndexedColors.BROWN;
+//        }
 
         if (isDelegation){
             color = IndexedColors.INDIGO;
@@ -414,10 +414,10 @@ public class ExcelExport implements ExportFile{
                 new LegendEntry("URLOP", IndexedColors.SEA_GREEN),
                 new LegendEntry("DELEGACJA", IndexedColors.INDIGO),
                 new LegendEntry("DOSTAWA", IndexedColors.LIGHT_ORANGE),
-                new LegendEntry("RATY", IndexedColors.TURQUOISE1),
-                new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT),
-                new LegendEntry("KASA", IndexedColors.CORNFLOWER_BLUE),
-                new LegendEntry("OTWIERA/ZAMYKA", IndexedColors.BROWN)
+//                new LegendEntry("RATY", IndexedColors.TURQUOISE1),
+                new LegendEntry("WEEKEND / ŚWIĘTO", IndexedColors.GREY_25_PERCENT)
+//                new LegendEntry("KASA", IndexedColors.CORNFLOWER_BLUE),
+//                new LegendEntry("OTWIERA/ZAMYKA", IndexedColors.BROWN)
         );
 
         for (int i = 0; i < entries.size(); i++) {

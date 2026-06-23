@@ -21,8 +21,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest loginRequest){
-        log.info("WCHODZE DO KONTROLLERA");
-        log.info("login={}, password={}", loginRequest.login(),loginRequest.password());
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 }

@@ -9,9 +9,12 @@ import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.CreateEmplo
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.EmployeeProposalShiftsSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.ResponseEmployeeProposalShiftsDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.DTO.UpdateEmployeeProposalShiftsDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,20 +31,23 @@ import static online.stworzgrafik.StworzGrafik.employee.proposal.shifts.Employee
 class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService, EmployeeProposalShiftsEntityService{
     private final EmployeeProposalShiftsRepository repository;
     private final EmployeeProposalShiftsMapper mapper;
-    private final EmployeeProposalShiftsBuilder builder;
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
 
     @Override
     public ResponseEmployeeProposalShiftsDTO createEmployeeProposalShift(Long storeId, Long employeeId, CreateEmployeeProposalShiftsDTO dto) {
         checkLoggedUserAccessToStore(storeId);
 
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+
         Store store = storeService.getEntityById(storeId);
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-        if (!employee.getStore().equals(store)){
+        if (!employee.getStore().getId().equals(store.getId())){
             throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
         }
 
@@ -49,7 +55,14 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
             throw new EntityExistsException("Employee with ID " + employeeId + " proposal shift for date " + dto.date() + " already exists");
         }
 
-        EmployeeProposalShifts employeeProposalShifts = builder.createEmployeeProposalShifts(store, employee, dto.date(), dto.dailyProposalShift());
+        EmployeeProposalShifts employeeProposalShifts = EmployeeProposalShifts.builder()
+                .store(store)
+                .employee(employee)
+                .date(dto.date())
+                .dailyProposalShift(dto.dailyProposalShift())
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         EmployeeProposalShifts saved = repository.save(employeeProposalShifts);
 
@@ -67,11 +80,15 @@ class EmployeeProposalShiftsServiceImpl implements EmployeeProposalShiftsService
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-        if (!employee.getStore().equals(store)){
+        if (!employee.getStore().getId().equals(store.getId())){
             throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
         }
 
         mapper.updateEmployeeProposalShifts(dto,employeeProposalShifts);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        employeeProposalShifts.setUpdatedByUserId(currentUser.getId());
+        employeeProposalShifts.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         EmployeeProposalShifts saved = repository.save(employeeProposalShifts);
 

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,10 +35,11 @@ public class JwtAppUserContext implements UserContext {
     }
 
     public Long getUserId() {
-       return getUser().getId();
+        return getUser().getId();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Long getUserStoreId() {
         AppUser appUser = getUser();
 
@@ -50,6 +52,7 @@ public class JwtAppUserContext implements UserContext {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Long> getManagedStoreIds() {
         AppUser appUser = getUser();
 

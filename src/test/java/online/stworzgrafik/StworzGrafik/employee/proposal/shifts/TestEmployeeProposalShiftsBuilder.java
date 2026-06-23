@@ -22,6 +22,10 @@ public class TestEmployeeProposalShiftsBuilder {
     private int[] dailyProposalShift = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0};
     private LocalDateTime createdAt = LocalDateTime.of(2022,12,12,12,12);
     private LocalDateTime updatedAt = LocalDateTime.now();
+    private Long createdByUserId = 1L;
+    private String createdByLabel = "KIEROWNIK SKLEPU";
+    private Long updatedByUserId = null;
+    private String updatedByLabel = null;
 
     public TestEmployeeProposalShiftsBuilder withId(Long id){
         this.id = id;
@@ -66,7 +70,11 @@ public class TestEmployeeProposalShiftsBuilder {
                 date,
                 dailyProposalShift,
                 createdAt,
-                updatedAt
+                updatedAt,
+                createdByUserId,
+                createdByLabel,
+                updatedByUserId,
+                updatedByLabel
         );
     }
 }

@@ -34,11 +34,12 @@ public class VacationApplier {
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year, month, day);
 
-            if (holidayManager.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
-                continue;
-            }
-
             for (Employee employee : employeesWithVacation) {
+                if (holidayManager.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
+                    context.addEmployeeDayOffProposal(date,employee);
+                    continue;
+                }
+
                 if (context.employeeIsOnVacation(employee, date)) {
                     context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
                     context.addEmployeeVacationDay(employee,1);

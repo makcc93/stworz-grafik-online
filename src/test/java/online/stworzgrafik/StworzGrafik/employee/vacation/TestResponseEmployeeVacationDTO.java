@@ -13,6 +13,11 @@ public class TestResponseEmployeeVacationDTO {
     private int[] monthlyVacation = {1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1};
     private LocalDateTime createdAt = LocalDateTime.of(2010,10,10,10,10);
     private LocalDateTime updatedAt = LocalDateTime.of(2020,10,20,20,20);
+    private Long createdByUserId = 1L;
+    private String createdByLabel = "KIEROWNIK SKLEPU";
+    private Long updatedByUserId = null;
+    private String updatedByLabel = null;
+
 
     public TestResponseEmployeeVacationDTO withId(Long id){
         this.id = id;
@@ -63,7 +68,11 @@ public class TestResponseEmployeeVacationDTO {
                 month,
                 monthlyVacation,
                 createdAt,
-                updatedAt
+                updatedAt,
+                createdByUserId,
+                createdByLabel,
+                updatedByUserId,
+                updatedByLabel
         );
     }
 }

@@ -1,8 +1,5 @@
 package online.stworzgrafik.StworzGrafik.employee.vacation.DTO;
 
-import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.store.Store;
-
 import java.time.LocalDateTime;
 
 public record ResponseEmployeeVacationDTO(
@@ -13,6 +10,10 @@ public record ResponseEmployeeVacationDTO(
         Integer month,
         int[] monthlyVacation,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Long createdByUserId,
+        String createdByLabel,
+        Long updatedByUserId,
+        String updatedByLabel
 ) {
 }

@@ -19,6 +19,7 @@ final class EmployeeBuilder {
                 .sap(sap)
                 .store(store)
                 .position(position)
+                .enable(true)
                 .build();
     }
 }

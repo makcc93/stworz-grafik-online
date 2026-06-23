@@ -38,11 +38,17 @@ import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigSer
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.AppUserService;
+import online.stworzgrafik.StworzGrafik.user.UserRole;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -117,6 +123,12 @@ public class EmployeeToShiftMatcherIT {
     @Autowired
     private ScheduleDatabaseSaver scheduleDatabaseSaver;
 
+    @Autowired
+    private AppUserService appUserService;
+
+    @Autowired
+    private UserLabelService userLabelService;
+
     @MockitoBean
     private UserAuthorizationService userAuthorizationService;
 
@@ -125,6 +137,7 @@ public class EmployeeToShiftMatcherIT {
     private Store store;
     private Schedule schedule;
     private Position position;
+    private AppUser currentUser;
     private int year = 2026;
     private int month = 3;
     private List<Employee> employees;
@@ -145,6 +158,15 @@ public class EmployeeToShiftMatcherIT {
 
         store = new TestStoreBuilder().withBranch(branch).build();
         storeEntityService.saveEntity(store);
+
+        currentUser = appUserService.save(AppUser.builder()
+                .login("test-matcher-user")
+                .password("test")
+                .role(UserRole.ADMIN)
+                .build());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(currentUser, null, currentUser.getAuthorities())
+        );
 
         when(userAuthorizationService.hasAccessToStore(anyLong())).thenReturn(true);
         when(userAuthorizationService.getUserStoreId()).thenReturn(store.getId());
@@ -167,6 +189,7 @@ public class EmployeeToShiftMatcherIT {
     @AfterEach
     void clean(){
         cleaner.cleanAll();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -209,7 +232,7 @@ public class EmployeeToShiftMatcherIT {
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
-        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context);
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -271,7 +294,7 @@ public class EmployeeToShiftMatcherIT {
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
-        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context);
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -286,7 +309,7 @@ public class EmployeeToShiftMatcherIT {
 
         assertTrue(isTheOnlyOneManagerWorking);
     }
-    
+
     @Test
     void matchEmployeeToShift_zeroDemandDraftDay() {
         //given
@@ -362,7 +385,15 @@ public class EmployeeToShiftMatcherIT {
             if (!e.isCanOpenCloseStore() && !e.isWarehouseman()){
                 employeesDaysOffProposal.put(e,allMonthDayOffProposal);
 
-                EmployeeProposalDaysOff dayOffProposal = EmployeeProposalDaysOff.builder().employee(e).monthlyDaysOff(allMonthDayOffProposal).store(store).year(year).month(month).build();
+                EmployeeProposalDaysOff dayOffProposal = EmployeeProposalDaysOff.builder()
+                        .employee(e)
+                        .monthlyDaysOff(allMonthDayOffProposal)
+                        .store(store)
+                        .year(year)
+                        .month(month)
+                        .createdByUserId(currentUser.getId())
+                        .createdByLabel(userLabelService.buildLabel(currentUser))
+                        .build();
                 employeeProposalDaysOffService.save(dayOffProposal);
 
                 Shift dayOffShift = shiftEntityService.getEntityByHours(LocalTime.of(0, 0), LocalTime.of(0, 0));
@@ -395,7 +426,7 @@ public class EmployeeToShiftMatcherIT {
 
         //when
         employeeToShiftMatcher.matchEmployeeToShift(context);
-        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context); // ← FIX
+        scheduleDatabaseSaver.saveScheduleToDatabase(store.getId(), context);
 
         //then
         List<ScheduleDetails> savedDetails = scheduleDetailsEntityService.findDailyScheduleDetails(
@@ -407,10 +438,10 @@ public class EmployeeToShiftMatcherIT {
     }
 
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursForEmployeesByDate(LocalDate date){
-    Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
-    map.put(date, new OpenCloseHoursForEmployeeIndexDTO(8,20));
+        Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> map = new HashMap<>();
+        map.put(date, new OpenCloseHoursForEmployeeIndexDTO(8,20));
 
-    return map;
+        return map;
     }
 
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> generateOpenCloseStoreHoursForClientsByDate(LocalDate date){

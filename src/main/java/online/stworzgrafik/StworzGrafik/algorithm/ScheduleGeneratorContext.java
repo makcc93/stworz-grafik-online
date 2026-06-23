@@ -9,6 +9,8 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
+import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfig;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -164,6 +166,18 @@ public class ScheduleGeneratorContext {
                 .put(employee,shift);
 
         addWorkingInformation(employee,shift,dayOfWeek);
+
+        if (getShiftLength(shift).compareTo(BigDecimal.valueOf(5L)) < 0){
+            registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.UNCOMMON_SHIFT_LENGTH,
+                            "Pracownik otrzymał bardzo krótką zmianę zgodną z planowaniem, zweryfikuj i podejmij decyzję",
+                            employee.getId(),
+                            date
+                    )
+            );
+        }
     }
 
     public OpenCloseHoursForEmployeeIndexDTO getStoreOpenCloseHoursIndexForClientsByDate(LocalDate date){
@@ -305,10 +319,15 @@ public class ScheduleGeneratorContext {
 
     public void deleteEmployeeDayOffProposal(LocalDate date, Employee employee){
         int day = date.getDayOfMonth();
-
         int[] employeeMonthlyDayOffProposal = this.monthlyEmployeesProposalDayOff.getOrDefault(employee, new int[31]);
-
         employeeMonthlyDayOffProposal[day-1] = 0;
+    }
+
+    public void addEmployeeDayOffProposal(LocalDate date, Employee employee){
+        int day = date.getDayOfMonth();
+        int[] employeeMonthlyDayOffProposal = this.monthlyEmployeesProposalDayOff
+                .computeIfAbsent(employee, k -> new int[31]);
+        employeeMonthlyDayOffProposal[day-1] = 1;
     }
 
     public boolean employeeHasProposalDaysOff(Employee employee, LocalDate date){

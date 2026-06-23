@@ -9,10 +9,13 @@ import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.ResponseEmployeeProposalDaysOffDTO;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.UpdateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,6 +51,15 @@ class EmployeeProposalDaysOffServiceImplTest {
     @Mock
     private EmployeeEntityService employeeService;
 
+    @Mock
+    private AppUser appUser;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
+    @Mock
+    private UserLabelService userLabelService;
+
     private Long storeId = 1L;
     private Long employeeId = 9L;
     private Long employeeProposalDaysOffId = 21L;
@@ -58,6 +70,8 @@ class EmployeeProposalDaysOffServiceImplTest {
     void setup(){
         store = new TestStoreBuilder().build();
         employee = new TestEmployeeBuilder().withStore(store).buildDefault();
+
+        appUser = AppUser.builder().build();
     }
 
     @Test
@@ -88,7 +102,6 @@ class EmployeeProposalDaysOffServiceImplTest {
                 .withMonth(month)
                 .withMontlyDaysOff(monthlyDaysOff).build();
 
-        when(builder.createEmployeeProposalDaysOff(store,employee,year,month,monthlyDaysOff)).thenReturn(employeeProposalDaysOff);
 
         ResponseEmployeeProposalDaysOffDTO responseEmployeeProposalDaysOffDTO = new TestResponseEmployeeProposalDaysOffDTO()
                 .withStoreId(storeId)
@@ -97,9 +110,11 @@ class EmployeeProposalDaysOffServiceImplTest {
                 .withYear(year)
                 .withMonth(month).build();
 
-        when(repository.save(employeeProposalDaysOff)).thenReturn(employeeProposalDaysOff);
+        when(repository.save(any(EmployeeProposalDaysOff.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(mapper.toResponseEmployeeProposalDaysOffDTO(employeeProposalDaysOff)).thenReturn(responseEmployeeProposalDaysOffDTO);
+        when(mapper.toResponseEmployeeProposalDaysOffDTO(any(EmployeeProposalDaysOff.class)))
+                .thenReturn(responseEmployeeProposalDaysOffDTO);
 
         CreateEmployeeProposalDaysOffDTO dto =
                 new TestCreateEmployeeProposalDaysOffDTO()
@@ -107,6 +122,9 @@ class EmployeeProposalDaysOffServiceImplTest {
                         .withMonth(month)
                         .withMonthlyDaysOff(monthlyDaysOff)
                         .build();
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+
         //when
         ResponseEmployeeProposalDaysOffDTO serviceResponse = service.createEmployeeProposalDaysOff(storeId, employeeId, dto);
 
@@ -267,6 +285,9 @@ class EmployeeProposalDaysOffServiceImplTest {
                         .withMonth(month)
                         .withMonthlyDaysOff(monthlyDaysOff)
                         .build();
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+
         //when
         ResponseEmployeeProposalDaysOffDTO serviceResponse = service.updateEmployeeProposalDaysOff(storeId, employeeId,employeeProposalDaysOffId, dto);
 

@@ -34,7 +34,6 @@ public class AppUser implements UserDetails {
     @Column(nullable = false)
     private UserRole role;
 
-    // dla STORE_MANAGER — jeden sklep
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
     private Store store;

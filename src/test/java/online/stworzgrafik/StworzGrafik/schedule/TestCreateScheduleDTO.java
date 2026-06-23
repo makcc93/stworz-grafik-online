@@ -6,7 +6,6 @@ public class TestCreateScheduleDTO {
     private Integer year = 2023;
     private Integer month = 5;
     private String name = "Majowy harmonogram 2023";
-    private Long createdByUserId = 500L;
     private String scheduleStatusName = "done";
 
     public TestCreateScheduleDTO withYear(Integer year) {
@@ -24,11 +23,6 @@ public class TestCreateScheduleDTO {
         return this;
     }
 
-    public TestCreateScheduleDTO withCreatedByUserId(Long createdByUserId) {
-        this.createdByUserId = createdByUserId;
-        return this;
-    }
-
     public TestCreateScheduleDTO withScheduleStatusName(String scheduleStatusName) {
         this.scheduleStatusName = scheduleStatusName;
         return this;
@@ -39,7 +33,6 @@ public class TestCreateScheduleDTO {
                 year,
                 month,
                 name,
-                createdByUserId,
                 scheduleStatusName
         );
     }

@@ -84,7 +84,6 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
             employee.setLastName(validatedLastName);
         }
 
-        // POPRAWKA: aktualizacja pozycji — wcześniej positionId z DTO było ignorowane
         if (dto.positionId() != null) {
             Position position = positionEntityService.getEntityById(dto.positionId());
             employee.setPosition(position);

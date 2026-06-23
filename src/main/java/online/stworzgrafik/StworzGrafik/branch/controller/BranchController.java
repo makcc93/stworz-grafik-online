@@ -19,27 +19,29 @@ import java.util.List;
 @Transactional
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ADMIN')")
 class BranchController {
     private final BranchService branchService;
     private final UserAuthorizationService userAuthorizationService;
 
-
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('DIRECTOR')")
     @GetMapping("/branches")
     ResponseEntity<List<ResponseBranchDTO>> findAll(){
         return ResponseEntity.ok().body(branchService.findAll());
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('DIRECTOR')")
     @GetMapping("/branches/{id}")
     ResponseEntity<ResponseBranchDTO> findById(@PathVariable Long id){
         return ResponseEntity.ok().body(branchService.findById(id));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/branches")
     ResponseEntity<ResponseBranchDTO> createBranch(@RequestBody @Valid CreateBranchDTO createBranchDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(branchService.createBranch(createBranchDTO));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/branches/{id}")
     ResponseEntity<HttpStatus> deleteBranchById(@PathVariable Long id){
         branchService.delete(id);
@@ -47,6 +49,7 @@ class BranchController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/branches/{id}")
     ResponseEntity<ResponseBranchDTO> updateBranch(@PathVariable Long id, @RequestBody @Valid UpdateBranchDTO updateBranchDTO){
         return ResponseEntity.ok().body(branchService.updateBranch(id,updateBranchDTO));

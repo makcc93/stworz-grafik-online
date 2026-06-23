@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
-import jakarta.persistence.EntityExistsException;
+import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
@@ -12,12 +12,14 @@ import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.UserContext;
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,16 +51,25 @@ class DemandDraftServiceImplTest {
     private UserAuthorizationService userAuthorizationService;
 
     @Mock
-    private HolidayManager holidayManager;          // <-- BRAKOWAŁ
+    private HolidayManager holidayManager;
 
     @Mock
-    private CalendarCalculation calendarCalculation; // <-- BRAKOWAŁ
+    private CalendarCalculation calendarCalculation;
 
     @Mock
-    private EmployeeEntityService employeeEntityService; // <-- BRAKOWAŁ
+    private EmployeeEntityService employeeEntityService;
 
     @Mock
-    private UserContext userContext;                 // <-- BRAKOWAŁ
+    private UserContext userContext;
+
+    @Mock
+    private AppUser appUser;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
+    @Mock
+    private UserLabelService userLabelService;
 
     private Store store;
     private Long storeId;
@@ -71,12 +82,13 @@ class DemandDraftServiceImplTest {
         Branch branch = new TestBranchBuilder().withRegion(region).build();
         store = new TestStoreBuilder().withBranch(branch).build();
         storeId = store.getId();
+
+        appUser = AppUser.builder().build();
     }
 
     @Test
     void createDemandDraft_workingTest() {
         //given
-        when(userAuthorizationService.getUserAccessibleStoreId(storeId)).thenReturn(storeId);
         when(storeEntityService.getEntityById(any())).thenReturn(store);
 
         CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO()
@@ -86,7 +98,6 @@ class DemandDraftServiceImplTest {
 
         when(demandDraftRepository.existsByStore_IdAndDraftDate(storeId, createDemandDraftDTO.draftDate())).thenReturn(false);
 
-        // holidayManager.isHoliday() musi zwrócić false żeby hourlyDemand nie był wyzerowany
         when(holidayManager.isHoliday(draftDate)).thenReturn(false);
 
         DemandDraft demandDraft = new TestDemandDraftBuilder()
@@ -103,6 +114,7 @@ class DemandDraftServiceImplTest {
                 .build();
 
         when(demandDraftMapper.toResponseDemandDraftDTO(demandDraft)).thenReturn(responseDemandDraftDTO);
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         //when
         ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO);
@@ -130,7 +142,6 @@ class DemandDraftServiceImplTest {
     @Test
     void createDemandDraft_draftAlreadyExistsReturnsExistingDraft() {
         // given
-        when(userAuthorizationService.getUserAccessibleStoreId(storeId)).thenReturn(storeId);
         when(storeEntityService.getEntityById(any())).thenReturn(store);
         when(demandDraftRepository.existsByStore_IdAndDraftDate(any(), any())).thenReturn(true);
 
@@ -201,6 +212,7 @@ class DemandDraftServiceImplTest {
                 .build();
 
         when(demandDraftMapper.toResponseDemandDraftDTO(any())).thenReturn(responseDemandDraftDTO);
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         //when
         ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.updateDemandDraft(storeId, draftId, updateDemandDraftDTO);

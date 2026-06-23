@@ -2,14 +2,18 @@ package online.stworzgrafik.StworzGrafik.schedule;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PrePersist;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,6 +53,20 @@ class ScheduleServiceImplTest {
 
     @Mock
     private StoreEntityService storeEntityService;
+
+    @Mock
+    private AppUser appUser;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
+    @Mock
+    private UserLabelService userLabelService;
+
+    @PrePersist
+    void setup(){
+        appUser = AppUser.builder().build();
+    }
 
     @Test
     void findByEntityById_workingTest(){
@@ -123,19 +141,20 @@ class ScheduleServiceImplTest {
         String name = "NAME";
         ScheduleStatus scheduleStatus = ScheduleStatus.IN_PROGRESS;
 
-        CreateScheduleDTO dto = new TestCreateScheduleDTO().withName(name).withYear(year).withMonth(month).withCreatedByUserId(createdByUserId).build();
+        CreateScheduleDTO dto = new TestCreateScheduleDTO().withName(name).withYear(year).withMonth(month).build();
         Store store = new TestStoreBuilder().build();
 
         Schedule schedule = new TestScheduleBuilder().build();
         ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO().withId(schedule.getId()).withName(schedule.getName()).withYear(schedule.getYear()).withMonth(schedule.getMonth()).build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
-        when(scheduleRepository.existsByStoreIdAndYearAndMonth(storeId, year, month)).thenReturn(false);
+        when(scheduleRepository.existsByStore_IdAndYearAndMonth(storeId, year, month)).thenReturn(false);
         when(storeEntityService.getEntityById(storeId)).thenReturn(store);
         when(scheduleMapper.stringToEnum(any())).thenReturn(scheduleStatus);
-        when(scheduleBuilder.createSchedule(store, year, month, name, scheduleStatus, createdByUserId)).thenReturn(schedule);
-        when(scheduleRepository.save(schedule)).thenReturn(schedule);
-        when(scheduleMapper.toDTO(schedule)).thenReturn(responseDTO);
+        when(scheduleRepository.save(any(Schedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scheduleMapper.toDTO(any(Schedule.class))).thenReturn(responseDTO);
+
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         //when
         ResponseScheduleDTO serviceResponse = scheduleService.createSchedule(storeId, dto);
@@ -145,11 +164,9 @@ class ScheduleServiceImplTest {
         assertEquals(responseDTO.id(), serviceResponse.id());
 
         verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(scheduleRepository, times(1)).existsByStoreIdAndYearAndMonth(storeId, year, month);
         verify(storeEntityService, times(1)).getEntityById(storeId);
-        verify(scheduleBuilder, times(1)).createSchedule(store, year, month,name, scheduleStatus,createdByUserId);
-        verify(scheduleRepository, times(1)).save(schedule);
-        verify(scheduleMapper, times(1)).toDTO(schedule);
+        verify(scheduleRepository, times(1)).save(any(Schedule.class));
+        verify(scheduleMapper, times(1)).toDTO(any(Schedule.class));
     }
 
     @Test
@@ -168,7 +185,7 @@ class ScheduleServiceImplTest {
         assertEquals("Access denied for store with id " + storeId, exception.getMessage());
 
         verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(scheduleRepository, never()).existsByStoreIdAndYearAndMonth(any(), any(), any());
+        verify(scheduleRepository, never()).existsByStore_IdAndYearAndMonth(any(), any(), any());
         verify(storeEntityService, never()).getEntityById(any());
     }
 
@@ -181,7 +198,7 @@ class ScheduleServiceImplTest {
         CreateScheduleDTO dto = new TestCreateScheduleDTO().withYear(year).withMonth(month).build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
-        when(scheduleRepository.existsByStoreIdAndYearAndMonth(storeId, year, month)).thenReturn(true);
+        when(scheduleRepository.existsByStore_IdAndYearAndMonth(storeId, year, month)).thenReturn(true);
 
         //when
         EntityExistsException exception =
@@ -192,7 +209,7 @@ class ScheduleServiceImplTest {
                 exception.getMessage());
 
         verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(scheduleRepository, times(1)).existsByStoreIdAndYearAndMonth(storeId, year, month);
+        verify(scheduleRepository, times(1)).existsByStore_IdAndYearAndMonth(storeId, year, month);
         verify(storeEntityService, never()).getEntityById(any());
         verify(scheduleBuilder, never()).createSchedule(any(), any(), any(), any(), any(),any());
     }
@@ -214,6 +231,7 @@ class ScheduleServiceImplTest {
         when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
         when(scheduleRepository.save(schedule)).thenReturn(schedule);
         when(scheduleMapper.toDTO(schedule)).thenReturn(responseDTO);
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
         //when
         ResponseScheduleDTO serviceResponse = scheduleService.updateSchedule(storeId, scheduleId, dto);

@@ -10,7 +10,9 @@ public record ResponseScheduleDTO (
         String name,
         LocalDateTime createdAt,
         Long createdByUserId,
+        String createdByLabel,
         LocalDateTime updatedAt,
         Long updatedByUserId,
+        String updatedByLabel,
         String scheduleStatusName
 ){}

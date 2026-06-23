@@ -8,7 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AppUserRepository extends JpaRepository<AppUser,Long> {
-    Optional<AppUser> findByLogin(String login);
+    @Query("SELECT u FROM AppUser u " +
+            "LEFT JOIN FETCH u.store " +
+            "LEFT JOIN FETCH u.branch " +
+            "LEFT JOIN FETCH u.region " +
+            "WHERE u.login = :login")
+    Optional<AppUser> findByLogin(@Param("login") String login);
+
     boolean existsByLogin(String login);
 
     @Query("SELECT s.id FROM Store s WHERE s.branch.region.id = :regionId")

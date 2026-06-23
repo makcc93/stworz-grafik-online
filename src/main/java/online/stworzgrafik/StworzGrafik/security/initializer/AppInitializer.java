@@ -66,7 +66,7 @@ public class AppInitializer implements CommandLineRunner{
     }
 
     private void createStore() {
-        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Puławy", 3L));
+        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Gościńczyk 2, 24-100 Puławy", 3L));
     }
 
     private void createStoreEmployees(Long storeId){

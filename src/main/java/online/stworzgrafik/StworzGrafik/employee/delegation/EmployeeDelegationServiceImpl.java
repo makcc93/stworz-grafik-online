@@ -10,9 +10,12 @@ import online.stworzgrafik.StworzGrafik.employee.delegation.DTO.CreateEmployeeDe
 import online.stworzgrafik.StworzGrafik.employee.delegation.DTO.EmployeeDelegationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.delegation.DTO.ResponseEmployeeDelegationDTO;
 import online.stworzgrafik.StworzGrafik.employee.delegation.DTO.UpdateEmployeeDelegationDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,6 +35,8 @@ class EmployeeDelegationServiceImpl implements EmployeeDelegationService, Employ
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
 
     @Override
     public ResponseEmployeeDelegationDTO createEmployeeProposalDelegation(Long storeId,
@@ -39,25 +44,29 @@ class EmployeeDelegationServiceImpl implements EmployeeDelegationService, Employ
                                                                         CreateEmployeeDelegationDTO dto) {
         verifyLoggedUserAccessToStore(storeId);
 
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+
         Store store = storeService.getEntityById(storeId);
 
         Employee employee = employeeService.getEntityById(employeeId);
 
-//        if (!employee.getStore().equals(store)) {
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+        if (!employee.getStore().equals(store)) {
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
 
         if (repository.existsByStore_IdAndEmployee_IdAndYearAndMonth(storeId, employeeId, dto.year(), dto.month())) {
             throw new EntityExistsException("Employee delegation in month " + dto.month() + " of  year " + dto.year() + " already exists");
         }
 
-        EmployeeDelegation employeeDelegation = builder.createEmployeeDelegation(
-                store,
-                employee,
-                dto.year(),
-                dto.month(),
-                dto.monthlyDelegation()
-        );
+        EmployeeDelegation employeeDelegation = EmployeeDelegation.builder()
+                .store(store)
+                .employee(employee)
+                .year(dto.year())
+                .month(dto.month())
+                .monthlyDelegation(dto.monthlyDelegation())
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         EmployeeDelegation saved = repository.save(employeeDelegation);
 
@@ -74,15 +83,19 @@ class EmployeeDelegationServiceImpl implements EmployeeDelegationService, Employ
         EmployeeDelegation employeeDelegation = repository.findById(employeeDelegationId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find employee delegation with id " + employeeDelegationId));
 
-//        Store store = storeService.getEntityById(storeId);
-//
-//        Employee employee = employeeService.getEntityById(employeeId);
-//
-//        if (!employee.getStore().equals(store)) {
-//            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
-//        }
+        Store store = storeService.getEntityById(storeId);
+
+        Employee employee = employeeService.getEntityById(employeeId);
+
+        if (!employee.getStore().equals(store)) {
+            throw new AccessDeniedException("Employee with ID " + employee.getId() + " does not belong to store with ID " + store.getId());
+        }
 
         mapper.updateEmployeeDelegation(dto, employeeDelegation);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        employeeDelegation.setUpdatedByUserId(currentUser.getId());
+        employeeDelegation.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         EmployeeDelegation saved = repository.save(employeeDelegation);
 

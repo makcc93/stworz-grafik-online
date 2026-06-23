@@ -26,10 +26,10 @@ public class TestDemandDraftBuilder {
     }
 
     public DemandDraft build(){
-        return new DemandDraftBuilder().createDemandDraft(
-                store,
-                draftDate,
-                hourlyDemand
-        );
+        return DemandDraft.builder()
+                .store(store)
+                .draftDate(draftDate)
+                .hourlyDemand(hourlyDemand)
+                .build();
     }
 }

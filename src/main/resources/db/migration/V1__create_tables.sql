@@ -155,24 +155,30 @@ CREATE TABLE shift_type_config (
 
 -- -------------------------------------------------------------
 -- 11. demand_draft
---    FK → store
+--    FK → store, FK → app_user (created_by / updated_by)
 --    UNIQUE (store_id, draft_date)
 -- -------------------------------------------------------------
 CREATE TABLE demand_draft (
-    id            BIGINT NOT NULL AUTO_INCREMENT,
-    store_id      BIGINT NOT NULL,
-    draft_date    DATE,
-    hourly_demand TEXT,            -- JSON z int[] przez IntArrayJsonConverter
-    created_at    DATETIME NOT NULL,
-    updated_at    DATETIME,
+    id                  BIGINT NOT NULL AUTO_INCREMENT,
+    store_id            BIGINT NOT NULL,
+    draft_date          DATE,
+    hourly_demand       TEXT,            -- JSON z int[] przez IntArrayJsonConverter
+    created_at          DATETIME NOT NULL,
+    updated_at          DATETIME,
+    created_by_user_id  BIGINT NOT NULL,
+    created_by_label    VARCHAR(255) NOT NULL,
+    updated_by_user_id  BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT uk_store_draft_date UNIQUE (store_id, draft_date),
-    CONSTRAINT fk_demand_draft_store FOREIGN KEY (store_id) REFERENCES store (id)
+    CONSTRAINT fk_demand_draft_store FOREIGN KEY (store_id) REFERENCES store (id),
+    CONSTRAINT fk_demand_draft_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_demand_draft_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 12. employee_vacation
---    FK → store, employee
+--    FK → store, employee, app_user
 -- -------------------------------------------------------------
 CREATE TABLE employee_vacation (
     id               BIGINT NOT NULL AUTO_INCREMENT,
@@ -180,17 +186,23 @@ CREATE TABLE employee_vacation (
     employee_id      BIGINT NOT NULL,
     year_number      INT,
     month_number     INT,
-    monthly_vacation TEXT,         -- JSON z int[] przez IntArrayJsonConverter
+    monthly_vacation TEXT,
     created_at       DATETIME,
     updated_at       DATETIME,
+    created_by_user_id  BIGINT NOT NULL,
+    created_by_label    VARCHAR(255) NOT NULL,
+    updated_by_user_id  BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_emp_vacation_store    FOREIGN KEY (store_id)    REFERENCES store (id),
-    CONSTRAINT fk_emp_vacation_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
+    CONSTRAINT fk_emp_vacation_employee FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_emp_vacation_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_emp_vacation_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 13. employee_proposal_days_off
---    FK → store, employee
+--    FK → store, employee, app_user
 -- -------------------------------------------------------------
 CREATE TABLE employee_proposal_days_off (
     id              BIGINT NOT NULL AUTO_INCREMENT,
@@ -198,34 +210,46 @@ CREATE TABLE employee_proposal_days_off (
     employee_id     BIGINT NOT NULL,
     year_number     INT,
     month_number    INT,
-    monthly_days_off TEXT,         -- JSON z int[] przez IntArrayJsonConverter
+    monthly_days_off TEXT,
     created_at      DATETIME,
     updated_at      DATETIME,
+    created_by_user_id  BIGINT NOT NULL,
+    created_by_label    VARCHAR(255) NOT NULL,
+    updated_by_user_id  BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_emp_days_off_store    FOREIGN KEY (store_id)    REFERENCES store (id),
-    CONSTRAINT fk_emp_days_off_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
+    CONSTRAINT fk_emp_days_off_employee FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_emp_days_off_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_emp_days_off_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 14. employee_proposal_shifts
---    FK → store, employee
+--    FK → store, employee, app_user
 -- -------------------------------------------------------------
 CREATE TABLE employee_proposal_shifts (
     id                   BIGINT NOT NULL AUTO_INCREMENT,
     store_id             BIGINT NOT NULL,
     employee_id          BIGINT NOT NULL,
     date                 DATE   NOT NULL,
-    daily_proposal_shift TEXT,            -- JSON z int[] przez IntArrayJsonConverter
+    daily_proposal_shift TEXT,
     created_at           DATETIME,
     updated_at           DATETIME,
+    created_by_user_id  BIGINT NOT NULL,
+    created_by_label    VARCHAR(255) NOT NULL,
+    updated_by_user_id  BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_emp_proposal_shifts_store    FOREIGN KEY (store_id)    REFERENCES store (id),
-    CONSTRAINT fk_emp_proposal_shifts_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
+    CONSTRAINT fk_emp_proposal_shifts_employee FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_emp_proposal_shifts_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_emp_proposal_shifts_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 15. employee_delegation
---    FK → store, employee
+--    FK → store, employee, app_user
 -- -------------------------------------------------------------
 CREATE TABLE employee_delegation (
     id                  BIGINT NOT NULL AUTO_INCREMENT,
@@ -233,17 +257,23 @@ CREATE TABLE employee_delegation (
     employee_id         BIGINT NOT NULL,
     year_number         INT,
     month_number        INT,
-    monthly_delegation  TEXT,             -- JSON z int[] przez IntArrayJsonConverter
+    monthly_delegation  TEXT,
     created_at          DATETIME,
     updated_at          DATETIME,
+    created_by_user_id  BIGINT NOT NULL,
+    created_by_label    VARCHAR(255) NOT NULL,
+    updated_by_user_id  BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_emp_delegation_store    FOREIGN KEY (store_id)    REFERENCES store (id),
-    CONSTRAINT fk_emp_delegation_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
+    CONSTRAINT fk_emp_delegation_employee FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_emp_delegation_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_emp_delegation_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 16. schedule
---    FK → store
+--    FK → store, app_user
 -- -------------------------------------------------------------
 CREATE TABLE schedule (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
@@ -254,10 +284,14 @@ CREATE TABLE schedule (
     schedule_status   VARCHAR(50),  -- DONE | IN_PROGRESS | DELETED | FAILED | ARCHIVED
     created_at        DATETIME,
     created_by_user_id BIGINT,
+    created_by_label    VARCHAR(255) NOT NULL,
     updated_at        DATETIME,
     updated_by_user_id BIGINT,
+    updated_by_label    VARCHAR(255),
     PRIMARY KEY (id),
-    CONSTRAINT fk_schedule_store FOREIGN KEY (store_id) REFERENCES store (id)
+    CONSTRAINT fk_schedule_store FOREIGN KEY (store_id) REFERENCES store (id),
+    CONSTRAINT fk_schedule_created_by FOREIGN KEY (created_by_user_id) REFERENCES app_user (id),
+    CONSTRAINT fk_schedule_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES app_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------

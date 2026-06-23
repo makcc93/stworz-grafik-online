@@ -2,24 +2,15 @@ package online.stworzgrafik.StworzGrafik.fileExport;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
-import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
-import online.stworzgrafik.StworzGrafik.employee.Employee;
-import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
-import online.stworzgrafik.StworzGrafik.shift.Shift;
-
-// ── OpenPDF 3.x (org.openpdf) ───────────────────────────────────────────────
-import org.openpdf.text.Document;
-import org.openpdf.text.Element;
-import org.openpdf.text.Font;
-import org.openpdf.text.PageSize;
-import org.openpdf.text.Paragraph;
-import org.openpdf.text.Phrase;
-import org.openpdf.text.Rectangle;
-import org.openpdf.text.pdf.PdfPCell;
-import org.openpdf.text.pdf.PdfPTable;
-import org.openpdf.text.pdf.PdfWriter;
-// ─────────────────────────────────────────────────────────────────────────────
-
+import online.stworzgrafik.StworzGrafik.schedule.Schedule;
+import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
+import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
+import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
+import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
+import org.openpdf.text.*;
+import org.openpdf.text.pdf.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
@@ -30,7 +21,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.List;
@@ -38,80 +28,77 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PdfExport implements ExportFile {
+public class PdfExport {
 
     private final HolidayManager holidayManager;
+    private final ScheduleEntityService scheduleEntityService;
+    private final ScheduleDetailsEntityService scheduleDetailsEntityService;
 
-    // Kolory
-    private static final Color COLOR_HEADER_BG = new Color(220, 220, 220);
-    private static final Color COLOR_WEEKEND   = new Color(192, 192, 192);
-    private static final Color COLOR_WAREHOUSE = new Color(255, 200, 150);
-    private static final Color COLOR_PROPOSAL  = new Color(200, 150, 255);
-    private static final Color COLOR_VACATION  = new Color(150, 255, 150);
-    private static final Color COLOR_CREDIT    = new Color(100, 200, 200);
-    private static final Color COLOR_CHECKOUT  = new Color(150, 150, 255);
+    // ── Kolory spójne z ExcelExportFromDatabase ───────────────────────────
+    private static final Color COLOR_WEEKEND    = new Color(192, 192, 192); // GREY_25_PERCENT
+    private static final Color COLOR_PROPOSAL   = new Color(128, 0, 128);   // VIOLET
+    private static final Color COLOR_VACATION   = new Color(46, 139, 87);   // SEA_GREEN
+    private static final Color COLOR_SICK_LEAVE = new Color(255, 255, 153); // LIGHT_YELLOW
+    private static final Color COLOR_DELEGATION = new Color(75, 0, 130);    // INDIGO
 
-    // Czcionki – dobrany kompromis czytelność vs. zmieszczenie na A3
     private static final float TITLE_SIZE  = 11f;
-    private static final float HDR_SIZE    =  6.5f;
-    private static final float DATA_SIZE   =  6f;
-    private static final float STAT_SIZE   =  6.5f;
-    private static final float LEGEND_SIZE =  7f;
+    private static final float HDR_SIZE    = 6.5f;
+    private static final float DATA_SIZE   = 6f;
+    private static final float STAT_SIZE   = 6.5f;
+    private static final float LEGEND_SIZE = 7f;
+    private static final float HDR_PAD     = 2.5f;
+    private static final float DATA_PAD    = 1.5f;
 
-    // Padding
-    private static final float HDR_PAD  = 2.5f;
-    private static final float DATA_PAD = 1.5f;
+    public byte[] export(Long storeId, Long scheduleId) throws IOException {
+        // ── Pobranie danych z bazy ─────────────────────────────────────────
+        Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
+        int year  = schedule.getYear();
+        int month = schedule.getMonth();
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int daysInMonth = yearMonth.lengthOfMonth();
 
-    @Override
-    public byte[] export(ScheduleGeneratorContext context) throws IOException {
+        List<ScheduleDetails> allDetails = scheduleDetailsEntityService
+                .findEntityByCriteria(storeId, scheduleId,
+                        new ScheduleDetailsSpecificationDTO(null, null, null, null, null),
+                        PageRequest.of(0, 10000))
+                .getContent();
+
+        // Ustal kolejność pracowników (wg pierwszego wystąpienia)
+        List<Long> employeeIds = allDetails.stream()
+                .map(d -> d.getEmployee().getId())
+                .distinct()
+                .toList();
+
+        // Mapa: employeeId → (dzień miesiąca → ScheduleDetails)
+        Map<Long, Map<Integer, ScheduleDetails>> empDayMap = new LinkedHashMap<>();
+        for (Long empId : employeeIds) {
+            empDayMap.put(empId, new TreeMap<>());
+        }
+        for (ScheduleDetails d : allDetails) {
+            int day = d.getDate().getDayOfMonth();
+            empDayMap.get(d.getEmployee().getId()).put(day, d);
+        }
+
+        // ── Budowanie PDF ─────────────────────────────────────────────────
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-
-            // ── 1. Dane ──────────────────────────────────────────────────────
-            Set<Employee> employees = context.getFinalSchedule().values().stream()
-                    .flatMap(m -> m.keySet().stream())
-                    .collect(Collectors.toSet());
-
-            Map<Employee, BigDecimal>      empHours     = context.getEmployeeHours();
-            Map<Employee, Integer>         empWorkDays  = context.getWorkingDaysCount();
-            Map<Employee, Integer>         empWeekends  = context.getWorkingOnWeekendCount();
-            Map<Employee, Integer>         empVacations = context.getVacationDaysCount();
-            Map<Employee, Set<LocalDate>> empWarehouse = context.getEmployeeWarehouseDays();
-            Map<Employee, Set<LocalDate>> empCredit    = context.getEmployeeCreditDays();
-            Map<Employee, Set<LocalDate>> empCheckout  = context.getEmployeeCheckoutDays();
-            Map<Employee, Set<LocalDate>> empOpenClose = context.getEmployeeOpenCloseDays();
-
-            LinkedHashMap<LocalDate, Map<Employee, Shift>> sched =
-                    context.getFinalSchedule().entrySet().stream()
-                            .sorted(Comparator.comparingInt(e -> e.getKey().getDayOfMonth()))
-                            .collect(Collectors.toMap(
-                                    Map.Entry::getKey, Map.Entry::getValue,
-                                    (a, b) -> a, LinkedHashMap::new));
-
-            int year        = context.getYear();
-            int month       = context.getMonth();
-            int daysInMonth = YearMonth.of(year, month).lengthOfMonth();
-
-            // ── 2. Dokument: strona 1 = A3 landscape, wąskie marginesy ──────
             float margin = 15f;
-            Document document = new Document(
-                    PageSize.A3.rotate(), margin, margin, margin, margin);
+            Document document = new Document(PageSize.A3.rotate(), margin, margin, margin, margin);
             PdfWriter.getInstance(document, out);
             document.open();
 
-            Font titleFont  = new Font(Font.HELVETICA, TITLE_SIZE, Font.BOLD);
-            Font hdrFont    = new Font(Font.HELVETICA, HDR_SIZE,   Font.BOLD);
-            Font dataFont   = new Font(Font.HELVETICA, DATA_SIZE,  Font.NORMAL);
-            Font statFont   = new Font(Font.HELVETICA, STAT_SIZE,  Font.BOLD);
-            Font openClFont = new Font(Font.HELVETICA, DATA_SIZE,  Font.BOLDITALIC);
+            Font titleFont = new Font(Font.HELVETICA, TITLE_SIZE, Font.BOLD);
+            Font hdrFont   = new Font(Font.HELVETICA, HDR_SIZE,   Font.BOLD);
+            Font dataFont  = new Font(Font.HELVETICA, DATA_SIZE,  Font.NORMAL);
+            Font statFont  = new Font(Font.HELVETICA, STAT_SIZE,  Font.BOLD);
 
-            // ── 3. STRONA 1: główna tabela + legenda ─────────────────────────
+            // Tytuł
             Paragraph title = new Paragraph("GRAFIK " + month + "/" + year, titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
             document.add(new Paragraph(" "));
 
-            // Proporcje kolumn: imię szerzej, dzień wąski (1.0), stat trochę szerzej (1.3)
-            int cols = 1 + daysInMonth + 7;
+            // ── Główna tabela ──────────────────────────────────────────────
+            int cols = 1 + daysInMonth + 4; // imię + dni + 4 statystyki
             PdfPTable mainTable = new PdfPTable(cols);
             mainTable.setWidthPercentage(100);
             mainTable.setSpacingBefore(0f);
@@ -123,97 +110,118 @@ public class PdfExport implements ExportFile {
             mainTable.setWidths(colWidths);
 
             // Nagłówek
-            addHdrCell(mainTable, "Pracownik", hdrFont, COLOR_HEADER_BG);
+            mainTable.addCell(headerCell("Pracownik", hdrFont));
             for (int d = 1; d <= daysInMonth; d++) {
-                LocalDate date    = LocalDate.of(year, month, d);
-                String    abbr    = date.getDayOfWeek()
-                        .getDisplayName(TextStyle.NARROW_STANDALONE, Locale.of("pl"));
-                Color     bg      = isWeekendOrHoliday(date) ? COLOR_WEEKEND : COLOR_HEADER_BG;
-                PdfPCell  hc      = styledCell(d + "\n" + abbr, hdrFont, bg, Element.ALIGN_CENTER);
-                hc.setPadding(HDR_PAD);
-                mainTable.addCell(hc);
+                LocalDate date = LocalDate.of(year, month, d);
+                String text = d + " " + yearMonth.getMonth().toString();
+                Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
+                mainTable.addCell(styledCell(text, hdrFont, bg, Element.ALIGN_CENTER, HDR_PAD));
             }
-            // Skrócone nagłówki statystyk (3 znaki) – mieszczą się w wąskiej kolumnie
-            String[] statHdrs = {"GDZ", "DNI", "WKD", "URL", "DOS", "RAT", "KAS"};
-            for (String s : statHdrs) addHdrCell(mainTable, s, hdrFont, COLOR_HEADER_BG);
+            for (String s : List.of("GODZINY", "DNI PRACY", "WEEKENDY", "URLOP")) {
+                mainTable.addCell(headerCell(s, hdrFont));
+            }
+
+            // Wiersz z nazwami dni tygodnia
+            mainTable.addCell(styledCell("", dataFont, null, Element.ALIGN_CENTER, DATA_PAD));
+            for (int d = 1; d <= daysInMonth; d++) {
+                LocalDate date = LocalDate.of(year, month, d);
+                String abbr = date.getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.of("pl"));
+                Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
+                mainTable.addCell(styledCell(abbr, dataFont, bg, Element.ALIGN_CENTER, DATA_PAD));
+            }
+            for (int i = 0; i < 4; i++) {
+                mainTable.addCell(styledCell("", dataFont, null, Element.ALIGN_CENTER, DATA_PAD));
+            }
 
             // Wiersze pracowników
-            for (Employee emp : employees) {
-                PdfPCell nameCell = styledCell(
-                        emp.getFirstName() + " " + emp.getLastName(),
-                        dataFont, null, Element.ALIGN_LEFT);
-                nameCell.setPadding(DATA_PAD);
-                mainTable.addCell(nameCell);
+            for (Long empId : employeeIds) {
+                Map<Integer, ScheduleDetails> dayMap = empDayMap.get(empId);
+                if (dayMap.isEmpty()) continue;
+
+                ScheduleDetails first = dayMap.values().iterator().next();
+                String fullName = first.getEmployee().getFirstName() + " " + first.getEmployee().getLastName();
+                mainTable.addCell(styledCell(fullName, dataFont, null, Element.ALIGN_LEFT, DATA_PAD));
+
+                BigDecimal totalHours = BigDecimal.ZERO;
+                int workDays        = 0;
+                int weekendWorkDays = 0;
+                int vacationDays    = 0;
 
                 for (int d = 1; d <= daysInMonth; d++) {
-                    LocalDate            date    = LocalDate.of(year, month, d);
-                    Map<Employee, Shift> dayMap  = sched.getOrDefault(date, new HashMap<>());
-                    Shift                shift   = dayMap.getOrDefault(emp, context.getDefaultDaysOffShift());
+                    LocalDate date = LocalDate.of(year, month, d);
+                    boolean isWeekend = date.getDayOfWeek() == DayOfWeek.SATURDAY
+                            || date.getDayOfWeek() == DayOfWeek.SUNDAY;
+                    ScheduleDetails detail = dayMap.get(d);
 
-                    boolean isVac  = false;
-                    boolean isWh   = empWarehouse.getOrDefault(emp, Set.of()).contains(date);
-                    boolean isPrS  = context.employeeHasProposalShift(emp, date);
-                    boolean isPrO  = context.employeeHasProposalDaysOff(emp, date);
-                    boolean isCred = empCredit.getOrDefault(emp, Set.of()).contains(date);
-                    boolean isChk  = empCheckout.getOrDefault(emp, Set.of()).contains(date);
-                    boolean isOC   = empOpenClose.getOrDefault(emp, Set.of()).contains(date);
-
-                    String val;
-                    if (!sched.containsKey(date)) {
-                        val = "w";
-                    } else if (shift.getStartHour().getHour() == 0) {
-                        if (shift.getEndHour().getHour() == 0) {
-                            val = "w";
-                        } else if (shift.getEndHour().getHour() == 8) {
-                            val = "u"; isVac = true;
-                        } else {
-                            val = "?";
-                        }
+                    String cellText;
+                    ShiftCode code;
+                    if (detail == null) {
+                        cellText = "w";
+                        code = null;
                     } else {
-                        val = fmt(shift.getStartHour()) + "\n" + fmt(shift.getEndHour());
+                        code = detail.getShiftTypeConfig().getCode();
+                        switch (code) {
+                            case DAY_OFF    -> cellText = "w";
+                            case VACATION   -> cellText = "u";
+                            case DELEGATION -> cellText = "d";
+                            default -> cellText = fmt(detail.getShift().getStartHour()) + "\n"
+                                    + fmt(detail.getShift().getEndHour());
+                        }
                     }
 
-                    Font cellFont = isOC ? openClFont : dataFont;
-                    mainTable.addCell(dataCell(val, cellFont, date,
-                            isVac, isWh, isPrS, isPrO, isCred, isChk));
+                    Color bg = computeCellBackground(date, code);
+                    mainTable.addCell(dataCell(cellText, dataFont, bg));
+
+                    // Statystyki
+                    if (code != null) {
+                        switch (code) {
+                            case WORK, WORK_BY_PROPOSAL -> {
+                                BigDecimal hours = computeShiftHours(
+                                        detail.getShift().getStartHour(),
+                                        detail.getShift().getEndHour());
+                                totalHours = totalHours.add(hours);
+                                workDays++;
+                                if (isWeekend) weekendWorkDays++;
+                            }
+                            case VACATION, SICK_LEAVE -> {
+                                BigDecimal defaultH = detail.getShiftTypeConfig().getDefaultHours();
+                                if (defaultH != null) totalHours = totalHours.add(defaultH);
+                                if (code == ShiftCode.VACATION) vacationDays++;
+                            }
+                            default -> { /* DAY_OFF, DELEGATION */ }
+                        }
+                    }
                 }
 
-                mainTable.addCell(statCell(String.valueOf(empHours.getOrDefault(emp, BigDecimal.ZERO)),          statFont));
-                mainTable.addCell(statCell(String.valueOf(empWorkDays.getOrDefault(emp, 0)
-                        - empVacations.getOrDefault(emp, 0)),                     statFont));
-                mainTable.addCell(statCell(String.valueOf(empWeekends.getOrDefault(emp, 0)),        statFont));
-                mainTable.addCell(statCell(String.valueOf(empVacations.getOrDefault(emp, 0)),       statFont));
-                mainTable.addCell(statCell(String.valueOf(empWarehouse.getOrDefault(emp, Set.of()).size()), statFont));
-                mainTable.addCell(statCell(String.valueOf(empCredit.getOrDefault(emp, Set.of()).size()),    statFont));
-                mainTable.addCell(statCell(String.valueOf(empCheckout.getOrDefault(emp, Set.of()).size()),  statFont));
+                mainTable.addCell(statCell(String.valueOf(totalHours.doubleValue()), statFont));
+                mainTable.addCell(statCell(String.valueOf(workDays), statFont));
+                mainTable.addCell(statCell(String.valueOf(weekendWorkDays), statFont));
+                mainTable.addCell(statCell(String.valueOf(vacationDays), statFont));
             }
             document.add(mainTable);
 
-            // Legenda
+            // ── Legenda ────────────────────────────────────────────────────
             document.add(new Paragraph(" "));
-            Font legendFont      = new Font(Font.HELVETICA, LEGEND_SIZE);
+            Font legendFont = new Font(Font.HELVETICA, LEGEND_SIZE);
             Font legendTitleFont = new Font(Font.HELVETICA, LEGEND_SIZE, Font.BOLD);
+            Paragraph legTitle = new Paragraph("LEGENDA", legendTitleFont);
+            legTitle.setAlignment(Element.ALIGN_CENTER);
+            document.add(legTitle);
 
-            Paragraph legendTitle = new Paragraph("LEGENDA", legendTitleFont);
-            legendTitle.setAlignment(Element.ALIGN_CENTER);
-            document.add(legendTitle);
+            PdfPTable legTable = new PdfPTable(2);
+            legTable.setWidthPercentage(100);
+            legTable.setWidths(new float[]{0.3f, 2.2f});
 
-            PdfPTable leg = new PdfPTable(2);
-            leg.setWidthPercentage(100);
-            leg.setWidths(new float[]{0.3f, 2.2f});
+            addLegendEntry(legTable, "PROPOZYCJA PRAC.",  COLOR_PROPOSAL,   legendFont);
+            addLegendEntry(legTable, "URLOP",             COLOR_VACATION,   legendFont);
+            addLegendEntry(legTable, "DELEGACJA",         COLOR_DELEGATION, legendFont);
+            addLegendEntry(legTable, "WEEKEND / ŚWIĘTO",  COLOR_WEEKEND,    legendFont);
 
-            addLegendEntry(leg, "PROPOZYCJA PRAC.",  COLOR_PROPOSAL,  legendFont);
-            addLegendEntry(leg, "URLOP",             COLOR_VACATION,  legendFont);
-            addLegendEntry(leg, "DOSTAWA",           COLOR_WAREHOUSE, legendFont);
-            addLegendEntry(leg, "RATY",              COLOR_CREDIT,    legendFont);
-            addLegendEntry(leg, "KASA",              COLOR_CHECKOUT,  legendFont);
-            addLegendEntry(leg, "WEEKEND / ŚWIĘTO",  COLOR_WEEKEND,   legendFont);
-            addLegendEntry(leg, "OTW/ZAM = kursywa+pogrubienie", null, legendFont);
+            legTable.setTotalWidth(150);
+            legTable.setLockedWidth(true);
+            document.add(legTable);
 
-            leg.setTotalWidth(150); leg.setLockedWidth(true);
-            document.add(leg);
-
-            // ── 4. STRONA 2: tabela godzinowa (A4 landscape) ────────────────
+            // ── Strona 2 – tabela rozkładu godzin ─────────────────────────
             document.setPageSize(PageSize.A4.rotate());
             document.setMargins(margin, margin, margin, margin);
             document.newPage();
@@ -221,8 +229,7 @@ public class PdfExport implements ExportFile {
             Font hdrFont2  = new Font(Font.HELVETICA, 7f,   Font.BOLD);
             Font dataFont2 = new Font(Font.HELVETICA, 6.5f, Font.NORMAL);
 
-            Paragraph hourTitle = new Paragraph(
-                    "Obsada na godzinę – " + month + "/" + year + "\n Nie jest w niej uwzględniony Pracownik ds. Przyjęcia dostaw lub osoba go zastępująca!", titleFont);
+            Paragraph hourTitle = new Paragraph("Rozkład godzin – " + month + "/" + year, titleFont);
             hourTitle.setAlignment(Element.ALIGN_CENTER);
             document.add(hourTitle);
             document.add(new Paragraph(" "));
@@ -234,71 +241,88 @@ public class PdfExport implements ExportFile {
             for (int i = 1; i <= daysInMonth; i++) hW[i] = 1.0f;
             hourTable.setWidths(hW);
 
-            addHdrCell(hourTable, "Godzina", hdrFont2, COLOR_HEADER_BG);
+            hourTable.addCell(styledCell("Godzina", hdrFont2, null, Element.ALIGN_CENTER, HDR_PAD));
             for (int d = 1; d <= daysInMonth; d++) {
                 LocalDate date = LocalDate.of(year, month, d);
-                Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : COLOR_HEADER_BG;
-                PdfPCell hc = styledCell(String.valueOf(d), hdrFont2, bg, Element.ALIGN_CENTER);
-                hc.setPadding(HDR_PAD);
-                hourTable.addCell(hc);
+                Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
+                hourTable.addCell(styledCell(String.valueOf(d), hdrFont2, bg, Element.ALIGN_CENTER, HDR_PAD));
             }
 
             for (int h = 0; h < 24; h++) {
-                String   label = String.format("%02d:00-%02d:00", h, h + 1);
-                PdfPCell lc    = styledCell(label, dataFont2, null, Element.ALIGN_CENTER);
-                lc.setPadding(DATA_PAD);
-                hourTable.addCell(lc);
-
+                String label = String.format("%02d:00 - %02d:00", h, (h + 1) % 24);
+                hourTable.addCell(styledCell(label, dataFont2, null, Element.ALIGN_CENTER, DATA_PAD));
                 for (int d = 1; d <= daysInMonth; d++) {
-                    LocalDate date   = LocalDate.of(year, month, d);
-                    int[]     counts = sumOfDailyShiftsAsArray(context, date, employees);
-                    Color     bg     = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
-                    PdfPCell  nc     = styledCell(String.valueOf(counts[h]), dataFont2, bg, Element.ALIGN_CENTER);
-                    nc.setPadding(DATA_PAD);
-                    hourTable.addCell(nc);
+                    LocalDate date = LocalDate.of(year, month, d);
+                    int count = countEmployeesAtHour(date, h, allDetails, yearMonth);
+                    Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
+                    hourTable.addCell(styledCell(String.valueOf(count), dataFont2, bg, Element.ALIGN_CENTER, DATA_PAD));
                 }
             }
             document.add(hourTable);
 
-            // ── 5. STRONA 3: wiadomości ──────────────────────────────────────
-            document.newPage();
-
-            Paragraph msgTitle = new Paragraph("INFORMACJE DO GRAFIKA", titleFont);
-            msgTitle.setAlignment(Element.ALIGN_CENTER);
-            document.add(msgTitle);
-            document.add(new Paragraph(" "));
-
-            Font msgHdrFont  = new Font(Font.HELVETICA, 8f, Font.BOLD);
-            Font msgDataFont = new Font(Font.HELVETICA, 8f, Font.NORMAL);
-
-            PdfPTable msgTable = new PdfPTable(3);
-            msgTable.setWidthPercentage(100);
-            msgTable.setWidths(new float[]{5f, 2f, 2f});
-            addHdrCell(msgTable, "Wiadomość", msgHdrFont, COLOR_HEADER_BG);
-            addHdrCell(msgTable, "Data",      msgHdrFont, COLOR_HEADER_BG);
-            addHdrCell(msgTable, "Rodzaj",    msgHdrFont, COLOR_HEADER_BG);
-
-            for (CreateScheduleMessageDTO dto : context.getFinalScheduleMessages()) {
-                msgTable.addCell(statCell(dto.message(), msgDataFont));
-                msgTable.addCell(statCell(
-                        dto.messageDate().format(DateTimeFormatter.ISO_DATE), msgDataFont));
-                msgTable.addCell(statCell(dto.scheduleMessageType().toString(), msgDataFont));
-            }
-            document.add(msgTable);
+            // Brak strony z komunikatami – w eksporcie z bazy nie ma takich danych
 
             document.close();
             return out.toByteArray();
-
         } catch (Exception e) {
             throw new IOException("Błąd generowania PDF", e);
         }
     }
 
-    // ── Metody pomocnicze ─────────────────────────────────────────────────────
+    // ── Pomocnicze metody dla tabeli godzinowej ─────────────────────────────
+    private int countEmployeesAtHour(LocalDate date, int hour,
+                                     List<ScheduleDetails> allDetails,
+                                     YearMonth yearMonth) {
+        int count = 0;
+        for (ScheduleDetails d : allDetails) {
+            if (d.getDate().getDayOfMonth() != date.getDayOfMonth()) continue;
+            if (d.getEmployee().isWarehouseman()) continue;
+            ShiftCode code = d.getShiftTypeConfig().getCode();
+            if (code == ShiftCode.VACATION || code == ShiftCode.DELEGATION) continue;
 
-    /** "8:00" zamiast "08:00:00" */
+            LocalTime start = d.getShift().getStartHour();
+            LocalTime end   = d.getShift().getEndHour();
+            int startIdx = start.getMinute() == 0 ? start.getHour() : start.getHour() + 1;
+            int endIdx   = end.getMinute()   == 0 ? end.getHour()   : end.getHour() + 1;
+
+            if (hour >= startIdx && hour < endIdx) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    // ── Kolorystyka komórek (taka sama jak w ExcelExportFromDatabase) ──────
+    private Color computeCellBackground(LocalDate date, ShiftCode code) {
+        boolean isWeekendOrHoliday = date.getDayOfWeek() == DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == DayOfWeek.SUNDAY
+                || holidayManager.isHoliday(date);
+
+        if (code != null) {
+            return switch (code) {
+                case WORK_BY_PROPOSAL -> COLOR_PROPOSAL;
+                case VACATION         -> COLOR_VACATION;
+                case SICK_LEAVE       -> COLOR_SICK_LEAVE;
+                case DELEGATION       -> COLOR_DELEGATION;
+                default               -> isWeekendOrHoliday ? COLOR_WEEKEND : null;
+            };
+        }
+        return isWeekendOrHoliday ? COLOR_WEEKEND : null;
+    }
+
+    // ── Narzędzia formatowania ──────────────────────────────────────────────
     private String fmt(LocalTime t) {
         return String.format("%d:%02d", t.getHour(), t.getMinute());
+    }
+
+    private BigDecimal computeShiftHours(LocalTime start, LocalTime end) {
+        if (start == null || end == null) return BigDecimal.ZERO;
+        if (start.equals(LocalTime.MIDNIGHT) && end.equals(LocalTime.MIDNIGHT)) return BigDecimal.ZERO;
+        int startMin = start.getHour() * 60 + start.getMinute();
+        int endMin   = end.getHour()   * 60 + end.getMinute();
+        int diff = endMin - startMin;
+        if (diff <= 0) diff += 24 * 60;
+        return BigDecimal.valueOf(diff).divide(BigDecimal.valueOf(60));
     }
 
     private boolean isWeekendOrHoliday(LocalDate date) {
@@ -307,48 +331,30 @@ public class PdfExport implements ExportFile {
                 || holidayManager.isHoliday(date);
     }
 
-    private void addHdrCell(PdfPTable table, String text, Font font, Color bg) {
+    // ── Tworzenie komórek PDF ───────────────────────────────────────────────
+    private PdfPCell headerCell(String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setBackgroundColor(bg);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setBorder(Rectangle.BOX);
         cell.setBorderWidth(0.4f);
         cell.setPadding(HDR_PAD);
-        table.addCell(cell);
+        return cell;
     }
 
-    private PdfPCell styledCell(String text, Font font, Color bg, int hAlign) {
+    private PdfPCell styledCell(String text, Font font, Color bg, int hAlign, float padding) {
         PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "", font));
         if (bg != null) cell.setBackgroundColor(bg);
         cell.setHorizontalAlignment(hAlign);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setBorder(Rectangle.BOX);
         cell.setBorderWidth(0.4f);
-        cell.setPadding(DATA_PAD);
+        cell.setPadding(padding);
         return cell;
     }
 
-    private PdfPCell dataCell(String text, Font font, LocalDate date,
-                              boolean isVac, boolean isWh,
-                              boolean isPrS, boolean isPrO,
-                              boolean isCred, boolean isChk) {
-        Color bg = null;
-        if (isWh)              bg = COLOR_WAREHOUSE;
-        if (isPrS || isPrO)   bg = COLOR_PROPOSAL;
-        if (isVac)             bg = COLOR_VACATION;
-        if (isCred)            bg = COLOR_CREDIT;
-        if (isChk)             bg = COLOR_CHECKOUT;
-        if (bg == null && isWeekendOrHoliday(date)) bg = COLOR_WEEKEND;
-
-        PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "", font));
-        if (bg != null) cell.setBackgroundColor(bg);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setBorder(Rectangle.BOX);
-        cell.setBorderWidth(0.4f);
-        cell.setPadding(DATA_PAD);
-        return cell;
+    private PdfPCell dataCell(String text, Font font, Color bg) {
+        return styledCell(text, font, bg, Element.ALIGN_CENTER, DATA_PAD);
     }
 
     private PdfPCell statCell(String value, Font font) {
@@ -375,21 +381,5 @@ public class PdfExport implements ExportFile {
         labelCell.setPaddingLeft(3f);
         labelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(labelCell);
-    }
-
-    private int[] sumOfDailyShiftsAsArray(
-            ScheduleGeneratorContext context, LocalDate date, Set<Employee> employees) {
-        Map<Employee, Shift> daily = context.getFinalSchedule().getOrDefault(date, new HashMap<>());
-        int[] counts = new int[24];
-        for (int i = 0; i < 24; i++) {
-            for (Employee emp : employees) {
-                if (context.isEmployeeWorkingInWarehouse(emp, date)) continue;
-                Shift shift = daily.getOrDefault(emp, context.findShiftByArray(new int[24]));
-                if (!emp.isWarehouseman() && !shift.equals(context.getDefaultVacationShift())) {
-                    counts[i] += context.shiftAsArray(shift)[i];
-                }
-            }
-        }
-        return counts;
     }
 }

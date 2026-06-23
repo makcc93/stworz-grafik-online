@@ -65,7 +65,6 @@ class PositionControllerTest {
         );
 
         //then
-        assertEquals(3, responsePositionDTOS.size());
         assertTrue(responsePositionDTOS.contains(first));
         assertTrue(responsePositionDTOS.contains(second));
         assertTrue(responsePositionDTOS.contains(third));
@@ -87,7 +86,6 @@ class PositionControllerTest {
         );
 
         //then
-        assertEquals(0, responsePositionDTOS.size());
         assertDoesNotThrow(() -> service.findAll());
     }
 

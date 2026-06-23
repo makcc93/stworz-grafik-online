@@ -10,6 +10,10 @@ public record ResponseEmployeeDelegationDTO(
         Integer month,
         int[] monthlyDelegation,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Long createdByUserId,
+        String createdByLabel,
+        Long updatedByUserId,
+        String updatedByLabel
 ) {
 }

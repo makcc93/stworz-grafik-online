@@ -43,6 +43,18 @@ public class DemandDraft {
     @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_by_user_id", nullable = false, updatable = false)
+    private Long createdByUserId;
+
+    @Column(name = "created_by_label", nullable = false, updatable = false)
+    private String createdByLabel;
+
+    @Column(name = "updated_by_user_id")
+    private Long updatedByUserId;
+
+    @Column(name = "updated_by_label")
+    private String updatedByLabel;
+
     @PrePersist
     void onCreate(){
         this.createdAt = LocalDateTime.now();

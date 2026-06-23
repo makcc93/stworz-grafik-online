@@ -49,10 +49,6 @@ public class MonthlyStoreScheduleGenerator {
     private final WeeklyRequirementRest weeklyRequirementRest;
     private final ScheduleDatabaseSaver scheduleDatabaseSaver;
 
-    /**
-     * Generuje grafik miesięczny i zwraca plik Excel jako byte[].
-     * Nie zapisuje nic na dysk — plik jest zwracany przez HTTP.
-     */
     public byte[] generateMonthlySchedule(Long storeId,Integer year, Integer month) throws IOException {
         ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
 

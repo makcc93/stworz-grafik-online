@@ -6,13 +6,19 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.DTO.CreateEmployeeProposalDaysOffDTO;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffEntityService;
+import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffService;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.CreateEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.EmployeeVacationSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.ResponseEmployeeVacationDTO;
 import online.stworzgrafik.StworzGrafik.employee.vacation.DTO.UpdateEmployeeVacationDTO;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
+import online.stworzgrafik.StworzGrafik.user.AppUser;
+import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -38,12 +44,16 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVa
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
     private final HolidayManager holidayManager;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserLabelService userLabelService;
 
     @Override
     public ResponseEmployeeVacationDTO createEmployeeProposalVacation(Long storeId,
                                                                       Long employeeId,
                                                                       CreateEmployeeVacationDTO dto) {
         verifyLoggedUserAccessToStore(storeId);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
 
         Store store = storeService.getEntityById(storeId);
 
@@ -59,13 +69,15 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVa
 
         int[] verifiedMonthlyVacation = verifyByWeekendsAndHolidays(dto.year(), dto.month(), dto.monthlyVacation());
 
-        EmployeeVacation employeeVacation = builder.createEmployeeVacation(
-                store,
-                employee,
-                dto.year(),
-                dto.month(),
-                verifiedMonthlyVacation
-        );
+        EmployeeVacation employeeVacation = EmployeeVacation.builder()
+                .store(store)
+                .employee(employee)
+                .year(dto.year())
+                .month(dto.month())
+                .monthlyVacation(verifiedMonthlyVacation)
+                .createdByUserId(currentUser.getId())
+                .createdByLabel(userLabelService.buildLabel(currentUser))
+                .build();
 
         EmployeeVacation saved = repository.save(employeeVacation);
 
@@ -99,6 +111,10 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVa
                 LocalDateTime.now());
 
         mapper.updateEmployeeVacation(verifiedDto, employeeVacation);
+
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+        employeeVacation.setUpdatedByUserId(currentUser.getId());
+        employeeVacation.setUpdatedByLabel(userLabelService.buildLabel(currentUser));
 
         EmployeeVacation saved = repository.save(employeeVacation);
 
