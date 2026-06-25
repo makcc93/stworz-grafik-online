@@ -6,10 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
+import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.SetRoleRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ public class AppUserServiceImpl implements AppUserService{
     private final StoreEntityService storeEntityService;
     private final BranchEntityService branchEntityService;
     private final RegionEntityService regionEntityService;
+    private final CurrentUserProvider currentUserProvider;
 
     @Override
     public UserResponse create(CreateUserRequest createUserRequest) {
@@ -76,6 +79,18 @@ public class AppUserServiceImpl implements AppUserService{
     }
 
     @Override
+    public void changeOwnPassword(String currentPassword, String newPassword) {
+        AppUser currentUser = currentUserProvider.getCurrentUser();
+
+        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
+            throw new BadCredentialsException("Aktualne hasło jest nieprawidłowe");
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(newPassword));
+        appUserRepository.save(currentUser);
+    }
+
+    @Override
     public void setEnabled(Long userId, boolean enabled) {
         AppUser appUser = appUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
@@ -106,6 +121,11 @@ public class AppUserServiceImpl implements AppUserService{
     public AppUser findByLogin(String login) {
         return appUserRepository.findByLogin(login)
                 .orElseThrow(() ->  new EntityNotFoundException("Cannot find User by login " + login));
+    }
+
+    @Override
+    public List<Long> findAllStoresIds() {
+        return appUserRepository.findAllStoreIds();
     }
 
     @Override

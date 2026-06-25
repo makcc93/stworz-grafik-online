@@ -66,7 +66,7 @@ public class JwtAppUserContext implements UserContext {
     private List<Long> getManagedStoreIdsForDirector(AppUser user) {
         if (user.getDirectorScope() == null) return List.of();
         return switch (user.getDirectorScope()) {
-            case NETWORK -> List.of();
+            case NETWORK -> appUserService.findAllStoresIds();
             case REGION -> appUserService.findStoreIdsByRegionId(user.getRegion().getId());
             case BRANCH -> appUserService.findStoreIdsByBranchId(user.getBranch().getId());
         };

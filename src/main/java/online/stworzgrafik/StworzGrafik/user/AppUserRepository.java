@@ -17,6 +17,9 @@ public interface AppUserRepository extends JpaRepository<AppUser,Long> {
 
     boolean existsByLogin(String login);
 
+    @Query("select s.id from Store s")
+    List<Long> findAllStoreIds();
+
     @Query("SELECT s.id FROM Store s WHERE s.branch.region.id = :regionId")
     List<Long> findStoreIdsByRegionId(@Param("regionId") Long regionId);
 

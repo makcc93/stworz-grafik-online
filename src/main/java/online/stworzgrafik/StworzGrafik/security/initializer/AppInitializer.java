@@ -52,12 +52,6 @@ public class AppInitializer implements CommandLineRunner{
     @org.springframework.beans.factory.annotation.Value("${app.admin.password}")
     private String adminPassword;
 
-    @org.springframework.beans.factory.annotation.Value("${app.user.login}")
-    private String userLogin;
-
-    @org.springframework.beans.factory.annotation.Value("${app.user.password}")
-    private String userPassword;
-
     @Override
     public void run(String...args){
         createAdmin();
@@ -225,20 +219,6 @@ public class AppInitializer implements CommandLineRunner{
             log.info("Admin created");
             log.info("Admin login={}", admin.getLogin());
             log.info("Admin password={}", admin.getPassword());
-        }
-    }
-
-    private void createUser() {
-        if (!appUserService.existsByLogin(userLogin)){
-            AppUser user = AppUser.builder()
-                    .login(userLogin)
-                    .password(passwordEncoder.encode(userPassword))
-                    .role(UserRole.STORE_MANAGER)
-                    .build();
-            appUserService.save(user);
-            log.info("User created");
-            log.info("User login={}", user.getLogin());
-            log.info("User password={}", user.getPassword());
         }
     }
 }

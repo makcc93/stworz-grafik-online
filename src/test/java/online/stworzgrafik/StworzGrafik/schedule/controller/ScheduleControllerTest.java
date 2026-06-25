@@ -289,7 +289,6 @@ class ScheduleControllerTest {
 
     @Test
     void createSchedule_alreadyExistsThrowsException() throws Exception {
-        // schedule z @BeforeEach ma year=2020, month=10 — duplikujemy te same wartości
         CreateScheduleDTO duplicateDto = new TestCreateScheduleDTO()
                 .withYear(schedule.getYear())
                 .withMonth(schedule.getMonth())
@@ -303,8 +302,6 @@ class ScheduleControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    // --- UPDATE ---
-
     @Test
     void updateSchedule_workingTest() throws Exception {
         String updatedName = "Updated Schedule Name";
@@ -317,8 +314,6 @@ class ScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value(updatedName));
     }
-
-    // --- DELETE ---
 
     @Test
     void deleteSchedule_workingTest() throws Exception {
@@ -339,8 +334,6 @@ class ScheduleControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // --- AUTHORIZATION ---
-
     @Test
     void anyMethod_noAccessToStoreThrowsException() throws Exception {
         when(userAuthorizationService.hasAccessToStore(anyLong())).thenReturn(false);
@@ -350,7 +343,6 @@ class ScheduleControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // --- GENERATE ---
 
     @Test
     void generateSchedule_workingTest() throws Exception {
@@ -359,7 +351,6 @@ class ScheduleControllerTest {
 
         when(scheduleGeneratorService.generateSchedule(storeId, scheduleId)).thenReturn(excelBytes);
         when(pdfExport.export(storeId, scheduleId)).thenReturn(pdfBytes);
-        // uploadAndPresign jest wołany dla xlsx i pdf — nie sprawdzamy wartości zwracanej
         when(r2StorageService.uploadAndPresign(any(), anyString(), anyString())).thenReturn("https://r2.example.com/any");
 
         mockMvc.perform(post("/api/stores/" + storeId + "/schedules/" + scheduleId + "/generate"))
@@ -376,8 +367,6 @@ class ScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isInternalServerError());
     }
-
-    // --- EXPORT EXCEL ---
 
     @Test
     void exportSchedule_workingTest() throws Exception {
@@ -404,7 +393,6 @@ class ScheduleControllerTest {
         when(excelExportFromDatabase.export(storeId, scheduleId))
                 .thenThrow(new IOException("Błąd zapisu arkusza"));
 
-        // export nie wywołuje excelExportFromDatabase — rzuca wyjątek w getPresignedUrl
         when(r2StorageService.getPresignedUrl(anyString()))
                 .thenThrow(new RuntimeException("Błąd generowania pliku Excel"));
 
@@ -412,8 +400,6 @@ class ScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isInternalServerError());
     }
-
-    // --- EXPORT PDF ---
 
     @Test
     void exportPdfSchedule_workingTest() throws Exception {

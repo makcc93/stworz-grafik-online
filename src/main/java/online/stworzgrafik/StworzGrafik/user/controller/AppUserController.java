@@ -36,6 +36,13 @@ public class AppUserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changeOwnPassword(@RequestBody @Valid ChangePasswordRequest request) {
+        appUserService.changeOwnPassword(request.currentPassword(),request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/enabled")
     public ResponseEntity<Void> setEnabled(@PathVariable Long id,
                                            @RequestBody @Valid SetEnabledRequest request) {

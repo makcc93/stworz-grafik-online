@@ -10,10 +10,12 @@ import java.util.List;
 public interface AppUserService {
     UserResponse create(CreateUserRequest createUserRequest);
     void changePassword(Long userId, String newPassword);
+    void changeOwnPassword(String currentPassword, String newPassword);
     void setEnabled(Long userId, boolean enabled);
     UserResponse setRole(Long userId, SetRoleRequest request);
     List<UserResponse> findAll();
     AppUser findByLogin(String login);
+    List<Long> findAllStoresIds();
     List<Long> findStoreIdsByRegionId(Long regionId);
     List<Long> findStoreIdsByBranchId(Long branchId);
     boolean existsByLogin(String login);

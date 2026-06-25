@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,8 +70,8 @@ public class MonthlyStoreScheduleGenerator {
         checkoutMatcher.assignRolesForMonth(context);
         openCloseMatcher.assignRolesForMonth(context);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
         dailyShiftGeneratorAlgorithm.modifyShiftsHours(context);
 
@@ -78,7 +79,9 @@ public class MonthlyStoreScheduleGenerator {
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), new ArrayList<>(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
+
+        scheduleAnalyzer.analyzeAndResolve(context,LocalDate.now(), List.of(),List.of(),ShiftAnalyzeType.UNBALANCED_SHIFT_DISTRIBUTION);
 
         creditMatcher.reassignRolesForMonth(context);
         checkoutMatcher.reassignRolesForMonth(context);
