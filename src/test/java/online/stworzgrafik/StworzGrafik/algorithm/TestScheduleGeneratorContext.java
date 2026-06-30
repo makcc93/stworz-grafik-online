@@ -28,7 +28,8 @@ public class TestScheduleGeneratorContext {
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;
     private Schedule schedule = new TestScheduleBuilder().withStore(store).build();
-    private List<Employee> storeActiveEmployees = new ArrayList<>();
+    private List<Employee> storeNotSpecialActiveEmployees = new ArrayList<>();
+    private List<Employee> storeSpecialActiveEmployees = new ArrayList<>();
     private Map<LocalDate, int[]> uneditedOriginalDateStoreDraft = new HashMap<>();
     private LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn = new LinkedHashMap<>();
     private Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = new HashMap<>();
@@ -96,8 +97,13 @@ public class TestScheduleGeneratorContext {
         return this;
     }
 
-    public TestScheduleGeneratorContext withStoreActiveEmployees(List<Employee> storeActiveEmployees) {
-        this.storeActiveEmployees = storeActiveEmployees;
+    public TestScheduleGeneratorContext withStoreNotSpecialActiveEmployees(List<Employee> storeActiveEmployees) {
+        this.storeNotSpecialActiveEmployees = storeActiveEmployees;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withStoreSpecialActiveEmployees(List<Employee> storeSpecialActiveEmployees) {
+        this.storeSpecialActiveEmployees = storeSpecialActiveEmployees;
         return this;
     }
 
@@ -123,6 +129,11 @@ public class TestScheduleGeneratorContext {
 
     public TestScheduleGeneratorContext withMonthlyEmployeesVacation(Map<Employee, int[]> monthlyEmployeesVacation) {
         this.monthlyEmployeesVacation = monthlyEmployeesVacation;
+        return this;
+    }
+
+    public TestScheduleGeneratorContext withMonthlyEmployeesDelegation(Map<Employee, int[]> monthlyEmployeesDelegation) {
+        this.monthlyEmployeesDelegation = monthlyEmployeesDelegation;
         return this;
     }
 
@@ -221,7 +232,8 @@ public class TestScheduleGeneratorContext {
                 periodWeek,
                 storeOpenCloseHoursForEmployeesByDate,
                 storeOpenCloseHoursForClientsByDate,
-                storeActiveEmployees,
+                storeNotSpecialActiveEmployees,
+                storeSpecialActiveEmployees,
                 uneditedOriginalDateStoreDraft,
                 everyDayStoreDemandDraftWorkingOn,
                 monthlyEmployeesProposalShiftsByDate,

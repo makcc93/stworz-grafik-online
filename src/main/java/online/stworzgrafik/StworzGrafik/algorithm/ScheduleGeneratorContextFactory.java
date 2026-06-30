@@ -68,7 +68,8 @@ public class ScheduleGeneratorContextFactory {
                 .periodWeek(calculatePeriodWeeks(year,month))
                 .storeOpenCloseHoursForEmployeesByDate(getStoreOpenCloseHourForEmployees(storeId,year,month))
                 .storeOpenCloseHoursForClientsByDate(getStoreOpenCloseHourForClients(storeId,year,month))
-                .storeActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
+                .storeNotSpecialActiveEmployees(getNotSpecialActiveEmployees(storeId))
+                .storeAllActiveEmployees(employeeEntityService.findAllStoreActiveEmployees(storeId))
                 .uneditedOriginalDateStoreDraft(getOriginalStoreDraft(storeId,year,month))
                 .everyDayStoreDemandDraftWorkingOn(dayAndDemandDraftSorted(storeId, year, month))
                 .monthlyEmployeesProposalShiftsByDate(employeeProposalShifts(storeId,year,month))
@@ -101,6 +102,13 @@ public class ScheduleGeneratorContextFactory {
                 .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))
                 .storeHasDedicatedCashier(isCashierInStore(storeId))
                 .build();
+    }
+
+    private List<Employee> getNotSpecialActiveEmployees(Long storeId){
+        return employeeEntityService.findAllStoreActiveEmployees(storeId).stream()
+                .filter(Employee::isEnable)
+                .filter(employee -> !employee.getIsSpecial())
+                .toList();
     }
 
     private List<Employee> getEmployeesToModifyHours(Long storeId){

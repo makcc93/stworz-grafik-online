@@ -61,7 +61,7 @@ public class TooManyShiftProposalsAnalysisStrategy implements ScheduleAnalysisSt
         log.info("tooManyShiftProposalAnalysisStrategy");
         Map<Employee, int[]> employeesDailyProposals = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, Collections.emptyMap());
 
-        Optional<Employee> employeeWithHighestWorkingHoursCannotOpenStore = context.getStoreActiveEmployees().stream()
+        Optional<Employee> employeeWithHighestWorkingHoursCannotOpenStore = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(empl -> !empl.isCanOpenCloseStore())
                 .filter(empl -> {
                             int[] proposal = context.getMonthlyEmployeesProposalShiftsByDate()

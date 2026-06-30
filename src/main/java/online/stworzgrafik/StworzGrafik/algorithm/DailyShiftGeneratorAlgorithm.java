@@ -46,7 +46,7 @@ public class DailyShiftGeneratorAlgorithm {
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
         log.info("GENERAWONIE ZMIAN");
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
-        List<Employee> employees = context.getStoreActiveEmployees();
+        List<Employee> employees = context.getStoreNotSpecialActiveEmployees();
 
         for (Map.Entry<LocalDate, int[]> entry : everyDayStoreDemandDraft.entrySet()) {
             int[] employeeDailyProposalCount = new int[24];

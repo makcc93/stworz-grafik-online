@@ -23,7 +23,7 @@ public class WeeklyRequirementRest {
 
     public void proceed(ScheduleGeneratorContext context){
         Map<Integer, PeriodDateDTO> periodWeek = context.getPeriodWeek();
-        List<Employee> employees = context.getStoreActiveEmployees().stream()
+        List<Employee> employees = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(empl -> !empl.isWarehouseman())
                 .filter(empl -> !empl.isPok())
                 .toList();
@@ -53,7 +53,7 @@ public class WeeklyRequirementRest {
         }
 
         log.info("ZAPLANOWANE DNI WOLNE PRACOWNIKÓW DLA 35-GODZINNEGO TYGODNIOWEGO ODPOCZYNKU");
-        context.getStoreActiveEmployees().forEach(empl -> log.info("Pracownik: {}, Dni: {}",
+        context.getStoreNotSpecialActiveEmployees().forEach(empl -> log.info("Pracownik: {}, Dni: {}",
                 empl.getLastName(),
                 context.getEmployeeWeeklyRestRequirementDaysOff().getOrDefault(empl, Set.of()).toArray()));
     }
@@ -138,7 +138,7 @@ public class WeeklyRequirementRest {
             if (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY) continue;
 
             double vacationAndDaysOffValue = 0.00;
-            for (Employee employee : context.getStoreActiveEmployees()){
+            for (Employee employee : context.getStoreNotSpecialActiveEmployees()){
                 if (context.employeeIsOnVacation(employee,currentDate)){
                     vacationAndDaysOffValue += 2.00;
                 }

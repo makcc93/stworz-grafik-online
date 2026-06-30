@@ -29,7 +29,7 @@ public class DaysOffApplier {
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year, month, day);
 
-            List<Employee> employeesWithProposalDaysOff= context.getStoreActiveEmployees().stream()
+            List<Employee> employeesWithProposalDaysOff= context.getStoreAllActiveEmployees().stream()
                     .filter(empl -> context.employeeHasProposalDaysOff(empl, date))
                     .toList();
 

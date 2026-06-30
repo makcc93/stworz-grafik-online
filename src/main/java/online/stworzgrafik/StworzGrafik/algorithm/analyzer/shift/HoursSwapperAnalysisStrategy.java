@@ -94,7 +94,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean swapHours(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
-        List<Employee> employees = context.getStoreActiveEmployees();
+        List<Employee> employees = context.getStoreNotSpecialActiveEmployees();
         int timesToRepeat = 5;
 
         YearMonth yearMonth = YearMonth.of(context.getYear(), context.getMonth());

@@ -21,7 +21,7 @@ public class VacationApplier {
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
         log.info("WPROWADZENIE URLOPÓW");
-        List<Employee> employeesWithVacation = context.getStoreActiveEmployees().stream()
+        List<Employee> employeesWithVacation = context.getStoreAllActiveEmployees().stream()
                 .filter(context::employeeHasPlannedVacation)
                 .toList();
 

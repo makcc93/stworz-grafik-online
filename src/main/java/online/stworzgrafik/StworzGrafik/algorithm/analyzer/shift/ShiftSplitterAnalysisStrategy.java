@@ -88,7 +88,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
             int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
             int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
-            List<Employee> managers = context.getStoreActiveEmployees().stream()
+            List<Employee> managers = context.getStoreNotSpecialActiveEmployees().stream()
                     .filter(Employee::isCanOpenCloseStore)
                     .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
                     .toList();
@@ -218,7 +218,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
-        List<Employee> creditEmployees = context.getStoreActiveEmployees().stream()
+        List<Employee> creditEmployees = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(Employee::isCanOperateCredit)
                 .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
                 .toList();
@@ -349,7 +349,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                 int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
                 int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
-                List<Employee> checkoutEmployees = context.getStoreActiveEmployees().stream()
+                List<Employee> checkoutEmployees = context.getStoreNotSpecialActiveEmployees().stream()
                         .filter(Employee::isCanOperateCheckout)
                         .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
                         .toList();
@@ -480,7 +480,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
         int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
-        List<Employee> others = context.getStoreActiveEmployees().stream()
+        List<Employee> others = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(empl -> !empl.isCanOperateCheckout())
                 .filter(empl -> !empl.isCanOperateCredit())
                 .filter(empl -> !empl.isCanOpenCloseStore())

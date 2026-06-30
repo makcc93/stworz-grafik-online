@@ -29,7 +29,7 @@ public class UnbalancedShiftDistributionStrategy implements ScheduleAnalysisStra
         List<LocalDate> sortedDates = new ArrayList<>(finalSchedule.keySet());
         Collections.sort(sortedDates);
 
-        for (Employee employee : context.getStoreActiveEmployees()) {
+        for (Employee employee : context.getStoreNotSpecialActiveEmployees()) {
             int consecutiveOff = 0;
             Set<LocalDate> offDays = new HashSet<>();
 
@@ -111,7 +111,7 @@ public class UnbalancedShiftDistributionStrategy implements ScheduleAnalysisStra
 
             Map<Employee, Set<LocalDate>> daysOffInARow = ((UnbalancedShiftDistributionResult) currentResult).daysOffInARow();
 
-            List<Employee> employeesWithManyDaysInARow = context.getStoreActiveEmployees().stream()
+            List<Employee> employeesWithManyDaysInARow = context.getStoreNotSpecialActiveEmployees().stream()
                     .filter(roleFilter)
                     .filter(daysOffInARow::containsKey)
                     .toList();
@@ -162,7 +162,7 @@ public class UnbalancedShiftDistributionStrategy implements ScheduleAnalysisStra
                                              ScheduleGeneratorContext context, Predicate<Employee> roleFilter,
                                              List<LocalDate> sortedDates) {
 
-        List<Employee> otherActiveEmployees = context.getStoreActiveEmployees().stream()
+        List<Employee> otherActiveEmployees = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(roleFilter)
                 .filter(e -> !e.equals(employeeWithManyDaysOff))
                 .toList();

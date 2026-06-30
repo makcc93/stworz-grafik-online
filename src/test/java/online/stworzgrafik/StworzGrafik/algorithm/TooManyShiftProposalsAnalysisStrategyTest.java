@@ -55,7 +55,7 @@ class TooManyShiftProposalsAnalysisStrategyTest {
                 new TooManyShiftProposalsAnalysisResult(originalDailyDraft, proposalCount);
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
-        when(context.getStoreActiveEmployees()).thenReturn(
+        when(context.getStoreNotSpecialActiveEmployees()).thenReturn(
                 List.of(emp1, emp2, empCantOpenStoreWithHighestHours, emp4));
 
         Map<Employee, BigDecimal> employeeHours = new HashMap<>();

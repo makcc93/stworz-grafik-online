@@ -80,7 +80,7 @@ public class EmployeeToShiftMatcherTest {
        }
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
-                .withStoreActiveEmployees(employees)
+                .withStoreNotSpecialActiveEmployees(employees)
                 .withEveryDayStoreDemandDraftWorkingOn(linkedMapOfDraft(DAY, demandDraft))
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
@@ -118,7 +118,7 @@ public class EmployeeToShiftMatcherTest {
         monthlyProposals.put(thirdManager, thirdEmployeeDaysOffProposal);
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
-                .withStoreActiveEmployees(employees)
+                .withStoreNotSpecialActiveEmployees(employees)
                 .withEveryDayStoreDemandDraftWorkingOn(linkedMapOfDraft(DAY, demandDraft))
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
@@ -156,7 +156,7 @@ public class EmployeeToShiftMatcherTest {
                 );
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
-                .withStoreActiveEmployees(employees)
+                .withStoreNotSpecialActiveEmployees(employees)
                 .withEveryDayStoreDemandDraftWorkingOn(linkedMapOfDraft(DAY, demandDraft))
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
@@ -200,7 +200,7 @@ public class EmployeeToShiftMatcherTest {
         );
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
-                .withStoreActiveEmployees(employees)
+                .withStoreNotSpecialActiveEmployees(employees)
                 .withEveryDayStoreDemandDraftWorkingOn(linkedMapOfDraft(DAY, demandDraft))
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))

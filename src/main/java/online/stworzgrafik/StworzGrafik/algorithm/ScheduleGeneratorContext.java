@@ -35,7 +35,8 @@ public class ScheduleGeneratorContext {
     private final Map<Integer, PeriodDateDTO> periodWeek;
     private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
     private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;
-    private final List<Employee> storeActiveEmployees;
+    private final List<Employee> storeNotSpecialActiveEmployees;
+    private final List<Employee> storeAllActiveEmployees;
     private final Map<LocalDate, int[]> uneditedOriginalDateStoreDraft;
     private final LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftWorkingOn;
     private final Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate;

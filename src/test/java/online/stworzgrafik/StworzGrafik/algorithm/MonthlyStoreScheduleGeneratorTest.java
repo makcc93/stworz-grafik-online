@@ -113,7 +113,7 @@ class MonthlyStoreScheduleGeneratorTest {
         // generateMonthlySchedule() woła tylko tę jedną metodę na context bezpośrednio -
         // reszta logiki siedzi w vacationApplier/daysOffApplier/dailyShiftGeneratorAlgorithm itd.,
         // które tutaj są pełnymi mockami i nigdy nie sięgają do context.
-        when(context.getStoreActiveEmployees()).thenReturn(getEmployees());
+        when(context.getStoreNotSpecialActiveEmployees()).thenReturn(getEmployees());
 
         when(contextFactory.create(any(),any(),any())).thenReturn(context);
     }

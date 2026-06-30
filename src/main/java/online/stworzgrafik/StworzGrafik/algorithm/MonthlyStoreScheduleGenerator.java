@@ -15,16 +15,13 @@ import online.stworzgrafik.StworzGrafik.algorithm.preparation.VacationApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CheckoutMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
+import online.stworzgrafik.StworzGrafik.algorithm.specialEmployees.SpecialEmployeesShiftMatcher;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
-import online.stworzgrafik.StworzGrafik.schedule.Schedule;
-import online.stworzgrafik.StworzGrafik.schedule.details.DTO.CreateScheduleDetailsDTO;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -49,6 +46,7 @@ public class MonthlyStoreScheduleGenerator {
     private final OpenCloseMatcher openCloseMatcher;
     private final WeeklyRequirementRest weeklyRequirementRest;
     private final ScheduleDatabaseSaver scheduleDatabaseSaver;
+    private final SpecialEmployeesShiftMatcher specialEmployeesShiftMatcher;
 
     public byte[] generateMonthlySchedule(Long storeId,Integer year, Integer month) throws IOException {
         ScheduleGeneratorContext context = contextFactory.create(storeId, year, month);
@@ -57,6 +55,8 @@ public class MonthlyStoreScheduleGenerator {
         delegationApplier.applyDelegationToSchedule(context);
         daysOffApplier.applyDaysOffToSchedule(context);
         proposalShiftApplier.applyProposalShiftsToSchedule(context);
+
+        specialEmployeesShiftMatcher.proceed(context);
 
         weeklyRequirementRest.proceed(context);
 
@@ -70,8 +70,8 @@ public class MonthlyStoreScheduleGenerator {
         checkoutMatcher.assignRolesForMonth(context);
         openCloseMatcher.assignRolesForMonth(context);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreNotSpecialActiveEmployees(), ShiftAnalyzeType.SHIFT_SPLITTER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreNotSpecialActiveEmployees(), ShiftAnalyzeType.HOURS_SWAPPER);
 
         dailyShiftGeneratorAlgorithm.modifyShiftsHours(context);
 
@@ -79,7 +79,7 @@ public class MonthlyStoreScheduleGenerator {
 
         restAnalyzer.analyzeAndResolve(context, RestAnalyzeType.WEEKLY_35_HOURS_REST);
 
-        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
+        scheduleAnalyzer.analyzeAndResolve(context, LocalDate.now(), List.of(), context.getStoreNotSpecialActiveEmployees(), ShiftAnalyzeType.SHIFT_SWAPPER);
 
         scheduleAnalyzer.analyzeAndResolve(context,LocalDate.now(), List.of(),List.of(),ShiftAnalyzeType.UNBALANCED_SHIFT_DISTRIBUTION);
 

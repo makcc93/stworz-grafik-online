@@ -71,7 +71,7 @@ public void generate(ScheduleGeneratorContext context){
     }
 
     private void coverDeliveryByOtherEmployee(ScheduleGeneratorContext context, Employee employee, LocalDate date, Shift shift, DayOfWeek dayOfWeek,ShiftTypeConfig shiftTypeConfig) {
-        Optional<Employee> optionalEmployee = context.getStoreActiveEmployees().stream()
+        Optional<Employee> optionalEmployee = context.getStoreNotSpecialActiveEmployees().stream()
                 .filter(Employee::isCanOperateDelivery)
                 .filter(empl -> !context.employeeIsOnVacation(empl, date))
                 .filter(empl -> !context.employeeHasProposalDaysOff(empl, date))

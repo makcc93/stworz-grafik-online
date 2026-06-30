@@ -27,7 +27,7 @@ public class ProposalShiftApplier {
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
         log.info("WPROWADZENIE PROPOZYCJI ZMIAN");
-        List<Employee> employees = context.getStoreActiveEmployees();
+        List<Employee> employees = context.getStoreAllActiveEmployees();
 
         Integer year = context.getYear();
         Integer month = context.getMonth();

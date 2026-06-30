@@ -22,7 +22,7 @@ public class DelegationApplier {
 
     public void applyDelegationToSchedule(ScheduleGeneratorContext context){
         log.info("WPROWADZENIE DELEGACJI");
-        List<Employee> employeesWithDelegation = context.getStoreActiveEmployees().stream()
+        List<Employee> employeesWithDelegation = context.getStoreAllActiveEmployees().stream()
                 .filter(context::employeeHasPlannedDelegation)
                 .toList();
 

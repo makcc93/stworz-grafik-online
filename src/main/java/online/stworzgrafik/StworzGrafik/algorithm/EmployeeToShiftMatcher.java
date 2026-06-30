@@ -34,7 +34,7 @@ public class EmployeeToShiftMatcher {
         LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc = context.getEveryDayStoreDemandDraftWorkingOn();
 
         Map<LocalDate, List<Shift>> generatedShiftsByDate = context.getGeneratedShiftsByDay();
-        List<Employee> storeActiveEmployees = context.getStoreActiveEmployees();
+        List<Employee> storeActiveEmployees = context.getStoreNotSpecialActiveEmployees();
 
         for (Map.Entry<LocalDate,int[]> entry : everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc.entrySet()) {
             LocalDate date = entry.getKey();
