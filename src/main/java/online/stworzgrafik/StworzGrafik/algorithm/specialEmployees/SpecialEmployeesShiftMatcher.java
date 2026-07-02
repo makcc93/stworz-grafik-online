@@ -7,10 +7,8 @@ import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -25,7 +23,7 @@ public class SpecialEmployeesShiftMatcher {
     private final HolidayManager holidayManager;
 
     public void proceed(ScheduleGeneratorContext context) {
-        log.info("PRACOWNIK SPECJALNY - TWORZENIA INDYWIDUALNEGO GRAFIKA");
+        log.info("PRACOWNIK SPECJALNY - TWORZENIE INDYWIDUALNEGO GRAFIKA");
 
         List<Employee> specialActiveEmployees = context.getStoreAllActiveEmployees().stream()
                 .filter(Employee::getIsSpecial)
@@ -34,12 +32,135 @@ public class SpecialEmployeesShiftMatcher {
         for (Employee special : specialActiveEmployees) {
             assignWeekends(context, special);
             assignRestRequirementDayOff(context, special);
-            assignWeekDays(context);
+            assignWorkToWeekDays(context,special);
         }
     }
 
-    private void assignRestRequirementDayOff(ScheduleGeneratorContext context, Employee special) {
-        //todo
+    private void assignWorkToWeekDays(ScheduleGeneratorContext context, Employee employee){
+        YearMonth yearMonth = YearMonth.of(context.getYear(),context.getMonth());
+
+        Map<String,Integer> shifts = shiftsUsedCount();
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
+            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
+
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+            if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
+            if (context.employeeIsOnVacation(employee,date)) continue;
+            if (context.employeeIsOnDelegation(employee,date)) continue;
+            if (context.employeeIsWorking(employee,date)) continue;
+
+            shifts.entrySet().stream()
+                    .sorted(Map.Entry::getValue)
+                    .map(Collectors.toList())
+                    .findFirst()
+                    .get();
+
+            switch ()
+        }
+    }
+
+    private Map<String,Integer> shiftsUsedCount(){
+        Map<String,Integer> shifts = new HashMap<>();
+        shifts.put("MORNING",0);
+        shifts.put("AFTERNOON",0);
+        shifts.put("DRAFT",0);
+
+        return shifts;
+    }
+
+    private void assignRestRequirementDayOff(ScheduleGeneratorContext context, Employee employee) {
+        Map<Integer, PeriodDateDTO> periodWeek = context.getPeriodWeek();
+        for (Map.Entry<Integer,PeriodDateDTO> entry : periodWeek.entrySet()) {
+            PeriodDateDTO periodDateDTO = entry.getValue();
+
+            if (isEmployeeWorkingOnSaturdayInPeriodWeek(context,periodDateDTO,employee)){
+                if (employeeAssignedToVacationOrZeroDraftDay(context, periodDateDTO,employee)) break;
+
+                LinkedHashMap<LocalDate,Double> weekDaysScoring = calculateWeekDaysScoring(context,periodDateDTO);
+                for (LocalDate date : weekDaysScoring.keySet()){
+                    if (!context.employeeHasProposalShift(employee,date)){
+                        context.assignEmployeeToRestRequirementDayOff(employee,date);
+                        break;
+                    }
+                }
+            }
+            else {
+                context.assignEmployeeToRestRequirementDayOff(employee,saturdayInPeriodWeek(context,periodDateDTO));
+            }
+        }
+    }
+
+    private LinkedHashMap<LocalDate,Double> calculateWeekDaysScoring(ScheduleGeneratorContext context, PeriodDateDTO dto){
+        LocalDate periodStartDate = dto.startDate();
+        LocalDate periodEndDate  = dto.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
+        LinkedHashMap<LocalDate,Double> daysScoring = new LinkedHashMap<>();
+        for (int day = periodStartDayOfMonth; day <= periodEndDayOfMonth; day++){
+            LocalDate currentDate = LocalDate.of(periodStartDate.getYear(), periodStartDate.getMonth(),day);
+
+            if (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+
+            double vacationAndDaysOffValue = 0.00;
+            for (Employee employee : context.getStoreAllActiveEmployees()){
+                if (context.employeeIsOnVacation(employee,currentDate)){
+                    vacationAndDaysOffValue += 2.00;
+                }
+
+                if (context.employeeHasProposalDaysOff(employee,currentDate)){
+                    vacationAndDaysOffValue += 2.00;
+                }
+            }
+
+            double divideBy = 8;
+            double dailySum = Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(currentDate, new int[24])).sum();
+            double dailyScoring = (dailySum / divideBy) + vacationAndDaysOffValue;
+
+            daysScoring.put(currentDate,dailyScoring);
+        }
+        return daysScoring.entrySet().stream()
+                .sorted(Comparator.comparingDouble((Map.Entry::getValue)))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private boolean employeeAssignedToVacationOrZeroDraftDay(ScheduleGeneratorContext context, PeriodDateDTO periodDateDTO, Employee employee){
+        LocalDate periodStartDate = periodDateDTO.startDate();
+        LocalDate periodEndDate = periodDateDTO.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
+        for (int day = periodStartDayOfMonth; day <= periodEndDayOfMonth; day++) {
+            LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
+
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
+            if (context.employeeHasProposalShift(employee,date)) continue;
+
+            if (context.employeeIsOnVacation(employee,date)){
+                context.assignEmployeeToRestRequirementDayOff(employee,date);
+                return true;
+            }
+
+            if (checkZeroDraftRequirementDay(context,date)){
+                context.assignEmployeeToRestRequirementDayOff(employee,date);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean checkZeroDraftRequirementDay(ScheduleGeneratorContext context, LocalDate date) {
+        int dailyStoreDraftCount = Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum();
+
+        return dailyStoreDraftCount == 0;
     }
 
     private void assignWeekends(ScheduleGeneratorContext context, Employee employee) {
@@ -64,6 +185,41 @@ public class SpecialEmployeesShiftMatcher {
                 workingWeekends += 1;
             }
         }
+    }
+
+    private boolean isEmployeeWorkingOnSaturdayInPeriodWeek(ScheduleGeneratorContext context, PeriodDateDTO periodDateDTO, Employee employee){
+        LocalDate periodStartDate = periodDateDTO.startDate();
+        LocalDate periodEndDate = periodDateDTO.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
+        for (int day = periodStartDayOfMonth; day <= periodEndDayOfMonth; day++){
+            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
+
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY && context.employeeIsWorking(employee,date)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private LocalDate saturdayInPeriodWeek(ScheduleGeneratorContext context, PeriodDateDTO periodDateDTO){
+        LocalDate periodStartDate = periodDateDTO.startDate();
+        LocalDate periodEndDate = periodDateDTO.endDate();
+
+        int periodStartDayOfMonth = periodStartDate.getDayOfMonth();
+        int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
+
+        for (int day = periodStartDayOfMonth; day <= periodEndDayOfMonth; day++){
+            LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
+
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY){
+                return date;
+            }
+        }
+
+        return LocalDate.of(2000,1,1);
     }
 
     private int weekDaysCountWithDayOffProposal(ScheduleGeneratorContext context, Employee employee){

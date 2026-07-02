@@ -223,6 +223,8 @@ public class ScheduleGeneratorContext {
                 .computeIfAbsent(employee, k -> new HashSet<>())
                 .add(date);
 
+        log.info("[35-HOURS REST REQUIREMENT] Dopisuję dzień wolny pracownikowi {} w dniu {}", employee.getLastName(),date);
+
     }
 
     public boolean isOpeningOrClosingStore(Employee employee, LocalDate date){
