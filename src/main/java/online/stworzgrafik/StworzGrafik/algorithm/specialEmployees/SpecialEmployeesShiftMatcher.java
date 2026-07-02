@@ -4,9 +4,11 @@ import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -49,14 +51,54 @@ public class SpecialEmployeesShiftMatcher {
             if (context.employeeIsOnDelegation(employee,date)) continue;
             if (context.employeeIsWorking(employee,date)) continue;
 
-            shifts.entrySet().stream()
-                    .sorted(Map.Entry::getValue)
-                    .map(Collectors.toList())
-                    .findFirst()
-                    .get();
+            String shiftName = shifts.entrySet().stream()
+                    .min(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey)
+                    .orElse("DRAFT");
 
-            switch ()
+            switch (shiftName){
+                case ("MORNING") -> {
+                    Shift morningShift = getMorningShift(context,date,employee);
+                    context.registerShiftOnSchedule(date,employee,morningShift,date.getDayOfWeek());
+
+                    shifts.merge("MORNING",1,Integer::sum);
+                }
+                case ("AFTERNOON") -> {
+                    Shift afternoonShift = getAfternoonShift(context,date,employee);
+                    context.registerShiftOnSchedule(date,employee,afternoonShift,date.getDayOfWeek());
+
+                    shifts.merge("AFTERNOON",1,Integer::sum);
+                }
+                case ("DRAFT") -> {
+                    Shift draftShift = calculateHighestDraftHoursShift(context,employee,date);
+                    context.registerShiftOnSchedule(date,employee,draftShift,date.getDayOfWeek());
+
+                    shifts.merge("DRAFT",1,Integer::sum);
+                }
+            }
         }
+    }
+
+    private Shift getAfternoonShift(ScheduleGeneratorContext context, LocalDate date, Employee employee){
+        OpenCloseHoursForEmployeeIndexDTO hoursDto = context.getStoreOpenCloseHoursForEmployeesByDate().getOrDefault(date, new OpenCloseHoursForEmployeeIndexDTO(8, 21));
+
+        int employeeMaxWorkingHours = employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
+
+        LocalTime startHour = LocalTime.of(hoursDto.closeHour() - employeeMaxWorkingHours,0);
+        LocalTime endHour = LocalTime.of(hoursDto.closeHour(),0);
+
+        return context.findShiftByHours(startHour,endHour);
+    }
+
+    private Shift getMorningShift(ScheduleGeneratorContext context, LocalDate date, Employee employee){
+        OpenCloseHoursForEmployeeIndexDTO hoursDto = context.getStoreOpenCloseHoursForEmployeesByDate().getOrDefault(date, new OpenCloseHoursForEmployeeIndexDTO(8, 21));
+
+        int employeeMaxWorkingHours = employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
+
+        LocalTime startHour = LocalTime.of(hoursDto.openHour(),0);
+        LocalTime endHour = LocalTime.of(hoursDto.openHour() +  employeeMaxWorkingHours,0);
+
+        return context.findShiftByHours(startHour,endHour);
     }
 
     private Map<String,Integer> shiftsUsedCount(){
