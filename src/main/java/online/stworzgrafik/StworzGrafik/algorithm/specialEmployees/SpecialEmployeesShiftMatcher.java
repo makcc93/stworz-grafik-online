@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.specialEmployees;
 
+import com.mysql.cj.log.Log;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursFor
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -116,7 +116,7 @@ public class SpecialEmployeesShiftMatcher {
             PeriodDateDTO periodDateDTO = entry.getValue();
 
             if (isEmployeeWorkingOnSaturdayInPeriodWeek(context,periodDateDTO,employee)){
-                if (employeeAssignedToVacationOrZeroDraftDay(context, periodDateDTO,employee)) break;
+                if (employeeAssignedToVacationOrZeroDraftDay(context, periodDateDTO,employee)) continue;
 
                 LinkedHashMap<LocalDate,Double> weekDaysScoring = calculateWeekDaysScoring(context,periodDateDTO);
                 for (LocalDate date : weekDaysScoring.keySet()){
@@ -206,22 +206,34 @@ public class SpecialEmployeesShiftMatcher {
     }
 
     private void assignWeekends(ScheduleGeneratorContext context, Employee employee) {
+        log.info("WEEKENDY");
         LinkedHashMap<LocalDate, Double> weekendsScoring = calculateWeekendsScoring(context);
 
         int workingWeekends = 0;
         int dayOffProposalsCount = weekDaysCountWithDayOffProposal(context,employee);
         int maxWorkingWeekends = Math.max(dayOffProposalsCount, 2);
+        log.info("workingWeekends={}, dayOffProposalsCount={}, maxWorkingWeekends={}",
+                workingWeekends,
+                dayOffProposalsCount,
+                maxWorkingWeekends
+                );
+
 
         for (LocalDate weekend : weekendsScoring.keySet()){
+            log.info("[PETLA] sobota={}", weekend);
             if (workingWeekends >= maxWorkingWeekends) break;
 
             if (context.employeeIsOnDelegation(employee,weekend) || context.employeeHasProposalShift(employee,weekend)) {
+                log.info("[PETLA] delegation CONTINUE");
                 workingWeekends += 1;
                 continue;
             }
 
             if (!context.employeeHasProposalDaysOff(employee,weekend)) {
+
                 Shift highestDraftShift = calculateHighestDraftHoursShift(context, employee, weekend);
+                log.info("[PETLA] brak proposal day off register | shift {}-{}", highestDraftShift.getStartHour(),highestDraftShift.getEndHour());
+
                 context.registerShiftOnSchedule(weekend, employee, highestDraftShift, weekend.getDayOfWeek());
 
                 workingWeekends += 1;
