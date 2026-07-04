@@ -35,15 +35,15 @@ public class VacationApplier {
             LocalDate date = LocalDate.of(year, month, day);
 
             for (Employee employee : employeesWithVacation) {
+                if (!context.employeeIsOnVacation(employee, date)) continue;
+
                 if (holidayManager.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
                     context.addEmployeeDayOffProposal(date,employee);
                     continue;
                 }
 
-                if (context.employeeIsOnVacation(employee, date)) {
-                    context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
-                    context.addEmployeeVacationDay(employee,1);
-                }
+                context.registerShiftOnSchedule(date,employee,vacationShift,date.getDayOfWeek());
+                context.addEmployeeVacationDay(employee,1);
             }
         }
     }

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
+import online.stworzgrafik.StworzGrafik.employee.DTO.UpdateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
 import online.stworzgrafik.StworzGrafik.employee.position.PositionService;
@@ -71,7 +73,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000001L,
                         1L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Monika",
@@ -79,7 +80,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000002L,
                         2L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Mateusz",
@@ -87,7 +87,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000003L,
                         2L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Filip",
@@ -95,7 +94,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000004L,
                         5L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Martyna",
@@ -103,7 +101,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000005L,
                         5L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Wojciech",
@@ -111,7 +108,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000006L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Agata",
@@ -119,7 +115,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000007L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Michał",
@@ -127,7 +122,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000008L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Tomasz",
@@ -135,7 +129,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000009L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Michał",
@@ -143,7 +136,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000010L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Marcin",
@@ -151,7 +143,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000011L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Marcin",
@@ -159,7 +150,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000012L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Olga",
@@ -167,7 +157,6 @@ public class AppInitializer implements CommandLineRunner{
                         10000013L,
                         4L
                 ));
-
         employeeService.createEmployee(storeId,
                 new CreateEmployeeDTO(
                         "Karolina",

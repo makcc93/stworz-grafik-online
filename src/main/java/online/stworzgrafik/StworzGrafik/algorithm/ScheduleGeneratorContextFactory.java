@@ -264,7 +264,7 @@ public class ScheduleGeneratorContextFactory {
         return employeesMonthlyProposalDayOff.stream()
                 .collect(Collectors.toMap(
                                 EmployeeProposalDaysOff::getEmployee,
-                                EmployeeProposalDaysOff::getMonthlyDaysOff
+                                entity -> entity.getMonthlyDaysOff().clone()
                         )
                 );
     }

@@ -31,7 +31,7 @@ public class DailyShiftGeneratorAlgorithm {
 
                 if (hoursToModify.containsKey(shift.getStartHour())){
                     Shift updatedShift = context.findShiftByHours(hoursToModify.get(shift.getStartHour()), shift.getEndHour());
-                    context.updateShiftOnSchedule(date,employee,updatedShift);
+                    context.updateShiftOnSchedule(date,employee,updatedShift);//tu trzeba update robic end hour dla pracownika specjalnego
                 }
 
                 if (hoursToModify.containsKey(shift.getEndHour())){

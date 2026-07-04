@@ -23,13 +23,13 @@ public class EmptyDaysMatcher {
             LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
 
             if (!finalSchedule.containsKey(date)){
-                for (Employee employee : context.getStoreNotSpecialActiveEmployees()){
+                for (Employee employee : context.getStoreAllActiveEmployees()){
                     context.registerShiftOnSchedule(date,employee,context.getDefaultDaysOffShift(),date.getDayOfWeek());
                 }
                 continue;
             }
 
-            for (Employee employee : context.getStoreNotSpecialActiveEmployees()){
+            for (Employee employee : context.getStoreAllActiveEmployees()){
                 if (context.employeeIsOnVacation(employee,date)) continue;
                 if (context.employeeIsOnDelegation(employee,date)) continue;
 
