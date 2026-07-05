@@ -56,10 +56,11 @@ public class DailyShiftGeneratorAlgorithm {
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
         log.info("GENERAWONIE ZMIAN");
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
-        List<Employee> employees = context.getStoreAllActiveEmployees();
+        List<Employee> employees = context.getStoreNotSpecialActiveEmployees();
+        List<Employee> specialEmployees = context.getStoreAllActiveEmployees().stream().filter(Employee::getIsSpecial).toList();
 
         for (Map.Entry<LocalDate, int[]> entry : everyDayStoreDemandDraft.entrySet()) {
-            int[] employeeDailyProposalCount = new int[24];
+            int[] employeesProposalsAndSpecialEmployeesScheduleCount = new int[24];
             LocalDate date = entry.getKey();
 
 
@@ -70,10 +71,17 @@ public class DailyShiftGeneratorAlgorithm {
             for (Employee employee : employees) {
                 int[] employeeProposal = dailyEmployeeProposals.getOrDefault(employee, new int[24]);
 
-                employeeDailyProposalCount = addArrays(employeeDailyProposalCount,employeeProposal);
+                employeesProposalsAndSpecialEmployeesScheduleCount = addArrays(employeesProposalsAndSpecialEmployeesScheduleCount,employeeProposal);
             }
 
-            int[] draftAfterProposals = subtractArrays(dailyDraft, employeeDailyProposalCount);
+            for (Employee special : specialEmployees){
+                Shift specialEmployeeShift = context.getFinalSchedule().getOrDefault(date,Map.of()).getOrDefault(special,context.getDefaultDaysOffShift());
+                int[] specialEmployeeShiftAsArray = context.shiftAsArray(specialEmployeeShift);
+
+                employeesProposalsAndSpecialEmployeesScheduleCount = addArrays(employeesProposalsAndSpecialEmployeesScheduleCount,specialEmployeeShiftAsArray);
+            }
+
+            int[] draftAfterProposals = subtractArrays(dailyDraft, employeesProposalsAndSpecialEmployeesScheduleCount);
             List<Shift> transientShifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
             List<Shift> resolvedShifts = transientShifts.stream()

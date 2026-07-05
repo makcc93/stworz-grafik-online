@@ -84,8 +84,9 @@ public class SpecialEmployeesShiftMatcher {
 
         int employeeMaxWorkingHours = employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
 
-        LocalTime startHour = LocalTime.of(hoursDto.closeHour() - employeeMaxWorkingHours,0);
-        LocalTime endHour = LocalTime.of(hoursDto.closeHour(),0);
+        int closeHour = hoursDto.closeHour() + 1;
+        LocalTime startHour = LocalTime.of(closeHour - employeeMaxWorkingHours,0);
+        LocalTime endHour = LocalTime.of(closeHour,0);
 
         log.info("[SPECIAL - CALCULATE AFTERNOON SHIFT] Dzień: {}, Shift: {}-{}, Empl: {}", date,startHour,endHour,employee.getLastName());
         return context.findShiftByHours(startHour,endHour);
