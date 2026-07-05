@@ -30,13 +30,23 @@ public class DailyShiftGeneratorAlgorithm {
                 if (!context.getEmployeesToModifyHours().contains(employee)) continue;
 
                 if (hoursToModify.containsKey(shift.getStartHour())){
-                    Shift updatedShift = context.findShiftByHours(hoursToModify.get(shift.getStartHour()), shift.getEndHour());
-                    context.updateShiftOnSchedule(date,employee,updatedShift);//tu trzeba update robic end hour dla pracownika specjalnego
+                    LocalTime modifiedStartHour = hoursToModify.get(shift.getStartHour());
+
+                    Shift updatedShift = employee.getIsSpecial()
+                            ? context.findShiftByHours(modifiedStartHour, modifiedStartHour.plusHours(employee.getSpecialWorkNorm().getMaxDailyHours().longValue()))
+                            : context.findShiftByHours(modifiedStartHour, shift.getEndHour());
+
+                    context.updateShiftOnSchedule(date,employee,updatedShift);
                 }
 
                 if (hoursToModify.containsKey(shift.getEndHour())){
                     Shift potentialUpdatedStartHourShift = context.getFinalSchedule().getOrDefault(date,Map.of()).getOrDefault(employee,context.getDefaultDaysOffShift());
-                    Shift updatedShift = context.findShiftByHours(potentialUpdatedStartHourShift.getStartHour(),hoursToModify.get(shift.getEndHour()));
+                    LocalTime modifiedEndHour = hoursToModify.get(shift.getEndHour());
+
+                    Shift updatedShift = employee.getIsSpecial()
+                            ? context.findShiftByHours(modifiedEndHour.minusHours(employee.getSpecialWorkNorm().getMaxDailyHours().longValue()), modifiedEndHour)
+                            : context.findShiftByHours(potentialUpdatedStartHourShift.getStartHour(), modifiedEndHour);
+
                     context.updateShiftOnSchedule(date,employee,updatedShift);
                 }
             }
@@ -46,7 +56,7 @@ public class DailyShiftGeneratorAlgorithm {
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
         log.info("GENERAWONIE ZMIAN");
         Map<LocalDate, int[]> everyDayStoreDemandDraft = context.getUneditedOriginalDateStoreDraft();
-        List<Employee> employees = context.getStoreNotSpecialActiveEmployees();
+        List<Employee> employees = context.getStoreAllActiveEmployees();
 
         for (Map.Entry<LocalDate, int[]> entry : everyDayStoreDemandDraft.entrySet()) {
             int[] employeeDailyProposalCount = new int[24];

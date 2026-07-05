@@ -87,6 +87,7 @@ public class SpecialEmployeesShiftMatcher {
         LocalTime startHour = LocalTime.of(hoursDto.closeHour() - employeeMaxWorkingHours,0);
         LocalTime endHour = LocalTime.of(hoursDto.closeHour(),0);
 
+        log.info("[SPECIAL - CALCULATE AFTERNOON SHIFT] Dzień: {}, Shift: {}-{}, Empl: {}", date,startHour,endHour,employee.getLastName());
         return context.findShiftByHours(startHour,endHour);
     }
 
@@ -98,6 +99,7 @@ public class SpecialEmployeesShiftMatcher {
         LocalTime startHour = LocalTime.of(hoursDto.openHour(),0);
         LocalTime endHour = LocalTime.of(hoursDto.openHour() +  employeeMaxWorkingHours,0);
 
+        log.info("[SPECIAL - CALCULATE MORNING SHIFT] Dzień: {}, Shift: {}-{}, Empl: {}", date,startHour,endHour,employee.getLastName());
         return context.findShiftByHours(startHour,endHour);
     }
 
@@ -314,6 +316,8 @@ public class SpecialEmployeesShiftMatcher {
                 ? LocalTime.MIDNIGHT
                 : LocalTime.of(bestEndIndex + 1, 0);
 
+
+        log.info("[SPECIAL - CALCULATE HIGHEST DRAFT HOURS SHIFT] Dzień: {}, Shift: {}-{}, Empl: {}", date,startHour,endHour,employee.getLastName());
         return context.findShiftByHours(startHour, endHour);
     }
 
