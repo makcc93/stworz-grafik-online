@@ -342,7 +342,7 @@ public class SpecialEmployeesShiftMatcher {
             int periodEndDayOfMonth = periodEndDate.getDayOfMonth();
 
 
-            for (int day = (periodStartDayOfMonth + 1); day < periodEndDayOfMonth; day++) {
+            for (int day = periodStartDayOfMonth + 1; day <= periodEndDayOfMonth; day++) {
                 LocalDate currentDate = LocalDate.of(periodStartDate.getYear(), periodStartDate.getMonth(), day);
 
                 if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY) continue;

@@ -143,7 +143,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 BigDecimal highestEmployeeHoursCount = employeeHours.getOrDefault(highestHoursEmployee, BigDecimal.ZERO);
                 Shift highestHoursEmployeeShift = employeeShift.getOrDefault(highestHoursEmployee, context.getDefaultDaysOffShift());
-                BigDecimal highestHoursEmployeeShiftLength = BigDecimal.valueOf(getShiftLength(highestHoursEmployeeShift));
+                BigDecimal highestHoursEmployeeShiftLength = BigDecimal.valueOf(getShiftLength(context,highestHoursEmployeeShift));
 
                 Employee lowestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
@@ -155,7 +155,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 BigDecimal lowestEmployeeHoursCount = employeeHours.getOrDefault(lowestHoursEmployee, BigDecimal.ZERO);
                 Shift lowestHoursEmployeeShift = employeeShift.getOrDefault(lowestHoursEmployee, context.getDefaultDaysOffShift());
-                BigDecimal lowestHoursEmployeeShiftLength = BigDecimal.valueOf(getShiftLength(lowestHoursEmployeeShift));
+                BigDecimal lowestHoursEmployeeShiftLength = BigDecimal.valueOf(getShiftLength(context,lowestHoursEmployeeShift));
 
                 if ((highestHoursEmployeeShiftLength.compareTo(lowestHoursEmployeeShiftLength) > 0) &&
                         (highestEmployeeHoursCount.subtract(lowestEmployeeHoursCount)).compareTo(highestHoursEmployeeShiftLength.subtract(lowestHoursEmployeeShiftLength)) > 0) {
@@ -168,7 +168,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         return anySwapDone;
     }
 
-    private int getShiftLength(Shift shift){
-        return shift.getEndHour().getHour() - shift.getStartHour().getHour();
+    private int getShiftLength(ScheduleGeneratorContext context, Shift shift){
+        return context.getShiftLength(shift).intValue();
     }
 }
