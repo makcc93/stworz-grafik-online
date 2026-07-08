@@ -440,3 +440,26 @@ CREATE TABLE shift_hour_modification_excluded_employees (
     CONSTRAINT fk_shm_excl_config   FOREIGN KEY (config_id)   REFERENCES shift_hour_modification_config (id),
     CONSTRAINT fk_shm_excl_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -------------------------------------------------------------
+-- 26. employee_monthly_hours_confirmation
+--    FK -> store(id)
+--    FK -> employee(id)
+-- -------------------------------------------------------------
+CREATE TABLE employee_monthly_hours_confirmation (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    store_id BIGINT NOT NULL,
+    employee_id BIGINT NOT NULL,
+    year_number INT NOT NULL,
+    month_number INT NOT NULL,
+    confirmed_hours DECIMAL(6,2) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NULL,
+    created_by_user_id BIGINT NOT NULL,
+    created_by_label VARCHAR(255) NOT NULL,
+    updated_by_user_id BIGINT NULL,
+    updated_by_label VARCHAR(255) NULL,
+    CONSTRAINT fk_emhc_store FOREIGN KEY (store_id) REFERENCES store(id),
+    CONSTRAINT fk_emhc_employee FOREIGN KEY (employee_id) REFERENCES employee(id),
+    CONSTRAINT uq_emhc_store_employee_period UNIQUE (store_id, employee_id, year_number, month_number)
+);
