@@ -12,6 +12,8 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
 import online.stworzgrafik.StworzGrafik.employee.delegation.EmployeeDelegation;
 import online.stworzgrafik.StworzGrafik.employee.delegation.EmployeeDelegationEntityService;
+import online.stworzgrafik.StworzGrafik.employee.hoursConfirmation.EmployeeMonthlyHoursConfirmation;
+import online.stworzgrafik.StworzGrafik.employee.hoursConfirmation.EmployeeMonthlyHoursConfirmationEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOff;
 import online.stworzgrafik.StworzGrafik.employee.proposal.daysOff.EmployeeProposalDaysOffEntityService;
 import online.stworzgrafik.StworzGrafik.employee.proposal.shifts.EmployeeProposalShifts;
@@ -31,6 +33,7 @@ import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
 import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -57,8 +60,11 @@ public class ScheduleGeneratorContextFactory {
     private final CalendarCalculation calendarCalculation;
     private final ShiftHourModificationService shiftHourModificationService;
     private final BillingPeriodConfigService billingPeriodConfigService;
+    private final EmployeeMonthlyHoursConfirmationEntityService employeeMonthlyHoursConfirmationEntityService;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
+        boolean isLastMonthOfPeriod = isLastMonthOfPeriod(year, month);
+
         return ScheduleGeneratorContext.builder()
                 .storeId(storeId)
                 .year(year)
@@ -77,6 +83,8 @@ public class ScheduleGeneratorContextFactory {
                 .monthlyEmployeesVacation(getVacation(storeId,year,month))
                 .monthlyEmployeesDelegation(getDelegation(storeId,year,month))
                 .employeeHours(new HashMap<>())
+                .employeeHoursLimit(getEmployeeHoursLimit(storeId, year, month, isLastMonthOfPeriod))
+                .lastMonthOfPeriod(isLastMonthOfPeriod)
                 .workingDaysCount(new HashMap<>())
                 .workingOnWeekendCount(new HashMap<>())
                 .vacationDaysCount(new HashMap<>())
@@ -102,6 +110,42 @@ public class ScheduleGeneratorContextFactory {
                 .storeHasDedicatedWarehouseman(storeDeliveryService.hasDedicatedWarehouseman(storeId))
                 .storeHasDedicatedCashier(isCashierInStore(storeId))
                 .build();
+    }
+
+    private boolean isLastMonthOfPeriod(Integer year, Integer month){
+        List<Integer> periodMonths = billingPeriodConfigService.getPeriodMonths(year, month);
+
+        return !periodMonths.isEmpty() && month.equals(periodMonths.get(periodMonths.size() - 1));
+    }
+
+    private Map<Employee, BigDecimal> getEmployeeHoursLimit(Long storeId, Integer year, Integer month, boolean isLastMonthOfPeriod){
+        List<Employee> employees = employeeEntityService.findAllStoreActiveEmployees(storeId);
+
+        Map<Employee, BigDecimal> hoursLimit = new HashMap<>();
+
+        if (isLastMonthOfPeriod){
+            Map<Long, BigDecimal> confirmedHoursByEmployeeId = employeeMonthlyHoursConfirmationEntityService
+                    .getStoreMonthlyHoursConfirmations(storeId, year, month).stream()
+                    .collect(Collectors.toMap(
+                            confirmation -> confirmation.getEmployee().getId(),
+                            EmployeeMonthlyHoursConfirmation::getConfirmedHours
+                    ));
+
+            for (Employee employee : employees){
+                BigDecimal confirmedHours = confirmedHoursByEmployeeId.get(employee.getId());
+                BigDecimal limit = confirmedHours != null
+                        ? confirmedHours
+                        : calendarCalculation.getMonthlyNormForEmployee(year, month, employee);
+
+                hoursLimit.put(employee, limit);
+            }
+        } else {
+            for (Employee employee : employees){
+                hoursLimit.put(employee, calendarCalculation.getMonthlyNormForEmployee(year, month, employee));
+            }
+        }
+
+        return hoursLimit;
     }
 
     private List<Employee> getNotSpecialActiveEmployees(Long storeId){
@@ -244,7 +288,7 @@ public class ScheduleGeneratorContextFactory {
         return employeeMonthlyDelegation.stream()
                 .collect(Collectors.toMap(
                         EmployeeDelegation::getEmployee,
-                        EmployeeDelegation::getMonthlyDelegation
+                        entity -> entity.getMonthlyDelegation().clone()
                 ));
     }
 
@@ -254,7 +298,7 @@ public class ScheduleGeneratorContextFactory {
         return employeesMonthlyVacation.stream()
                 .collect(Collectors.toMap(
                         EmployeeVacation::getEmployee,
-                        EmployeeVacation::getMonthlyVacation
+                        entity -> entity.getMonthlyVacation().clone()
                 ));
     }
 
@@ -281,7 +325,7 @@ public class ScheduleGeneratorContextFactory {
                                 TreeMap::new,
                                 Collectors.toMap(
                                         EmployeeProposalShifts::getEmployee,
-                                        EmployeeProposalShifts::getDailyProposalShift
+                                        entity -> entity.getDailyProposalShift().clone()
                                 )
                         )
                 );
@@ -301,7 +345,7 @@ public class ScheduleGeneratorContextFactory {
                 )
                 .collect(Collectors.toMap(
                         DemandDraft::getDraftDate,
-                        DemandDraft::getHourlyDemand,
+                        entity -> entity.getHourlyDemand().clone(),
                         (e1, e2) -> {throw new IllegalStateException("Date in store draft cannot be duplicated");},
                         LinkedHashMap::new
                 ));
@@ -314,7 +358,7 @@ public class ScheduleGeneratorContextFactory {
         return demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, firstDay, lastDay).stream()
                 .collect(Collectors.toMap(
                         DemandDraft::getDraftDate,
-                        DemandDraft::getHourlyDemand
+                        entity -> entity.getHourlyDemand().clone()
                 ));
     }
 }

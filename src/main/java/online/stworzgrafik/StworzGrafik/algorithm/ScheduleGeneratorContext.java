@@ -44,6 +44,8 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, int[]> monthlyEmployeesVacation;
     private final Map<Employee, int[]> monthlyEmployeesDelegation;
     private final Map<Employee, BigDecimal> employeeHours;
+    private final Map<Employee, BigDecimal> employeeHoursLimit;
+    private final boolean lastMonthOfPeriod;
     private final Map<Employee, Integer> workingOnWeekendCount;
     private final Map<Employee, Integer> workingDaysCount;
     private final Map<Employee, Integer> vacationDaysCount;
@@ -139,7 +141,7 @@ public class ScheduleGeneratorContext {
                 newShift.getStartHour(),
                 newShift.getEndHour(),
                 date
-                );
+        );
 
         updateEmployeeHours(employee,oldShift,newShift);
     }
@@ -426,6 +428,24 @@ public class ScheduleGeneratorContext {
         if (!shift.equals(this.defaultDaysOffShift)) {
             workingDaysCount.merge(employee, 1, Integer::sum);
         }
+    }
+
+    public BigDecimal getEmployeeHoursLimit(Employee employee){
+        return employeeHoursLimit.getOrDefault(employee, BigDecimal.ZERO);
+    }
+
+    public boolean isEmployeeUnderHoursLimit(Employee employee){
+        BigDecimal currentHours = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
+        BigDecimal limit = getEmployeeHoursLimit(employee);
+
+        return currentHours.compareTo(limit) < 0;
+    }
+
+    public boolean wouldExceedHoursLimit(Employee employee, BigDecimal additionalHours){
+        BigDecimal currentHours = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
+        BigDecimal limit = getEmployeeHoursLimit(employee);
+
+        return currentHours.add(additionalHours).compareTo(limit) > 0;
     }
 
     public ShiftTypeConfig resolveShiftTypeConfig(Employee employee, LocalDate date, Shift shift){

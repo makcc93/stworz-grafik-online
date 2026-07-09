@@ -55,7 +55,15 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         log.info("PRÓBA ZAMIANY ZMIAN");
         BigDecimal minHoursDifference = ((ShiftSwapperAnalysisResult) result).minHoursDifference();
 
+        int maxIterations = 50;
+        int iteration = 0;
+
         while (true) {
+            if (++iteration > maxIterations) {
+                log.warn("Osiągnięto maksymalną liczbę iteracji ({}) przy próbie zamiany zmian - przerywam, aby uniknąć zapętlenia", maxIterations);
+                break;
+            }
+
             BigDecimal lowestHours = lowestNonSpecialistHours(context);
             BigDecimal highestHours = highestNonSpecialistHours(context);
 
@@ -121,6 +129,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
                 if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
+                if (context.isLastMonthOfPeriod() && context.wouldExceedHoursLimit(lowestHoursManager, context.getShiftLength(shift))) continue;
 
                 executeSwap(context, date, highestHoursManager, lowestHoursManager, shift);
                 context.deleteEmployeeToOpenClose(date, highestHoursManager);
@@ -182,6 +191,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
                 if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
+                if (context.isLastMonthOfPeriod() && context.wouldExceedHoursLimit(lowestHoursCreditEmployee, context.getShiftLength(shift))) continue;
 
                 executeSwap(context, date, highestHoursCreditEmployee, lowestHoursCreditEmployee, shift);
                 context.deleteEmployeeFromCredit(date, highestHoursCreditEmployee);
@@ -243,6 +253,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
                 if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
+                if (context.isLastMonthOfPeriod() && context.wouldExceedHoursLimit(lowestHoursCheckoutEmployee, context.getShiftLength(shift))) continue;
 
                 executeSwap(context, date, highestHoursCheckoutEmployee, lowestHoursCheckoutEmployee, shift);
                 context.deleteEmployeeFromCheckout(date, highestHoursCheckoutEmployee);
@@ -304,6 +315,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestEmployeeHasMoreHoursThanHighest(highestHours, lowestHours)) continue;
                 if (context.getShiftLength(shift).compareTo(highestHours.subtract(lowestHours)) >= 0) continue;
+                if (context.isLastMonthOfPeriod() && context.wouldExceedHoursLimit(lowestHoursEmployee, context.getShiftLength(shift))) continue;
 
                 executeSwap(context, date, highestHoursEmployee, lowestHoursEmployee, shift);
                 anySwapDone = true;
@@ -311,7 +323,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         }
         return anySwapDone;
     }
-    
+
     private void executeSwap(ScheduleGeneratorContext context, LocalDate date, Employee from, Employee to, Shift shift) {
         log.info("{} USUWAM ZMIANE {}-{} PRACOWNIKA {} (SUMA GODZIN: {}) I DODAJE PRACOWNIKOWI {} (SUMA GODZIN: {})",
                 date,
