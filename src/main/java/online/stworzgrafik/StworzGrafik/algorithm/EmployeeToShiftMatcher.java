@@ -516,13 +516,13 @@ public class EmployeeToShiftMatcher {
 
         for (Employee e : dailySchedule.keySet()){
             if (e.isCanOpenCloseStore()
-                && context.employeeIsWorking(e,date)
-                && !context.employeeIsOnDelegation(e,date)
-                && !context.employeeIsOnVacation(e,date)
-                && !context.employeeHasProposalDaysOff(e,date)
-                && !context.isEmployeeOnRestRequirementDayOff(e,date)){
-                    employee = e;
-                    shift = dailySchedule.get(e);
+                    && context.employeeIsWorking(e,date)
+                    && !context.employeeIsOnDelegation(e,date)
+                    && !context.employeeIsOnVacation(e,date)
+                    && !context.employeeHasProposalDaysOff(e,date)
+                    && !context.isEmployeeOnRestRequirementDayOff(e,date)){
+                employee = e;
+                shift = dailySchedule.get(e);
             }
         }
 
@@ -612,11 +612,11 @@ public class EmployeeToShiftMatcher {
         if (openShift.isEmpty()){
             log.info("Brak dostępnej zmiany otwierającej sklep w dniu {}", date);
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
-                    ScheduleMessageType.WARNING,
-                    ScheduleMessageCode.NO_AVAILABLE_SHIFT,
-                    "Brak dostępnej otwierącej zmiany w dniu: " + date,
-                    null,
-                    date
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.NO_AVAILABLE_SHIFT,
+                            "Brak dostępnej otwierącej zmiany w dniu: " + date,
+                            null,
+                            date
                     )
             );
             return;
@@ -631,18 +631,29 @@ public class EmployeeToShiftMatcher {
     }
 
     private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date) {
-        return (e1, e2) -> {
-            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                return Comparator.<Employee>comparingInt(
-                                emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
-                        .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
-                        .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
-                        .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO))
-                        .compare(e1, e2);
-            } else {
-                return employeeWithLowestHours(context,date).compare(e1, e2);
-            }
-        };
+        Comparator<Employee> baseComparator;
+
+        if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            baseComparator = Comparator.<Employee>comparingInt(
+                            emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
+                    .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
+                    .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
+                    .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO));
+        } else {
+            baseComparator = employeeWithLowestHours(context,date);
+        }
+
+        if (!context.isLastMonthOfPeriod()) {
+            return baseComparator;
+        }
+
+        // W ostatnim miesiącu okresu rozliczeniowego nie możemy przekraczać indywidualnego
+        // limitu godzin pracownika - w pierwszej kolejności próbujemy dopasować kogoś,
+        // kto się jeszcze w limicie mieści. Jeśli nikt taki nie jest dostępny, i tak
+        // wybieramy najlepszego kandydata (zmiana musi zostać obsadzona), ale wtedy
+        // whenEmployeeHoursExceeded zarejestruje ostrzeżenie w grafiku.
+        return Comparator.<Employee>comparingInt(emp -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1)
+                .thenComparing(baseComparator);
     }
 
     private static Comparator<Shift> longestCloseStoreShift() {
@@ -673,8 +684,8 @@ public class EmployeeToShiftMatcher {
             Employee employee = iterator.next();
 
             if (employee.isCashier()){
-                if (whenEmployeeHoursExceeded(context,date,employee)) break;
-                if (whenEmployeeWorkingDaysExceeded(context,date,employee)) break;
+                if (whenEmployeeHoursExceeded(context,date,employee)) continue;
+                if (whenEmployeeWorkingDaysExceeded(context,date,employee)) continue;
 
                 Optional<Shift> longestCloseShift = shiftsSorted.stream().min(longestCloseStoreShift());
 
@@ -718,13 +729,24 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean whenEmployeeHoursExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO)
-                .compareTo(BigDecimal.valueOf(calendarCalculation.getMonthlyStandardWorkingHours(context.getYear(), context.getMonth()))) >= 0) {
-            log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {} i wynosi {}",
+        if (!context.isEmployeeUnderHoursLimit(employee)) {
+            log.info("Miesięczna suma przepracowanych godzin u {} {} została przekroczona w dniu {} i wynosi {} (limit: {})",
                     employee.getFirstName(),
                     employee.getLastName(),
                     day,
-                    context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO));
+                    context.getEmployeeHours().getOrDefault(employee,BigDecimal.ZERO),
+                    context.getEmployeeHoursLimit(employee));
+
+            if (context.isLastMonthOfPeriod()) {
+                context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                        ScheduleMessageType.WARNING,
+                        ScheduleMessageCode.EMPLOYEE_MONTHLY_SUM_OF_HOURS_EXCEEDED,
+                        "Brak dostępnego pracownika mieszczącego się w limicie godzin - " + employee.getFirstName() + " " + employee.getLastName() +
+                                " przekroczył zatwierdzony limit godzin w dniu " + day,
+                        employee.getId(),
+                        day)
+                );
+            }
 
             return true;
         }
