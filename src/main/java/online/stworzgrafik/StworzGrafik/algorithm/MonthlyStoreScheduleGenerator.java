@@ -89,6 +89,6 @@ public class MonthlyStoreScheduleGenerator {
 
         scheduleDatabaseSaver.saveScheduleToDatabase(storeId,context);
 
-        return excelExport.export(context);
+        return pdfExport.export(storeId,context.getSchedule().getId());
     }
 }

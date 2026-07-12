@@ -23,4 +23,6 @@ public interface BillingPeriodConfigService {
     void saveAll(List<BillingPeriodConfig> billingPeriodConfigs);
 
     void delete(Long billingPeriodConfigId);
+
+    boolean isLastMonthOfPeriod(int year, int month);
 }

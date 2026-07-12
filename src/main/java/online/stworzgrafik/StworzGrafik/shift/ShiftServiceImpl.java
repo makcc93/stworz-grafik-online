@@ -195,6 +195,11 @@ class ShiftServiceImpl implements ShiftService, ShiftEntityService {
     }
 
     @Override
+    public long count() {
+        return shiftRepository.count();
+    }
+
+    @Override
     public BigDecimal calculateShiftLength(Shift shift) {
         BigDecimal endHour = BigDecimal.valueOf(shift.getEndHour().getHour());
         BigDecimal endMinute = BigDecimal.valueOf(shift.getEndHour().getMinute());

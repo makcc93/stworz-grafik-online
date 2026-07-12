@@ -25,4 +25,6 @@ interface ScheduleRepository extends JpaRepository<Schedule,Long>, JpaSpecificat
     boolean existsByStore_IdAndYearAndMonth(Long storeId, Integer year, Integer month);
 
     Optional<Schedule> findByStore_IdAndYearAndMonth(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
+
+    Optional<Schedule> findFirstByStore_IdAndYearAndMonthOrderByIdDesc(@NotNull Long storeId, @NotNull Integer year, @NotNull Integer month);
 }

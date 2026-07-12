@@ -10,6 +10,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+// === ZMIANA: brak tego ograniczenia pozwalał na wielokrotne Schedule dla tego samego
+// sklepu/roku/miesiąca (np. przy usuwaniu i ponownym generowaniu grafiku), co powodowało
+// "Query did not return a unique result" w ScheduleRepository.findByStore_IdAndYearAndMonth().
+@Table(
+        name = "schedule",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_schedule_store_year_month",
+                columnNames = {"store_id", "year_number", "month_number"}
+        )
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter

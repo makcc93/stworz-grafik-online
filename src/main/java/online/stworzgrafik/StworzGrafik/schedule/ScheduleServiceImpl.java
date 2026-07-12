@@ -65,7 +65,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public Schedule findByStoreIdAndYearAndMonth(Long storeId, Integer year, Integer month) {
         verifyStoreAccess(storeId);
 
-        return repository.findByStore_IdAndYearAndMonth(storeId,year,month)
+        return repository.findFirstByStore_IdAndYearAndMonthOrderByIdDesc(storeId,year,month)
                 .orElseGet(() -> mapper.toEntity(
                         createSchedule(
                                 storeId,

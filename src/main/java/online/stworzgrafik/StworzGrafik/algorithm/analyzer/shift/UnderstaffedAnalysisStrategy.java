@@ -9,6 +9,7 @@ import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -59,26 +60,36 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         int[] shiftToCoverAsArray = context.shiftAsArray(shiftToCover);
 
         Map<Employee,Integer> shiftMatchingScore = new HashMap<>();
+        Map<Employee,Shift> candidateJoinedShift = new HashMap<>();
+        Map<Employee,BigDecimal> candidateAdditionalHours = new HashMap<>();
+
         for (Employee employee : employees){
             int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(employee, new int[24]);
 
             int[] summedArray = summedArrays(shiftToCoverAsArray,employeeProposalAsArray);
 
             int score = calculateMatchingScore(summedArray);
-
             shiftMatchingScore.put(employee,score);
+
+            Shift currentEmployeeShift = context.findShiftByArray(employeeProposalAsArray);
+            Shift joinedShift = joinShifts(context, currentEmployeeShift, shiftToCover);
+            BigDecimal additionalHours = context.getShiftLength(joinedShift).subtract(context.getShiftLength(currentEmployeeShift));
+
+            candidateJoinedShift.put(employee, joinedShift);
+            candidateAdditionalHours.put(employee, additionalHours);
         }
 
-        Optional<Employee> highestMatchingScoreEmployee = shiftMatchingScore.entrySet().stream()
-                .sorted((key1, key2) -> key2.getValue().compareTo(key1.getValue()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (k1, k2) -> k1,
-                        LinkedHashMap::new
-                ))
-                .keySet().stream()
-                .findFirst();
+        Comparator<Employee> byMatchingScoreDesc = Comparator.comparing(
+                (Employee e) -> shiftMatchingScore.getOrDefault(e, 0)
+        ).reversed();
+
+        Comparator<Employee> comparator = context.isLastMonthOfPeriod()
+                ? Comparator.<Employee>comparingInt(e ->
+                        context.wouldExceedHoursLimit(e, candidateAdditionalHours.get(e)) ? 1 : 0)
+                .thenComparing(byMatchingScoreDesc)
+                : byMatchingScoreDesc;
+
+        Optional<Employee> highestMatchingScoreEmployee = employees.stream().min(comparator);
 
         if (highestMatchingScoreEmployee.isEmpty()) {
             log.info("Nie można znaleźć pracownika z najwyższym wynikiem dopasowania do zmiany");
@@ -96,14 +107,27 @@ public class UnderstaffedAnalysisStrategy implements ScheduleAnalysisStrategy{
         }
 
         Employee chosenEmployee = highestMatchingScoreEmployee.get();
+        Shift joinedShift = candidateJoinedShift.get(chosenEmployee);
+        BigDecimal additionalHours = candidateAdditionalHours.get(chosenEmployee);
 
-        int[] employeeProposalAsArray = context.getMonthlyEmployeesProposalShiftsByDate().getOrDefault(day, new HashMap<>()).getOrDefault(chosenEmployee, new int[24]);
-        Shift chosenEmployeeShift = context.findShiftByArray(employeeProposalAsArray);
+        if (context.isLastMonthOfPeriod() && context.wouldExceedHoursLimit(chosenEmployee, additionalHours)) {
+            log.warn("Dołożenie brakującej zmiany dla {} {} w dniu {} przekroczy zatwierdzony limit godzin o {}h (ostatni miesiąc okresu) - wykonuję mimo to, bo zmiana musi zostać obsadzona.",
+                    chosenEmployee.getFirstName(), chosenEmployee.getLastName(), day, additionalHours);
 
-        Shift joinedShift = joinShifts(context, chosenEmployeeShift, shiftToCover);
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.WARNING,
+                            ScheduleMessageCode.EMPLOYEE_MONTHLY_SUM_OF_HOURS_EXCEEDED,
+                            "Dołożenie brakującej zmiany dla " + chosenEmployee.getFirstName() + " " + chosenEmployee.getLastName() +
+                                    " w dniu " + day + " przekracza zatwierdzony limit godzin.",
+                            chosenEmployee.getId(),
+                            day
+                    )
+            );
+        }
 
-        context.updateShiftOnSchedule(day, chosenEmployee,joinedShift);
-        context.updateEmployeeDailyProposal(chosenEmployee,day,context.shiftAsArray(joinedShift));
+        context.updateShiftOnSchedule(day, chosenEmployee, joinedShift);
+        context.updateEmployeeDailyProposal(chosenEmployee, day, context.shiftAsArray(joinedShift));
 
         shifts.remove(shiftToCover);
         employees.remove(chosenEmployee);

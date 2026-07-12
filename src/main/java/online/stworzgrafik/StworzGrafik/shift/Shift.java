@@ -14,6 +14,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(
+        name = "shift",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_shift_start_end",
+                columnNames = {"start_hour", "end_hour"}
+        )
+)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Shift {
 

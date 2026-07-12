@@ -4,10 +4,13 @@ import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.draft.DTO.*;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
+import online.stworzgrafik.StworzGrafik.employee.hoursConfirmation.EmployeeMonthlyHoursConfirmation;
+import online.stworzgrafik.StworzGrafik.employee.hoursConfirmation.EmployeeMonthlyHoursConfirmationEntityService;
 import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
@@ -25,7 +28,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,8 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final EmployeeEntityService employeeEntityService;
     private final CurrentUserProvider currentUserProvider;
     private final UserLabelService userLabelService;
+    private final BillingPeriodConfigService billingPeriodConfigService;
+    private final EmployeeMonthlyHoursConfirmationEntityService employeeMonthlyHoursConfirmationEntityService;
 
     @Override
     public ResponseDemandDraftDTO createDemandDraft(Long storeId,CreateDemandDraftDTO dto) {
@@ -47,7 +54,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         Store store = storeEntityService.getEntityById(storeId);
 
         if (demandDraftRepository.existsByStore_IdAndDraftDate(storeId,dto.draftDate())){
-            return demandDraftMapper.toResponseDemandDraftDTO(demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId,dto.draftDate(),dto.draftDate())
+            return demandDraftMapper.toResponseDemandDraftDTO(demandDraftRepository.findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId,dto.draftDate())
                     .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft on date " + dto.draftDate() + " for store with id " + storeId)));
         }
 
@@ -153,7 +160,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year,month,day);
 
-            Optional<DemandDraft> dateDraft = demandDraftRepository.findByStore_IdAndDraftDateBetween(storeId, date, date);
+            Optional<DemandDraft> dateDraft = demandDraftRepository.findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId, date);
             if (dateDraft.isPresent()){
                 BigDecimal dailyDraftSum = BigDecimal.valueOf(Arrays.stream(dateDraft.get().getHourlyDemand()).sum());
 
@@ -170,25 +177,42 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        // 1. Standardowe godziny robocze (z uwzgl. świąt) — np. 160 dla maja 2026
         int standardWorkingHours = calendarCalculation.getMonthlyStandardWorkingHours(year, month);
 
-        // 2. Aktywni pracownicy sklepu bez magazyniera
         List<Employee> nonWarehouseEmployees = employeeEntityService
                 .findAllStoreActiveEmployees(storeId)
                 .stream()
                 .filter(e -> !e.isWarehouseman())
                 .toList();
 
-        // 3. Suma indywidualnych norm (uwzgl. wymiar etatu i ewentualne normy specjalne)
-        BigDecimal totalEmployeeNorm = nonWarehouseEmployees.stream()
-                .map(e -> calendarCalculation.getMonthlyNormForEmployee(year, month, e))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        boolean isLastMonthOfPeriod = billingPeriodConfigService.isLastMonthOfPeriod(year, month);
+
+        BigDecimal totalEmployeeNorm;
+        if (isLastMonthOfPeriod) {
+            Map<Long, BigDecimal> confirmedHoursByEmployeeId = employeeMonthlyHoursConfirmationEntityService
+                    .getStoreMonthlyHoursConfirmations(storeId, year, month).stream()
+                    .collect(Collectors.toMap(
+                            confirmation -> confirmation.getEmployee().getId(),
+                            EmployeeMonthlyHoursConfirmation::getConfirmedHours
+                    ));
+
+            totalEmployeeNorm = nonWarehouseEmployees.stream()
+                    .map(e -> confirmedHoursByEmployeeId.getOrDefault(
+                            e.getId(),
+                            calendarCalculation.getMonthlyNormForEmployee(year, month, e)))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            // 3. Suma indywidualnych norm (uwzgl. wymiar etatu i ewentualne normy specjalne)
+            totalEmployeeNorm = nonWarehouseEmployees.stream()
+                    .map(e -> calendarCalculation.getMonthlyNormForEmployee(year, month, e))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
 
         return new MonthlyNormResponseDTO(
                 standardWorkingHours,
                 totalEmployeeNorm,
-                nonWarehouseEmployees.size()
+                nonWarehouseEmployees.size(),
+                isLastMonthOfPeriod
         );
     }
 

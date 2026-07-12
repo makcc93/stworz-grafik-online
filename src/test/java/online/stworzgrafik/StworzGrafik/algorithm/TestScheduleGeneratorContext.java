@@ -37,6 +37,7 @@ public class TestScheduleGeneratorContext {
     private Map<Employee, int[]> monthlyEmployeesVacation = new HashMap<>();
     private Map<Employee, int[]> monthlyEmployeesDelegation = new HashMap<>();
     private Map<Employee, BigDecimal> employeeHours = new HashMap<>();
+    private Map<Employee, BigDecimal> employeeHoursLimit = new HashMap<>();
     private Map<Employee, Integer> workingOnWeekendCount = new HashMap<>();
     private Map<Employee, Integer> workingDaysCount = new HashMap<>();
     private Map<Employee, Integer> vacationDaysCount = new HashMap<>();
@@ -61,6 +62,7 @@ public class TestScheduleGeneratorContext {
     private List<CreateScheduleMessageDTO> finalScheduleMessages = new ArrayList<>();
     private boolean storeHasDedicatedWarehouseman = true;
     private boolean storeHasDedicatedCashier = true;
+    private boolean isLastMonthOfPeriod = false;
 
     public TestScheduleGeneratorContext withStoreId(Long storeId){
         this.storeId = storeId;
@@ -241,6 +243,8 @@ public class TestScheduleGeneratorContext {
                 monthlyEmployeesVacation,
                 monthlyEmployeesDelegation,
                 employeeHours,
+                employeeHoursLimit,
+                isLastMonthOfPeriod,
                 workingOnWeekendCount,
                 workingDaysCount,
                 vacationDaysCount,

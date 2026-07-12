@@ -448,6 +448,13 @@ public class ScheduleGeneratorContext {
         return currentHours.add(additionalHours).compareTo(limit) > 0;
     }
 
+    public BigDecimal getRemainingHoursUntilLimit(Employee employee){
+        BigDecimal currentHours = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
+        BigDecimal limit = getEmployeeHoursLimit(employee);
+
+        return limit.subtract(currentHours);
+    }
+
     public ShiftTypeConfig resolveShiftTypeConfig(Employee employee, LocalDate date, Shift shift){
         if (shift.equals(defaultDaysOffShift))    return daysOffShiftTypeConfig;
         if (shift.equals(defaultVacationShift))   return vacationShiftTypeConfig;

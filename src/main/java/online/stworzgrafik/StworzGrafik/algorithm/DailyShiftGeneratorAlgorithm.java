@@ -33,7 +33,7 @@ public class DailyShiftGeneratorAlgorithm {
                     LocalTime modifiedStartHour = hoursToModify.get(shift.getStartHour());
 
                     Shift updatedShift = employee.getIsSpecial()
-                            ? context.findShiftByHours(modifiedStartHour, modifiedStartHour.plusHours(employee.getSpecialWorkNorm().getMaxDailyHours().longValue()))
+                            ? context.findShiftByHours(modifiedStartHour, modifiedStartHour.plusHours(requireMaxDailyHours(employee)))
                             : context.findShiftByHours(modifiedStartHour, shift.getEndHour());
 
                     context.updateShiftOnSchedule(date,employee,updatedShift);
@@ -44,13 +44,32 @@ public class DailyShiftGeneratorAlgorithm {
                     LocalTime modifiedEndHour = hoursToModify.get(shift.getEndHour());
 
                     Shift updatedShift = employee.getIsSpecial()
-                            ? context.findShiftByHours(modifiedEndHour.minusHours(employee.getSpecialWorkNorm().getMaxDailyHours().longValue()), modifiedEndHour)
+                            ? context.findShiftByHours(modifiedEndHour.minusHours(requireMaxDailyHours(employee)), modifiedEndHour)
                             : context.findShiftByHours(potentialUpdatedStartHourShift.getStartHour(), modifiedEndHour);
 
                     context.updateShiftOnSchedule(date,employee,updatedShift);
                 }
             }
         }
+    }
+
+    /**
+     * Pracownik oznaczony jako isSpecial=true musi mieć przypisaną specialWorkNorm.
+     * Jeśli tak nie jest, to niespójne dane pracownika, a nie błąd algorytmu -
+     * rzucamy czytelny błąd zamiast NPE, żeby wiadomo było którego pracownika trzeba
+     * poprawić w panelu (patrz też EmployeeServiceImpl.updateEmployee, gdzie
+     * specialWorkNormId jest jedynym źródłem prawdy dla isSpecial).
+     */
+    private int requireMaxDailyHours(Employee employee) {
+        if (employee.getSpecialWorkNorm() == null) {
+            throw new IllegalStateException(
+                    "Pracownik " + employee.getFirstName() + " " + employee.getLastName()
+                            + " (id=" + employee.getId() + ") ma isSpecial=true, ale nie ma przypisanej"
+                            + " specialWorkNorm. Popraw dane pracownika w panelu (przypisz normę specjalną"
+                            + " albo wyłącz isSpecial) i wygeneruj grafik ponownie."
+            );
+        }
+        return employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
     }
 
     public void generateShiftsToDays(ScheduleGeneratorContext context) {
@@ -160,4 +179,3 @@ public class DailyShiftGeneratorAlgorithm {
         return result;
     }
 }
-

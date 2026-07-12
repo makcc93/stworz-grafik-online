@@ -115,6 +115,12 @@ class BillingPeriodConfigServiceImpl implements BillingPeriodConfigService {
         repository.delete(billingPeriodConfig);
     }
 
+    @Override
+    public boolean isLastMonthOfPeriod(int year, int month) {
+        List<Integer> periodMonths = getPeriodMonths(year, month);
+        return !periodMonths.isEmpty() && periodMonths.get(periodMonths.size() - 1) == month;
+    }
+
     private boolean belongsToPeriod(BillingPeriodConfig config, int month) {
         for (int i = 0; i < config.getDurationMonths(); i++) {
             int periodMonth = (config.getStartMonth() - 1 + i) % 12 + 1;

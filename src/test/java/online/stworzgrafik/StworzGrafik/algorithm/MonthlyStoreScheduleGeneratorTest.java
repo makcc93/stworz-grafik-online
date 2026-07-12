@@ -11,6 +11,7 @@ import online.stworzgrafik.StworzGrafik.algorithm.preparation.VacationApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CheckoutMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
+import online.stworzgrafik.StworzGrafik.algorithm.specialEmployees.SpecialEmployeesShiftMatcher;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -72,6 +73,9 @@ class MonthlyStoreScheduleGeneratorTest {
 
     @Mock
     private ExcelExport excelExport;
+
+    @Mock
+    private SpecialEmployeesShiftMatcher specialEmployeesShiftMatcher;
 
     @Mock
     private PdfExport pdfExport;

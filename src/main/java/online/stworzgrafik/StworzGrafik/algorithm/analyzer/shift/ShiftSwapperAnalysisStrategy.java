@@ -30,15 +30,19 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
         BigDecimal minHoursDifference = BigDecimal.valueOf(8);
 
+        // === ZMIANA: porównanie WZGLĘDEM indywidualnego limitu (getRemainingHoursUntilLimit),
+        // nie surowych godzin - patrz komentarz przy
+        // ScheduleGeneratorContext.getRemainingHoursUntilLimit() i analogiczna zmiana
+        // w HoursSwapperAnalysisStrategy.
         BigDecimal lowestHours = employees.stream()
                 .filter(e -> !e.isWarehouseman())
-                .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .map(context::getRemainingHoursUntilLimit)
                 .min(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
 
         BigDecimal highestHours = employees.stream()
                 .filter(e -> !e.isWarehouseman())
-                .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .map(context::getRemainingHoursUntilLimit)
                 .max(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
 
@@ -67,7 +71,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
             BigDecimal lowestHours = lowestNonSpecialistHours(context);
             BigDecimal highestHours = highestNonSpecialistHours(context);
 
-            if (highestHours.subtract(lowestHours).compareTo(minHoursDifference) <= 0) break;
+            if (highestHours.subtract(lowestHours).compareTo(minHoursDifference) < 0) break;
 
             boolean resolved = swapManagerShifts(context);
             resolved |= swapCreditShifts(context);
@@ -101,7 +105,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.isEmployeeWorkingOnCredit(entry.getKey(), date))
                         .filter(entry -> !context.isEmployeeWorkingOnCheckout(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalShift(entry.getKey(), date))
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue().reversed())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ))
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -115,7 +121,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ).reversed())
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -163,7 +171,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.isEmployeeWorkingOnCheckout(entry.getKey(), date))
                         .filter(entry -> !context.isOpeningOrClosingStore(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalShift(entry.getKey(), date))
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue().reversed())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ))
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -177,7 +187,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ).reversed())
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -225,7 +237,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.isEmployeeWorkingOnCredit(entry.getKey(), date))
                         .filter(entry -> !context.isOpeningOrClosingStore(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalShift(entry.getKey(), date))
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue().reversed())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ))
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -239,7 +253,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ).reversed())
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -286,7 +302,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.isEmployeeWorkingOnCredit(entry.getKey(), date))
                         .filter(entry -> !context.isEmployeeWorkingOnCheckout(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalShift(entry.getKey(), date))
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue().reversed())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ))
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -301,7 +319,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
-                        .sorted(Map.Entry.<Employee, BigDecimal>comparingByValue())
+                        .sorted(Comparator.comparing(
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ).reversed())
                         .map(Map.Entry::getKey)
                         .findFirst();
 
@@ -348,7 +368,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         return context.getEmployeeHours().entrySet().stream()
                 .filter(e -> !e.getKey().isWarehouseman())
                 .filter(e -> !e.getKey().isCashier())
-                .map(Map.Entry::getValue)
+                .map(e -> context.getRemainingHoursUntilLimit(e.getKey()))
                 .min(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
     }
@@ -357,7 +377,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         return context.getEmployeeHours().entrySet().stream()
                 .filter(e -> !e.getKey().isWarehouseman())
                 .filter(e -> !e.getKey().isCashier())
-                .map(Map.Entry::getValue)
+                .map(e -> context.getRemainingHoursUntilLimit(e.getKey()))
                 .max(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO);
     }

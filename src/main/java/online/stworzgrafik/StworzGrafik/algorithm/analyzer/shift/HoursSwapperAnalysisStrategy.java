@@ -28,22 +28,29 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
         BigDecimal maxHoursDifference = BigDecimal.valueOf(1);
 
+        // === ZMIANA: porównanie WZGLĘDEM indywidualnego limitu (getRemainingHoursUntilLimit),
+        // a nie surowych godzin (context.getEmployeeHours()) - patrz komentarz przy
+        // ScheduleGeneratorContext.getRemainingHoursUntilLimit(). Pracownik z najmniejszym
+        // zapasem do limitu (najmniej "miejsca") ląduje w polu "highest" (bo to on jest
+        // najbardziej wykorzystany), pracownik z największym zapasem - w polu "lowest".
+        // Przy równych limitach matematycznie daje to dokładnie ten sam wynik co poprzednio
+        // (surowe godziny), więc nic się nie zmienia poza ostatnim miesiącem okresu / part-time.
         BigDecimal employeeLowestValueOfWorkingHours = employees.stream()
                 .filter(empl -> !empl.isWarehouseman())
                 .sorted(Comparator.comparing(
-                        e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO)
+                        (Employee e) -> context.getRemainingHoursUntilLimit(e)
                 ))
                 .findFirst()
-                .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .map(context::getRemainingHoursUntilLimit)
                 .orElse(BigDecimal.ZERO);
 
         BigDecimal employeeHighestValueOfWorkingHours = employees.stream()
                 .filter(empl -> !empl.isWarehouseman())
                 .sorted(Comparator.comparing(
-                        e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO)
+                        (Employee e) -> context.getRemainingHoursUntilLimit(e)
                 ).reversed())
                 .findFirst()
-                .map(e -> context.getEmployeeHours().getOrDefault(e, BigDecimal.ZERO))
+                .map(context::getRemainingHoursUntilLimit)
                 .orElse(BigDecimal.ZERO);
 
         return new HoursSwapperAnalysisResult(employeeLowestValueOfWorkingHours,employeeHighestValueOfWorkingHours,maxHoursDifference);
@@ -68,22 +75,26 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 break;
             }
 
+            // === ZMIANA: to samo co w analyze() - porównujemy dystans do limitu
+            // (getRemainingHoursUntilLimit), nie surowe godziny entry.getValue().
             BigDecimal employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
-                    .sorted(Comparator.comparing(Map.Entry::getValue))
+                    .sorted(Comparator.comparing(
+                            (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                    ))
                     .findFirst()
-                    .map(Map.Entry::getValue)
+                    .map(entry -> context.getRemainingHoursUntilLimit(entry.getKey()))
                     .orElse(BigDecimal.ZERO);
 
             BigDecimal employeeHighestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
                     .sorted(Comparator.comparing(
-                            (Map.Entry<Employee, BigDecimal> entry) -> entry.getValue()
+                            (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
                     ).reversed())
                     .findFirst()
-                    .map(Map.Entry::getValue)
+                    .map(entry -> context.getRemainingHoursUntilLimit(entry.getKey()))
                     .orElse(BigDecimal.ZERO);
 
             if ((employeeHighestValueOfWorkingHours.subtract(employeeLowestValueOfWorkingHours)).compareTo(maxHoursDifference) <= 0) {
@@ -141,10 +152,14 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (employeeShift.size() < 2) continue;
 
+                // === ZMIANA: highestHoursEmployee to teraz pracownik z NAJMNIEJSZYM
+                // zapasem do własnego limitu (najmniej "miejsca" - to on oddaje dłuższą
+                // zmianę), a nie z największymi surowymi godzinami. Sortujemy rosnąco po
+                // getRemainingHoursUntilLimit (pierwszy = najmniejszy zapas).
                 Employee highestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
-                                (Map.Entry<Employee, BigDecimal> entry) -> entry.getValue()
-                        ).reversed())
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ))
                         .map(Map.Entry::getKey)
                         .toList()
                         .getFirst();
@@ -153,10 +168,13 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Shift highestHoursEmployeeShift = employeeShift.getOrDefault(highestHoursEmployee, context.getDefaultDaysOffShift());
                 BigDecimal highestHoursEmployeeShiftLength = context.getShiftLength(highestHoursEmployeeShift);
 
+                // === ZMIANA: lowestHoursEmployee to pracownik z NAJWIĘKSZYM zapasem do
+                // własnego limitu (najwięcej "miejsca" - to on dostaje dłuższą zmianę).
+                // Sortujemy malejąco po getRemainingHoursUntilLimit (pierwszy = największy zapas).
                 Employee lowestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
-                                Map.Entry::getValue
-                        ))
+                                (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
+                        ).reversed())
                         .map(Map.Entry::getKey)
                         .toList()
                         .getFirst();

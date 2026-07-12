@@ -113,9 +113,7 @@ public class ScheduleGeneratorContextFactory {
     }
 
     private boolean isLastMonthOfPeriod(Integer year, Integer month){
-        List<Integer> periodMonths = billingPeriodConfigService.getPeriodMonths(year, month);
-
-        return !periodMonths.isEmpty() && month.equals(periodMonths.get(periodMonths.size() - 1));
+        return billingPeriodConfigService.isLastMonthOfPeriod(year, month);
     }
 
     private Map<Employee, BigDecimal> getEmployeeHoursLimit(Long storeId, Integer year, Integer month, boolean isLastMonthOfPeriod){

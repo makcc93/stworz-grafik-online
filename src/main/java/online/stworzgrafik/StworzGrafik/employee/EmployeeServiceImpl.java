@@ -89,6 +89,16 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
             employee.setPosition(position);
         }
 
+        employeeMapper.updateEmployee(dto, employee);
+
+        // UWAGA: to musi być PO employeeMapper.updateEmployee() i musi być jedynym
+        // miejscem ustawiającym isSpecial/specialWorkNorm. specialWorkNormId jest
+        // jedynym źródłem prawdy - dzięki temu nie da się zapisać isSpecial=true bez
+        // przypisanej normy (co wcześniej powodowało NPE w DailyShiftGeneratorAlgorithm
+        // i SpecialEmployeesShiftMatcher przy getSpecialWorkNorm().getMaxDailyHours()).
+        // Pole isSpecial jest dodatkowo zignorowane w EmployeeMapper (ignore = true),
+        // więc nawet gdyby ten blok przesunąć z powrotem przed mapper, i tak nie wróci
+        // ten sam bug.
         if (dto.specialWorkNormId() != null) {
             SpecialWorkNorm norm = specialWorkNormEntityService.getEntityById(dto.specialWorkNormId());
             employee.setSpecialWorkNorm(norm);
@@ -97,8 +107,6 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
             employee.setSpecialWorkNorm(null);
             employee.setIsSpecial(false);
         }
-
-        employeeMapper.updateEmployee(dto, employee);
 
         Employee savedEmployee = employeeRepository.save(employee);
 

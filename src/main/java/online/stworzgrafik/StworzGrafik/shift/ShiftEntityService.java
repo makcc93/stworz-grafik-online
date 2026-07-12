@@ -18,5 +18,6 @@ public interface ShiftEntityService {
     Shift getArrayAsShift(@NotNull int[] array);
     Shift updateShift(ShiftHoursDTO dto, Shift shift);
     List<Shift> getAll();
+    long count();
     BigDecimal calculateShiftLength(@NotNull Shift shift);
 }

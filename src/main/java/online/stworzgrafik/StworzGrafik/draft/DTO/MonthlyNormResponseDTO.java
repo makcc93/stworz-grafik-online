@@ -5,6 +5,6 @@ import java.math.BigDecimal;
 public record MonthlyNormResponseDTO(
         int standardWorkingHours,
         BigDecimal totalEmployeeNorm,
-        int activeNonWarehouseCount
+        int activeNonWarehouseCount,
+        boolean usingConfirmedHours
 ) {}
-

@@ -95,7 +95,7 @@ public class SpecialEmployeesShiftMatcher {
     private Shift getMorningShift(ScheduleGeneratorContext context, LocalDate date, Employee employee){
         OpenCloseHoursForEmployeeIndexDTO hoursDto = context.getStoreOpenCloseHoursForEmployeesByDate().getOrDefault(date, new OpenCloseHoursForEmployeeIndexDTO(8, 21));
 
-        int employeeMaxWorkingHours = employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
+        int employeeMaxWorkingHours = requireMaxDailyHours(employee);
 
         LocalTime startHour = LocalTime.of(hoursDto.openHour(),0);
         LocalTime endHour = LocalTime.of(hoursDto.openHour() +  employeeMaxWorkingHours,0);
@@ -219,7 +219,7 @@ public class SpecialEmployeesShiftMatcher {
                 workingWeekends,
                 dayOffProposalsCount,
                 maxWorkingWeekends
-                );
+        );
 
 
         for (LocalDate weekend : weekendsScoring.keySet()){
@@ -294,7 +294,7 @@ public class SpecialEmployeesShiftMatcher {
 
     private Shift calculateHighestDraftHoursShift(ScheduleGeneratorContext context, Employee employee, LocalDate date) {
         int[] dailyDraft = context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24]);
-        int maxDailyHours = employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
+        int maxDailyHours = requireMaxDailyHours(employee);
 
         int bestEndIndex = maxDailyHours - 1;
         int bestValue = -1;
@@ -389,5 +389,17 @@ public class SpecialEmployeesShiftMatcher {
             }
         }
         return false;
+    }
+
+    private int requireMaxDailyHours(Employee employee) {
+        if (employee.getSpecialWorkNorm() == null) {
+            throw new IllegalStateException(
+                    "Pracownik " + employee.getFirstName() + " " + employee.getLastName()
+                            + " (id=" + employee.getId() + ") ma isSpecial=true, ale nie ma przypisanej"
+                            + " specialWorkNorm. Popraw dane pracownika w panelu (przypisz normę specjalną"
+                            + " albo wyłącz isSpecial) i wygeneruj grafik ponownie."
+            );
+        }
+        return employee.getSpecialWorkNorm().getMaxDailyHours().intValue();
     }
 }

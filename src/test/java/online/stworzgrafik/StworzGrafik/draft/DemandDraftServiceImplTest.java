@@ -155,8 +155,7 @@ class DemandDraftServiceImplTest {
                 .withHourlyDemand(hourlyDemand)
                 .build();
 
-        when(demandDraftRepository.findByStore_IdAndDraftDateBetween(
-                storeId, draftDate, draftDate))
+        when(demandDraftRepository.findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId, draftDate))
                 .thenReturn(Optional.of(existingDraft));
 
         ResponseDemandDraftDTO expectedResponse = new TestResponseDemandDraftDTO()
@@ -174,7 +173,7 @@ class DemandDraftServiceImplTest {
         assertArrayEquals(hourlyDemand, serviceResponse.hourlyDemand());
 
         verify(demandDraftRepository, never()).save(any());
-        verify(demandDraftRepository).findByStore_IdAndDraftDateBetween(storeId, draftDate, draftDate);
+        verify(demandDraftRepository).findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId, draftDate);
     }
 
     @Test

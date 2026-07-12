@@ -71,7 +71,6 @@ public class ExcelExportFromDatabase {
             CellStyle dataStyle   = createDataStyle(workbook);
             CellStyle totalStyle  = createTotalStyle(workbook);
 
-            // ── Wiersz nagłówkowy ──────────────────────────────────────────
             Row headerRow = sheet.createRow(0);
             createStyledCell(headerRow, 0, "Pracownik", headerStyle);
 
@@ -88,7 +87,6 @@ public class ExcelExportFromDatabase {
             createStyledCell(headerRow, colIdx++, "WEEKENDY",  headerStyle);
             createStyledCell(headerRow, colIdx,   "URLOP",     headerStyle);
 
-            // ── Wiersz z nazwami dni tygodnia ──────────────────────────────
             Row dowRow = sheet.createRow(1);
             dowRow.createCell(0).setCellStyle(dataStyle);
             colIdx = 1;
@@ -99,7 +97,6 @@ public class ExcelExportFromDatabase {
                 cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, null));
             }
 
-            // ── Wiersze pracowników ────────────────────────────────────────
             int rowNum = 2;
             for (Long empId : employeeIds) {
                 Map<Integer, ScheduleDetails> dayMap = empDayMap.get(empId);
@@ -147,7 +144,6 @@ public class ExcelExportFromDatabase {
 
                     cell.setCellStyle(determineCellStyle(workbook, dataStyle, date, code));
 
-                    // ── Statystyki godzinowe ───────────────────────────────
                     switch (code) {
                         case WORK, WORK_BY_PROPOSAL -> {
                             BigDecimal shiftHours = computeShiftHours(
@@ -159,7 +155,6 @@ public class ExcelExportFromDatabase {
                             if (isWeekend) weekendWorkDays++;
                         }
                         case VACATION, SICK_LEAVE -> {
-                            // Godziny urlopowe/chorobowe z ShiftTypeConfig.defaultHours
                             BigDecimal defaultH = detail.getShiftTypeConfig().getDefaultHours();
                             if (defaultH != null) {
                                 totalHours = totalHours.add(defaultH);
@@ -196,8 +191,6 @@ public class ExcelExportFromDatabase {
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private BigDecimal computeShiftHours(LocalTime start, LocalTime end) {
         if (start == null || end == null) return BigDecimal.ZERO;
         if (start.equals(LocalTime.MIDNIGHT) && end.equals(LocalTime.MIDNIGHT)) return BigDecimal.ZERO;
@@ -214,11 +207,6 @@ public class ExcelExportFromDatabase {
         cell.setCellStyle(style);
     }
 
-    /**
-     * Wyznacza styl komórki — priorytet kolorów taki jak w oryginalnym ExcelExport:
-     * weekend/święto → warehouse → proposal → vacation → credit → checkout → openClose → delegation
-     * ShiftCode null = brak wpisu w bazie (traktowany jak weekend/zwykły dzień)
-     */
     private CellStyle determineCellStyle(Workbook workbook, CellStyle base,
                                          LocalDate date, ShiftCode code) {
         IndexedColors color = null;

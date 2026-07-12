@@ -38,7 +38,13 @@ class EmployeeMonthlyHoursConfirmationServiceImpl implements EmployeeMonthlyHour
     public List<EmployeeHoursConfirmationDTO> getHoursConfirmationForMonth(Long storeId, Integer year, Integer month) {
         verifyLoggedUserAccessToStore(storeId);
 
-        List<Employee> employees = employeeService.findAllStoreActiveEmployees(storeId);
+        // Magazynier ma osobny generator (WarehousemanScheduleGenerator) i nie liczy się
+        // do wspólnego draftu godzinowego sklepu - isSpecial liczy się normalnie, bo mimo
+        // że ma osobny matcher (SpecialEmployeesShiftMatcher), nadal konsumuje wspólny
+        // budżet godzin rozliczeniowych.
+        List<Employee> employees = employeeService.findAllStoreActiveEmployees(storeId).stream()
+                .filter(employee -> !employee.isWarehouseman())
+                .toList();
 
         Map<Long, EmployeeMonthlyHoursConfirmation> existingByEmployeeId = repository
                 .findAllByStore_IdAndYearAndMonth(storeId, year, month).stream()

@@ -15,6 +15,7 @@ import online.stworzgrafik.StworzGrafik.shift.ShiftBuilder;
 import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftTypeConfigService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.DTO.StoreNameAndCodeDTO;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.AppUserService;
@@ -60,7 +61,9 @@ public class AppInitializer implements CommandLineRunner{
     }
 
     private void createStore() {
-        storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Gościńczyk 2, 24-100 Puławy", 3L));
+        if (!storeService.existsByNameAndCode(new StoreNameAndCodeDTO("PUŁAWY","F7"))) {
+            storeService.createStore(new CreateStoreDTO("PUŁAWY", "F7", "Gościńczyk 2, 24-100 Puławy", 3L));
+        }
     }
 
     private void createStoreEmployees(Long storeId){
@@ -174,6 +177,11 @@ public class AppInitializer implements CommandLineRunner{
 
 
     private void generateAllFifteenMinuteShifts() {
+        if (shiftEntityService.count() > 0) {
+            log.info("Shifts already seeded ({}), skipping generateAllFifteenMinuteShifts", shiftEntityService.count());
+            return;
+        }
+
         List<Shift> shifts = new ArrayList<>();
         int[] minutes = {0, 15, 30, 45};
 
