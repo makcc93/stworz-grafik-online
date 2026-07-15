@@ -373,7 +373,7 @@ class ScheduleControllerTest {
         String expectedUrl = "https://r2.example.com/presigned/export.xlsx";
         String expectedFilename = "Grafik_";
 
-        when(r2StorageService.getPresignedUrl(anyString())).thenReturn(expectedUrl);
+        when(r2StorageService.getPresignedUrl(anyString(), anyString())).thenReturn(expectedUrl);
 
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/schedules/" + scheduleId + "/export"))
                 .andDo(print())
@@ -393,7 +393,7 @@ class ScheduleControllerTest {
         when(excelExportFromDatabase.export(storeId, scheduleId))
                 .thenThrow(new IOException("Błąd zapisu arkusza"));
 
-        when(r2StorageService.getPresignedUrl(anyString()))
+        when(r2StorageService.getPresignedUrl(anyString(),anyString()))
                 .thenThrow(new RuntimeException("Błąd generowania pliku Excel"));
 
         mockMvc.perform(get("/api/stores/" + storeId + "/schedules/" + scheduleId + "/export"))
@@ -405,7 +405,7 @@ class ScheduleControllerTest {
     void exportPdfSchedule_workingTest() throws Exception {
         String expectedUrl = "https://r2.example.com/presigned/export.pdf";
 
-        when(r2StorageService.getPresignedUrl(anyString())).thenReturn(expectedUrl);
+        when(r2StorageService.getPresignedUrl(anyString(), anyString())).thenReturn(expectedUrl);
 
         MvcResult mvcResult = mockMvc.perform(get("/api/stores/" + storeId + "/schedules/" + scheduleId + "/exportPdf"))
                 .andDo(print())
@@ -425,7 +425,7 @@ class ScheduleControllerTest {
                 .thenThrow(new IOException("Błąd zapisu PDF"));
 
         // analogicznie do excel — exportPdf nie woła pdfExport bezpośrednio
-        when(r2StorageService.getPresignedUrl(anyString()))
+        when(r2StorageService.getPresignedUrl(anyString(),anyString()))
                 .thenThrow(new RuntimeException("Błąd generowania pliku PDF"));
 
         mockMvc.perform(get("/api/stores/" + storeId + "/schedules/" + scheduleId + "/exportPdf"))
