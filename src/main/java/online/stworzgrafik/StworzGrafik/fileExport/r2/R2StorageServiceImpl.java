@@ -51,10 +51,12 @@ class R2StorageServiceImpl implements R2StorageService{
     }
 
     @Override
-    public String getPresignedUrl(String key) {
+    public String getPresignedUrl(String key, String filename) {
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(expiryMinutes))
-                .getObjectRequest(r -> r.bucket(bucket).key(key))
+                .getObjectRequest(r -> r.bucket(bucket)
+                        .key(key)
+                        .responseContentDisposition("attachment; filename=\"" + filename + "\""))
                 .build();
 
         return r2Presigner.presignGetObject(presignRequest).url().toString();

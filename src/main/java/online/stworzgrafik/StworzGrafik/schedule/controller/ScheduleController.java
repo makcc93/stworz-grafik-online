@@ -1,9 +1,9 @@
 package online.stworzgrafik.StworzGrafik.schedule.controller;
 
 import jakarta.validation.Valid;
-import jdk.jfr.ContentType;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExportFromDatabase;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
 import online.stworzgrafik.StworzGrafik.fileExport.r2.DTO.ExportUrlDTO;
 import online.stworzgrafik.StworzGrafik.fileExport.r2.R2StorageService;
@@ -11,21 +11,16 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
-import online.stworzgrafik.StworzGrafik.fileExport.ExcelExportFromDatabase;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleService;
 import online.stworzgrafik.StworzGrafik.schedule.generator.ScheduleGeneratorService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api")
@@ -92,13 +87,11 @@ class ScheduleController {
             ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
 
             byte[] excelBytes = scheduleGeneratorService.generateSchedule(storeId, scheduleId);
-            String excelFile = excelFilename(schedule);
-            String excelKey = exportKey(storeId, scheduleId, excelFile);
+            String excelKey = exportKey(storeId, scheduleId, "xlsx");
             r2StorageService.uploadAndPresign(excelBytes, excelKey, XLSX_CONTENT_TYPE);
 
             byte[] pdfBytes = pdfExport.export(storeId, scheduleId);
-            String pdfFile = pdfFilename(schedule);
-            String pdfKey = exportKey(storeId, scheduleId, pdfFile);
+            String pdfKey = exportKey(storeId, scheduleId, "pdf");
             r2StorageService.uploadAndPresign(pdfBytes, pdfKey, PDF_CONTENT_TYPE);
 
             return ResponseEntity.ok().build();
@@ -112,9 +105,9 @@ class ScheduleController {
     ResponseEntity<ExportUrlDTO> exportSchedule(@PathVariable Long storeId, @PathVariable Long scheduleId) {
         ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
         String filename = excelFilename(schedule);
-        String key = exportKey(storeId, scheduleId, filename);
+        String key = exportKey(storeId, scheduleId, "xlsx");
 
-        String url = r2StorageService.getPresignedUrl(key);
+        String url = r2StorageService.getPresignedUrl(key, filename);
         return ResponseEntity.ok(new ExportUrlDTO(url, filename));
     }
 
@@ -123,9 +116,9 @@ class ScheduleController {
     ResponseEntity<ExportUrlDTO> exportPdfSchedule(@PathVariable Long storeId, @PathVariable Long scheduleId) {
         ResponseScheduleDTO schedule = scheduleService.findById(storeId, scheduleId);
         String filename = pdfFilename(schedule);
-        String key = exportKey(storeId, scheduleId, filename);
+        String key = exportKey(storeId, scheduleId, "pdf");
 
-        String url = r2StorageService.getPresignedUrl(key);
+        String url = r2StorageService.getPresignedUrl(key, filename);
         return ResponseEntity.ok(new ExportUrlDTO(url, filename));
     }
 
@@ -152,7 +145,7 @@ class ScheduleController {
                 schedule.scheduleStatusName();
     }
 
-    private String exportKey(Long storeId, Long scheduleId, String filename) {
-        return "exports/" + storeId + "/" + scheduleId + "/" + filename;
+    private String exportKey(Long storeId, Long scheduleId, String extension) {
+        return "exports/" + storeId + "/" + scheduleId + "/schedule." + extension;
     }
 }
