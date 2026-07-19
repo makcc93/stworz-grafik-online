@@ -38,6 +38,7 @@ public class TestScheduleGeneratorContext {
     private Map<Employee, int[]> monthlyEmployeesDelegation = new HashMap<>();
     private Map<Employee, BigDecimal> employeeHours = new HashMap<>();
     private Map<Employee, BigDecimal> employeeHoursLimit = new HashMap<>();
+    private Map<Employee, BigDecimal> employeeDailyNorm = new HashMap<>();
     private Map<Employee, Integer> workingOnWeekendCount = new HashMap<>();
     private Map<Employee, Integer> workingDaysCount = new HashMap<>();
     private Map<Employee, Integer> vacationDaysCount = new HashMap<>();
@@ -244,6 +245,7 @@ public class TestScheduleGeneratorContext {
                 monthlyEmployeesDelegation,
                 employeeHours,
                 employeeHoursLimit,
+                employeeDailyNorm,
                 isLastMonthOfPeriod,
                 workingOnWeekendCount,
                 workingDaysCount,

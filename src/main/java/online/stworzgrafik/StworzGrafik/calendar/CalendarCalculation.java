@@ -88,7 +88,7 @@ public class CalendarCalculation {
 
         return norm;
     }
-    
+
     public BigDecimal getDailyNormForEmployee(Employee employee) {
         BigDecimal baseDailyNorm = (Boolean.TRUE.equals(employee.getIsSpecial()) && employee.getSpecialWorkNorm() != null)
                 ? employee.getSpecialWorkNorm().getMaxDailyHours()

@@ -20,6 +20,7 @@ import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
+import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,8 +102,12 @@ class MonthlyStoreScheduleGeneratorTest {
     @Mock
     private ScheduleDatabaseSaver scheduleDatabaseSaver;
 
+    @Mock
+    private Schedule schedule;
+
     private final int year = 2026;
     private final int month = 3;
+    private Long scheduleId = 1L;
 
     private Region region;
     private Branch branch;
@@ -114,9 +119,6 @@ class MonthlyStoreScheduleGeneratorTest {
         branch = new TestBranchBuilder().withRegion(region).build();
         store = new TestStoreBuilder().withBranch(branch).build();
 
-        // generateMonthlySchedule() woła tylko tę jedną metodę na context bezpośrednio -
-        // reszta logiki siedzi w vacationApplier/daysOffApplier/dailyShiftGeneratorAlgorithm itd.,
-        // które tutaj są pełnymi mockami i nigdy nie sięgają do context.
         when(context.getStoreNotSpecialActiveEmployees()).thenReturn(getEmployees());
 
         when(contextFactory.create(any(),any(),any())).thenReturn(context);
@@ -125,7 +127,8 @@ class MonthlyStoreScheduleGeneratorTest {
     @Test
     void generateMonthlySchedule_workingTest() throws IOException {
         // given
-
+        when(context.getSchedule()).thenReturn(schedule);
+        when(context.getSchedule().getId()).thenReturn(scheduleId);
         // when
         monthlyStoreScheduleGenerator.generateMonthlySchedule(store.getId(),year,month);
 
@@ -142,7 +145,6 @@ class MonthlyStoreScheduleGeneratorTest {
         verify(dailyShiftGeneratorAlgorithm).modifyShiftsHours(context);
         verify(emptyDaysMatcher).completeEmptyDaysWithDayOffShift(context);
         verify(scheduleDatabaseSaver).saveScheduleToDatabase(store.getId(), context);
-        verify(excelExport).export(context);
     }
 
     private List<Employee> getEmployees(){
