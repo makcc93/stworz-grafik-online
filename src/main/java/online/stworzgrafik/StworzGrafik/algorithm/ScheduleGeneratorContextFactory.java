@@ -84,6 +84,7 @@ public class ScheduleGeneratorContextFactory {
                 .monthlyEmployeesDelegation(getDelegation(storeId,year,month))
                 .employeeHours(new HashMap<>())
                 .employeeHoursLimit(getEmployeeHoursLimit(storeId, year, month, isLastMonthOfPeriod))
+                .employeeDailyNorm(getEmployeeDailyNorm(storeId))
                 .lastMonthOfPeriod(isLastMonthOfPeriod)
                 .workingDaysCount(new HashMap<>())
                 .workingOnWeekendCount(new HashMap<>())
@@ -144,6 +145,18 @@ public class ScheduleGeneratorContextFactory {
         }
 
         return hoursLimit;
+    }
+
+    private Map<Employee, BigDecimal> getEmployeeDailyNorm(Long storeId){
+        List<Employee> employees = employeeEntityService.findAllStoreActiveEmployees(storeId);
+
+        Map<Employee, BigDecimal> dailyNorm = new HashMap<>();
+
+        for (Employee employee : employees){
+            dailyNorm.put(employee, calendarCalculation.getDailyNormForEmployee(employee));
+        }
+
+        return dailyNorm;
     }
 
     private List<Employee> getNotSpecialActiveEmployees(Long storeId){

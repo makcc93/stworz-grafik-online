@@ -44,13 +44,13 @@ public class CalendarCalculation {
 
         while (date.getMonthValue() == month) {
             if (date.getDayOfWeek() != DayOfWeek.SATURDAY &&
-                date.getDayOfWeek() != DayOfWeek.SUNDAY &&
-                !holidayManager.isHoliday(date)) {
+                    date.getDayOfWeek() != DayOfWeek.SUNDAY &&
+                    !holidayManager.isHoliday(date)) {
                 monthlyWorkingDays++;
             }
 
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY &&
-                holidayManager.isHoliday(date)){
+                    holidayManager.isHoliday(date)){
                 monthlyWorkingDays--;
             }
 
@@ -68,13 +68,7 @@ public class CalendarCalculation {
 
     public BigDecimal getMonthlyNormForEmployee(int year, int month, Employee employee) {
         BigDecimal baseNorm = BigDecimal.valueOf(getMonthlyStandardWorkingHours(year, month));
-
-        // wymiar etatu
-        int numerator = employee.getEtatNumerator() != null ? employee.getEtatNumerator() : 1;
-        int denominator = employee.getEtatDenominator() != null ? employee.getEtatDenominator() : 1;
-
-        BigDecimal etatMultiplier = BigDecimal.valueOf(numerator)
-                .divide(BigDecimal.valueOf(denominator), 4, RoundingMode.HALF_UP);
+        BigDecimal etatMultiplier = getEtatMultiplier(employee);
 
         BigDecimal norm = baseNorm.multiply(etatMultiplier)
                 .setScale(2, RoundingMode.HALF_UP);
@@ -93,5 +87,23 @@ public class CalendarCalculation {
         }
 
         return norm;
+    }
+    
+    public BigDecimal getDailyNormForEmployee(Employee employee) {
+        BigDecimal baseDailyNorm = (Boolean.TRUE.equals(employee.getIsSpecial()) && employee.getSpecialWorkNorm() != null)
+                ? employee.getSpecialWorkNorm().getMaxDailyHours()
+                : BigDecimal.valueOf(8);
+
+        BigDecimal etatMultiplier = getEtatMultiplier(employee);
+
+        return baseDailyNorm.multiply(etatMultiplier).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal getEtatMultiplier(Employee employee) {
+        int numerator = employee.getEtatNumerator() != null ? employee.getEtatNumerator() : 1;
+        int denominator = employee.getEtatDenominator() != null ? employee.getEtatDenominator() : 1;
+
+        return BigDecimal.valueOf(numerator)
+                .divide(BigDecimal.valueOf(denominator), 4, RoundingMode.HALF_UP);
     }
 }

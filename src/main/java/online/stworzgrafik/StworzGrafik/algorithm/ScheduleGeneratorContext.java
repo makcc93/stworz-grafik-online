@@ -45,6 +45,7 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, int[]> monthlyEmployeesDelegation;
     private final Map<Employee, BigDecimal> employeeHours;
     private final Map<Employee, BigDecimal> employeeHoursLimit;
+    private final Map<Employee, BigDecimal> employeeDailyNorm;
     private final boolean lastMonthOfPeriod;
     private final Map<Employee, Integer> workingOnWeekendCount;
     private final Map<Employee, Integer> workingDaysCount;
@@ -398,8 +399,8 @@ public class ScheduleGeneratorContext {
         BigDecimal currentEmployeeHoursValue = employeeHours.getOrDefault(employee, BigDecimal.ZERO);
 
 
-        BigDecimal oldShiftLengthHours = getShiftLength(oldShift);
-        BigDecimal newShiftLengthHours = getShiftLength(newShift);
+        BigDecimal oldShiftLengthHours = getEffectiveShiftHours(employee, oldShift);
+        BigDecimal newShiftLengthHours = getEffectiveShiftHours(employee, newShift);
 
         BigDecimal shiftHoursDifference = newShiftLengthHours.subtract(oldShiftLengthHours);
 
@@ -410,12 +411,31 @@ public class ScheduleGeneratorContext {
     }
 
     private void addEmployeeHours(Employee employee, Shift shift){
-        BigDecimal shiftHours = getShiftLength(shift);
+        BigDecimal shiftHours = getEffectiveShiftHours(employee, shift);
 
         BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
         BigDecimal newValueOfEmployeeHours = employeeHoursValue.add(shiftHours);
 
         employeeHours.put(employee,newValueOfEmployeeHours);
+    }
+
+    /**
+     * Zwraca liczbę godzin, jaką dana zmiana wnosi do sumy godzin pracownika.
+     * Dla zmian-znaczników urlopu i delegacji jest to indywidualna norma dzienna
+     * pracownika (norma podstawowa lub własna x wymiar etatu), a nie sztywna
+     * długość znacznika (00:00-08:00 / 00:15-08:15), która była jednakowa dla
+     * wszystkich pracowników niezależnie od wymiaru etatu czy własnej normy.
+     */
+    private BigDecimal getEffectiveShiftHours(Employee employee, Shift shift){
+        if (isVacationOrDelegationShift(shift)){
+            return employeeDailyNorm.getOrDefault(employee, getShiftLength(shift));
+        }
+
+        return getShiftLength(shift);
+    }
+
+    private boolean isVacationOrDelegationShift(Shift shift){
+        return shift.equals(this.defaultVacationShift) || shift.equals(this.defaultDelegationShift);
     }
 
     private void addEmployeeWorkingOnWeekend(Employee employee,Shift shift, DayOfWeek dayOfWeek){
