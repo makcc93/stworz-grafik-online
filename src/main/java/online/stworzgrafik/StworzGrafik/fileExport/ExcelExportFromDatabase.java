@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.fileExport;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
@@ -37,6 +38,7 @@ public class ExcelExportFromDatabase {
     private final HolidayManager holidayManager;
     private final ScheduleEntityService scheduleEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
+    private final CalendarCalculation calendarCalculation;
 
     public byte[] export(Long storeId, Long scheduleId) throws IOException {
         Schedule schedule = scheduleEntityService.findEntityById(scheduleId);
@@ -119,7 +121,7 @@ public class ExcelExportFromDatabase {
                 for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                     LocalDate date    = LocalDate.of(year, month, day);
                     boolean isWeekend = date.getDayOfWeek() == DayOfWeek.SATURDAY
-                                     || date.getDayOfWeek() == DayOfWeek.SUNDAY;
+                            || date.getDayOfWeek() == DayOfWeek.SUNDAY;
 
                     Cell cell = row.createCell(colIdx++);
                     ScheduleDetails detail = dayMap.get(day);
@@ -154,14 +156,23 @@ public class ExcelExportFromDatabase {
                             workDays++;
                             if (isWeekend) weekendWorkDays++;
                         }
-                        case VACATION, SICK_LEAVE -> {
+                        case VACATION, DELEGATION -> {
+                            // Urlop i delegacja wnoszą do grafiku tyle godzin, ile wynosi
+                            // indywidualna norma dzienna pracownika (norma bazowa lub własna,
+                            // pomnożona przez wymiar etatu) — a nie sztywną wartość defaultHours
+                            // z konfiguracji typu zmiany (jednakową dla wszystkich pracowników)
+                            // ani, w przypadku delegacji, zero godzin.
+                            BigDecimal dailyNorm = calendarCalculation.getDailyNormForEmployee(detail.getEmployee());
+                            totalHours = totalHours.add(dailyNorm);
+                            if (code == ShiftCode.VACATION) vacationDays++;
+                        }
+                        case SICK_LEAVE -> {
                             BigDecimal defaultH = detail.getShiftTypeConfig().getDefaultHours();
                             if (defaultH != null) {
                                 totalHours = totalHours.add(defaultH);
                             }
-                            if (code == ShiftCode.VACATION) vacationDays++;
                         }
-                        default -> { /* DAY_OFF, DELEGATION — nie liczą do godzin */ }
+                        default -> { /* DAY_OFF — nie liczy do godzin */ }
                     }
                 }
 

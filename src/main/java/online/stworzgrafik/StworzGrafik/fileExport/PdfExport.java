@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.fileExport;
 
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
@@ -33,6 +34,7 @@ public class PdfExport {
     private final HolidayManager holidayManager;
     private final ScheduleEntityService scheduleEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
+    private final CalendarCalculation calendarCalculation;
 
     // ── Kolory spójne z ExcelExportFromDatabase ───────────────────────────
     private static final Color COLOR_WEEKEND    = new Color(192, 192, 192); // GREY_25_PERCENT
@@ -183,12 +185,19 @@ public class PdfExport {
                                 workDays++;
                                 if (isWeekend) weekendWorkDays++;
                             }
-                            case VACATION, SICK_LEAVE -> {
-                                BigDecimal defaultH = detail.getShiftTypeConfig().getDefaultHours();
-                                if (defaultH != null) totalHours = totalHours.add(defaultH);
+                            case VACATION, DELEGATION -> {
+                                // Urlop i delegacja wnoszą tyle godzin, ile wynosi indywidualna
+                                // norma dzienna pracownika (norma bazowa lub własna x wymiar etatu),
+                                // a nie sztywna wartość defaultHours ani (dla delegacji) zero godzin.
+                                BigDecimal dailyNorm = calendarCalculation.getDailyNormForEmployee(detail.getEmployee());
+                                totalHours = totalHours.add(dailyNorm);
                                 if (code == ShiftCode.VACATION) vacationDays++;
                             }
-                            default -> { /* DAY_OFF, DELEGATION */ }
+                            case SICK_LEAVE -> {
+                                BigDecimal defaultH = detail.getShiftTypeConfig().getDefaultHours();
+                                if (defaultH != null) totalHours = totalHours.add(defaultH);
+                            }
+                            default -> { /* DAY_OFF — nie liczy do godzin */ }
                         }
                     }
                 }

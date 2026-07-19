@@ -89,6 +89,11 @@ public class CalendarCalculation {
         return norm;
     }
 
+    /**
+     * Zwraca liczbę godzin, jaką pojedynczy dzień urlopu lub delegacji powinien wnieść
+     * do grafiku danego pracownika: średnia norma dzienna (8h, lub własna norma
+     * pracownika specjalnego z pola maxDailyHours) pomnożona przez wymiar etatu.
+     */
     public BigDecimal getDailyNormForEmployee(Employee employee) {
         BigDecimal baseDailyNorm = (Boolean.TRUE.equals(employee.getIsSpecial()) && employee.getSpecialWorkNorm() != null)
                 ? employee.getSpecialWorkNorm().getMaxDailyHours()
