@@ -647,12 +647,35 @@ public class EmployeeToShiftMatcher {
             return baseComparator;
         }
 
-        // W ostatnim miesiącu okresu rozliczeniowego nie możemy przekraczać indywidualnego
-        // limitu godzin pracownika - w pierwszej kolejności próbujemy dopasować kogoś,
-        // kto się jeszcze w limicie mieści. Jeśli nikt taki nie jest dostępny, i tak
-        // wybieramy najlepszego kandydata (zmiana musi zostać obsadzona), ale wtedy
-        // whenEmployeeHoursExceeded zarejestruje ostrzeżenie w grafiku.
+        // W ostatnim miesiącu okresu rozliczeniowego liczy się trafienie w indywidualny,
+        // potwierdzony limit/pozostałą liczbę godzin każdego pracownika (patrz
+        // EmployeeMonthlyHoursConfirmation.confirmedHours ustawiane na froncie).
+        //
+        // POPRAWKA: baseComparator sortuje po SUROWYCH, dotychczas przepracowanych
+        // godzinach (rosnąco) - to wyrównuje wszystkich pracowników do tego samego
+        // poziomu godzin, zupełnie IGNORUJĄC że mają różne indywidualne limity.
+        // Właśnie dlatego pracownik z potwierdzonym limitem 195h kończył grafik
+        // z ok. 163h, a inny z limitem 175h - z 183h: algorytm traktował ich tak,
+        // jakby cel był identyczny, zamiast dążyć do wypełnienia w każdym przypadku
+        // WŁASNEGO limitu. Te same "surowe godziny" oznaczają zupełnie inny % realizacji
+        // celu dla osoby z limitem 163h i dla osoby z limitem 195h.
+        //
+        // Dlatego priorytet przy wyborze pracownika do zmiany jest teraz następujący:
+        // 1) kandydaci, którzy jeszcze mieszczą się w swoim limicie, przed tymi,
+        //    którzy go już przekroczyli (bez zmian),
+        // 2) spośród nich ten, komu zostało najwięcej godzin DO WYPRACOWANIA
+        //    względem WŁASNEGO limitu (getRemainingHoursUntilLimit, malejąco) -
+        //    to ta sama logika, która już działa poprawnie w
+        //    HoursSwapperAnalysisStrategy i ShiftSwapperAnalysisStrategy (patrz
+        //    komentarze "ZMIANA" w tamtych klasach) - teraz algorytm dopasowuje
+        //    dobrze od razu, zamiast liczyć wyłącznie na korektę zamianami po fakcie,
+        // 3) dopiero przy remisie (identyczny pozostały zapas godzin) - dotychczasowa
+        //    reguła jako tie-breaker (uczciwość weekendowa / surowe godziny).
+        Comparator<Employee> byRemainingHoursUntilLimitDesc =
+                Comparator.comparing((Employee emp) -> context.getRemainingHoursUntilLimit(emp)).reversed();
+
         return Comparator.<Employee>comparingInt(emp -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1)
+                .thenComparing(byRemainingHoursUntilLimitDesc)
                 .thenComparing(baseComparator);
     }
 
