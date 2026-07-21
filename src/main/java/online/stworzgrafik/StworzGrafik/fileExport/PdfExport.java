@@ -3,12 +3,18 @@ package online.stworzgrafik.StworzGrafik.fileExport;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
+import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.Schedule;
 import online.stworzgrafik.StworzGrafik.schedule.ScheduleEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetails;
 import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
 import online.stworzgrafik.StworzGrafik.schedule.details.DTO.ScheduleDetailsSpecificationDTO;
+import online.stworzgrafik.StworzGrafik.shift.Shift;
 import online.stworzgrafik.StworzGrafik.shift.shiftTypeConfig.ShiftCode;
+import online.stworzgrafik.StworzGrafik.store.Store;
+import online.stworzgrafik.StworzGrafik.store.delivery.DayDeliveryConfig;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
+import online.stworzgrafik.StworzGrafik.store.delivery.StoreWeeklyDeliverySchedule;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.*;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +48,7 @@ public class PdfExport {
     private static final Color COLOR_VACATION   = new Color(46, 139, 87);   // SEA_GREEN
     private static final Color COLOR_SICK_LEAVE = new Color(255, 255, 153); // LIGHT_YELLOW
     private static final Color COLOR_DELEGATION = new Color(75, 0, 130);    // INDIGO
+    private static final Color COLOR_DELIVERY   = new Color(255, 255, 0);   // YELLOW — osoba robiąca dostawę
 
     private static final float TITLE_SIZE  = 11f;
     private static final float HDR_SIZE    = 6.5f;
@@ -80,6 +87,10 @@ public class PdfExport {
             int day = d.getDate().getDayOfMonth();
             empDayMap.get(d.getEmployee().getId()).put(day, d);
         }
+
+        // Mapa: dzień → id pracownika, który tego dnia robi dostawę
+        // (magazynier, albo — gdy magazynier jest nieobecny — osoba, która go zastępuje)
+        Map<LocalDate, Long> deliveryAssignments = computeDeliveryAssignments(schedule.getStore(), yearMonth, allDetails);
 
         // ── Budowanie PDF ─────────────────────────────────────────────────
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -171,7 +182,8 @@ public class PdfExport {
                         }
                     }
 
-                    Color bg = computeCellBackground(date, code);
+                    boolean isDelivery = empId.equals(deliveryAssignments.get(date));
+                    Color bg = computeCellBackground(date, code, isDelivery);
                     mainTable.addCell(dataCell(cellText, dataFont, bg));
 
                     // Statystyki
@@ -224,6 +236,7 @@ public class PdfExport {
             addLegendEntry(legTable, "PROPOZYCJA PRAC.",  COLOR_PROPOSAL,   legendFont);
             addLegendEntry(legTable, "URLOP",             COLOR_VACATION,   legendFont);
             addLegendEntry(legTable, "DELEGACJA",         COLOR_DELEGATION, legendFont);
+            addLegendEntry(legTable, "OSOBA ROBIĄCA DOSTAWĘ", COLOR_DELIVERY, legendFont);
             addLegendEntry(legTable, "WEEKEND / ŚWIĘTO",  COLOR_WEEKEND,    legendFont);
 
             legTable.setTotalWidth(150);
@@ -302,7 +315,9 @@ public class PdfExport {
     }
 
     // ── Kolorystyka komórek (taka sama jak w ExcelExportFromDatabase) ──────
-    private Color computeCellBackground(LocalDate date, ShiftCode code) {
+    private Color computeCellBackground(LocalDate date, ShiftCode code, boolean isDelivery) {
+        if (isDelivery) return COLOR_DELIVERY;
+
         boolean isWeekendOrHoliday = date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY
                 || holidayManager.isHoliday(date);
@@ -317,6 +332,83 @@ public class PdfExport {
             };
         }
         return isWeekendOrHoliday ? COLOR_WEEKEND : null;
+    }
+
+    // ── Ustalanie kto danego dnia robi dostawę (magazynier lub jego zastępca) ──
+    private Map<LocalDate, Long> computeDeliveryAssignments(Store store, YearMonth yearMonth,
+                                                            List<ScheduleDetails> allDetails) {
+        Map<LocalDate, Long> result = new HashMap<>();
+        if (store == null) return result;
+
+        StoreDelivery storeDelivery = store.getDelivery();
+        if (storeDelivery == null || !Boolean.TRUE.equals(storeDelivery.getHasDedicatedWarehouseman())) {
+            return result;
+        }
+
+        Employee warehouseman = storeDelivery.getPrimaryEmployee();
+        StoreWeeklyDeliverySchedule weekly = storeDelivery.getStoreWeeklyDeliverySchedule();
+        if (warehouseman == null || weekly == null || weekly.getDeliverySchedule() == null) {
+            return result;
+        }
+
+        Map<LocalDate, List<ScheduleDetails>> byDate = allDetails.stream()
+                .collect(Collectors.groupingBy(ScheduleDetails::getDate));
+
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), day);
+            DayDeliveryConfig config = weekly.getDeliverySchedule().get(date.getDayOfWeek());
+            if (config == null || !config.hasDelivery()) continue;
+
+            int[] startEnd = startEndHoursFromArray(config.shiftAsArray());
+            if (startEnd == null) continue;
+
+            List<ScheduleDetails> dayDetails = byDate.getOrDefault(date, List.of());
+
+            ScheduleDetails warehousemanEntry = dayDetails.stream()
+                    .filter(d -> d.getEmployee().getId().equals(warehouseman.getId()))
+                    .findFirst().orElse(null);
+
+            if (warehousemanEntry != null
+                    && isWorkingShift(warehousemanEntry.getShiftTypeConfig().getCode())
+                    && matchesDeliveryHours(warehousemanEntry.getShift(), startEnd)) {
+                result.put(date, warehouseman.getId());
+                continue;
+            }
+
+            // Magazynier nie pracuje tego dnia na dostawie — szukamy, kto go zastępuje
+            dayDetails.stream()
+                    .filter(d -> !d.getEmployee().getId().equals(warehouseman.getId()))
+                    .filter(d -> d.getEmployee().isCanOperateDelivery())
+                    .filter(d -> isWorkingShift(d.getShiftTypeConfig().getCode()))
+                    .filter(d -> matchesDeliveryHours(d.getShift(), startEnd))
+                    .findFirst()
+                    .ifPresent(d -> result.put(date, d.getEmployee().getId()));
+        }
+
+        return result;
+    }
+
+    private boolean isWorkingShift(ShiftCode code) {
+        return code == ShiftCode.WORK || code == ShiftCode.WORK_BY_PROPOSAL;
+    }
+
+    private boolean matchesDeliveryHours(Shift shift, int[] startEnd) {
+        if (shift == null || shift.getStartHour() == null || shift.getEndHour() == null) return false;
+        return shift.getStartHour().getHour() == startEnd[0] && shift.getEndHour().getHour() == startEnd[1];
+    }
+
+    private int[] startEndHoursFromArray(int[] shiftAsArray) {
+        if (shiftAsArray == null || shiftAsArray.length != 24) return null;
+        int startHour = -1;
+        int endHour = 0;
+        for (int i = 0; i < 24; i++) {
+            if (shiftAsArray[i] != 0) { startHour = i; break; }
+        }
+        if (startHour == -1) return null; // brak zmiany dostawy tego dnia
+        for (int i = 23; i >= 0; i--) {
+            if (shiftAsArray[i] != 0) { endHour = (i + 1) % 24; break; }
+        }
+        return new int[]{startHour, endHour};
     }
 
     // ── Narzędzia formatowania ──────────────────────────────────────────────
