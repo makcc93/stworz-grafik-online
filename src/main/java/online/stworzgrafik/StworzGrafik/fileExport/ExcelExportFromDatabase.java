@@ -72,8 +72,6 @@ public class ExcelExportFromDatabase {
             empDayMap.get(d.getEmployee().getId()).put(day, d);
         }
 
-        // dzień → id pracownika, który tego dnia robi dostawę
-        // (magazynier, albo — gdy magazynier jest nieobecny — osoba, która go zastępuje)
         Map<LocalDate, Long> deliveryAssignments = computeDeliveryAssignments(schedule.getStore(), yearMonth, allDetails);
 
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -168,11 +166,6 @@ public class ExcelExportFromDatabase {
                             if (isWeekend) weekendWorkDays++;
                         }
                         case VACATION, DELEGATION -> {
-                            // Urlop i delegacja wnoszą do grafiku tyle godzin, ile wynosi
-                            // indywidualna norma dzienna pracownika (norma bazowa lub własna,
-                            // pomnożona przez wymiar etatu) — a nie sztywną wartość defaultHours
-                            // z konfiguracji typu zmiany (jednakową dla wszystkich pracowników)
-                            // ani, w przypadku delegacji, zero godzin.
                             BigDecimal dailyNorm = calendarCalculation.getDailyNormForEmployee(detail.getEmployee());
                             totalHours = totalHours.add(dailyNorm);
                             if (code == ShiftCode.VACATION) vacationDays++;

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.employee.workNorm.DTO.CreateSpecialWorkNormDTO;
 import online.stworzgrafik.StworzGrafik.employee.workNorm.DTO.ResponseSpecialWorkNormDTO;
 import online.stworzgrafik.StworzGrafik.employee.workNorm.DTO.UpdateSpecialWorkNormDTO;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,7 +68,14 @@ public class SpecialWorkNormServiceImpl implements SpecialWorkNormService, Speci
     @Transactional
     public void delete(Long id) {
         SpecialWorkNorm norm = getEntityById(id);
-        repository.delete(norm);
+        try {
+            repository.delete(norm);
+            repository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException(
+                    "Nie można usunąć normy '" + norm.getName() + "' — jest wciąż przypisana do co najmniej jednego pracownika. " +
+                            "Zmień najpierw normę u tych pracowników albo dezaktywuj normę zamiast ją usuwać.");
+        }
         log.info("Deleted SpecialWorkNorm id={}", id);
     }
 
