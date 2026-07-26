@@ -28,13 +28,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
         BigDecimal maxHoursDifference = BigDecimal.valueOf(1);
 
-        // === ZMIANA: porównanie WZGLĘDEM indywidualnego limitu (getRemainingHoursUntilLimit),
-        // a nie surowych godzin (context.getEmployeeHours()) - patrz komentarz przy
-        // ScheduleGeneratorContext.getRemainingHoursUntilLimit(). Pracownik z najmniejszym
-        // zapasem do limitu (najmniej "miejsca") ląduje w polu "highest" (bo to on jest
-        // najbardziej wykorzystany), pracownik z największym zapasem - w polu "lowest".
-        // Przy równych limitach matematycznie daje to dokładnie ten sam wynik co poprzednio
-        // (surowe godziny), więc nic się nie zmienia poza ostatnim miesiącem okresu / part-time.
         BigDecimal employeeLowestValueOfWorkingHours = employees.stream()
                 .filter(empl -> !empl.isWarehouseman())
                 .sorted(Comparator.comparing(
@@ -75,8 +68,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 break;
             }
 
-            // === ZMIANA: to samo co w analyze() - porównujemy dystans do limitu
-            // (getRemainingHoursUntilLimit), nie surowe godziny entry.getValue().
             BigDecimal employeeLowestValueOfWorkingHours = context.getEmployeeHours().entrySet().stream()
                     .filter(entry -> !entry.getKey().isWarehouseman())
                     .filter(entry -> !entry.getKey().isCashier())
@@ -152,10 +143,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (employeeShift.size() < 2) continue;
 
-                // === ZMIANA: highestHoursEmployee to teraz pracownik z NAJMNIEJSZYM
-                // zapasem do własnego limitu (najmniej "miejsca" - to on oddaje dłuższą
-                // zmianę), a nie z największymi surowymi godzinami. Sortujemy rosnąco po
-                // getRemainingHoursUntilLimit (pierwszy = najmniejszy zapas).
                 Employee highestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
@@ -168,9 +155,6 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                 Shift highestHoursEmployeeShift = employeeShift.getOrDefault(highestHoursEmployee, context.getDefaultDaysOffShift());
                 BigDecimal highestHoursEmployeeShiftLength = context.getShiftLength(highestHoursEmployeeShift);
 
-                // === ZMIANA: lowestHoursEmployee to pracownik z NAJWIĘKSZYM zapasem do
-                // własnego limitu (najwięcej "miejsca" - to on dostaje dłuższą zmianę).
-                // Sortujemy malejąco po getRemainingHoursUntilLimit (pierwszy = największy zapas).
                 Employee lowestHoursEmployee = employeeHours.entrySet().stream()
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
@@ -185,6 +169,12 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if ((highestHoursEmployeeShiftLength.compareTo(lowestHoursEmployeeShiftLength) > 0) &&
                         (highestEmployeeHoursCount.subtract(lowestEmployeeHoursCount)).compareTo(highestHoursEmployeeShiftLength.subtract(lowestHoursEmployeeShiftLength)) > 0) {
+
+                    boolean swapRespectsRestForBothEmployees =
+                            context.hasMinimumRestForShift(highestHoursEmployee, date, lowestHoursEmployeeShift) &&
+                                    context.hasMinimumRestForShift(lowestHoursEmployee, date, highestHoursEmployeeShift);
+
+                    if (!swapRespectsRestForBothEmployees) continue;
 
                     if (context.isLastMonthOfPeriod() &&
                             context.wouldExceedHoursLimit(lowestHoursEmployee, highestHoursEmployeeShiftLength.subtract(lowestHoursEmployeeShiftLength))) {

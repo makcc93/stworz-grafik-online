@@ -40,12 +40,12 @@ public class ProposalShiftApplier {
                 continue;
             }
 
+            scheduleAnalyzer.analyzeAndResolve(context, date, Collections.emptyList(), Collections.emptyList(), ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
+
             for (Employee employee : employees){
                 if (context.employeeHasProposalShift(employee,date)){
                     if (employeeIsOnVacation(context, employee, date)) continue;
                     if (employeeIsOnDayOff(context, employee, date)) continue;
-
-                    scheduleAnalyzer.analyzeAndResolve(context,date, Collections.emptyList(),Collections.emptyList(), ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
 
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
                     Shift proposalShift = context.findShiftByArray(proposalShiftAsArray);

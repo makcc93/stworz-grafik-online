@@ -1,6 +1,5 @@
 package online.stworzgrafik.StworzGrafik.algorithm.specialEmployees;
 
-import com.mysql.cj.log.Log;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -384,7 +383,7 @@ public class SpecialEmployeesShiftMatcher {
 
     private static boolean employeeHasDayOffProposalInWeekBeforeSaturday(ScheduleGeneratorContext context, Employee employee, LocalDate currentDate) {
         for (int i = 5; i >= 0; i--){
-            if (context.employeeHasProposalDaysOff(employee,currentDate.minusDays(5))){
+            if (context.employeeHasProposalDaysOff(employee,currentDate.minusDays(i))){
                 return true;
             }
         }

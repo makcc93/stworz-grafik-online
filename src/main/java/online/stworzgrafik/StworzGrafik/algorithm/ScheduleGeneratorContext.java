@@ -19,7 +19,9 @@ import online.stworzgrafik.StworzGrafik.store.Store;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -419,13 +421,6 @@ public class ScheduleGeneratorContext {
         employeeHours.put(employee,newValueOfEmployeeHours);
     }
 
-    /**
-     * Zwraca liczbę godzin, jaką dana zmiana wnosi do sumy godzin pracownika.
-     * Dla zmian-znaczników urlopu i delegacji jest to indywidualna norma dzienna
-     * pracownika (norma podstawowa lub własna x wymiar etatu), a nie sztywna
-     * długość znacznika (00:00-08:00 / 00:15-08:15), która była jednakowa dla
-     * wszystkich pracowników niezależnie od wymiaru etatu czy własnej normy.
-     */
     private BigDecimal getEffectiveShiftHours(Employee employee, Shift shift){
         if (isVacationOrDelegationShift(shift)){
             return employeeDailyNorm.getOrDefault(employee, getShiftLength(shift));
@@ -481,5 +476,56 @@ public class ScheduleGeneratorContext {
         if (shift.equals(defaultDelegationShift)) return delegationShiftTypeConfig;
         if (employeeHasProposalShift(employee, date)) return proposalShiftTypeConfig;
         return standardShiftTypeConfig;
+    }
+
+    public static final int MINIMUM_REST_HOURS_BETWEEN_SHIFTS = 11;
+
+    private LocalDateTime shiftStartDateTime(LocalDate date, Shift shift){
+        return LocalDateTime.of(date, shift.getStartHour());
+    }
+
+    private LocalDateTime shiftEndDateTime(LocalDate date, Shift shift){
+        LocalTime endHour = shift.getEndHour();
+
+        if (endHour.equals(LocalTime.MIDNIGHT) && !shift.getStartHour().equals(LocalTime.MIDNIGHT)){
+            return LocalDateTime.of(date.plusDays(1), LocalTime.MIDNIGHT);
+        }
+
+        return LocalDateTime.of(date, endHour);
+    }
+
+    private boolean isRealWorkShift(Shift shift){
+        if (shift.equals(defaultDaysOffShift) || shift.equals(defaultVacationShift) || shift.equals(defaultDelegationShift)){
+            return false;
+        }
+
+        return Arrays.stream(shiftAsArray(shift)).sum() > 0;
+    }
+
+    public long remainingRestHours(Employee employee, LocalDate date, Shift candidateShift){
+        if (!isRealWorkShift(candidateShift)) return Long.MAX_VALUE;
+
+        long minRestHours = Long.MAX_VALUE;
+
+        LocalDateTime candidateStart = shiftStartDateTime(date, candidateShift);
+        LocalDateTime candidateEnd = shiftEndDateTime(date, candidateShift);
+
+        Shift previousDayShift = finalSchedule.getOrDefault(date.minusDays(1), Map.of()).get(employee);
+        if (previousDayShift != null && isRealWorkShift(previousDayShift)){
+            LocalDateTime previousShiftEnd = shiftEndDateTime(date.minusDays(1), previousDayShift);
+            minRestHours = Math.min(minRestHours, Duration.between(previousShiftEnd, candidateStart).toHours());
+        }
+
+        Shift nextDayShift = finalSchedule.getOrDefault(date.plusDays(1), Map.of()).get(employee);
+        if (nextDayShift != null && isRealWorkShift(nextDayShift)){
+            LocalDateTime nextShiftStart = shiftStartDateTime(date.plusDays(1), nextDayShift);
+            minRestHours = Math.min(minRestHours, Duration.between(candidateEnd, nextShiftStart).toHours());
+        }
+
+        return minRestHours;
+    }
+
+    public boolean hasMinimumRestForShift(Employee employee, LocalDate date, Shift candidateShift){
+        return remainingRestHours(employee, date, candidateShift) >= MINIMUM_REST_HOURS_BETWEEN_SHIFTS;
     }
 }

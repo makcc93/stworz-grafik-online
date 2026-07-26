@@ -30,10 +30,6 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
         BigDecimal minHoursDifference = BigDecimal.valueOf(8);
 
-        // === ZMIANA: porównanie WZGLĘDEM indywidualnego limitu (getRemainingHoursUntilLimit),
-        // nie surowych godzin - patrz komentarz przy
-        // ScheduleGeneratorContext.getRemainingHoursUntilLimit() i analogiczna zmiana
-        // w HoursSwapperAnalysisStrategy.
         BigDecimal lowestHours = employees.stream()
                 .filter(e -> !e.isWarehouseman())
                 .map(context::getRemainingHoursUntilLimit)
@@ -113,6 +109,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (highestHoursWorkingManager.isEmpty()) continue;
 
+                Employee highestHoursManager = highestHoursWorkingManager.get();
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursManager);
+
                 Optional<Employee> lowestHoursNotWorkingManager = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOpenCloseStore())
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
@@ -121,6 +120,10 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
+                        // ZMIANA: nie przenosimy zmiany na pracownika, jeśli złamałoby to jego
+                        // 11h odpoczynek dobowy względem sąsiednich dni (patrz
+                        // ScheduleGeneratorContext.hasMinimumRestForShift).
+                        .filter(entry -> shift != null && context.hasMinimumRestForShift(entry.getKey(), date, shift))
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
                         ).reversed())
@@ -129,9 +132,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestHoursNotWorkingManager.isEmpty()) continue;
 
-                Employee highestHoursManager = highestHoursWorkingManager.get();
                 Employee lowestHoursManager = lowestHoursNotWorkingManager.get();
-                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursManager);
                 BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursManager, BigDecimal.ZERO);
                 BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursManager, BigDecimal.ZERO);
 
@@ -179,6 +180,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (highestHoursWorkingCreditEmployee.isEmpty()) continue;
 
+                Employee highestHoursCreditEmployee = highestHoursWorkingCreditEmployee.get();
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCreditEmployee);
+
                 Optional<Employee> lowestHoursNotWorkingCreditEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCredit())
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
@@ -187,6 +191,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
+                        // ZMIANA: patrz komentarz w swapManagerShifts - nie łamiemy 11h odpoczynku.
+                        .filter(entry -> shift != null && context.hasMinimumRestForShift(entry.getKey(), date, shift))
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
                         ).reversed())
@@ -195,9 +201,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestHoursNotWorkingCreditEmployee.isEmpty()) continue;
 
-                Employee highestHoursCreditEmployee = highestHoursWorkingCreditEmployee.get();
                 Employee lowestHoursCreditEmployee = lowestHoursNotWorkingCreditEmployee.get();
-                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCreditEmployee);
                 BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursCreditEmployee, BigDecimal.ZERO);
                 BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursCreditEmployee, BigDecimal.ZERO);
 
@@ -245,6 +249,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (highestHoursWorkingCheckoutEmployee.isEmpty()) continue;
 
+                Employee highestHoursCheckoutEmployee = highestHoursWorkingCheckoutEmployee.get();
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCheckoutEmployee);
+
                 Optional<Employee> lowestHoursNotWorkingCheckoutEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> entry.getKey().isCanOperateCheckout())
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
@@ -253,6 +260,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
+                        // ZMIANA: patrz komentarz w swapManagerShifts - nie łamiemy 11h odpoczynku.
+                        .filter(entry -> shift != null && context.hasMinimumRestForShift(entry.getKey(), date, shift))
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
                         ).reversed())
@@ -261,9 +270,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestHoursNotWorkingCheckoutEmployee.isEmpty()) continue;
 
-                Employee highestHoursCheckoutEmployee = highestHoursWorkingCheckoutEmployee.get();
                 Employee lowestHoursCheckoutEmployee = lowestHoursNotWorkingCheckoutEmployee.get();
-                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursCheckoutEmployee);
                 BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursCheckoutEmployee, BigDecimal.ZERO);
                 BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursCheckoutEmployee, BigDecimal.ZERO);
 
@@ -310,6 +317,9 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (highestHoursWorkingEmployee.isEmpty()) continue;
 
+                Employee highestHoursEmployee = highestHoursWorkingEmployee.get();
+                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursEmployee);
+
                 Optional<Employee> lowestHoursNotWorkingEmployee = context.getEmployeeHours().entrySet().stream()
                         .filter(entry -> !context.employeeIsWorking(entry.getKey(), date))
                         .filter(entry -> !context.employeeIsOnDelegation(entry.getKey(), date))
@@ -319,6 +329,8 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .filter(entry -> !context.employeeIsOnVacation(entry.getKey(), date))
                         .filter(entry -> !context.employeeHasProposalDaysOff(entry.getKey(), date))
                         .filter(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0) < monthlyMaxWorkingDays)
+                        // ZMIANA: patrz komentarz w swapManagerShifts - nie łamiemy 11h odpoczynku.
+                        .filter(entry -> shift != null && context.hasMinimumRestForShift(entry.getKey(), date, shift))
                         .sorted(Comparator.comparing(
                                 (Map.Entry<Employee, BigDecimal> entry) -> context.getRemainingHoursUntilLimit(entry.getKey())
                         ).reversed())
@@ -327,9 +339,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
 
                 if (lowestHoursNotWorkingEmployee.isEmpty()) continue;
 
-                Employee highestHoursEmployee = highestHoursWorkingEmployee.get();
                 Employee lowestHoursEmployee = lowestHoursNotWorkingEmployee.get();
-                Shift shift = context.getFinalSchedule().getOrDefault(date, Map.of()).get(highestHoursEmployee);
                 BigDecimal highestHours = context.getEmployeeHours().getOrDefault(highestHoursEmployee, BigDecimal.ZERO);
                 BigDecimal lowestHours = context.getEmployeeHours().getOrDefault(lowestHoursEmployee, BigDecimal.ZERO);
 
