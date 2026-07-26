@@ -2,6 +2,7 @@ package online.stworzgrafik.StworzGrafik.algorithm;
 
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalResult;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.TooManyDayOffProposalStrategy;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageType;
@@ -9,8 +10,10 @@ import online.stworzgrafik.StworzGrafik.shift.Shift;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -24,10 +27,15 @@ public class TooManyDayOffProposalStrategyTest {
     @InjectMocks
     private TooManyDayOffProposalStrategy strategy;
 
+    @Mock
+    private CalendarCalculation calendarCalculation;
+
     @Test
     void resolve_employeeWithMostDayOffProposalCountAddToAvailableEmployeeListAndCancelProposal() {
         // given
-        LocalDate date = LocalDate.of(2026, 3, 2);
+        int year = 2026;
+        int month = 3;
+        LocalDate date = LocalDate.of(year, month, 2);
         Employee emp1 = mock(Employee.class);
         Employee emp2 = mock(Employee.class);
         Employee emp3 = mock(Employee.class);
@@ -42,6 +50,18 @@ public class TooManyDayOffProposalStrategyTest {
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
 
+        // --- DODANE STUBY ---
+        when(context.getYear()).thenReturn(year);
+        when(context.getMonth()).thenReturn(month);
+        when(context.getWorkingDaysCount()).thenReturn(Collections.emptyMap()); // zapobiega NPE w getOrDefault
+        when(context.isEmployeeUnderHoursLimit(any(Employee.class))).thenReturn(true); // wszyscy mieszczą się w limicie
+
+        // Ustawiamy różne wartości zapasu godzin, aby emp3 był wybierany jako pierwszy
+        when(context.getRemainingHoursUntilLimit(emp1)).thenReturn(BigDecimal.valueOf(10));
+        when(context.getRemainingHoursUntilLimit(emp2)).thenReturn(BigDecimal.valueOf(10));
+        when(context.getRemainingHoursUntilLimit(emp3)).thenReturn(BigDecimal.valueOf(20));
+        // --------------------
+
         List<Employee> availableEmployees = new ArrayList<>();
         List<Shift> shifts = List.of(mock(Shift.class));
 
@@ -53,6 +73,7 @@ public class TooManyDayOffProposalStrategyTest {
         monthlyEmployeesProposalDayOff.put(emp3, emp3MonthlyDayOffProposal);
 
         when(context.getMonthlyEmployeesProposalDayOff()).thenReturn(monthlyEmployeesProposalDayOff);
+        when(calendarCalculation.getMonthlyMaxWorkingDays(anyInt(), anyInt())).thenReturn(21);
 
         // when
         strategy.resolve(result, context, date);
@@ -71,5 +92,4 @@ public class TooManyDayOffProposalStrategyTest {
 
         verify(context, never()).deleteShiftFromSchedule(eq(date), eq(emp1));
         verify(context, never()).deleteShiftFromSchedule(eq(date), eq(emp2));
-    }
-}
+    }}

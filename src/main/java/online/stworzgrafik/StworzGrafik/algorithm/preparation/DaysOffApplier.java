@@ -38,6 +38,9 @@ public class DaysOffApplier {
             }
 
             for (Employee employee : employeesWithProposalDaysOff){
+                if (context.employeeIsOnDelegation(employee,date)) continue;
+                if (context.employeeIsOnVacation(employee,date)) continue;
+
                 context.registerShiftOnSchedule(date,employee,dayOffShift,date.getDayOfWeek());
             }
         }

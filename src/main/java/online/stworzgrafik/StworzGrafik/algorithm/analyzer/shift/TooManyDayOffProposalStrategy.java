@@ -3,6 +3,7 @@ package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
+import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.schedule.message.DTO.CreateScheduleMessageDTO;
 import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageCode;
@@ -12,12 +13,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
+
+    private final CalendarCalculation calendarCalculation;
 
     @Override
     public ShiftAnalyzeType getSupportedType() {
@@ -48,25 +50,14 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
     }
 
     private boolean cancelProposalDayOffAndAddEmployeeToAvailable(List<Employee> availableEmployees, ScheduleGeneratorContext context, LocalDate day){
-        Map<Employee, Integer> employeeProposalDayOffCount = getEmployeeProposalDayOffCount(context, day, availableEmployees);
+        List<Employee> candidatesWithDayOffProposal = getEmployeesWithDayOffProposal(context, day, availableEmployees);
 
-        LinkedHashMap<Employee, Integer> sortedByProposalsCountDesc = employeeProposalDayOffCount.entrySet().stream()
-                .sorted((key1, key2) -> key2.getValue().compareTo(key1.getValue()))
-                .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                Map.Entry::getValue,
-                                (keyValue1, keyValue2) -> keyValue1,
-                                LinkedHashMap::new
-                        )
-                );
-
-        Optional<Employee> employeeWithHighestProposalsCount = sortedByProposalsCountDesc.keySet().stream().findFirst();
-        if (employeeWithHighestProposalsCount.isEmpty()) {
+        if (candidatesWithDayOffProposal.isEmpty()) {
             context.registerMessageOnSchedule(
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.WARNING,
                             ScheduleMessageCode.NO_AVAILABLE_EMPLOYEE,
-                            "Nie można znaleźć pracownika z największą liczbą propozycji dni wolnych",
+                            "Nie można znaleźć pracownika z propozycją dnia wolnego do anulowania",
                             null,
                             day
                     )
@@ -74,14 +65,36 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
             return false;
         }
 
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
 
-        Employee chosenEmployee = employeeWithHighestProposalsCount.get();
+        Comparator<Employee> byBiggestBufferToLimits = Comparator
+                .comparing((Employee empl) -> context.getRemainingHoursUntilLimit(empl))
+                .reversed()
+                .thenComparing(Comparator.<Employee>comparingInt(
+                        empl -> monthlyMaxWorkingDays - context.getWorkingDaysCount().getOrDefault(empl, 0)
+                ).reversed());
+
+        List<Employee> withinLimits = candidatesWithDayOffProposal.stream()
+                .filter(empl -> context.isEmployeeUnderHoursLimit(empl))
+                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0) < monthlyMaxWorkingDays)
+                .sorted(byBiggestBufferToLimits)
+                .toList();
+
+        boolean limitAlreadyExceeded = withinLimits.isEmpty();
+
+        Employee chosenEmployee = limitAlreadyExceeded
+                ? candidatesWithDayOffProposal.stream().sorted(byBiggestBufferToLimits).findFirst().orElseThrow()
+                : withinLimits.get(0);
 
         context.deleteShiftFromSchedule(day, chosenEmployee);
         context.deleteEmployeeDayOffProposal(day, chosenEmployee);
         availableEmployees.add(chosenEmployee);
 
-        log.info("Propozycja dnia wolnego dla {} {} na dzień {} została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
+        if (limitAlreadyExceeded) {
+            registerLimitViolation(context, day, chosenEmployee, monthlyMaxWorkingDays);
+        }
+
+        log.info("Propozycja dnia wolnego dla {} {} na dzień {} została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma największy zapas do limitu godzin/dni pracy.",
                 chosenEmployee.getFirstName(),
                 chosenEmployee.getLastName(),
                 day);
@@ -95,19 +108,37 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
                                 " " +
                                 chosenEmployee.getLastName() +
                                 " na dzień " + day +
-                                " została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma najwięcej propozycji dni wolnych.",
+                                " została anulowana z powodu zbyt małej liczby dostępnych pracowników. Uzasadnienie: ten pracownik ma największy zapas do limitu godzin/dni pracy.",
                         chosenEmployee.getId(),
                         day
                 )
         );
 
-        log.info("");
         return true;
     }
 
-    private static Map<Employee, Integer> getEmployeeProposalDayOffCount(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees) {
+    private void registerLimitViolation(ScheduleGeneratorContext context, LocalDate day, Employee employee, int monthlyMaxWorkingDays) {
+        boolean hoursExceeded = !context.isEmployeeUnderHoursLimit(employee);
+        boolean daysExceeded = context.getWorkingDaysCount().getOrDefault(employee, 0) >= monthlyMaxWorkingDays;
+        String exceededLimitDescription = hoursExceeded && daysExceeded ? "godzin i dni pracy" : hoursExceeded ? "godzin pracy" : "dni pracy";
+
+        log.warn("Brak pracownika z propozycją dnia wolnego mieszczącego się w limicie godzin/dni pracy w dniu {} - anuluję dzień wolny dla {} {} mimo to (przekroczony limit: {}), żeby nie zostawić zmiany bez obsady",
+                day, employee.getFirstName(), employee.getLastName(), exceededLimitDescription);
+
+        context.registerMessageOnSchedule(new CreateScheduleMessageDTO(
+                ScheduleMessageType.WARNING,
+                daysExceeded ? ScheduleMessageCode.EMPLOYEE_MONTHLY_MAX_WORKING_DAYS_EXCEEDED : ScheduleMessageCode.EMPLOYEE_MONTHLY_SUM_OF_HOURS_EXCEEDED,
+                "Pracownikowi " + employee.getFirstName() + " " + employee.getLastName() +
+                        " anulowano dzień wolny w dniu " + day +
+                        " mimo przekroczonego limitu " + exceededLimitDescription +
+                        " - brak innego dostępnego pracownika z propozycją dnia wolnego mieszczącego się w limicie.",
+                employee.getId(),
+                day));
+    }
+
+    private static List<Employee> getEmployeesWithDayOffProposal(ScheduleGeneratorContext context, LocalDate day, List<Employee> availableEmployees) {
         Map<Employee, int[]> monthlyEmployeesProposalDayOff = context.getMonthlyEmployeesProposalDayOff();
-        Map<Employee, Integer> employeeProposalDayOffCount = new HashMap<>();
+        List<Employee> candidates = new ArrayList<>();
 
         for (Map.Entry<Employee, int[]> entry : monthlyEmployeesProposalDayOff.entrySet()) {
             Employee employee = entry.getKey();
@@ -115,13 +146,8 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
 
             if (availableEmployees.contains(employee) || monthlyProposal[day.getDayOfMonth() - 1] == 0 || employee.isWarehouseman()) continue;
 
-            int proposalsCount = 0;
-            for (int dayValue : monthlyProposal) {
-                proposalsCount += dayValue;
-            }
-
-            employeeProposalDayOffCount.put(employee, proposalsCount);
+            candidates.add(employee);
         }
-        return employeeProposalDayOffCount;
+        return candidates;
     }
 }

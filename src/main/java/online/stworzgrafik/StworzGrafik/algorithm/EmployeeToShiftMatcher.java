@@ -102,7 +102,23 @@ public class EmployeeToShiftMatcher {
                         .filter(empl -> !empl.isCashier())
                         .filter(empl -> !empl.isWarehouseman())
                         .filter(empl -> context.hasMinimumRestForShift(empl, date, shift.get()))
+                        .filter(empl -> isEmployeeWithinHoursAndDaysLimit(context, empl))
                         .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
+
+                if (employee.isEmpty()) {
+                    // Brak kandydata mieszczącego się w limicie godzin/dni pracy, a zachowującego 11h odpoczynku -
+                    // próbujemy mimo to, żeby nie zostawić zmiany bez obsady, ale zgłaszamy to jako naruszenie limitu.
+                    employee = availableEmployees.stream()
+                            .filter(empl -> !empl.isCashier())
+                            .filter(empl -> !empl.isWarehouseman())
+                            .filter(empl -> context.hasMinimumRestForShift(empl, date, shift.get()))
+                            .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
+
+                    employee.ifPresent(empl -> {
+                        whenEmployeeHoursExceeded(context, date, empl);
+                        whenEmployeeWorkingDaysExceeded(context, date, empl);
+                    });
+                }
 
                 if (employee.isEmpty()) {
                     // Brak kandydata zachowującego 11h odpoczynku dobowego - próbujemy mimo to,
@@ -112,7 +128,11 @@ public class EmployeeToShiftMatcher {
                             .filter(empl -> !empl.isWarehouseman())
                             .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date));
 
-                    employee.ifPresent(empl -> registerMinimumRestViolation(context, date, empl, shift.get()));
+                    employee.ifPresent(empl -> {
+                        registerMinimumRestViolation(context, date, empl, shift.get());
+                        whenEmployeeHoursExceeded(context, date, empl);
+                        whenEmployeeWorkingDaysExceeded(context, date, empl);
+                    });
                 }
 
 
@@ -129,9 +149,6 @@ public class EmployeeToShiftMatcher {
                     );
                     break;
                 }
-
-                whenEmployeeHoursExceeded(context, date, employee.get());
-                whenEmployeeWorkingDaysExceeded(context, date, employee.get());
 
                 context.registerShiftOnSchedule(date, employee.get(), shift.get(), date.getDayOfWeek());
                 shiftsSorted.remove(shift.get());
@@ -250,9 +267,6 @@ public class EmployeeToShiftMatcher {
 
         Employee employeeToOperateCheckout = employeeToOperateAfternoonCheckout.get();
 
-        whenEmployeeHoursExceeded(context, date, employeeToOperateCheckout);
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCheckout);
-
         context.registerShiftOnSchedule(date, employeeToOperateCheckout, checkoutShift,date.getDayOfWeek());
 
         shiftsSorted.remove(checkoutShift);
@@ -296,9 +310,6 @@ public class EmployeeToShiftMatcher {
         }
 
         Employee employeeToOperateCredit = employeeToOperateAfternoonCredit.get();
-
-        whenEmployeeHoursExceeded(context, date, employeeToOperateCredit);
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCredit);
 
         context.registerShiftOnSchedule(date, employeeToOperateCredit, creditShift,date.getDayOfWeek());
 
@@ -344,9 +355,6 @@ public class EmployeeToShiftMatcher {
 
         Employee employeeToOperateCheckout = employeeToOperateMorningCheckout.get();
 
-        whenEmployeeHoursExceeded(context, date, employeeToOperateCheckout);
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCheckout);
-
         context.registerShiftOnSchedule(date, employeeToOperateCheckout,checkoutShift,date.getDayOfWeek());
 
         shiftsSorted.remove(checkoutShift);
@@ -390,9 +398,6 @@ public class EmployeeToShiftMatcher {
         }
 
         Employee employeeToOperateCredit = employeeToOperateMorningCredit.get();
-
-        whenEmployeeHoursExceeded(context, date, employeeToOperateCredit);
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToOperateCredit);
 
         context.registerShiftOnSchedule(date, employeeToOperateCredit,creditShift,date.getDayOfWeek());
 
@@ -513,9 +518,6 @@ public class EmployeeToShiftMatcher {
         Employee employeeClosingStore = employeeToCloseStore.get();
         Shift closingShift = closeShift.get();
 
-        whenEmployeeHoursExceeded(context, date, employeeClosingStore);
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToCloseStore.get());
-
         context.registerShiftOnSchedule(date,employeeClosingStore,closingShift,date.getDayOfWeek());
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
@@ -634,9 +636,6 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
-        whenEmployeeHoursExceeded(context, date, employeeToOpenStore.get());
-        whenEmployeeWorkingDaysExceeded(context, date, employeeToOpenStore.get());
-
         context.registerShiftOnSchedule(date,employeeToOpenStore.get(),shiftToOpenStore,date.getDayOfWeek());
         shiftsSorted.remove(shiftToOpenStore);
         availableEmployees.remove(employeeToOpenStore.get());
@@ -675,17 +674,42 @@ public class EmployeeToShiftMatcher {
         Optional<Employee> compliant = availableEmployees.stream()
                 .filter(roleFilter)
                 .filter(empl -> context.hasMinimumRestForShift(empl, date, candidateShift))
+                .filter(empl -> isEmployeeWithinHoursAndDaysLimit(context, empl))
                 .min(comparator);
 
         if (compliant.isPresent()) return compliant;
+
+        Optional<Employee> restCompliantOnly = availableEmployees.stream()
+                .filter(roleFilter)
+                .filter(empl -> context.hasMinimumRestForShift(empl, date, candidateShift))
+                .min(comparator);
+
+        if (restCompliantOnly.isPresent()) {
+            Employee employee = restCompliantOnly.get();
+            whenEmployeeHoursExceeded(context, date, employee);
+            whenEmployeeWorkingDaysExceeded(context, date, employee);
+            return restCompliantOnly;
+        }
 
         Optional<Employee> fallback = availableEmployees.stream()
                 .filter(roleFilter)
                 .min(comparator);
 
-        fallback.ifPresent(employee -> registerMinimumRestViolation(context, date, employee, candidateShift));
+        fallback.ifPresent(employee -> {
+            registerMinimumRestViolation(context, date, employee, candidateShift);
+            whenEmployeeHoursExceeded(context, date, employee);
+            whenEmployeeWorkingDaysExceeded(context, date, employee);
+        });
 
         return fallback;
+    }
+
+    private boolean isEmployeeWithinHoursAndDaysLimit(ScheduleGeneratorContext context, Employee employee) {
+        boolean withinHoursLimit = context.isEmployeeUnderHoursLimit(employee);
+        boolean withinDaysLimit = context.getWorkingDaysCount().getOrDefault(employee, 0)
+                < calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+
+        return withinHoursLimit && withinDaysLimit;
     }
 
     private void registerMinimumRestViolation(ScheduleGeneratorContext context, LocalDate date, Employee employee, Shift shift) {
