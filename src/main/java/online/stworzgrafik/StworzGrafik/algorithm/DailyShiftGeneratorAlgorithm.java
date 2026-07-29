@@ -15,6 +15,13 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DailyShiftGeneratorAlgorithm {
 
+    /**
+     * Maksymalna dopuszczalna długość jednej zmiany zgodnie z Kodeksem Pracy
+     * (przy zachowaniu min. 11h nieprzerwanego odpoczynku na dobę realny limit
+     * to 13h, ale przyjmujemy 12h jako bezpieczny margines).
+     */
+    private static final int MAX_SHIFT_DURATION_HOURS = 12;
+
     public void modifyShiftsHours(ScheduleGeneratorContext context){
         Map<LocalTime, LocalTime> hoursToModify = context.getHoursToModify();
         LinkedHashMap<LocalDate, Map<Employee, Shift>> schedule = context.getFinalSchedule();
@@ -103,7 +110,9 @@ public class DailyShiftGeneratorAlgorithm {
             int[] draftAfterProposals = subtractArrays(dailyDraft, employeesProposalsAndSpecialEmployeesScheduleCount);
             List<Shift> transientShifts = generateLowestPersonNeededDailyShifts(draftAfterProposals);
 
-            List<Shift> resolvedShifts = transientShifts.stream()
+            List<Shift> transientShiftsWithinLegalLimits = splitOverlongShifts(transientShifts);
+
+            List<Shift> resolvedShifts = transientShiftsWithinLegalLimits.stream()
                     .map(s -> context.findShiftByHours(s.getStartHour(), s.getEndHour()))
                     .toList();
 
@@ -159,6 +168,63 @@ public class DailyShiftGeneratorAlgorithm {
             }
         }
         return shifts;
+    }
+
+    /**
+     * Dzieli zmiany dłuższe niż MAX_SHIFT_DURATION_HOURS na kilka krótszych.
+     *
+     * Podział NIE psuje dopasowania do draftu - pokrycie godzinowe (ile osób
+     * pracuje w danej godzinie) jest identyczne przed i po podziale, bo
+     * rozcinamy jedną zmianę na sąsiadujące, niezachodzące na siebie kawałki.
+     * Jedyny efekt uboczny: zamiast 1 osoby pracującej 14h, potrzeba 2 różnych
+     * osób na sąsiadujące zmiany - to nieuniknione przy limicie 12h.
+     *
+     * Długości kawałków są możliwie wyrównane (np. 14h -> 7h+7h, a nie
+     * 12h+2h), żeby nie tworzyć bezsensownie krótkich "resztkowych" zmian.
+     */
+    private List<Shift> splitOverlongShifts(List<Shift> shifts) {
+        List<Shift> result = new ArrayList<>();
+
+        for (Shift shift : shifts) {
+            int durationHours = calculateDurationHours(shift.getStartHour(), shift.getEndHour());
+
+            if (durationHours <= MAX_SHIFT_DURATION_HOURS) {
+                result.add(shift);
+            } else {
+                result.addAll(splitIntoBalancedParts(shift.getStartHour(), durationHours));
+            }
+        }
+
+        return result;
+    }
+
+    private int calculateDurationHours(LocalTime startHour, LocalTime endHour) {
+        int start = startHour.getHour();
+        int end = endHour.equals(LocalTime.MIDNIGHT) ? 24 : endHour.getHour();
+        return end - start;
+    }
+
+    private List<Shift> splitIntoBalancedParts(LocalTime shiftStart, int totalDurationHours) {
+        int parts = (int) Math.ceil((double) totalDurationHours / MAX_SHIFT_DURATION_HOURS);
+        int baseLength = totalDurationHours / parts;
+        int remainder = totalDurationHours % parts;
+
+        List<Shift> splitShifts = new ArrayList<>(parts);
+        int currentStartHour = shiftStart.getHour();
+
+        for (int i = 0; i < parts; i++) {
+            int partLength = baseLength + (i < remainder ? 1 : 0);
+            int endHourValue = currentStartHour + partLength;
+
+            Shift part = new Shift();
+            part.setStartHour(LocalTime.of(currentStartHour, 0));
+            part.setEndHour(endHourValue == 24 ? LocalTime.of(0, 0) : LocalTime.of(endHourValue, 0));
+            splitShifts.add(part);
+
+            currentStartHour = endHourValue;
+        }
+
+        return splitShifts;
     }
 
     private int[] addArrays(int[] mainArray, int[] addedArray){
