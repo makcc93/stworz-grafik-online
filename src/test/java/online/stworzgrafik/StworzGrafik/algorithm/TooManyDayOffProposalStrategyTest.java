@@ -50,17 +50,14 @@ public class TooManyDayOffProposalStrategyTest {
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
 
-        // --- DODANE STUBY ---
         when(context.getYear()).thenReturn(year);
         when(context.getMonth()).thenReturn(month);
-        when(context.getWorkingDaysCount()).thenReturn(Collections.emptyMap()); // zapobiega NPE w getOrDefault
-        when(context.isEmployeeUnderHoursLimit(any(Employee.class))).thenReturn(true); // wszyscy mieszczą się w limicie
-
-        // Ustawiamy różne wartości zapasu godzin, aby emp3 był wybierany jako pierwszy
+        when(context.getWorkingDaysCount()).thenReturn(Collections.emptyMap());
+        when(context.isEmployeeUnderHoursLimit(any(Employee.class))).thenReturn(true);
         when(context.getRemainingHoursUntilLimit(emp1)).thenReturn(BigDecimal.valueOf(10));
         when(context.getRemainingHoursUntilLimit(emp2)).thenReturn(BigDecimal.valueOf(10));
         when(context.getRemainingHoursUntilLimit(emp3)).thenReturn(BigDecimal.valueOf(20));
-        // --------------------
+
 
         List<Employee> availableEmployees = new ArrayList<>();
         List<Shift> shifts = List.of(mock(Shift.class));
