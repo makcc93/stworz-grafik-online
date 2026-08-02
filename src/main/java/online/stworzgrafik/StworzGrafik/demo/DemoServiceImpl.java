@@ -64,7 +64,6 @@ class DemoServiceImpl implements DemoService {
         ).id();
 
         createStoreEmployees(employeeService, demoStoreId, randomNumber);
-
         return authService.login(new LoginRequest(login, rawPassword));
     }
 

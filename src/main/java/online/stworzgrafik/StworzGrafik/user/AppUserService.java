@@ -8,8 +8,8 @@ import online.stworzgrafik.StworzGrafik.user.DTO.UserResponse;
 import java.util.List;
 
 public interface AppUserService {
-    UserResponse createSystemUser(CreateUserRequest createUserRequest);
     UserResponse create(CreateUserRequest createUserRequest);
+    UserResponse createSystemUser(CreateUserRequest createUserRequest);
     void changePassword(Long userId, String newPassword);
     void changeOwnPassword(String currentPassword, String newPassword);
     void setEnabled(Long userId, boolean enabled);
