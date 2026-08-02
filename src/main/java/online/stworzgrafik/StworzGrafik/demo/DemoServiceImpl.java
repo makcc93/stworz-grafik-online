@@ -13,7 +13,6 @@ import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
 import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.LoginRequest;
 import online.stworzgrafik.StworzGrafik.user.UserRole;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,9 +22,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
-class DemoServiceImpl implements DemoService{
+class DemoServiceImpl implements DemoService {
     private final AppUserService appUserService;
-    private final PasswordEncoder passwordEncoder;
     private final StoreService storeService;
     private final BranchService branchService;
     private final RegionService regionService;
@@ -39,7 +37,7 @@ class DemoServiceImpl implements DemoService{
         Long branchId = branchService.findByName(demo).id();
 
         int randomNumber = ThreadLocalRandom.current().nextInt(20000000, 90000000);
-
+        
         String storeCode = findFirstUnusedDemoStoreCode(storeService);
 
         Long demoStoreId = storeService.createStore(
@@ -71,11 +69,11 @@ class DemoServiceImpl implements DemoService{
         return authService.login(new LoginRequest(login, rawPassword));
     }
 
-    private void createStoreEmployees(EmployeeService employeeService, Long storeId, int randomNumber){
+    private void createStoreEmployees(EmployeeService employeeService, Long storeId, int randomNumber) {
         List<String> firstName = new ArrayList<>(firstNames());
         List<String> lastName = new ArrayList<>(lastNames());
 
-        int secondRandomDigit = (randomNumber/1000000)%10;
+        int secondRandomDigit = (randomNumber / 1000000) % 10;
         int number = randomNumber;
 
         employeeService.createEmployee(
@@ -154,46 +152,45 @@ class DemoServiceImpl implements DemoService{
                         7L
                 )
         );
-
     }
 
-
-    private String findFirstUnusedDemoStoreCode(StoreService storeService){
-        for (String code : getPolishLettersAndNumbers()){
+    private String findFirstUnusedDemoStoreCode(StoreService storeService) {
+        for (String code : getPolishLettersAndNumbers()) {
             String storeCode = "#" + code;
 
-            if (!storeService.existsByStoreCode(storeCode)){
+            if (!storeService.existsByStoreCode(storeCode)) {
                 return storeCode;
             }
         }
-        return null;
+
+        throw new IllegalStateException("Brak wolnych kodów sklepów demo - wszystkie zostały wykorzystane");
     }
 
     public static Set<String> getPolishLettersAndNumbers() {
         return Set.of(
-                "A", "Ą", "B", "C", "Ć", "D", "E", "Ę", "F", "G", "H", "I", "J", "K", "L", "Ł",
-                "M", "N", "Ń", "O", "Ó", "P", "R", "S", "Ś", "T", "U", "W", "Y", "Z", "Ź", "Ż",
-                "0","1","2","3","4","5","6","7","8","9"
+                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
+                "M", "N", "O", "P", "R", "S", "T", "U", "W", "Y", "Z",
+                "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
         );
     }
 
-    private Set<String> firstNames(){
+    private Set<String> firstNames() {
         return Set.of(
-                "Nikodem","Zofia", "Antoni","Hanna", "Jan","Maria", "Aleksander","Julia", "Franciszek","Maja",
-                "Szymon","Emilia", "Leon", "Oliwia", "Jakub", "Mikołaj","Alicja",  "Lena","Wojciech", "Laura",
+                "Nikodem", "Zofia", "Antoni", "Hanna", "Jan", "Maria", "Aleksander", "Julia", "Franciszek", "Maja",
+                "Szymon", "Emilia", "Leon", "Oliwia", "Jakub", "Mikołaj", "Alicja", "Lena", "Wojciech", "Laura",
                 "Dawid", "Olga", "Mateusz", "Monika", "Damian", "Agnieszka", "Filip", "Martyna", "Emil", "Klara",
-                "Piotr", "Dagmara","Wojeciech","Izabela"
+                "Piotr", "Dagmara", "Wojeciech", "Izabela"
         );
     }
 
-    private Set<String> lastNames(){
+    private Set<String> lastNames() {
         return Set.of(
                 "Nowak", "Wójcik", "Kowalczyk", "Woźniak", "Mazur",
                 "Krawczyk", "Pietrzak", "Król", "Cieślak", "Kaczmarek",
                 "Zając", "Bąk", "Szymczak", "Marciniak", "Olejnik",
                 "Kowal", "Lis", "Kozioł", "Stępień", "Włodarczyk",
-                "Pirat", "Dąb", "Kruk", "Wrona","Orzeł","Niebo", "Koło",
-                "Dzik","Ząb","Mak","Rak","Liść"
+                "Pirat", "Dąb", "Kruk", "Wrona", "Orzeł", "Niebo", "Koło",
+                "Dzik", "Ząb", "Mak", "Rak", "Liść"
         );
     }
 }

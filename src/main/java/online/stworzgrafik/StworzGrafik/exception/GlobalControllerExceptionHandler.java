@@ -61,8 +61,16 @@ public class GlobalControllerExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException exception){
-        return ResponseEntity.badRequest().body(exception);
+    public ResponseEntity<Map<String,Object>> handleConstraintViolationException(ConstraintViolationException exception){
+        List<String> errors = exception.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .toList();
+
+        Map<String,Object> response = new HashMap<>();
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", errors);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
