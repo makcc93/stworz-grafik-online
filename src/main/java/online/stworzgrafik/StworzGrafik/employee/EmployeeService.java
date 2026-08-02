@@ -14,15 +14,16 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 
 @Validated
- public interface EmployeeService {
-     ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull @Valid CreateEmployeeDTO createEmployeeDTO);
-     ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull @Valid UpdateEmployeeDTO updateEmployeeDTO);
-     void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
-     ResponseEmployeeDTO save(@NotNull Employee employee);
-     Page<ResponseEmployeeDTO> findAll(Pageable pageable);
-     ResponseEmployeeDTO findById(@NotNull Long storeId, @NotNull Long employeeId);
-     Page<ResponseEmployeeDTO> findByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable);
-     boolean existsById(@NotNull Long id);
-     boolean existsBySap(@NotNull Long sap);
-     boolean existsByLastName(@NotNull String lastName);
+public interface EmployeeService {
+    ResponseEmployeeDTO createEmployee(@NotNull Long storeId, @NotNull @Valid CreateEmployeeDTO createEmployeeDTO);
+    ResponseEmployeeDTO createEmployeeSystem(@NotNull Long storeId, @NotNull @Valid CreateEmployeeDTO createEmployeeDTO);
+    ResponseEmployeeDTO updateEmployee(@NotNull Long storeId, @NotNull Long employeeId, @NotNull @Valid UpdateEmployeeDTO updateEmployeeDTO);
+    void deleteEmployee(@NotNull Long storeId, @NotNull Long employeeId);
+    ResponseEmployeeDTO save(@NotNull Employee employee);
+    Page<ResponseEmployeeDTO> findAll(Pageable pageable);
+    ResponseEmployeeDTO findById(@NotNull Long storeId, @NotNull Long employeeId);
+    Page<ResponseEmployeeDTO> findByCriteria(@NotNull Long storeId, @Nullable EmployeeSpecificationDTO dto, Pageable pageable);
+    boolean existsById(@NotNull Long id);
+    boolean existsBySap(@NotNull Long sap);
+    boolean existsByLastName(@NotNull String lastName);
 }

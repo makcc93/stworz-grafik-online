@@ -74,7 +74,7 @@ class DemoServiceImpl implements DemoService {
         int secondRandomDigit = (randomNumber / 1000000) % 10;
         int number = randomNumber;
 
-        employeeService.createEmployee(
+        employeeService.createEmployeeSystem(
                 storeId,
                 new CreateEmployeeDTO(
                         firstName.get(secondRandomDigit),
@@ -87,7 +87,7 @@ class DemoServiceImpl implements DemoService {
         secondRandomDigit++;
         number++;
 
-        employeeService.createEmployee(
+        employeeService.createEmployeeSystem(
                 storeId,
                 new CreateEmployeeDTO(
                         firstName.get(secondRandomDigit),
@@ -100,7 +100,7 @@ class DemoServiceImpl implements DemoService {
         secondRandomDigit++;
         number++;
 
-        employeeService.createEmployee(
+        employeeService.createEmployeeSystem(
                 storeId,
                 new CreateEmployeeDTO(
                         firstName.get(secondRandomDigit),
@@ -114,7 +114,7 @@ class DemoServiceImpl implements DemoService {
         number++;
 
         for (int i = 1; i <= 10; i++) {
-            employeeService.createEmployee(
+            employeeService.createEmployeeSystem(
                     storeId,
                     new CreateEmployeeDTO(
                             firstName.get(secondRandomDigit),
@@ -128,7 +128,7 @@ class DemoServiceImpl implements DemoService {
             number++;
         }
 
-        employeeService.createEmployee(
+        employeeService.createEmployeeSystem(
                 storeId,
                 new CreateEmployeeDTO(
                         firstName.get(secondRandomDigit),
@@ -141,7 +141,7 @@ class DemoServiceImpl implements DemoService {
         secondRandomDigit++;
         number++;
 
-        employeeService.createEmployee(
+        employeeService.createEmployeeSystem(
                 storeId,
                 new CreateEmployeeDTO(
                         firstName.get(secondRandomDigit),

@@ -47,6 +47,15 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
 
     @Override
     public ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
+        return createEmployee(storeId, createEmployeeDTO, false);
+    }
+
+    @Override
+    public ResponseEmployeeDTO createEmployeeSystem(Long storeId, CreateEmployeeDTO createEmployeeDTO) {
+        return createEmployee(storeId, createEmployeeDTO, true);
+    }
+
+    private ResponseEmployeeDTO createEmployee(Long storeId, CreateEmployeeDTO createEmployeeDTO, boolean internal) {
         if (employeeRepository.existsBySap(createEmployeeDTO.sap())){
             throw new EntityExistsException("Employee with sap " + createEmployeeDTO.sap() + " already exists");
         }
@@ -54,7 +63,7 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         String validatedFirstName = nameValidatorService.validate(createEmployeeDTO.firstName(), ObjectType.PERSON);
         String validatedLastName = nameValidatorService.validate(createEmployeeDTO.lastName(), ObjectType.PERSON);
 
-        Store store = getStore(storeId);
+        Store store = getStore(storeId, internal);
         Position position = getPosition(createEmployeeDTO);
 
         Employee employee = employeeBuilder.createEmployee(
@@ -91,14 +100,6 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
 
         employeeMapper.updateEmployee(dto, employee);
 
-        // UWAGA: to musi być PO employeeMapper.updateEmployee() i musi być jedynym
-        // miejscem ustawiającym isSpecial/specialWorkNorm. specialWorkNormId jest
-        // jedynym źródłem prawdy - dzięki temu nie da się zapisać isSpecial=true bez
-        // przypisanej normy (co wcześniej powodowało NPE w DailyShiftGeneratorAlgorithm
-        // i SpecialEmployeesShiftMatcher przy getSpecialWorkNorm().getMaxDailyHours()).
-        // Pole isSpecial jest dodatkowo zignorowane w EmployeeMapper (ignore = true),
-        // więc nawet gdyby ten blok przesunąć z powrotem przed mapper, i tak nie wróci
-        // ten sam bug.
         if (dto.specialWorkNormId() != null) {
             SpecialWorkNorm norm = specialWorkNormEntityService.getEntityById(dto.specialWorkNormId());
             employee.setSpecialWorkNorm(norm);
@@ -236,12 +237,12 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         return employee;
     }
 
-    private Store getStore(Long storeId){
+    private Store getStore(Long storeId, boolean internal){
         if (!storeService.existsById(storeId)){
             throw new EntityNotFoundException("Cannot find store by id " + storeId);
         }
 
-        return storeEntityService.getEntityById(storeId);
+        return internal ? storeEntityService.getEntityByIdInternal(storeId) : storeEntityService.getEntityById(storeId);
     }
 
     private Position getPosition(CreateEmployeeDTO createEmployeeDTO){
