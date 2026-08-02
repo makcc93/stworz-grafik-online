@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalTime;
-
 public record CreateStoreDTO(
         @NotBlank(message = "Name is required")
         @Size(min = 3,max = 50,message = "Store name must be between three and fifty chars")

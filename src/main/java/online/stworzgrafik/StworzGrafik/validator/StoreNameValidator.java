@@ -17,7 +17,7 @@ public class StoreNameValidator implements NameValidatorStrategy{
             throw new ValidationException("Name cannot be empty or contain only spaces");
         }
 
-        if (!normalized.matches("^[a-zA-ZąćęłńóśźżĄĘĆŁŃÓŚŹŻ -]+$")) {
+        if (!normalized.matches("^[a-zA-Z0-9ąćęłńóśźżĄĘĆŁŃÓŚŹŻ #-]+$")) {
             throw new ValidationException("Name contains illegal characters");
         }
 
