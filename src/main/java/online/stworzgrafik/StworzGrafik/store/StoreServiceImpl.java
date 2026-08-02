@@ -190,6 +190,13 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
                 .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
     }
 
+    @Override
+    public Store getEntityByIdInternal(Long storeId) {
+        return storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find store by id " + storeId));
+    }
+
+
     private void ifStoreAlreadyExist(CreateStoreDTO createStoreDTO) {
         String name = createStoreDTO.name();
         if (storeRepository.existsByName(name)){

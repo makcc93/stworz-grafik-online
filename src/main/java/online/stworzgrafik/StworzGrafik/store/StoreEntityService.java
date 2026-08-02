@@ -12,4 +12,5 @@ public interface StoreEntityService {
     Store updateEntityStore(@NotNull Long storeId,@NotNull UpdateStoreDTO dto);
     Store saveEntity(@NotNull @Valid Store store);
     Store getEntityById(@NotNull Long id);
+    Store getEntityByIdInternal(@NotNull Long id);
 }

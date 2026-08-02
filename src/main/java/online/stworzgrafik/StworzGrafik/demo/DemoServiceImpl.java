@@ -37,7 +37,6 @@ class DemoServiceImpl implements DemoService {
         Long branchId = branchService.findByName(demo).id();
 
         int randomNumber = ThreadLocalRandom.current().nextInt(20000000, 90000000);
-
         String storeCode = findFirstUnusedDemoStoreCode(storeService);
 
         Long demoStoreId = storeService.createStore(
@@ -52,7 +51,7 @@ class DemoServiceImpl implements DemoService {
         String login = "demo-" + randomNumber;
         String rawPassword = login;
 
-        Long userId = appUserService.create(
+        Long userId = appUserService.createSystemUser(
                 new CreateUserRequest(
                         login,
                         rawPassword,

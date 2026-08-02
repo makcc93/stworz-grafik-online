@@ -7,6 +7,7 @@ import online.stworzgrafik.StworzGrafik.branch.BranchEntityService;
 import online.stworzgrafik.StworzGrafik.employee.DTO.ResponseEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.region.RegionEntityService;
 import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
+import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.SetRoleRequest;
@@ -30,6 +31,15 @@ public class AppUserServiceImpl implements AppUserService{
 
     @Override
     public UserResponse create(CreateUserRequest createUserRequest) {
+        return create(createUserRequest, false);
+    }
+
+    @Override
+    public UserResponse createSystemUser(CreateUserRequest createUserRequest) {
+        return create(createUserRequest, true);
+    }
+
+    private UserResponse create(CreateUserRequest createUserRequest, boolean internal) {
         if (appUserRepository.existsByLogin(createUserRequest.login())){
             throw new IllegalArgumentException("Login already taken: " + createUserRequest.login());
         }
@@ -42,7 +52,12 @@ public class AppUserServiceImpl implements AppUserService{
         switch(createUserRequest.role()){
             case STORE_MANAGER -> {
                 if (createUserRequest.storeId() == null) throw new IllegalArgumentException("StoreId is required for STORE_MANAGER");
-                appUserBuilder.store(storeEntityService.getEntityById(createUserRequest.storeId()));
+
+                Store store = internal
+                        ? storeEntityService.getEntityByIdInternal(createUserRequest.storeId())
+                        : storeEntityService.getEntityById(createUserRequest.storeId());
+
+                appUserBuilder.store(store);
             }
             case DIRECTOR -> {
                 if (createUserRequest.directorScope() == null) throw new IllegalArgumentException("DirectorScope is required for DIRECTOR");
