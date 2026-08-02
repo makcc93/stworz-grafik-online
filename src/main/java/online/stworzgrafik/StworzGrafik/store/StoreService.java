@@ -19,6 +19,7 @@ public interface StoreService {
     ResponseStoreDTO update(@NotNull Long storeId,@NotNull @Valid UpdateStoreDTO updateStoreDTO);
     boolean existsById(@NotNull Long storeId);
     boolean existsByNameAndCode(@NotNull @Valid StoreNameAndCodeDTO storeNameAndCodeDTO);
+    boolean existsByStoreCode(@NotNull String storeCode);
     void delete(@NotNull Long storeId);
     ResponseStoreDTO save(@NotNull @Valid Store store);
 }

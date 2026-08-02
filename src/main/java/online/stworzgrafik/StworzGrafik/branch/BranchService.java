@@ -12,6 +12,7 @@ import java.util.List;
 @Validated
 public interface BranchService {
     public ResponseBranchDTO findById(@NotNull Long id);
+    ResponseBranchDTO findByName(@NotNull String name);
     public List<ResponseBranchDTO> findAll();
     public ResponseBranchDTO createBranch(@NotNull @Valid CreateBranchDTO createBranchDTO);
     public ResponseBranchDTO updateBranch(@NotNull Long id, @NotNull @Valid UpdateBranchDTO updateBranchDTO);

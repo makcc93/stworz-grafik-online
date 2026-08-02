@@ -106,6 +106,11 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
+    public boolean existsByStoreCode(String storeCode) {
+        return storeRepository.existsByStoreCode(storeCode);
+    }
+
+    @Override
     public void delete(Long storeId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);

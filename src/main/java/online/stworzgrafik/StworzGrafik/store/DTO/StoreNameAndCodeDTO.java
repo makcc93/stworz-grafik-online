@@ -12,6 +12,6 @@ public record StoreNameAndCodeDTO(
 
         @NotBlank(message = "Store code is required")
         @Size(min = 2,max = 2,message = "Store code must have exactly two chars")
-        @Pattern(regexp = "[a-zA-Z0-9]{2}")
+        @Pattern(regexp = "[a-zA-Z0-9#]{2}")
         String storeCode
 ) {}

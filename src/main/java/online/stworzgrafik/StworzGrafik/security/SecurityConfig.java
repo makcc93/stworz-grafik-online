@@ -27,8 +27,6 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-    // Pobiera adres z pliku konfiguracyjnego/środowiska.
-    // Jeśli go nie znajdzie, domyślnie wstawi http://localhost:5173
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private List<String> allowedOrigins;
 
@@ -39,11 +37,6 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .requestMatchers("/api/**").authenticated()
-//                        .anyRequest().authenticated()
-//                );
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 );
@@ -54,20 +47,9 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. Definiujemy globalne reguły CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(allowedOrigins); // dynamiczna lista adresów
-//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-//        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-//        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-//        configuration.setAllowCredentials(true); // ważne, jeśli będziesz przesyłać ciasteczka/sesje
-//
-
         CorsConfiguration configuration = new CorsConfiguration();
-        // setAllowedOriginPatterns działa z allowCredentials(true) i wspiera wildcardy
-        // setAllowedOrigins NIE działa z "*" + credentials, stąd błąd "Invalid CORS request"
         configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));

@@ -34,6 +34,14 @@ class BranchServiceImpl implements BranchService, BranchEntityService{
     }
 
     @Override
+    public ResponseBranchDTO findByName(String name) {
+        Branch branch = branchRepository.findByName(name).
+                orElseThrow(() -> new EntityNotFoundException("Cannot find branch by name " + name));
+
+        return branchMapper.toResponseBranchDTO(branch);
+    }
+
+    @Override
     public List<ResponseBranchDTO> findAll() {
         return branchRepository.findAll().stream()
                 .map(branchMapper::toResponseBranchDTO)

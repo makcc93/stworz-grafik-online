@@ -75,6 +75,14 @@ class RegionServiceImpl implements RegionService, RegionEntityService {
     }
 
     @Override
+    public ResponseRegionDTO findByName(String name) {
+        Region region = regionRepository.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Cannot find region by name " + name));
+
+        return regionMapper.toResponseRegionDTO(region);
+    }
+
+    @Override
     public ResponseRegionDTO save(Region region) {
         Region savedRegion = regionRepository.save(region);
 
