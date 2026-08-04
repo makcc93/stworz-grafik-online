@@ -115,6 +115,13 @@ public class AppUserServiceImpl implements AppUserService{
     }
 
     @Override
+    public void deleteUser(Long userId) {
+        AppUser appUser = appUserRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Cannot find user by id: " + userId));
+
+        appUserRepository.delete(appUser);
+    }
+
+    @Override
     public UserResponse setRole(Long userId, SetRoleRequest request) {
         AppUser appUser = appUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));

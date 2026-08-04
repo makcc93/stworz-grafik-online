@@ -13,6 +13,7 @@ public interface AppUserService {
     void changePassword(Long userId, String newPassword);
     void changeOwnPassword(String currentPassword, String newPassword);
     void setEnabled(Long userId, boolean enabled);
+    void deleteUser(Long userId);
     UserResponse setRole(Long userId, SetRoleRequest request);
     List<UserResponse> findAll();
     AppUser findByLogin(String login);

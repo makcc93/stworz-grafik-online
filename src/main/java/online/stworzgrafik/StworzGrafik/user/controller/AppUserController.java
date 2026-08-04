@@ -55,4 +55,11 @@ public class AppUserController {
                                                 @RequestBody @Valid SetRoleRequest request){
         return ResponseEntity.ok(appUserService.setRole(id,request));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id){
+        appUserService.deleteUser(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }
