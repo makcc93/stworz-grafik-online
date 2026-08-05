@@ -440,11 +440,13 @@ public class EmployeeToShiftMatcher {
         Map<Employee, Shift> employeeShift = context.getFinalSchedule().getOrDefault(date,Map.of());
         for (Map.Entry<Employee, Shift> entry : employeeShift.entrySet()) {
             Employee employee = entry.getKey();
-            if (!employee.isCanOpenCloseStore()) continue;
 
+            if (!employee.isCanOpenCloseStore()) continue;
+            log.info("SPRAWDZAM KIERO RANO, employee mogacy otworzyc: {}",employee.getLastName());
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
             int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
 
+            log.info("shiftAsArray[openHour] = {}", shiftAsArray[openHour]);
             if (shiftAsArray[openHour] > 0) return true;
 
         }
