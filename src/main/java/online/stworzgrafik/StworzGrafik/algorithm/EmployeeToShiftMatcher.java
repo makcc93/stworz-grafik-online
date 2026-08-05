@@ -58,9 +58,15 @@ public class EmployeeToShiftMatcher {
             if (!morningOpenStoreEmployeeAlreadyInSchedule(context,date)) {
                 applyOpenStoreEmployee(context, date, availableEmployees, shiftsSorted);
             }
+            else {
+                log.info("JEST RANO KIEROWNIK");
+            }
 
             if (!afternoonCloseStoreEmployeeAlreadyInSchedule(context,date)) {
                 applyCloseStoreEmployee(context, date, availableEmployees, shiftsSorted);
+            }
+            else {
+                log.info("JEST POPOŁUDNIU KIEROWNIK");
             }
 
             applyCashierIfPresent(context, date, availableEmployees, shiftsSorted);
@@ -68,9 +74,15 @@ public class EmployeeToShiftMatcher {
             if (!morningCreditEmployeeAlreadyInSchedule(context,date)){
                 applyMorningCreditEmployee(context, availableEmployees, shiftsSorted, date);
             }
+            else {
+                log.info("JEST RANO RATALNY");
+            }
 
             if (!afternoonCreditEmployeeAlreadyInSchedule(context,date)){
                 applyAfternoonCreditEmployee(context, availableEmployees, shiftsSorted, date);
+            }
+            else {
+                log.info("JEST POPOŁUDNIU RATALNY");
             }
 
             if (!morningCheckoutEmployeeAlreadyInSchedule(context,date)){
@@ -81,6 +93,7 @@ public class EmployeeToShiftMatcher {
                 applyAfternoonCheckoutEmployee(context,availableEmployees,shiftsSorted,date);
             }
 
+            log.info("TERAZ POZOSTALI");
             while (!shiftsSorted.isEmpty()) {
 
                 Optional<Shift> shift = shiftsSorted.stream().min(longestShift());
@@ -518,6 +531,8 @@ public class EmployeeToShiftMatcher {
         Employee employeeClosingStore = employeeToCloseStore.get();
         Shift closingShift = closeShift.get();
 
+        log.info("KIEROWNIK POPOŁUDNIU: {}, ZMIANA OD OTWARCIA: {}-{}", employeeToCloseStore.get().getLastName(),closingShift.getStartHour(),closingShift.getEndHour());
+
         context.registerShiftOnSchedule(date,employeeClosingStore,closingShift,date.getDayOfWeek());
         shiftsSorted.remove(closingShift);
         availableEmployees.remove(employeeClosingStore);
@@ -622,6 +637,8 @@ public class EmployeeToShiftMatcher {
 
         Optional<Employee> employeeToOpenStore = selectEmployeeRespectingRest(
                 context, date, availableEmployees, shiftToOpenStore, Employee::isCanOpenCloseStore);
+
+        log.info("KIEROWNIK RANO: {}, ZMIANA OD OTWARCIA: {}-{}", employeeToOpenStore.get().getLastName(),shiftToOpenStore.getStartHour(),shiftToOpenStore.getEndHour());
 
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", date);

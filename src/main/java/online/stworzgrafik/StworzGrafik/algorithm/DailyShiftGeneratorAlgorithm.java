@@ -89,7 +89,6 @@ public class DailyShiftGeneratorAlgorithm {
             int[] employeesProposalsAndSpecialEmployeesScheduleCount = new int[24];
             LocalDate date = entry.getKey();
 
-
             int[] dailyDraft = entry.getValue();
             Map<LocalDate, Map<Employee, int[]>> monthlyEmployeesProposalShiftsByDate = context.getMonthlyEmployeesProposalShiftsByDate();
             Map<Employee, int[]> dailyEmployeeProposals = monthlyEmployeesProposalShiftsByDate.getOrDefault(date, Collections.emptyMap());
