@@ -528,4 +528,38 @@ public class ScheduleGeneratorContext {
     public boolean hasMinimumRestForShift(Employee employee, LocalDate date, Shift candidateShift){
         return remainingRestHours(employee, date, candidateShift) >= MINIMUM_REST_HOURS_BETWEEN_SHIFTS;
     }
+
+    public boolean isMorningShift(LocalDate date, Shift shift){
+        OpenCloseHoursForEmployeeIndexDTO hours = getStoreOpenCloseHoursIndexForEmployeesByDate(date);
+        double storeMidpoint = (hours.openHour() + hours.closeHour() + 1) / 2.0;
+
+        return shiftMidpointHour(shift) < storeMidpoint;
+    }
+
+    private double shiftMidpointHour(Shift shift){
+        double start = shift.getStartHour().getHour() + shift.getStartHour().getMinute() / 60.0;
+        double end = shift.getEndHour().getHour() + shift.getEndHour().getMinute() / 60.0;
+
+        if (end <= start){
+            end += 24;
+        }
+
+        return (start + end) / 2.0;
+    }
+
+    public int getEmployeeSameShiftTypeCount(Employee employee, LocalDate date, Shift candidateShift){
+        if (!isRealWorkShift(candidateShift)) return 0;
+
+        boolean morning = isMorningShift(date, candidateShift);
+        int count = 0;
+
+        for (Map.Entry<LocalDate, Map<Employee, Shift>> dayEntry : finalSchedule.entrySet()) {
+            Shift assignedShift = dayEntry.getValue().get(employee);
+
+            if (assignedShift == null || !isRealWorkShift(assignedShift)) continue;
+            if (isMorningShift(dayEntry.getKey(), assignedShift) == morning) count++;
+        }
+
+        return count;
+    }
 }
