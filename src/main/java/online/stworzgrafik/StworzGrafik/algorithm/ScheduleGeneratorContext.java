@@ -429,7 +429,7 @@ public class ScheduleGeneratorContext {
         return getShiftLength(shift);
     }
 
-    private boolean isVacationOrDelegationShift(Shift shift){
+    public boolean isVacationOrDelegationShift(Shift shift){
         return shift.equals(this.defaultVacationShift) || shift.equals(this.defaultDelegationShift);
     }
 

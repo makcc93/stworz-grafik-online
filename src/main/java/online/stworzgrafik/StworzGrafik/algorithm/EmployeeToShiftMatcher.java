@@ -231,6 +231,7 @@ public class EmployeeToShiftMatcher {
         for (Map.Entry<Employee, Shift> entry : employeeShift.entrySet()) {
             Employee employee = entry.getKey();
             if (!employee.isCanOpenCloseStore()) continue;
+            if (context.isVacationOrDelegationShift(entry.getValue())) continue;
 
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
             int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
@@ -442,6 +443,8 @@ public class EmployeeToShiftMatcher {
             Employee employee = entry.getKey();
 
             if (!employee.isCanOpenCloseStore()) continue;
+            if (context.isVacationOrDelegationShift(entry.getValue())) continue;
+
             log.info("SPRAWDZAM KIERO RANO, employee mogacy otworzyc: {}",employee.getLastName());
             int[] shiftAsArray = context.shiftAsArray(entry.getValue());
             int openHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).openHour();
@@ -640,7 +643,7 @@ public class EmployeeToShiftMatcher {
         Optional<Employee> employeeToOpenStore = selectEmployeeRespectingRest(
                 context, date, availableEmployees, shiftToOpenStore, Employee::isCanOpenCloseStore);
 
-        log.info("KIEROWNIK RANO: {}, ZMIANA OD OTWARCIA: {}-{}", employeeToOpenStore.get().getLastName(),shiftToOpenStore.getStartHour(),shiftToOpenStore.getEndHour());
+        log.info("KIEROWNIK RANO: {}, ZMIANA: {}-{}", employeeToOpenStore.get().getLastName(),shiftToOpenStore.getStartHour(),shiftToOpenStore.getEndHour());
 
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", date);
