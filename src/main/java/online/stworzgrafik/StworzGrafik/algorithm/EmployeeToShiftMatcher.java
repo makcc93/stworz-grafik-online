@@ -643,8 +643,6 @@ public class EmployeeToShiftMatcher {
         Optional<Employee> employeeToOpenStore = selectEmployeeRespectingRest(
                 context, date, availableEmployees, shiftToOpenStore, Employee::isCanOpenCloseStore);
 
-        log.info("KIEROWNIK RANO: {}, ZMIANA: {}-{}", employeeToOpenStore.get().getLastName(),shiftToOpenStore.getStartHour(),shiftToOpenStore.getEndHour());
-
         if (employeeToOpenStore.isEmpty()){
             log.info("Brak dostępnego pracownika, który może otworzyć sklep w dniu {}", date);
 
@@ -658,11 +656,13 @@ public class EmployeeToShiftMatcher {
             return;
         }
 
+        log.info("KIEROWNIK RANO: {}, ZMIANA: {}-{}", employeeToOpenStore.get().getLastName(),shiftToOpenStore.getStartHour(),shiftToOpenStore.getEndHour());
+
         context.registerShiftOnSchedule(date,employeeToOpenStore.get(),shiftToOpenStore,date.getDayOfWeek());
         shiftsSorted.remove(shiftToOpenStore);
         availableEmployees.remove(employeeToOpenStore.get());
     }
-
+    
     private Comparator<Employee> byRemainingHoursUntilOwnLimit(ScheduleGeneratorContext context) {
         return Comparator.<Employee>comparingInt(emp -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1)
                 .thenComparing(Comparator.comparing((Employee emp) -> context.getRemainingHoursUntilLimit(emp)).reversed());
