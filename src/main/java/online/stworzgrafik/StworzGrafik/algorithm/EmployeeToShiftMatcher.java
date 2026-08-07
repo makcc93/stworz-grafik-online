@@ -116,7 +116,7 @@ public class EmployeeToShiftMatcher {
                         .filter(empl -> !empl.isWarehouseman())
                         .filter(empl -> context.hasMinimumRestForShift(empl, date, shift.get()))
                         .filter(empl -> isEmployeeWithinHoursAndDaysLimit(context, empl))
-                        .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date, shift.get()));
+                        .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
                 if (employee.isEmpty()) {
                     // Brak kandydata mieszczącego się w limicie godzin/dni pracy, a zachowującego 11h odpoczynku -
@@ -125,7 +125,7 @@ public class EmployeeToShiftMatcher {
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
                             .filter(empl -> context.hasMinimumRestForShift(empl, date, shift.get()))
-                            .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date, shift.get()));
+                            .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
                     employee.ifPresent(empl -> {
                         whenEmployeeHoursExceeded(context, date, empl);
@@ -139,7 +139,7 @@ public class EmployeeToShiftMatcher {
                     employee = availableEmployees.stream()
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
-                            .min(sortByWorkedHoursAndSpecialSortForWeekends(context, date, shift.get()));
+                            .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
                     employee.ifPresent(empl -> {
                         registerMinimumRestViolation(context, date, empl, shift.get());
@@ -668,25 +668,54 @@ public class EmployeeToShiftMatcher {
                 .thenComparing(Comparator.comparing((Employee emp) -> context.getRemainingHoursUntilLimit(emp)).reversed());
     }
 
-    private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date, Shift candidateShift) {
+    private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date) {
         Comparator<Employee> byRemainingHoursUntilOwnLimit = byRemainingHoursUntilOwnLimit(context);
-        Comparator<Employee> byShiftTypeBalance = byShiftTypeBalance(context, date, candidateShift);
 
         if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
             return Comparator.<Employee>comparingInt(
                             emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
                     .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
                     .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
-                    .thenComparing(byShiftTypeBalance)
                     .thenComparing(byRemainingHoursUntilOwnLimit)
                     .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO));
         }
 
         return byRemainingHoursUntilOwnLimit
-                .thenComparing(byShiftTypeBalance)
                 .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO));
     }
 
+    private Comparator<Employee> sortByWorkedHoursBalancingShiftType(ScheduleGeneratorContext context, LocalDate date, Shift candidateShift) {
+        Comparator<Employee> underHoursLimitGate = Comparator.comparingInt(
+                (Employee emp) -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1);
+        Comparator<Employee> byShiftTypeBalance = byShiftTypeBalance(context, date, candidateShift);
+        Comparator<Employee> byRemainingHoursDesc = Comparator.comparing(
+                (Employee emp) -> context.getRemainingHoursUntilLimit(emp)).reversed();
+        Comparator<Employee> byTotalHoursAsc = Comparator.comparing(
+                (Employee emp) -> context.getEmployeeHours().getOrDefault(emp, BigDecimal.ZERO));
+
+        if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            return Comparator.<Employee>comparingInt(
+                            emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
+                    .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
+                    .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
+                    .thenComparing(underHoursLimitGate)
+                    .thenComparing(byShiftTypeBalance)
+                    .thenComparing(byRemainingHoursDesc)
+                    .thenComparing(byTotalHoursAsc);
+        }
+
+        return underHoursLimitGate
+                .thenComparing(byShiftTypeBalance)
+                .thenComparing(byRemainingHoursDesc)
+                .thenComparing(byTotalHoursAsc);
+    }
+
+    /**
+     * Kryterium wyrównujące rodzaj przypisywanych zmian (rano/popołudnie) pomiędzy pracownikami.
+     * Preferuje pracownika, który w bieżącym miesiącu ma dotychczas mniej zmian tego samego rodzaju
+     * co zmiana aktualnie przydzielana (candidateShift) - dzięki temu nikt nie dostaje "samych ranków"
+     * albo "samych popołudniówek", a rozkład zmian robi się bardziej równomierny.
+     */
     private Comparator<Employee> byShiftTypeBalance(ScheduleGeneratorContext context, LocalDate date, Shift candidateShift) {
         return Comparator.comparingInt(
                 (Employee emp) -> context.getEmployeeSameShiftTypeCount(emp, date, candidateShift));
@@ -699,7 +728,7 @@ public class EmployeeToShiftMatcher {
             Shift candidateShift,
             java.util.function.Predicate<Employee> roleFilter) {
 
-        Comparator<Employee> comparator = sortByWorkedHoursAndSpecialSortForWeekends(context, date, candidateShift);
+        Comparator<Employee> comparator = sortByWorkedHoursAndSpecialSortForWeekends(context, date);
 
         Optional<Employee> compliant = availableEmployees.stream()
                 .filter(roleFilter)
