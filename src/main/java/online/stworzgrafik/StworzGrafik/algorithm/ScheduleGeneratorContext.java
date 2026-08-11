@@ -528,7 +528,7 @@ public class ScheduleGeneratorContext {
     public boolean hasMinimumRestForShift(Employee employee, LocalDate date, Shift candidateShift){
         return remainingRestHours(employee, date, candidateShift) >= MINIMUM_REST_HOURS_BETWEEN_SHIFTS;
     }
-    
+
     public boolean isMorningShift(LocalDate date, Shift shift){
         OpenCloseHoursForEmployeeIndexDTO hours = getStoreOpenCloseHoursIndexForEmployeesByDate(date);
         double storeMidpoint = (hours.openHour() + hours.closeHour() + 1) / 2.0;

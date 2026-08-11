@@ -663,27 +663,6 @@ public class EmployeeToShiftMatcher {
         availableEmployees.remove(employeeToOpenStore.get());
     }
 
-    private Comparator<Employee> byRemainingHoursUntilOwnLimit(ScheduleGeneratorContext context) {
-        return Comparator.<Employee>comparingInt(emp -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1)
-                .thenComparing(Comparator.comparing((Employee emp) -> context.getRemainingHoursUntilLimit(emp)).reversed());
-    }
-
-    private Comparator<Employee> sortByWorkedHoursAndSpecialSortForWeekends(ScheduleGeneratorContext context, LocalDate date) {
-        Comparator<Employee> byRemainingHoursUntilOwnLimit = byRemainingHoursUntilOwnLimit(context);
-
-        if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
-            return Comparator.<Employee>comparingInt(
-                            emp -> context.getWorkingOnWeekendCount().getOrDefault(emp, 0))
-                    .thenComparingInt(emp -> - context.getVacationDaysCount().getOrDefault(emp,0))
-                    .thenComparingInt(emp -> context.getWorkingDaysCount().getOrDefault(emp, 0))
-                    .thenComparing(byRemainingHoursUntilOwnLimit)
-                    .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO));
-        }
-
-        return byRemainingHoursUntilOwnLimit
-                .thenComparing(emp -> context.getEmployeeHours().getOrDefault(emp,BigDecimal.ZERO));
-    }
-
     private Comparator<Employee> sortByWorkedHoursBalancingShiftType(ScheduleGeneratorContext context, LocalDate date, Shift candidateShift) {
         Comparator<Employee> underHoursLimitGate = Comparator.comparingInt(
                 (Employee emp) -> context.isEmployeeUnderHoursLimit(emp) ? 0 : 1);
@@ -710,12 +689,7 @@ public class EmployeeToShiftMatcher {
                 .thenComparing(byTotalHoursAsc);
     }
 
-    /**
-     * Kryterium wyrównujące rodzaj przypisywanych zmian (rano/popołudnie) pomiędzy pracownikami.
-     * Preferuje pracownika, który w bieżącym miesiącu ma dotychczas mniej zmian tego samego rodzaju
-     * co zmiana aktualnie przydzielana (candidateShift) - dzięki temu nikt nie dostaje "samych ranków"
-     * albo "samych popołudniówek", a rozkład zmian robi się bardziej równomierny.
-     */
+
     private Comparator<Employee> byShiftTypeBalance(ScheduleGeneratorContext context, LocalDate date, Shift candidateShift) {
         return Comparator.comparingInt(
                 (Employee emp) -> context.getEmployeeSameShiftTypeCount(emp, date, candidateShift));
@@ -728,7 +702,7 @@ public class EmployeeToShiftMatcher {
             Shift candidateShift,
             java.util.function.Predicate<Employee> roleFilter) {
 
-        Comparator<Employee> comparator = sortByWorkedHoursAndSpecialSortForWeekends(context, date);
+        Comparator<Employee> comparator = sortByWorkedHoursBalancingShiftType(context, date, candidateShift);
 
         Optional<Employee> compliant = availableEmployees.stream()
                 .filter(roleFilter)
