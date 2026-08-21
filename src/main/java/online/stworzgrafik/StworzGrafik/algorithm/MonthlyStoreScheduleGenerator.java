@@ -17,6 +17,7 @@ import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.CreditMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.rolesMatcher.OpenCloseMatcher;
 import online.stworzgrafik.StworzGrafik.algorithm.specialEmployees.SpecialEmployeesShiftMatcher;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExportFromDatabase;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,7 @@ public class MonthlyStoreScheduleGenerator {
     private final DailyShiftGeneratorAlgorithm dailyShiftGeneratorAlgorithm;
     private final EmployeeToShiftMatcher employeeToShiftMatcher;
     private final ExcelExport excelExport;
+    private final ExcelExportFromDatabase excelExportFromDatabase;
     private final PdfExport pdfExport;
     private final ScheduleAnalyzer scheduleAnalyzer;
     private final RestAnalyzer restAnalyzer;
@@ -89,6 +91,6 @@ public class MonthlyStoreScheduleGenerator {
 
         scheduleDatabaseSaver.saveScheduleToDatabase(storeId,context);
 
-        return pdfExport.export(storeId,context.getSchedule().getId());
+        return excelExportFromDatabase.export(storeId,context.getSchedule().getId());
     }
 }

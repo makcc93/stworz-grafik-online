@@ -98,6 +98,8 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
             employee.setPosition(position);
         }
 
+        whenEmployeeRoleUpdated(dto,employee);
+
         employeeMapper.updateEmployee(dto, employee);
 
         if (dto.specialWorkNormId() != null) {
@@ -112,6 +114,20 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
         Employee savedEmployee = employeeRepository.save(employee);
 
         return employeeMapper.toResponseEmployeeDTO(savedEmployee);
+    }
+
+    private void whenEmployeeRoleUpdated(UpdateEmployeeDTO dto, Employee employee) {
+        if (dto.manager() ||
+            dto.seller() ||
+            dto.cashier() ||
+            dto.warehouseman() ||
+            dto.pok()){
+                employee.setManager(false);
+                employee.setSeller(false);
+                employee.setCashier(false);
+                employee.setWarehouseman(false);
+                employee.setPok(false);
+        }
     }
 
     @Override
