@@ -127,6 +127,8 @@ class EmployeeServiceImpl implements EmployeeService, EmployeeEntityService{
                 employee.setCashier(false);
                 employee.setWarehouseman(false);
                 employee.setPok(false);
+
+                employeeRepository.save(employee);
         }
     }
 
