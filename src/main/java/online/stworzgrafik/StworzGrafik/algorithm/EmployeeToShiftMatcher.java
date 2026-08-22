@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
+import com.mysql.cj.log.Log;
 import de.focus_shift.jollyday.core.HolidayManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -331,6 +332,7 @@ public class EmployeeToShiftMatcher {
         availableEmployees.remove(employeeToOperateCredit);
     }
 
+
     private void applyMorningCheckoutEmployee(ScheduleGeneratorContext context, List<Employee> availableEmployees, List<Shift> shiftsSorted, LocalDate date){
         Optional<Shift> morningCheckoutShift = shiftsSorted.stream().min(longestOpenStoreShift());
 
@@ -431,9 +433,13 @@ public class EmployeeToShiftMatcher {
             int closeHour = context.getStoreOpenCloseHoursIndexForEmployeesByDate(date).closeHour();
             int closeForClientsHour = context.getStoreOpenCloseHoursIndexForClientsByDate(date).closeHour();
 
-            if (employeeShiftAsArray[closeHour] > 0 || employeeShiftAsArray[closeForClientsHour] > 0) return true;
+            if (employeeShiftAsArray[closeHour] > 0 || employeeShiftAsArray[closeForClientsHour] > 0) {
+                log.info("PRACOWNIK RATALNY POPOŁUDNIOWY JUŻ W GRAFIKU: {}, closeHourIndex= {} ({})", employee.getLastName(),closeHour,closeForClientsHour);
+                return true;
+            }
 
         }
+        log.info("PRACOWNIK RATALNY POPOLUDNIU NIE JEST ZAPLANOWANY");
         return false;
     }
 
