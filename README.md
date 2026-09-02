@@ -2,18 +2,16 @@
 
 # 📅 StworzGrafik
 
-**Automatyczne układanie grafików pracy dla sieci sklepów / oddziałów**
-**Automatic employee shift-scheduling engine for retail chains**
+### Automatyczne generowanie grafików pracy dla sieci sklepów
 
-<!-- TODO: podmień poniższy link na właściwy adres wdrożenia -->
-<!-- TODO: replace the link below with your actual deployment URL -->
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://stworzgrafik.online)
-![License](https://img.shields.io/badge/license-proprietary-red)
-<!-- TODO: po podpięciu CI podmień na prawdziwy badge z GitHub Actions -->
-<!-- TODO: once CI is configured, swap this for a real GitHub Actions badge -->
-![Build](https://img.shields.io/badge/build-configure_CI-lightgrey)
-![Java](https://img.shields.io/badge/Java-17%2B-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
+**Backend scheduling engine built with Java 21 & Spring Boot**
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-stworzgrafik.online-brightgreen)](https://stworzgrafik.online)
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-brightgreen)
+![MySQL](https://img.shields.io/badge/MySQL-8-blue)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+![Kafka](https://img.shields.io/badge/Apache-Kafka-black)
 
 🇵🇱 [Polski](#-opis-pl) • 🇬🇧 [English](#-description-en)
 
@@ -21,281 +19,697 @@
 
 ---
 
-## 🇵🇱 Opis (PL)
+# 🇵🇱 Opis PL
 
-### O projekcie
+## O projekcie
 
-**StworzGrafik** to backend systemu do automatycznego generowania miesięcznych grafików pracy dla wielooddziałowych sieci (sklepy / punkty usługowe). API napisane w Javie (Spring Boot) obsługuje pełny proces: od zdefiniowania zapotrzebowania godzinowego danego sklepu, przez dostępność i preferencje pracowników, po automatyczne ułożenie grafiku zgodnego z wymogami prawa pracy oraz jego eksport.
+**StworzGrafik** to aplikacja webowa do automatycznego generowania miesięcznych grafików pracy dla sklepów oraz większych struktur organizacyjnych.
 
-Repozytorium zawiera **backend (REST API)**. Aplikacja frontendowa (SPA komunikująca się z API przez REST + JWT) jest utrzymywana osobno.
+Backend został napisany w **Java 21 + Spring Boot** i udostępnia REST API obsługujące cały proces planowania pracy:
 
-> ⚠️ To repozytorium prezentuje architekturę i sposób pracy nad projektem. Rdzeń algorytmu układania grafiku jest opisany na poziomie ogólnym — bez wchodzenia w szczegóły implementacyjne (patrz sekcja [Licencja](#-licencja--dostępność-kodu)).
+**zapotrzebowanie sklepu → dostępność pracowników → ograniczenia → generowanie → analiza → eksport grafiku**
 
-### Kluczowe funkcje
+Najważniejszym elementem projektu jest rozwijany przeze mnie **autorski algorytm generowania grafików**, który analizuje zapotrzebowanie godzinowe sklepu i przypisuje pracowników do zmian z uwzględnieniem m.in. ich ról, wymiaru czasu pracy, dostępności, urlopów, preferencji oraz wymaganych okresów odpoczynku.
 
-- 🧠 **Automatyczny generator grafiku** — silnik dopasowuje pracowników do zmian na podstawie godzinowego zapotrzebowania sklepu, ról (otwarcie / zamknięcie / kasa / kredyt), dni dostaw towaru oraz pracowników „specjalnych”.
-- 🙋 **Dostępność i preferencje pracowników** — urlopy, propozycje dni wolnych, propozycje zmian oraz delegacje między sklepami są uwzględniane przy układaniu grafiku.
-- ✅ **Analiza zgodności grafiku** — automatyczne wykrywanie m.in.: niedoboru obsady, nierównomiernego rozkładu zmian, naruszeń wymaganego odpoczynku (np. tygodniowy odpoczynek), nadmiaru wniosków o dni wolne oraz sugestii zamiany zmian/godzin między pracownikami.
-- 🏢 **Struktura organizacyjna** — hierarchia *Sieć → Region → Oddział (Branch) → Sklep (Store) → Pracownik*, z rolami użytkowników i zakresem uprawnień dyrektora (oddział / region / cała sieć).
-- ⏱️ **Normy godzinowe i okresy rozliczeniowe** — konfigurowalne miesięczne normy pracy oraz okresy rozliczeniowe.
-- 🎉 **Kalendarz świąt** — konfiguracja dni świątecznych wpływających na godziny otwarcia i grafik.
-- 📤 **Eksport danych** — generowanie plików Excel i PDF, przechowywanych w Cloudflare R2 z tymczasowymi (presigned) linkami do pobrania.
-- 🔐 **Bezpieczeństwo** — logowanie JWT, role `ADMIN` / `DIRECTOR` / `STORE_MANAGER`, autoryzacja na poziomie metod (w tym dostęp scope’owany do konkretnego sklepu/regionu).
-- 🚀 **Tryb demo** — endpoint tworzący tymczasowe konto demonstracyjne bez rejestracji, do szybkiego przetestowania aplikacji.
+Aplikacja jest dostępna online:
 
-### Stos technologiczny
+👉 **https://stworzgrafik.online**
 
-| Warstwa | Technologia |
-|---|---|
-| Język / runtime | Java 17+ |
-| Framework | Spring Boot 3 (Spring Web, Spring Security, Spring Data JPA) |
-| Baza danych | relacyjna baza danych (JPA / Hibernate) — skonfiguruj wg własnych preferencji (np. PostgreSQL) |
-| Mapowanie DTO | MapStruct |
-| Uwierzytelnianie | JWT (stateless) + role + zakres uprawnień |
-| Eksport plików | Apache POI (Excel), OpenPDF (PDF) |
-| Storage plików | Cloudflare R2 (kompatybilny z AWS S3 SDK), presigned URL |
-| Build | Maven (dołączony Maven Wrapper `mvnw`) |
-| Konteneryzacja | Docker (`compose.yaml`) |
-| Jakość kodu | JetBrains Qodana (`qodana.yaml`) |
-
-### Architektura / hierarchia organizacyjna
-
-```mermaid
-flowchart TD
-    A[Sieć / Network] --> B[Region]
-    B --> C[Oddział / Branch]
-    C --> D[Sklep / Store]
-    D --> E[Pracownik / Employee]
-
-    F[ADMIN] -. pełny dostęp .-> A
-    G["DIRECTOR (zakres: Branch/Region/Network)"] -. dostęp wg zakresu .-> B
-    H[STORE_MANAGER] -. dostęp do własnego sklepu .-> D
-```
-
-### Model ról i uprawnień
-
-| Rola | Opis |
-|---|---|
-| `ADMIN` | Pełny dostęp do systemu, konfiguracja globalna (okresy rozliczeniowe, święta, użytkownicy). |
-| `DIRECTOR` | Dostęp ograniczony zakresem (`DirectorScope`): `BRANCH`, `REGION` lub `NETWORK`. |
-| `STORE_MANAGER` | Zarządza grafikiem i pracownikami przypisanego sklepu. |
-
-Autoryzacja realizowana jest na poziomie metod kontrolerów (`@PreAuthorize`), w tym poprzez dedykowany serwis sprawdzający dostęp do konkretnego sklepu/oddziału.
-
-### Uruchomienie lokalne
-
-**Wymagania:**
-- JDK 17+
-- Maven (lub użyj dołączonego `./mvnw`)
-- Relacyjna baza danych
-- Konto Cloudflare R2 (opcjonalne — wymagane tylko do eksportu plików do chmury)
-
-```bash
-# 1. Sklonuj repozytorium
-git clone https://github.com/makcc93/stworz-grafik-online.git
-cd stworz-grafik-online
-
-# 2. Skonfiguruj zmienne środowiskowe (patrz tabela poniżej)
-
-# 3. Uruchom aplikację
-./mvnw spring-boot:run
-
-# lub przez Docker Compose
-docker compose up
-```
-
-API domyślnie dostępne będzie pod `http://localhost:8080/api`.
-
-### Zmienne środowiskowe
-
-| Zmienna | Opis | Wymagane |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | Połączenie z bazą danych | ✅ |
-| `APPLICATION_SECURITY_JWT_SECRET_KEY` | Klucz podpisujący tokeny JWT (Base64) | ✅ |
-| `APPLICATION_SECURITY_JWT_EXPIRATION` | Czas ważności tokenu JWT (ms) | ✅ |
-| `APP_ADMIN_LOGIN` / `APP_ADMIN_PASSWORD` | Dane konta administratora tworzonego przy pierwszym starcie | ✅ |
-| `APP_CORS_ALLOWED_ORIGINS` | Dozwolone originy CORS (domyślnie `http://localhost:5173`) | opcjonalne |
-| `CLOUDFLARE_R2_ENDPOINT` / `CLOUDFLARE_R2_ACCESS_KEY` / `CLOUDFLARE_R2_SECRET_KEY` / `CLOUDFLARE_R2_BUCKET` | Konfiguracja storage’u plików (eksport Excel/PDF) | opcjonalne* |
-| `CLOUDFLARE_R2_PRESIGNED_URL_EXPIRY_MINUTES` | Czas ważności linku do pobrania pliku (domyślnie 15 min) | opcjonalne |
-
-\* wymagane, jeśli korzystasz z funkcji eksportu i pobierania plików.
-
-### Przegląd API (skrót)
-
-Pełny kontrakt API (schematy żądań/odpowiedzi) nie jest publikowany w tym repozytorium — poniżej znajduje się przegląd głównych grup endpointów.
-
-| Grupa | Bazowy path | Opis |
-|---|---|---|
-| Autoryzacja | `/api/auth` | Logowanie, wydawanie tokenu JWT |
-| Demo | `/api/demo` | Tworzenie tymczasowego konta demonstracyjnego |
-| Użytkownicy | `/api/users` | Zarządzanie kontami i rolami |
-| Sieć / Region / Oddział / Sklep | `/api/regions`, `/api/branches`, `/api/stores` | Struktura organizacyjna |
-| Pracownicy | `/api/employees`, `/.../position`, `/.../vacation`, `/.../delegation`, `/.../proposal` | Kartoteka pracowników, stanowiska, urlopy, delegacje, propozycje |
-| Zapotrzebowanie | `/api/demand-drafts` | Definiowanie zapotrzebowania godzinowego |
-| Grafik | `/api/schedules`, `/.../details`, `/.../hours`, `/.../messages` | Generowanie i zarządzanie grafikiem |
-| Zmiany | `/api/shifts`, `/.../shift-type-config` | Konfiguracja typów zmian |
-| Rozliczenia | `/api/billing-period` | Okresy rozliczeniowe |
-| Kalendarz | `/api/holidays` | Dni świąteczne |
-| Eksport | (wewnątrz modułu `fileExport`) | Generowanie i pobieranie plików Excel/PDF |
-
-### Demo
-
-🔗 **Live demo:** [stworzgrafik.online](https://stworzgrafik.online)
-
-Aplikacja udostępnia też endpoint `GET /api/demo`, który natychmiast tworzy tymczasowe konto testowe — bez potrzeby rejestracji.
-
-### Licencja / dostępność kodu
-
-Kod w tym repozytorium jest **publicznie widoczny w celach demonstracyjnych / portfolio**, ale **nie jest udostępniony na otwartej licencji** (typu MIT/Apache) — repozytorium nie zawiera pliku `LICENSE`, co zgodnie z domyślnym prawem autorskim oznacza **„All Rights Reserved”**: kod można przeglądać, ale nie wolno go kopiować, modyfikować, wdrażać ani wykorzystywać komercyjnie bez pisemnej zgody autora.
-
-Jeśli chcesz to sformalizować jeszcze mocniej, masz kilka opcji do rozważenia:
-- dodać krótką notatkę `LICENSE` z treścią „All rights reserved” (najprostsze, zgodne ze stanem obecnym),
-- użyć licencji typu *source-available* (np. „PolyForm Noncommercial”, „Business Source License”), jeśli chcesz pozwolić np. na naukę z kodu, ale zabronić użycia komercyjnego,
-- pozostawić stan obecny (brak pliku `LICENSE`) — jest on ważny prawnie, ale bywa mylący dla odwiedzających repo, dlatego warto przynajmniej dopisać notatkę tak jak w tym README.
-
-*Nie jestem prawnikiem — przy wyborze konkretnej licencji warto skonsultować się z prawnikiem, szczególnie jeśli projekt ma być komercjalizowany.*
-
-### Autor
-
-Projekt rozwijany i utrzymywany przez [@makcc93](https://github.com/makcc93).
+Repozytorium zawiera backend aplikacji. Frontend rozwijany jest w osobnym repozytorium przy użyciu **React + TypeScript + Vite**.
 
 ---
+
+## 🧠 Generator grafików
+
+Generator tworzy miesięczny grafik na podstawie danych zgromadzonych w systemie.
+
+Algorytm uwzględnia m.in.:
+
+* godzinowe zapotrzebowanie sklepu,
+* miesięczny wymiar czasu pracy pracowników,
+* pracowników zatrudnionych w niepełnym wymiarze,
+* role i kompetencje pracowników,
+* możliwość otwierania i zamykania sklepu,
+* obsługę kasy,
+* obsługę finansowania,
+* urlopy,
+* proponowane dni wolne,
+* preferowane godziny pracy,
+* delegacje pomiędzy sklepami,
+* dni dostaw,
+* godziny otwarcia sklepu,
+* minimalne okresy odpoczynku,
+* ograniczenia dotyczące liczby godzin pracy.
+
+Przed rozpoczęciem generowania dane wymagane dla danego miesiąca są pobierane z bazy i przygotowywane w strukturach pamięciowych, ograniczając liczbę zapytań wykonywanych podczas pracy algorytmu.
+
+Po wygenerowaniu harmonogramu system zapisuje również komunikaty dotyczące potencjalnych problemów, np.:
+
+* niedoboru pracowników,
+* braku osoby mogącej otworzyć lub zamknąć sklep,
+* problemów z obsadą określonych kompetencji,
+* konfliktów wynikających z dostępności,
+* problemów z realizacją zapotrzebowania.
+
 ---
 
-## 🇬🇧 Description (EN)
+## ✨ Najważniejsze funkcje
 
-### About
+### 📊 Zarządzanie zapotrzebowaniem
 
-**StworzGrafik** (Polish for *"create a schedule"*) is the backend of a system for automatically generating monthly employee shift schedules for multi-branch retail chains. The Java (Spring Boot) API handles the full workflow: defining a store's hourly staffing demand, accounting for employee availability and preferences, and automatically producing a schedule compliant with labor-law rest requirements, plus exporting it.
+Dla każdego dnia można określić godzinowe zapotrzebowanie na pracowników.
 
-This repository contains the **backend (REST API)**. The frontend SPA (communicating with the API over REST + JWT) is maintained separately.
+Dane te stanowią podstawę działania algorytmu generującego grafik.
 
-> ⚠️ This repository is meant to showcase the project's architecture and engineering approach. The core scheduling algorithm is described at a high level only, without implementation details (see [License](#-license--code-availability)).
+### 👥 Zarządzanie pracownikami
 
-### Key Features
+System przechowuje informacje dotyczące m.in.:
 
-- 🧠 **Automatic schedule generator** — matches employees to shifts based on a store's hourly demand, roles (opening/closing/checkout/cash handling), delivery days, and "special" employees.
-- 🙋 **Employee availability & preferences** — vacations, requested days off, shift preference proposals, and inter-store delegations are all factored into schedule generation.
-- ✅ **Schedule compliance analysis** — automatically flags issues such as understaffing, uneven shift distribution, rest-time violations (e.g. weekly rest requirements), excessive day-off requests, and suggests shift/hour swaps between employees.
-- 🏢 **Organizational structure** — *Network → Region → Branch → Store → Employee* hierarchy, with user roles and a director's permission scope (branch / region / entire network).
-- ⏱️ **Work norms & billing periods** — configurable monthly work-hour norms and billing periods.
-- 🎉 **Holiday calendar** — configurable public holidays affecting opening hours and scheduling.
-- 📤 **Data export** — generates Excel and PDF files, stored in Cloudflare R2 with time-limited (presigned) download links.
-- 🔐 **Security** — JWT authentication, `ADMIN` / `DIRECTOR` / `STORE_MANAGER` roles, method-level authorization (including access scoped to a specific store/branch).
-- 🚀 **Demo mode** — an endpoint that instantly creates a temporary demo account, no registration required.
+* stanowiska,
+* wymiaru czasu pracy,
+* kompetencji,
+* dostępności,
+* dni wolnych,
+* urlopów,
+* delegacji,
+* preferowanych zmian.
 
-### Tech Stack
+### 🏢 Struktura organizacyjna
 
-| Layer | Technology |
-|---|---|
-| Language / runtime | Java 17+ |
-| Framework | Spring Boot 3 (Spring Web, Spring Security, Spring Data JPA) |
-| Database | relational database (JPA / Hibernate) — MySQL |
-| DTO mapping | MapStruct |
-| Auth | Stateless JWT + roles + permission scope |
-| File export | Apache POI (Excel), OpenPDF (PDF) |
-| File storage | Cloudflare R2 (S3-compatible, AWS SDK), presigned URLs |
-| Build | Maven (Maven Wrapper `mvnw` included) |
-| Containerization | Docker (`compose.yaml`) |
-| Code quality | JetBrains Qodana (`qodana.yaml`) |
+System obsługuje hierarchię:
 
-### Architecture / Organizational Hierarchy
-
-```mermaid
-flowchart TD
-    A[Network] --> B[Region]
-    B --> C[Branch]
-    C --> D[Store]
-    D --> E[Employee]
-
-    F[ADMIN] -. full access .-> A
-    G["DIRECTOR (scope: Branch/Region/Network)"] -. scoped access .-> B
-    H[STORE_MANAGER] -. own store access .-> D
+```text
+Network
+   └── Region
+        └── Branch
+             └── Store
+                  └── Employee
 ```
 
-### Roles & Permissions
+Pozwala to na zarządzanie wieloma sklepami i różnymi poziomami dostępu.
 
-| Role | Description |
-|---|---|
-| `ADMIN` | Full system access; global configuration (billing periods, holidays, users). |
-| `DIRECTOR` | Access limited by scope (`DirectorScope`): `BRANCH`, `REGION`, or `NETWORK`. |
-| `STORE_MANAGER` | Manages the schedule and employees of their assigned store. |
+### 🔐 Role i uprawnienia
 
-Authorization is enforced at the controller-method level (`@PreAuthorize`), including a dedicated service that checks access to a specific store/branch.
+Obsługiwane role użytkowników:
 
-### Getting Started
+| Rola            | Dostęp                                           |
+| --------------- | ------------------------------------------------ |
+| `ADMIN`         | pełny dostęp do systemu                          |
+| `DIRECTOR`      | dostęp do przypisanego Branch / Region / Network |
+| `STORE_MANAGER` | dostęp do własnego sklepu                        |
 
-**Requirements:**
-- JDK 17+
-- Maven (or use the included `./mvnw`)
-- A relational database
-- A Cloudflare R2 account (optional — only needed for cloud file export)
+Autoryzacja realizowana jest przy pomocy **Spring Security + JWT**.
+
+Dostęp do zasobów jest dodatkowo kontrolowany na poziomie metod przy wykorzystaniu `@PreAuthorize`.
+
+### 📤 Eksport
+
+Wygenerowany grafik może zostać wyeksportowany do:
+
+* Excel,
+* PDF.
+
+Pliki przechowywane są w **Cloudflare R2**, a backend generuje czasowe **presigned URLs** pozwalające na ich pobranie.
+
+### 🚀 Tryb demo
+
+Aplikację można przetestować bez zakładania własnego konta.
+
+Backend może automatycznie utworzyć tymczasowe środowisko demonstracyjne wraz z danymi potrzebnymi do przetestowania najważniejszych funkcji systemu.
+
+---
+
+# 🛠 Stack technologiczny
+
+| Obszar                | Technologia                 |
+| --------------------- | --------------------------- |
+| Język                 | **Java 21**                 |
+| Backend               | **Spring Boot 3.5**         |
+| REST API              | Spring Web                  |
+| Security              | Spring Security + JWT       |
+| ORM                   | Spring Data JPA / Hibernate |
+| Baza danych           | **MySQL 8**                 |
+| Migracje DB           | **Flyway**                  |
+| Mapowanie DTO         | MapStruct                   |
+| Messaging             | **Apache Kafka**            |
+| Testy                 | JUnit 5, Mockito            |
+| Excel                 | Apache POI                  |
+| PDF                   | OpenPDF                     |
+| Object Storage        | Cloudflare R2 / S3 API      |
+| Build                 | Maven                       |
+| Konteneryzacja        | Docker + Docker Compose     |
+| CI/CD                 | GitHub Actions              |
+| Reverse proxy / HTTPS | Caddy                       |
+| Hosting               | Hetzner VPS                 |
+| Code Quality          | JetBrains Qodana            |
+
+Frontend:
+
+```text
+React
+TypeScript
+Vite
+Tailwind CSS
+```
+
+---
+
+# 🏗 Architektura
+
+Backend został podzielony na moduły odpowiadające poszczególnym obszarom domenowym.
+
+Przykładowe moduły:
+
+```text
+auth
+user
+region
+branch
+store
+employee
+shift
+demand
+schedule
+billing
+holiday
+fileExport
+demo
+```
+
+Typowy przepływ:
+
+```text
+HTTP Request
+      ↓
+Controller
+      ↓
+Service
+      ↓
+Repository
+      ↓
+JPA / Hibernate
+      ↓
+MySQL 8
+```
+
+DTO są oddzielone od encji domenowych, a mapowanie pomiędzy nimi realizowane jest przy pomocy **MapStruct**.
+
+---
+
+## 🌐 Infrastruktura
+
+Produkcja działa na VPS w **Hetzner**.
+
+```text
+                         Internet
+                            │
+                            ▼
+                      stworzgrafik.online
+                            │
+                            ▼
+                    ┌───────────────┐
+                    │     Caddy     │
+                    │     HTTPS     │
+                    └───────┬───────┘
+                            │
+                ┌───────────┴───────────┐
+                ▼                       ▼
+           React frontend          Spring Boot
+                                    REST API
+                                       │
+                        ┌──────────────┼──────────────┐
+                        ▼              ▼              ▼
+                     MySQL 8        Kafka       Cloudflare R2
+```
+
+Aplikacja uruchamiana jest za pomocą **Docker Compose**.
+
+Deployment backendu jest automatyzowany przez **GitHub Actions**.
+
+Typowy flow deploymentu:
+
+```text
+git push
+   ↓
+GitHub
+   ↓
+GitHub Actions
+   ↓
+tests / build
+   ↓
+Docker image
+   ↓
+deployment
+   ↓
+Hetzner VPS
+   ↓
+Docker Compose
+```
+
+---
+
+# 🗄 Baza danych
+
+Aplikacja wykorzystuje:
+
+**MySQL 8**
+
+Zmiany schematu bazy danych są wersjonowane przy pomocy:
+
+**Flyway**
+
+Migracje znajdują się w:
+
+```text
+src/main/resources/db/migration
+```
+
+Dzięki temu struktura bazy danych jest tworzona i aktualizowana automatycznie podczas uruchamiania aplikacji.
+
+---
+
+# 📨 Apache Kafka
+
+Projekt wykorzystuje również **Apache Kafka** do obsługi zdarzeń aplikacyjnych.
+
+Pozwala to oddzielać operacje wykonywane bezpośrednio podczas requestu HTTP od logiki reagującej na zdarzenia występujące w systemie.
+
+Przykładowy przepływ:
+
+```text
+Spring Boot
+    │
+    │ publish event
+    ▼
+Kafka Producer
+    │
+    ▼
+Kafka Topic
+    │
+    ▼
+Kafka Consumer
+    │
+    ▼
+Event Handler
+```
+
+Integracja z Kafką jest rozwijana wraz z kolejnymi funkcjami aplikacji.
+
+---
+
+# 🔐 Security
+
+API wykorzystuje stateless authentication opartą o JWT.
+
+```text
+Login
+  ↓
+credentials validation
+  ↓
+JWT generation
+  ↓
+client
+  ↓
+Authorization: Bearer <token>
+  ↓
+JwtAuthenticationFilter
+  ↓
+Spring Security
+  ↓
+secured endpoint
+```
+
+Backend stosuje również autoryzację zależną od:
+
+* roli użytkownika,
+* przypisanego sklepu,
+* zakresu organizacyjnego użytkownika.
+
+---
+
+# 🧪 Testy
+
+Projekt wykorzystuje:
+
+* **JUnit 5**
+* **Mockito**
+* testy warstwy serwisowej,
+* testy logiki biznesowej.
+
+Testy uruchamiane są również podczas procesu CI/CD.
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/makcc93/stworz-grafik-online.git
-cd stworz-grafik-online
-
-# 2. Configure environment variables (see table below)
-
-# 3. Run the application
-./mvnw spring-boot:run
-
-# or via Docker Compose
-docker compose up
+./mvnw test
 ```
 
-The API will be available by default at `http://localhost:8080/api`.
+---
 
-### Environment Variables
+# 🚀 Uruchomienie lokalne
 
-| Variable | Description | Required |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | Database connection | ✅ |
-| `APPLICATION_SECURITY_JWT_SECRET_KEY` | JWT signing key (Base64) | ✅ |
-| `APPLICATION_SECURITY_JWT_EXPIRATION` | JWT token expiration (ms) | ✅ |
-| `APP_ADMIN_LOGIN` / `APP_ADMIN_PASSWORD` | Admin account credentials created on first startup | ✅ |
-| `APP_CORS_ALLOWED_ORIGINS` | Allowed CORS origins (defaults to `http://localhost:5173`) | optional |
-| `CLOUDFLARE_R2_ENDPOINT` / `CLOUDFLARE_R2_ACCESS_KEY` / `CLOUDFLARE_R2_SECRET_KEY` / `CLOUDFLARE_R2_BUCKET` | File storage configuration (Excel/PDF export) | optional* |
-| `CLOUDFLARE_R2_PRESIGNED_URL_EXPIRY_MINUTES` | Download link expiry time (defaults to 15 min) | optional |
+## Wymagania
 
-\* required only if you use the file export/download features.
+* Java 21
+* Docker + Docker Compose
 
-### API Overview
+lub:
 
-The full API contract (request/response schemas) isn't published in this repository — below is an overview of the main endpoint groups.
+* Java 21
+* MySQL 8
+* Maven
 
-| Group | Base path | Description |
-|---|---|---|
-| Auth | `/api/auth` | Login, JWT issuance |
-| Demo | `/api/demo` | Temporary demo account creation |
-| Users | `/api/users` | Account & role management |
-| Network / Region / Branch / Store | `/api/regions`, `/api/branches`, `/api/stores` | Organizational structure |
-| Employees | `/api/employees`, `/.../position`, `/.../vacation`, `/.../delegation`, `/.../proposal` | Employee records, positions, vacations, delegations, proposals |
-| Demand | `/api/demand-drafts` | Hourly staffing demand definition |
-| Schedule | `/api/schedules`, `/.../details`, `/.../hours`, `/.../messages` | Schedule generation & management |
-| Shifts | `/api/shifts`, `/.../shift-type-config` | Shift type configuration |
-| Billing | `/api/billing-period` | Billing periods |
-| Calendar | `/api/holidays` | Public holidays |
-| Export | (inside the `fileExport` module) | Excel/PDF file generation & download |
+---
 
-### Demo
+## Opcja 1 — Docker Compose
 
-🔗 **Live demo:** [stworzgrafik.online](https://stworzgrafik.online)
+```bash
+git clone https://github.com/makcc93/stworz-grafik-online.git
 
-The app also exposes a `GET /api/demo` endpoint that instantly provisions a temporary test account — no registration needed.
+cd stworz-grafik-online
 
-### License / Code Availability
+docker compose up -d --build
+```
 
-The code in this repository is **publicly visible for demonstration/portfolio purposes**, but **it is not released under an open-source license** (e.g. MIT/Apache) — there is no `LICENSE` file, which under default copyright law means **"All Rights Reserved"**: the code may be viewed, but not copied, modified, deployed, or used commercially without the author's written permission.
+---
 
-If you'd like to formalize this further, a few options:
-- add a short `LICENSE` file stating "All rights reserved" (simplest, matches the current state),
-- use a *source-available* license (e.g. "PolyForm Noncommercial", "Business Source License") if you want to allow learning from the code while blocking commercial use,
-- keep the current state (no `LICENSE` file) — it's legally valid, but can be confusing to visitors, so it's worth at least noting it explicitly, as done here.
+## Opcja 2 — uruchomienie przez Maven
 
-*I'm not a lawyer — it's worth consulting one when choosing a specific license, especially if the project will be commercialized.*
+```bash
+git clone https://github.com/makcc93/stworz-grafik-online.git
 
-### Author
+cd stworz-grafik-online
 
-Built and maintained by [@makcc93](https://github.com/makcc93).
+./mvnw spring-boot:run
+```
+
+API dostępne jest domyślnie pod:
+
+```text
+http://localhost:8080
+```
+
+---
+
+# ⚙️ Konfiguracja
+
+Najważniejsze zmienne środowiskowe:
+
+| Zmienna                               | Opis                   |
+| ------------------------------------- | ---------------------- |
+| `SPRING_DATASOURCE_URL`               | adres MySQL            |
+| `SPRING_DATASOURCE_USERNAME`          | użytkownik MySQL       |
+| `SPRING_DATASOURCE_PASSWORD`          | hasło MySQL            |
+| `APPLICATION_SECURITY_JWT_SECRET_KEY` | klucz podpisujący JWT  |
+| `APPLICATION_SECURITY_JWT_EXPIRATION` | czas ważności JWT      |
+| `APP_ADMIN_LOGIN`                     | login administratora   |
+| `APP_ADMIN_PASSWORD`                  | hasło administratora   |
+| `APP_CORS_ALLOWED_ORIGINS`            | dozwolone originy      |
+| `CLOUDFLARE_R2_ENDPOINT`              | endpoint Cloudflare R2 |
+| `CLOUDFLARE_R2_ACCESS_KEY`            | access key R2          |
+| `CLOUDFLARE_R2_SECRET_KEY`            | secret key R2          |
+| `CLOUDFLARE_R2_BUCKET`                | bucket R2              |
+
+Sekrety nie są przechowywane w repozytorium.
+
+---
+
+# 📡 API
+
+Przykładowe obszary API:
+
+| Obszar         | Endpoint                             |
+| -------------- | ------------------------------------ |
+| Authentication | `/api/auth/**`                       |
+| Demo           | `/api/demo/**`                       |
+| Users          | `/api/users/**`                      |
+| Regions        | `/api/regions/**`                    |
+| Branches       | `/api/branches/**`                   |
+| Stores         | `/api/stores/**`                     |
+| Employees      | `/api/stores/{storeId}/employees/**` |
+| Demand         | `/api/stores/{storeId}/drafts/**`    |
+| Schedules      | `/api/stores/{storeId}/schedules/**` |
+
+Pełny kontrakt API nie jest publikowany w README.
+
+---
+
+# 🌐 Demo
+
+Aplikacja działa online:
+
+### 👉 https://stworzgrafik.online
+
+Tryb demonstracyjny pozwala przetestować aplikację bez konfiguracji własnego środowiska.
+
+---
+
+# 📦 Frontend
+
+Frontend aplikacji utrzymywany jest w oddzielnym repozytorium.
+
+Technologie:
+
+```text
+React
+TypeScript
+Vite
+Tailwind CSS
+Framer Motion
+```
+
+Frontend komunikuje się z backendem poprzez REST API zabezpieczone JWT.
+
+---
+
+# 📜 Licencja
+
+Kod źródłowy tego repozytorium jest publicznie dostępny przede wszystkim w celach **portfolio oraz demonstracji projektu**.
+
+Projekt nie jest obecnie udostępniany na licencji open-source pozwalającej na jego swobodne kopiowanie, modyfikowanie lub wykorzystanie komercyjne.
+
+**All rights reserved.**
+
+---
+
+# 👨‍💻 Autor
+
+Projekt zaprojektowany i rozwijany przez:
+
+**Mateusz Kruk**
+
+GitHub: [@makcc93](https://github.com/makcc93)
+
+---
+
+# 🇬🇧 Description EN
+
+## About
+
+**StworzGrafik** is a web application for automatically generating monthly employee work schedules for retail stores and larger organizational structures.
+
+The backend is built with **Java 21 and Spring Boot** and exposes a REST API responsible for the entire scheduling workflow:
+
+```text
+staffing demand
+      ↓
+employee availability
+      ↓
+business constraints
+      ↓
+schedule generation
+      ↓
+validation
+      ↓
+export
+```
+
+The core of the project is a custom scheduling algorithm that assigns employees to shifts based on hourly staffing requirements while taking into account:
+
+* employee working-hour limits,
+* part-time contracts,
+* employee roles and skills,
+* store opening and closing requirements,
+* checkout availability,
+* vacations,
+* requested days off,
+* preferred shifts,
+* inter-store delegations,
+* delivery days,
+* store opening hours,
+* required rest periods.
+
+Live application:
+
+👉 **https://stworzgrafik.online**
+
+The repository contains the application backend.
+
+The frontend is developed separately using **React, TypeScript and Vite**.
+
+---
+
+## ✨ Key Features
+
+* 🧠 custom automatic scheduling engine
+* 📊 hourly staffing-demand configuration
+* 👥 employee management
+* 🙋 vacations, requested days off and shift preferences
+* 🔄 inter-store employee delegations
+* 🏢 multi-level organizational structure
+* 🔐 JWT authentication and role-based authorization
+* 📊 schedule analysis and warning generation
+* 📤 Excel and PDF export
+* ☁️ Cloudflare R2 object storage
+* 📨 Apache Kafka event processing
+* 🚀 temporary demo environments
+* 🐳 Docker-based deployment
+* 🔄 automated CI/CD
+
+---
+
+# 🛠 Tech Stack
+
+| Area                | Technology                  |
+| ------------------- | --------------------------- |
+| Language            | **Java 21**                 |
+| Backend             | **Spring Boot 3.5**         |
+| Web                 | Spring Web                  |
+| Security            | Spring Security + JWT       |
+| Persistence         | Spring Data JPA / Hibernate |
+| Database            | **MySQL 8**                 |
+| Database migrations | **Flyway**                  |
+| DTO mapping         | MapStruct                   |
+| Messaging           | **Apache Kafka**            |
+| Testing             | JUnit 5, Mockito            |
+| Excel               | Apache POI                  |
+| PDF                 | OpenPDF                     |
+| Object storage      | Cloudflare R2               |
+| Build               | Maven                       |
+| Containers          | Docker / Docker Compose     |
+| CI/CD               | GitHub Actions              |
+| Reverse proxy       | Caddy                       |
+| Hosting             | Hetzner VPS                 |
+| Code quality        | JetBrains Qodana            |
+
+Frontend:
+
+```text
+React + TypeScript + Vite + Tailwind CSS
+```
+
+---
+
+# 🏗 Architecture
+
+Typical backend request flow:
+
+```text
+HTTP Request
+     ↓
+Controller
+     ↓
+Service
+     ↓
+Repository
+     ↓
+Hibernate / JPA
+     ↓
+MySQL 8
+```
+
+DTO mapping is handled using **MapStruct**, while database schema evolution is managed using **Flyway migrations**.
+
+---
+
+# 🌐 Infrastructure
+
+Production environment:
+
+```text
+Internet
+   ↓
+stworzgrafik.online
+   ↓
+Caddy / HTTPS
+   ↓
+Docker Compose
+   ├── Frontend
+   ├── Spring Boot Backend
+   ├── MySQL 8
+   └── Apache Kafka
+
+Backend
+   ↓
+Cloudflare R2
+```
+
+Deployment is automated using **GitHub Actions**.
+
+---
+
+# 🚀 Running locally
+
+## Requirements
+
+* Java 21
+* Docker
+* Docker Compose
+
+Clone the repository:
+
+```bash
+git clone https://github.com/makcc93/stworz-grafik-online.git
+
+cd stworz-grafik-online
+```
+
+Start using Docker:
+
+```bash
+docker compose up -d --build
+```
+
+or Maven:
+
+```bash
+./mvnw spring-boot:run
+```
+
+---
+
+# 🧪 Tests
+
+Run tests using:
+
+```bash
+./mvnw test
+```
+
+The project uses **JUnit 5 and Mockito**.
+
+Tests are also executed as part of the CI/CD pipeline.
+
+---
+
+# 🌐 Live Demo
+
+### 👉 https://stworzgrafik.online
+
+A temporary demo environment can be created without registering a permanent account.
+
+---
+
+# 📜 License
+
+This repository is publicly accessible primarily for **portfolio and project demonstration purposes**.
+
+The source code is not currently distributed under an open-source license permitting unrestricted copying, modification, deployment or commercial use.
+
+**All rights reserved.**
+
+---
+
+# 👨‍💻 Author
+
+Designed and developed by **Mateusz Kruk**
+
+GitHub: [@makcc93](https://github.com/makcc93)
