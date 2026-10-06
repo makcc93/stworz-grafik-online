@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.demo.controller;
 
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.demo.DTO.DemoResponse;
 import online.stworzgrafik.StworzGrafik.demo.DemoService;
 import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ public class DemoController {
     private final DemoService demoService;
 
     @GetMapping
-    ResponseEntity<AuthResponse> createDemoAccess(){
-        return ResponseEntity.ok(demoService.createAccount());
+    ResponseEntity<DemoResponse> createDemoAccess(){
+        return ResponseEntity.ok(demoService.createDemo());
     }
 }

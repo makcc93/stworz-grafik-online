@@ -17,6 +17,7 @@ import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
 import online.stworzgrafik.StworzGrafik.fileExport.ExcelExport;
+import online.stworzgrafik.StworzGrafik.fileExport.ExcelExportFromDatabase;
 import online.stworzgrafik.StworzGrafik.fileExport.PdfExport;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
@@ -74,6 +75,9 @@ class MonthlyStoreScheduleGeneratorTest {
 
     @Mock
     private ExcelExport excelExport;
+
+    @Mock
+    private ExcelExportFromDatabase excelExportFromDatabase;
 
     @Mock
     private SpecialEmployeesShiftMatcher specialEmployeesShiftMatcher;

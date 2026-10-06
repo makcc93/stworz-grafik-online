@@ -1,6 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import lombok.extern.slf4j.Slf4j;
+import online.stworzgrafik.StworzGrafik.IntegrationTestBase;
 import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ManagerOpeningHourAnalysisStrategy;
@@ -46,10 +47,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
@@ -62,10 +61,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-@ActiveProfiles("test")
+
 @Slf4j
-@SpringBootTest
-public class EmployeeToShiftMatcherIT {
+public class EmployeeToShiftMatcherIT extends IntegrationTestBase {
     @Autowired
     private TestDatabaseCleaner cleaner;
 

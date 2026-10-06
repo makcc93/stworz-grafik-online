@@ -13,4 +13,5 @@ public interface StoreEntityService {
     Store saveEntity(@NotNull @Valid Store store);
     Store getEntityById(@NotNull Long id);
     Store getEntityByIdInternal(@NotNull Long id);
+    void deleteByIdInternalIfExists(Long storeId);
 }

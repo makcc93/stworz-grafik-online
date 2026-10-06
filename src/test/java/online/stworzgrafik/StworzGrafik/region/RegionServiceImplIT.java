@@ -3,21 +3,19 @@ package online.stworzgrafik.StworzGrafik.region;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import online.stworzgrafik.StworzGrafik.IntegrationTestBase;
 import online.stworzgrafik.StworzGrafik.region.DTO.CreateRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.ResponseRegionDTO;
 import online.stworzgrafik.StworzGrafik.region.DTO.UpdateRegionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-@ActiveProfiles("test")
-@SpringBootTest
+
 @Transactional
-class RegionServiceImplIT {
+class RegionServiceImplIT extends IntegrationTestBase {
     @Autowired
     private RegionService regionService;
 

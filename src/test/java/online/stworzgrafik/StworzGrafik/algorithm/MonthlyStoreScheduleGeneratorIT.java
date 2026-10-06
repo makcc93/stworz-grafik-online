@@ -1,10 +1,9 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import de.focus_shift.jollyday.core.HolidayManager;
-import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import lombok.extern.slf4j.Slf4j;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
+import online.stworzgrafik.StworzGrafik.IntegrationTestBase;
+import online.stworzgrafik.StworzGrafik.TestDatabaseCleaner;
 import online.stworzgrafik.StworzGrafik.algorithm.deliveryCover.WarehousemanScheduleGenerator;
 import online.stworzgrafik.StworzGrafik.algorithm.preparation.DaysOffApplier;
 import online.stworzgrafik.StworzGrafik.algorithm.preparation.ProposalShiftApplier;
@@ -53,12 +52,8 @@ import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.DTO.UpdateStoreDeliveryDTO;
-import online.stworzgrafik.StworzGrafik.store.delivery.StoreDelivery;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
-import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ExcludedEmployeesRequest;
-import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourMappingRequest;
-import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
 import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.AppUserService;
@@ -67,27 +62,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
-@ActiveProfiles("test")
 @Slf4j
-@SpringBootTest
-class MonthlyStoreScheduleGeneratorIT {
+class MonthlyStoreScheduleGeneratorIT extends IntegrationTestBase {
 
     @Autowired
     private MonthlyStoreScheduleGenerator monthlyStoreScheduleGenerator;

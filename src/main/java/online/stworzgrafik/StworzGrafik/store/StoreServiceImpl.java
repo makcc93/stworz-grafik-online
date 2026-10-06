@@ -131,6 +131,15 @@ class StoreServiceImpl implements StoreService, StoreEntityService{
     }
 
     @Override
+    public void deleteByIdInternalIfExists(Long storeId) {
+        if (!storeRepository.existsById(storeId)){
+            return;
+        }
+
+        storeRepository.deleteById(storeId);
+    }
+
+    @Override
     public Store createEntityStore(CreateStoreDTO dto) {
         ifStoreAlreadyExist(dto);
 

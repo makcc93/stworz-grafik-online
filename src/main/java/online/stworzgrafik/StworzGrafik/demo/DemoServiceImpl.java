@@ -1,37 +1,53 @@
 package online.stworzgrafik.StworzGrafik.demo;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.branch.BranchService;
+import online.stworzgrafik.StworzGrafik.demo.DTO.DemoCreatedEvent;
+import online.stworzgrafik.StworzGrafik.demo.DTO.DemoResponse;
+import online.stworzgrafik.StworzGrafik.demo.lifecycle.DemoSessionService;
 import online.stworzgrafik.StworzGrafik.employee.DTO.CreateEmployeeDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeService;
 import online.stworzgrafik.StworzGrafik.region.RegionService;
 import online.stworzgrafik.StworzGrafik.security.AuthService;
 import online.stworzgrafik.StworzGrafik.store.DTO.CreateStoreDTO;
+import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.StoreService;
 import online.stworzgrafik.StworzGrafik.user.AppUserService;
 import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
 import online.stworzgrafik.StworzGrafik.user.DTO.CreateUserRequest;
 import online.stworzgrafik.StworzGrafik.user.DTO.LoginRequest;
 import online.stworzgrafik.StworzGrafik.user.UserRole;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 class DemoServiceImpl implements DemoService {
     private final AppUserService appUserService;
     private final StoreService storeService;
+    private final StoreEntityService storeEntityService;
     private final BranchService branchService;
     private final RegionService regionService;
     private final EmployeeService employeeService;
     private final AuthService authService;
+    private final DemoEventProducer demoEventProducer;
+    private final DemoSessionService demoSessionService;
+
+    @Value("${app.demo.ttl-minutes}")
+    private Long demoTtlMinutes;
 
     @Override
-    public AuthResponse createAccount() {
+    @Transactional
+    public DemoResponse createDemo() {
         String demo = "DEMO";
         Long regionId = regionService.findByName(demo).id();
         Long branchId = branchService.findByName(demo).id();
@@ -51,11 +67,13 @@ class DemoServiceImpl implements DemoService {
         String login = "demo-" + randomNumber;
         String rawPassword = login;
 
+        UserRole demoStoreManager = UserRole.STORE_MANAGER;
+
         Long userId = appUserService.createSystemUser(
                 new CreateUserRequest(
                         login,
                         rawPassword,
-                        UserRole.STORE_MANAGER,
+                        demoStoreManager,
                         demoStoreId,
                         branchId,
                         regionId,
@@ -64,7 +82,42 @@ class DemoServiceImpl implements DemoService {
         ).id();
 
         createStoreEmployees(employeeService, demoStoreId, randomNumber);
-        return authService.login(new LoginRequest(login, rawPassword));
+
+        long ttlSeconds = demoTtlMinutes * 60;
+        Instant expiresAt = Instant.now().plusSeconds(ttlSeconds);
+        DemoCreatedEvent demoCreatedEvent = new DemoCreatedEvent(userId, demoStoreId, expiresAt);
+
+        demoSessionService.register(demoCreatedEvent);
+
+        demoEventProducer.sendDemoCreatedEvent(demoCreatedEvent);
+
+        authService.login(new LoginRequest(login, rawPassword));
+
+        return new DemoResponse(
+                login,
+                demoStoreManager.name(),
+                demoStoreId,
+                expiresAt
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deleteDemo(Long userId, Long storeId) {
+        log.info(
+                "DEMO CLEANUP START userId={}, storeId={}",
+                userId,
+                storeId
+        );
+
+        appUserService.deleteSystemUserIfExists(userId);
+        storeEntityService.deleteByIdInternalIfExists(storeId);
+
+        log.info(
+                "DEMO CLEANUP FINISHED userId={}, storeId={}",
+                userId,
+                storeId
+        );
     }
 
     private void createStoreEmployees(EmployeeService employeeService, Long storeId, int randomNumber) {

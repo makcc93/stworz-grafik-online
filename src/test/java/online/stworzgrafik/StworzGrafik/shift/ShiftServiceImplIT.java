@@ -2,22 +2,19 @@ package online.stworzgrafik.StworzGrafik.shift;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import online.stworzgrafik.StworzGrafik.IntegrationTestBase;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ResponseShiftDTO;
 import online.stworzgrafik.StworzGrafik.shift.DTO.ShiftHoursDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ActiveProfiles("test")
-@SpringBootTest
 @Transactional
-class ShiftServiceImplIT {
+class ShiftServiceImplIT extends IntegrationTestBase {
 
     @Autowired
     ShiftRepository shiftRepository;
