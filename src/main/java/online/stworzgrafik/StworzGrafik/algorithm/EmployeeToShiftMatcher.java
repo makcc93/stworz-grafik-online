@@ -511,7 +511,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
-        Optional<Shift> closeShift = shiftsSorted.stream().min(longestCloseStoreShift());
+        Optional<Shift> closeShift = shiftsSorted.stream().min(shortestCloseStoreShift());
 
         if (closeShift.isEmpty()){
             log.info("Brak dostępnej zmiany do zamknięcia sklepu w dniu {}", date);
@@ -775,6 +775,15 @@ public class EmployeeToShiftMatcher {
                         Comparator.comparingInt(
                                 (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
                         ).reversed()
+                );
+    }
+
+    private static Comparator<Shift> shortestCloseStoreShift() {
+        return Comparator.comparingInt(
+                        (Shift shift) -> shift.getEndHour().getHour()
+                ).reversed()
+                .thenComparingInt(
+                        (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
                 );
     }
 
