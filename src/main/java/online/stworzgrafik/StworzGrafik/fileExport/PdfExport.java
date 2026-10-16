@@ -126,7 +126,7 @@ public class PdfExport {
             mainTable.addCell(headerCell("Pracownik", hdrFont));
             for (int d = 1; d <= daysInMonth; d++) {
                 LocalDate date = LocalDate.of(year, month, d);
-                String text = d + " " + yearMonth.getMonth().toString();
+                String text = d + " " + yearMonth.getMonth().getDisplayName(TextStyle.SHORT, Locale.of("pl", "PL"));
                 Color bg = isWeekendOrHoliday(date) ? COLOR_WEEKEND : null;
                 mainTable.addCell(styledCell(text, hdrFont, bg, Element.ALIGN_CENTER, HDR_PAD));
             }
