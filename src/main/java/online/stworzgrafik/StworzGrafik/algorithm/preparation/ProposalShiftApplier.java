@@ -45,6 +45,7 @@ public class ProposalShiftApplier {
             for (Employee employee : employees){
                 if (context.employeeHasProposalShift(employee,date)){
                     if (employeeIsOnVacation(context, employee, date)) continue;
+                    if (employeeIsOnDelegation(context,employee,date)) continue;
                     if (employeeIsOnDayOff(context, employee, date)) continue;
 
                     int[] proposalShiftAsArray = context.employeeProposalShiftAsArray(employee, date);
@@ -81,7 +82,7 @@ public class ProposalShiftApplier {
                     new CreateScheduleMessageDTO(
                             ScheduleMessageType.INFO,
                             ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
-                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest urlopie i ma propozycję w dniu " + date,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest na urlopie i ma propozycję zmiany w dniu " + date,
                             employee.getId(),
                             date
                     )
@@ -91,4 +92,22 @@ public class ProposalShiftApplier {
         }
         return false;
     }
+
+    private static boolean employeeIsOnDelegation(ScheduleGeneratorContext context, Employee employee,LocalDate date) {
+        if (context.employeeIsOnDelegation(employee, date)){
+            context.registerMessageOnSchedule(
+                    new CreateScheduleMessageDTO(
+                            ScheduleMessageType.INFO,
+                            ScheduleMessageCode.EMPLOYEE_DOUBLE_PROPOSAL,
+                            "Pracownik " + employee.getFirstName() + " " + employee.getLastName() + " jest na delegacji i ma propozycję zmiany w dniu " + date,
+                            employee.getId(),
+                            date
+                    )
+            );
+
+            return true;
+        }
+        return false;
+    }
+
 }

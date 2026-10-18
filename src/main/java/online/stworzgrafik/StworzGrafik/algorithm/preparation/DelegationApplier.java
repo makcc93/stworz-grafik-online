@@ -13,6 +13,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,7 +42,12 @@ public class DelegationApplier {
 
             for (Employee employee : employeesWithDelegation) {
                 if (context.employeeIsOnDelegation(employee, date)) {
-                     context.registerShiftOnSchedule(date,employee,delegationShift,date.getDayOfWeek());
+                    Shift employeePossibleShift = context.getFinalSchedule().getOrDefault(date, Map.of()).getOrDefault(employee, context.getDefaultDaysOffShift());
+                    if (context.getShiftLength(employeePossibleShift).compareTo(BigDecimal.ZERO) > 0){
+                        context.deleteShiftFromSchedule(date,employee);
+                    }
+
+                    context.registerShiftOnSchedule(date,employee,delegationShift,date.getDayOfWeek());
                 }
             }
         }
