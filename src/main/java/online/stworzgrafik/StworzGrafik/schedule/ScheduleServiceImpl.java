@@ -7,6 +7,8 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
+import online.stworzgrafik.StworzGrafik.schedule.kafka.DTO.ScheduleCreatedEvent;
+import online.stworzgrafik.StworzGrafik.schedule.kafka.ScheduleEventProducer;
 import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 import static online.stworzgrafik.StworzGrafik.schedule.ScheduleSpecification.*;
 
@@ -31,6 +35,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     private final StoreEntityService storeEntityService;
     private final CurrentUserProvider currentUserProvider;
     private final UserLabelService userLabelService;
+    private final ScheduleEventProducer scheduleEventProducer;
 
     @Override
     public Schedule findEntityById(Long scheduleId) {
@@ -111,6 +116,17 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
                 .build();
 
         Schedule saved = repository.save(schedule);
+
+        ScheduleCreatedEvent scheduleCreatedEvent =
+                new ScheduleCreatedEvent(currentUser.getId(),
+                        storeId,
+                        store.getStoreCode(),
+                        store.getName(),
+                        dto.year(),
+                        dto.month(),
+                        LocalDateTime.now()
+                );
+        scheduleEventProducer.sendScheduleCreatedEvent(scheduleCreatedEvent);
 
         return mapper.toDTO(saved);
     }
