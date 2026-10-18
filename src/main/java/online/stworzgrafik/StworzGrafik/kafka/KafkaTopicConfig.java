@@ -26,6 +26,9 @@ public class KafkaTopicConfig {
         return createTopic(KafkaTopics.DEMO_DELETED);
     }
 
+    @Bean
+    public NewTopic scheduleCreatedTopic() {return createTopic(KafkaTopics.SCHEDULE_CREATED);}
+    
     private NewTopic createTopic(KafkaTopics topics){
         return new NewTopic(topics.name(), partitions,(short) replicationFactor);
     }
