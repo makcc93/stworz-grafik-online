@@ -177,7 +177,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
             throw new AccessDeniedException("Access denied for store with id " + storeId);
         }
 
-        int standardWorkingHours = calendarCalculation.getMonthlyStandardWorkingHours(year, month);
+        int standardWorkingHours = calendarCalculation.getMonthlyWorkingHours(year, month);
 
         List<Employee> nonWarehouseEmployees = employeeEntityService
                 .findAllStoreActiveEmployees(storeId)

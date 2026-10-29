@@ -7,6 +7,8 @@ import online.stworzgrafik.StworzGrafik.schedule.DTO.CreateScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ResponseScheduleDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.ScheduleSpecificationDTO;
 import online.stworzgrafik.StworzGrafik.schedule.DTO.UpdateScheduleDTO;
+import online.stworzgrafik.StworzGrafik.schedule.kafka.DTO.ScheduleCreatedEvent;
+import online.stworzgrafik.StworzGrafik.schedule.kafka.ScheduleEventProducer;
 import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
 import online.stworzgrafik.StworzGrafik.security.UserAuthorizationService;
 import online.stworzgrafik.StworzGrafik.store.Store;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 import static online.stworzgrafik.StworzGrafik.schedule.ScheduleSpecification.*;
 
@@ -31,6 +35,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     private final StoreEntityService storeEntityService;
     private final CurrentUserProvider currentUserProvider;
     private final UserLabelService userLabelService;
+    private final ScheduleEventProducer scheduleEventProducer;
 
     @Override
     public Schedule findEntityById(Long scheduleId) {
@@ -47,6 +52,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
         verifyStoreAccess(storeId);
 
         Specification<Schedule> specification = Specification.allOf(
+                hasStoreId(storeId),
                 hasId(dto.scheduleId()),
                 hasYear(dto.year()),
                 hasMonth(dto.month()),
@@ -111,6 +117,17 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
 
         Schedule saved = repository.save(schedule);
 
+        ScheduleCreatedEvent scheduleCreatedEvent =
+                new ScheduleCreatedEvent(currentUser.getId(),
+                        storeId,
+                        store.getStoreCode(),
+                        store.getName(),
+                        dto.year(),
+                        dto.month(),
+                        LocalDateTime.now()
+                );
+        scheduleEventProducer.sendScheduleCreatedEvent(scheduleCreatedEvent);
+
         return mapper.toDTO(saved);
     }
 
@@ -118,7 +135,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public ResponseScheduleDTO updateSchedule(Long storeId, Long scheduleId, UpdateScheduleDTO dto) {
         verifyStoreAccess(storeId);
 
-        Schedule schedule = getSchedule(scheduleId);
+        Schedule schedule = getSchedule(storeId, scheduleId);
 
         mapper.updateSchedule(dto,schedule);
 
@@ -135,7 +152,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public ResponseScheduleDTO findById(Long storeId, Long scheduleId) {
         verifyStoreAccess(storeId);
 
-        Schedule schedule = getSchedule(scheduleId);
+        Schedule schedule = getSchedule(storeId, scheduleId);
 
         return mapper.toDTO(schedule);
     }
@@ -150,7 +167,7 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     public void deleteSchedule(Long storeId, Long scheduleId) {
         verifyStoreAccess(storeId);
 
-        Schedule schedule = getSchedule(scheduleId);
+        Schedule schedule = getSchedule(storeId, scheduleId);
 
         repository.delete(schedule);
     }
@@ -166,6 +183,18 @@ class ScheduleServiceImpl implements ScheduleService, ScheduleEntityService{
     private void verifyStoreAccess(Long storeId) {
         if (!userAuthorizationService.hasAccessToStore(storeId)){
             throw new AccessDeniedException("Access denied for store with id " + storeId);
+        }
+    }
+
+    private Schedule getSchedule(Long storeId, Long scheduleId) {
+        Schedule schedule = getSchedule(scheduleId);
+        verifyScheduleAndStoreMatching(storeId, scheduleId, schedule);
+        return schedule;
+    }
+
+    private static void verifyScheduleAndStoreMatching(Long storeId, Long scheduleId, Schedule schedule) {
+        if (!schedule.getStore().getId().equals(storeId)) {
+            throw new AccessDeniedException("Schedule id " + scheduleId + " does not belong to store with id " + storeId);
         }
     }
 

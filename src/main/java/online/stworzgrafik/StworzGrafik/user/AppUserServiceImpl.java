@@ -170,6 +170,12 @@ public class AppUserServiceImpl implements AppUserService{
         return appUserRepository.save(appUser);
     }
 
+    @Override
+    public void deleteSystemUserIfExists(Long userId) {
+        appUserRepository.findById(userId)
+                .ifPresent(appUserRepository::delete);
+    }
+
     private UserResponse toResponse(AppUser user) {
         return new UserResponse(
                 user.getId(),

@@ -153,9 +153,17 @@ public class ScheduleGeneratorContext {
         Map<Employee, Shift> dailySchedule = finalSchedule.getOrDefault(date, Map.of());
 
         if (!dailySchedule.isEmpty()){
+            Shift shift = dailySchedule.getOrDefault(employee, defaultDaysOffShift);
+
+            deleteEmployeeHours(employee,shift);
             dailySchedule.remove(employee);
 
-            log.info("Usuwam zmianę w dniu {} u pracownika {} {}", date, employee.getFirstName(), employee.getLastName());
+
+            log.info("Usuwam zmianę w dniu {} u pracownika {} {}, zmiejszam godziny o {}",
+                    date,
+                    employee.getFirstName(),
+                    employee.getLastName(),
+                    getShiftLength(shift));
         }
     }
 
@@ -417,6 +425,15 @@ public class ScheduleGeneratorContext {
 
         BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
         BigDecimal newValueOfEmployeeHours = employeeHoursValue.add(shiftHours);
+
+        employeeHours.put(employee,newValueOfEmployeeHours);
+    }
+
+    private void deleteEmployeeHours(Employee employee, Shift shift){
+        BigDecimal shiftHours = getEffectiveShiftHours(employee, shift);
+
+        BigDecimal employeeHoursValue = this.employeeHours.getOrDefault(employee, BigDecimal.ZERO);
+        BigDecimal newValueOfEmployeeHours = employeeHoursValue.subtract(shiftHours);
 
         employeeHours.put(employee,newValueOfEmployeeHours);
     }

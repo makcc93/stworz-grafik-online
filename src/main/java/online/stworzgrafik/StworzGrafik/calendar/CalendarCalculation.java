@@ -1,8 +1,7 @@
 package online.stworzgrafik.StworzGrafik.calendar;
 
-import de.focus_shift.jollyday.core.HolidayManager;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import online.stworzgrafik.StworzGrafik.calendar.workingNorm.WorkingNormService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class CalendarCalculation {
-    private final HolidayManager holidayManager;
+    private final StandardWorkingHoursCalculator standardWorkingHoursCalculator;
+    private final WorkingNormService workingNormService;
 
     public List<Integer> getDayNumbersByDayOfWeek(int year, int month, DayOfWeek dayOfWeek) {
         List<Integer> result = new ArrayList<>();
@@ -37,37 +37,15 @@ public class CalendarCalculation {
     }
 
     public int getMonthlyMaxWorkingDays(int year, int month) {
-        int monthlyWorkingDays = 0;
-
-        YearMonth yearMonth = YearMonth.of(year, month);
-        LocalDate date = yearMonth.atDay(1);
-
-        while (date.getMonthValue() == month) {
-            if (date.getDayOfWeek() != DayOfWeek.SATURDAY &&
-                    date.getDayOfWeek() != DayOfWeek.SUNDAY &&
-                    !holidayManager.isHoliday(date)) {
-                monthlyWorkingDays++;
-            }
-
-            if (date.getDayOfWeek() == DayOfWeek.SATURDAY &&
-                    holidayManager.isHoliday(date)){
-                monthlyWorkingDays--;
-            }
-
-            date = date.plusDays(1);
-        }
-
-        return monthlyWorkingDays;
+        return standardWorkingHoursCalculator.getMonthlyMaxWorkingDays(year, month);
     }
 
-    public int getMonthlyStandardWorkingHours(int year, int month){
-        int monthlyMaxWorkingDays = getMonthlyMaxWorkingDays(year, month);
-
-        return monthlyMaxWorkingDays * 8;
+    public int getMonthlyWorkingHours(int year, int month){
+        return workingNormService.getHours(year, month);
     }
 
     public BigDecimal getMonthlyNormForEmployee(int year, int month, Employee employee) {
-        BigDecimal baseNorm = BigDecimal.valueOf(getMonthlyStandardWorkingHours(year, month));
+        BigDecimal baseNorm = BigDecimal.valueOf(getMonthlyWorkingHours(year, month));
         BigDecimal etatMultiplier = getEtatMultiplier(employee);
 
         BigDecimal norm = baseNorm.multiply(etatMultiplier)

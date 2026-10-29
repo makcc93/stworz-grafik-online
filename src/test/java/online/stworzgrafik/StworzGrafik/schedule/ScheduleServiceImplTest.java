@@ -14,6 +14,7 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -63,7 +64,7 @@ class ScheduleServiceImplTest {
     @Mock
     private UserLabelService userLabelService;
 
-    @PrePersist
+    @BeforeEach
     void setup(){
         appUser = AppUser.builder().build();
     }
@@ -224,8 +225,19 @@ class ScheduleServiceImplTest {
         Integer month = 6;
         UpdateScheduleDTO dto = new TestUpdateScheduleDTO().withName(updatedName).withYear(year).withMonth(month).build();
 
-        Schedule schedule = new TestScheduleBuilder().build();
-        ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO().withId(schedule.getId()).withName(updatedName).withYear(year).withMonth(month).build();
+        Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
+        Schedule schedule = new TestScheduleBuilder()
+                .withStore(store).
+                build();
+
+        ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO()
+                .withId(schedule.getId())
+                .withName(updatedName)
+                .withYear(year)
+                .withMonth(month)
+                .build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
         when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
@@ -295,8 +307,20 @@ class ScheduleServiceImplTest {
         Long storeId = 1L;
         Long scheduleId = 10L;
 
-        Schedule schedule = new TestScheduleBuilder().build();
-        ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO().withId(schedule.getId()).withName(schedule.getName()).withYear(schedule.getYear()).withMonth(schedule.getMonth()).build();
+        Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
+        Schedule schedule = new TestScheduleBuilder()
+                .withStore(store)
+                .build();
+
+        ResponseScheduleDTO responseDTO = new TestResponseScheduleDTO()
+                .withId(schedule.getId())
+                .withStoreId(storeId)
+                .withName(schedule.getName())
+                .withYear(schedule.getYear())
+                .withMonth(schedule.getMonth())
+                .build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
         when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
@@ -439,7 +463,12 @@ class ScheduleServiceImplTest {
         Long storeId = 1L;
         Long scheduleId = 10L;
 
-        Schedule schedule = new TestScheduleBuilder().build();
+        Store store = new TestStoreBuilder().build();
+        store.setId(storeId);
+
+        Schedule schedule = new TestScheduleBuilder()
+                .withStore(store).
+                build();
 
         when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
         when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));

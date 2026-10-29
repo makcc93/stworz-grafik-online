@@ -511,7 +511,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private void applyCloseStoreEmployee(ScheduleGeneratorContext context, LocalDate date, List<Employee> availableEmployees, List<Shift> shiftsSorted) {
-        Optional<Shift> closeShift = shiftsSorted.stream().min(longestCloseStoreShift());
+        Optional<Shift> closeShift = shiftsSorted.stream().min(shortestCloseStoreShift());
 
         if (closeShift.isEmpty()){
             log.info("Brak dostępnej zmiany do zamknięcia sklepu w dniu {}", date);
@@ -778,6 +778,15 @@ public class EmployeeToShiftMatcher {
                 );
     }
 
+    private static Comparator<Shift> shortestCloseStoreShift() {
+        return Comparator.comparingInt(
+                        (Shift shift) -> shift.getEndHour().getHour()
+                ).reversed()
+                .thenComparingInt(
+                        (Shift shift) -> shift.getEndHour().getHour() - shift.getStartHour().getHour()
+                );
+    }
+
     private static Comparator<Shift> longestOpenStoreShift() {
         return Comparator.comparingInt(
                         (Shift shift) -> shift.getStartHour().getHour()
@@ -832,7 +841,10 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean whenEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
-        if (context.getWorkingDaysCount().getOrDefault(employee,0) >= calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth())) {
+        Integer workingDaysCount = context.getWorkingDaysCount().getOrDefault(employee, 0);
+        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+
+        if (workingDaysCount >= monthlyMaxWorkingDays) {
             log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}", employee.getFirstName(), employee.getLastName(), day);
 
             context.registerMessageOnSchedule(new CreateScheduleMessageDTO(

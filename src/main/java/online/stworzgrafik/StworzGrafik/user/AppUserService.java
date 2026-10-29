@@ -22,4 +22,5 @@ public interface AppUserService {
     List<Long> findStoreIdsByBranchId(Long branchId);
     boolean existsByLogin(String login);
     AppUser save(AppUser appUser);
+    void deleteSystemUserIfExists(Long userId);
 }

@@ -1,7 +1,8 @@
 package online.stworzgrafik.StworzGrafik.demo;
 
-import online.stworzgrafik.StworzGrafik.user.DTO.AuthResponse;
+import online.stworzgrafik.StworzGrafik.demo.DTO.DemoResponse;
 
 public interface DemoService {
-    AuthResponse createAccount();
+    DemoResponse createDemo();
+    void deleteDemo(Long userId, Long storeId);
 }
