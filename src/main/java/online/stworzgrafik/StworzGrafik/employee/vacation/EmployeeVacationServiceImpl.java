@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.employee.vacation;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVa
     private final UserAuthorizationService userAuthorizationService;
     private final StoreEntityService storeService;
     private final EmployeeEntityService employeeService;
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final CurrentUserProvider currentUserProvider;
     private final UserLabelService userLabelService;
 
@@ -190,7 +190,7 @@ class EmployeeVacationServiceImpl implements EmployeeVacationService, EmployeeVa
             LocalDate date = LocalDate.of(year, month, day);
             if (date.getDayOfWeek() != DayOfWeek.SATURDAY
                     && date.getDayOfWeek() != DayOfWeek.SUNDAY
-                    && !holidayManager.isHoliday(date)) {
+                    && !holidayService.isHoliday(date)) {
                 verifiedMonthlyVacation[day - 1] = originalMonthlyVacation[day - 1];
             }
         }

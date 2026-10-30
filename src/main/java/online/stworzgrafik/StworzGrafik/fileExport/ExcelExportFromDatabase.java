@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.fileExport;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExcelExportFromDatabase {
 
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final ScheduleEntityService scheduleEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final CalendarCalculation calendarCalculation;
@@ -228,7 +228,7 @@ public class ExcelExportFromDatabase {
 
         boolean isWeekendOrHoliday = date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || holidayManager.isHoliday(date);
+                || holidayService.isHoliday(date);
 
         if (isWeekendOrHoliday) color = IndexedColors.GREY_25_PERCENT;
 

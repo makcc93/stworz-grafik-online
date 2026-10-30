@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -19,7 +19,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrategy{
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     @Override
     public ShiftAnalyzeType getSupportedType() {
@@ -79,7 +79,7 @@ public class ManagerOpeningHourAnalysisStrategy implements ScheduleAnalysisStrat
                 .max(Comparator.comparing(empl -> context.getEmployeeHours().getOrDefault(empl, BigDecimal.ZERO)));
 
         if (employeeWithHighestMonthlyWorkingHours.isEmpty()){
-            if (!holidayManager.isHoliday(day)) {
+            if (!holidayService.isHoliday(day)) {
                 log.info("Brak dostępnego pracownika w dniu {},", day);
 
                 context.registerMessageOnSchedule(

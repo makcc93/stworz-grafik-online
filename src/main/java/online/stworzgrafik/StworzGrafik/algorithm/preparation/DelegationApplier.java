@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.preparation;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Component
 public class DelegationApplier {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     public void applyDelegationToSchedule(ScheduleGeneratorContext context){
         log.info("WPROWADZENIE DELEGACJI");
@@ -36,7 +36,7 @@ public class DelegationApplier {
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(year, month, day);
 
-            if (holidayManager.isHoliday(date)){
+            if (holidayService.isHoliday(date)){
                 continue;
             }
 

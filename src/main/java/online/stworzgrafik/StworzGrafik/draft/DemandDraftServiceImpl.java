@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
     private final DemandDraftMapper demandDraftMapper;
     private final UserContext userContext;
     private final UserAuthorizationService userAuthorizationService;
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final CalendarCalculation calendarCalculation;
     private final EmployeeEntityService employeeEntityService;
     private final CurrentUserProvider currentUserProvider;
@@ -58,7 +58,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
                     .orElseThrow(() -> new EntityNotFoundException("Cannot find demand draft on date " + dto.draftDate() + " for store with id " + storeId)));
         }
 
-        int[] validatedDailyDemandDraft = holidayManager.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
+        int[] validatedDailyDemandDraft = holidayService.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
 
         DemandDraft demandDraft = DemandDraft.builder()
                 .store(store)
@@ -82,7 +82,7 @@ class DemandDraftServiceImpl implements DemandDraftService, DemandDraftEntitySer
         DemandDraft demandDraft = demandDraftRepository.findById(draftId).orElseThrow(() ->
                 new EntityNotFoundException("Cannot find demand draft by id " + draftId));
 
-        int[] validatedDailyDemandDraft = holidayManager.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
+        int[] validatedDailyDemandDraft = holidayService.isHoliday(dto.draftDate()) ? new int[24] : dto.hourlyDemand();
         UpdateDemandDraftDTO validatedDto = new UpdateDemandDraftDTO(dto.draftDate(), validatedDailyDemandDraft);
 
         demandDraftMapper.updateDemandDraft(validatedDto,demandDraft);

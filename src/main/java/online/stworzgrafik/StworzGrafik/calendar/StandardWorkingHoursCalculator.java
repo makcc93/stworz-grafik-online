@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.calendar;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 
 /**
- * Czysty kalkulator kalendarza (bez dostępu do bazy) – zależy wyłącznie od HolidayManager.
+ * Kalkulator dni roboczych i domyślnej normy – zależy wyłącznie od HolidayService (święta z bazy/jollyday).
  * Wydzielony z CalendarCalculation, żeby WorkingNormService mógł wyliczać wartości domyślne
  * bez cyklicznej zależności (CalendarCalculation -> WorkingNormService -> CalendarCalculation).
  */
@@ -18,7 +18,7 @@ import java.time.YearMonth;
 public class StandardWorkingHoursCalculator {
     private static final int STANDARD_DAILY_HOURS = 8;
 
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     /**
      * Liczba dni roboczych w miesiącu: pon-pt bez świąt, a każde święto w sobotę
@@ -33,12 +33,12 @@ public class StandardWorkingHoursCalculator {
         while (date.getMonthValue() == month) {
             if (date.getDayOfWeek() != DayOfWeek.SATURDAY &&
                     date.getDayOfWeek() != DayOfWeek.SUNDAY &&
-                    !holidayManager.isHoliday(date)) {
+                    !holidayService.isHoliday(date)) {
                 monthlyWorkingDays++;
             }
 
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY &&
-                    holidayManager.isHoliday(date)) {
+                    holidayService.isHoliday(date)) {
                 monthlyWorkingDays--;
             }
 

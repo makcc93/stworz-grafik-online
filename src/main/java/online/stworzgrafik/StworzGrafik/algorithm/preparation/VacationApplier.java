@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.preparation;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -17,7 +17,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class VacationApplier {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     public void applyVacationsToSchedule(ScheduleGeneratorContext context){
         log.info("WPROWADZENIE URLOPÓW");
@@ -37,7 +37,7 @@ public class VacationApplier {
             for (Employee employee : employeesWithVacation) {
                 if (!context.employeeIsOnVacation(employee, date)) continue;
 
-                if (holidayManager.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
+                if (holidayService.isHoliday(date) || date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
                     context.addEmployeeDayOffProposal(date,employee);
                     continue;
                 }

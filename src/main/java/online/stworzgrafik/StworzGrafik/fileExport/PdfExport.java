@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.fileExport;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PdfExport {
 
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final ScheduleEntityService scheduleEntityService;
     private final ScheduleDetailsEntityService scheduleDetailsEntityService;
     private final CalendarCalculation calendarCalculation;
@@ -320,7 +320,7 @@ public class PdfExport {
 
         boolean isWeekendOrHoliday = date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || holidayManager.isHoliday(date);
+                || holidayService.isHoliday(date);
 
         if (code != null) {
             return switch (code) {
@@ -429,7 +429,7 @@ public class PdfExport {
     private boolean isWeekendOrHoliday(LocalDate date) {
         return date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || holidayManager.isHoliday(date);
+                || holidayService.isHoliday(date);
     }
 
     // ── Tworzenie komórek PDF ───────────────────────────────────────────────

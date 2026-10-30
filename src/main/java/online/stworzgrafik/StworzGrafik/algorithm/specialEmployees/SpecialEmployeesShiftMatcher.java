@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.specialEmployees;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class SpecialEmployeesShiftMatcher {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     public void proceed(ScheduleGeneratorContext context) {
         log.info("PRACOWNIK SPECJALNY - TWORZENIE INDYWIDUALNEGO GRAFIKA");
@@ -284,7 +284,7 @@ public class SpecialEmployeesShiftMatcher {
         int dayOffProposalsCount = 0;
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = yearMonth.atDay(day);
-            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY || holidayManager.isHoliday(date)) continue;
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY || holidayService.isHoliday(date)) continue;
 
             if (context.employeeHasProposalDaysOff(employee,date)) dayOffProposalsCount += 1;
         }

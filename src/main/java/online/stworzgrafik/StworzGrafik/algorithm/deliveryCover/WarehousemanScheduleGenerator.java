@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.deliveryCover;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -25,10 +25,10 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class WarehousemanScheduleGenerator {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final CalendarCalculation calendarCalculation;
 
-public void generate(ScheduleGeneratorContext context){
+    public void generate(ScheduleGeneratorContext context){
         log.info("GENEROWANIE GRAFIKA MAGAZYNIERA");
         if (!context.isStoreHasDedicatedWarehouseman()){
             return;
@@ -55,7 +55,7 @@ public void generate(ScheduleGeneratorContext context){
             for (int day : dayNumbersByDayOfWeek){
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
-                if (holidayManager.isHoliday(date) || context.employeeHasProposalShift(warehouseman,date) || shift.equals(context.getDefaultDaysOffShift())){
+                if (holidayService.isHoliday(date) || context.employeeHasProposalShift(warehouseman,date) || shift.equals(context.getDefaultDaysOffShift())){
                     continue;
                 }
 

@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     private final CalendarCalculation calendarCalculation;
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     @Override
     public ShiftAnalyzeType getSupportedType() {
@@ -620,7 +620,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
     private boolean isWeekendOrHoliday(LocalDate date) {
         return date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || holidayManager.isHoliday(date);
+                || holidayService.isHoliday(date);
     }
 
     private DividedShiftDTO divideShift(Shift shift, ScheduleGeneratorContext context){

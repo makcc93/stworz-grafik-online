@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -17,7 +17,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
 
     @Override
     public ShiftAnalyzeType getSupportedType() {
@@ -114,7 +114,7 @@ public class HoursSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
             for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
                 LocalDate date = LocalDate.of(context.getYear(), context.getMonth(), day);
 
-                if (holidayManager.isHoliday(date) || Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1)
+                if (holidayService.isHoliday(date) || Arrays.stream(context.getUneditedOriginalDateStoreDraft().getOrDefault(date, new int[24])).sum() < 1)
                     continue;
 
                 Map<Employee, BigDecimal> employeeHours = new HashMap<>();

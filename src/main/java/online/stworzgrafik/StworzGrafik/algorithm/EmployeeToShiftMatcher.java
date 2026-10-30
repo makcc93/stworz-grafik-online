@@ -1,7 +1,7 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
 import com.mysql.cj.log.Log;
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class EmployeeToShiftMatcher {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final CalendarCalculation calendarCalculation;
     private final ScheduleAnalyzer scheduleAnalyzer;
 
@@ -199,7 +199,7 @@ public class EmployeeToShiftMatcher {
     }
 
     private boolean dayIsHolidayOrHasEmptyDemandDraft(LocalDate day, Map<LocalDate, int[]> everyDayStoreDemandDraftAfterProposals) {
-        return holidayManager.isHoliday(day) ||
+        return holidayService.isHoliday(day) ||
                 Arrays.stream(everyDayStoreDemandDraftAfterProposals.getOrDefault(day, new int[24])).sum() == 0;
     }
 

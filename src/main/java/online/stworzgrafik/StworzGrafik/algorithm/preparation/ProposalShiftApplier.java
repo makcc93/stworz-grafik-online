@@ -1,6 +1,6 @@
 package online.stworzgrafik.StworzGrafik.algorithm.preparation;
 
-import de.focus_shift.jollyday.core.HolidayManager;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.algorithm.ScheduleGeneratorContext;
@@ -22,7 +22,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class ProposalShiftApplier {
-    private final HolidayManager holidayManager;
+    private final HolidayService holidayService;
     private final ScheduleAnalyzer scheduleAnalyzer;
 
     public void applyProposalShiftsToSchedule(ScheduleGeneratorContext context){
@@ -36,7 +36,7 @@ public class ProposalShiftApplier {
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = LocalDate.of(year, month, day);
 
-            if (holidayManager.isHoliday(date)) {
+            if (holidayService.isHoliday(date)) {
                 continue;
             }
 
