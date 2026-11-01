@@ -1,15 +1,16 @@
 package online.stworzgrafik.StworzGrafik.draft;
 
-import de.focus_shift.jollyday.core.HolidayManager;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PrePersist;
+import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.branch.Branch;
 import online.stworzgrafik.StworzGrafik.branch.TestBranchBuilder;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import online.stworzgrafik.StworzGrafik.draft.DTO.CreateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.ResponseDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.draft.DTO.UpdateDemandDraftDTO;
 import online.stworzgrafik.StworzGrafik.employee.EmployeeEntityService;
+import online.stworzgrafik.StworzGrafik.employee.hoursConfirmation.EmployeeMonthlyHoursConfirmationEntityService;
 import online.stworzgrafik.StworzGrafik.region.Region;
 import online.stworzgrafik.StworzGrafik.region.TestRegionBuilder;
 import online.stworzgrafik.StworzGrafik.security.CurrentUserProvider;
@@ -20,6 +21,7 @@ import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
 import online.stworzgrafik.StworzGrafik.user.AppUser;
 import online.stworzgrafik.StworzGrafik.user.UserContext;
 import online.stworzgrafik.StworzGrafik.user.label.UserLabelService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,214 +33,277 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DemandDraftServiceImplTest {
+
     @InjectMocks
     private DemandDraftServiceImpl demandDraftServiceImpl;
 
-    @Mock
-    private DemandDraftRepository demandDraftRepository;
+    // === Repozytoria i serwisy wstrzykiwane do DemandDraftServiceImpl ===
+    @Mock private DemandDraftRepository demandDraftRepository;
+    @Mock private DemandDraftMapper demandDraftMapper;
+    @Mock private StoreEntityService storeEntityService;
+    @Mock private UserContext userContext;
+    @Mock private UserAuthorizationService userAuthorizationService;
+    @Mock private HolidayService holidayService;              // ← BYŁO: HolidayManager (błędny typ!)
+    @Mock private CalendarCalculation calendarCalculation;
+    @Mock private EmployeeEntityService employeeEntityService;
+    @Mock private CurrentUserProvider currentUserProvider;
+    @Mock private UserLabelService userLabelService;
+    @Mock private BillingPeriodConfigService billingPeriodConfigService;                          // ← BRAKOWAŁO
+    @Mock private EmployeeMonthlyHoursConfirmationEntityService employeeMonthlyHoursConfirmationEntityService; // ← BRAKOWAŁO
 
-    @Mock
-    private DemandDraftMapper demandDraftMapper;
-
-    @Mock
-    private StoreEntityService storeEntityService;
-
-    @Mock
-    private UserAuthorizationService userAuthorizationService;
-
-    @Mock
-    private HolidayManager holidayManager;
-
-    @Mock
-    private CalendarCalculation calendarCalculation;
-
-    @Mock
-    private EmployeeEntityService employeeEntityService;
-
-    @Mock
-    private UserContext userContext;
-
-    @Mock
-    private AppUser appUser;
-
-    @Mock
-    private CurrentUserProvider currentUserProvider;
-
-    @Mock
-    private UserLabelService userLabelService;
+    // === Dane testowe ===
+    private static final Long STORE_ID = 1L;
+    private static final LocalDate DRAFT_DATE = LocalDate.of(2021, 9, 9);
+    private static final int[] HOURLY_DEMAND =
+            {0,0,0,0,0,0,0,0,4,6,8,8,8,8,10,10,10,10,10,10,6,0,0,0};
 
     private Store store;
-    private Long storeId;
-    private LocalDate draftDate = LocalDate.of(2021, 9, 9);
-    private int[] hourlyDemand = {0,0,0,0,0,0,0,0,4,6,8,8,8,8,10,10,10,10,10,10,6,0,0,0};
+    private AppUser appUser;
 
-    @PrePersist
+    @BeforeEach
     void setup() {
         Region region = new TestRegionBuilder().build();
         Branch branch = new TestBranchBuilder().withRegion(region).build();
         store = new TestStoreBuilder().withBranch(branch).build();
-        storeId = store.getId();
-
         appUser = AppUser.builder().build();
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // createDemandDraft
+    // ─────────────────────────────────────────────────────────────────────
+
     @Test
     void createDemandDraft_workingTest() {
-        //given
-        when(storeEntityService.getEntityById(any())).thenReturn(store);
-
-        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO()
-                .withDraftDate(draftDate)
-                .withHourlyDemand(hourlyDemand)
+        // given
+        CreateDemandDraftDTO dto = new TestCreateDemandDraftDTO()
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
                 .build();
 
-        when(demandDraftRepository.existsByStore_IdAndDraftDate(storeId, createDemandDraftDTO.draftDate())).thenReturn(false);
-
-        when(holidayManager.isHoliday(draftDate)).thenReturn(false);
-
-        DemandDraft demandDraft = new TestDemandDraftBuilder()
-                .withStore(store)
-                .withHourlyDemand(hourlyDemand)
-                .build();
-
-        when(demandDraftRepository.save(any(DemandDraft.class))).thenReturn(demandDraft);
-
-        ResponseDemandDraftDTO responseDemandDraftDTO = new TestResponseDemandDraftDTO()
-                .withStoreId(storeId)
-                .withDraftDate(draftDate)
-                .withHourlyDemand(hourlyDemand)
-                .build();
-
-        when(demandDraftMapper.toResponseDemandDraftDTO(demandDraft)).thenReturn(responseDemandDraftDTO);
+        when(storeEntityService.getEntityById(STORE_ID)).thenReturn(store);
+        when(demandDraftRepository.existsByStore_IdAndDraftDate(STORE_ID, DRAFT_DATE)).thenReturn(false);
+        when(holidayService.isHoliday(DRAFT_DATE)).thenReturn(false);
         when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
 
-        //when
-        ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO);
+        DemandDraft savedDraft = new TestDemandDraftBuilder()
+                .withStore(store)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
+                .build();
+        when(demandDraftRepository.save(any(DemandDraft.class))).thenReturn(savedDraft);
 
-        //then
-        assertEquals(draftDate, serviceResponse.draftDate());
-        assertEquals(hourlyDemand, serviceResponse.hourlyDemand());
+        ResponseDemandDraftDTO expected = new TestResponseDemandDraftDTO()
+                .withStoreId(STORE_ID)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
+                .build();
+        when(demandDraftMapper.toResponseDemandDraftDTO(savedDraft)).thenReturn(expected);
 
-        verify(demandDraftRepository, times(1)).existsByStore_IdAndDraftDate(storeId, draftDate);
-        verify(demandDraftRepository, times(1)).save(any());
-        verify(demandDraftMapper, times(1)).toResponseDemandDraftDTO(demandDraft);
+        // when
+        ResponseDemandDraftDTO response = demandDraftServiceImpl.createDemandDraft(STORE_ID, dto);
+
+        // then
+        assertNotNull(response);
+        assertEquals(DRAFT_DATE, response.draftDate());
+        assertArrayEquals(HOURLY_DEMAND, response.hourlyDemand());
+
+        verify(demandDraftRepository).existsByStore_IdAndDraftDate(STORE_ID, DRAFT_DATE);
+        verify(demandDraftRepository).save(any(DemandDraft.class));
+        verify(demandDraftMapper).toResponseDemandDraftDTO(savedDraft);
+        verify(holidayService).isHoliday(DRAFT_DATE);
+    }
+
+    @Test
+    void createDemandDraft_onHolidayZeroesDemand() {
+        // given
+        CreateDemandDraftDTO dto = new TestCreateDemandDraftDTO()
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
+                .build();
+
+        when(storeEntityService.getEntityById(STORE_ID)).thenReturn(store);
+        when(demandDraftRepository.existsByStore_IdAndDraftDate(STORE_ID, DRAFT_DATE)).thenReturn(false);
+        when(holidayService.isHoliday(DRAFT_DATE)).thenReturn(true);  // ← święto
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+
+        DemandDraft savedDraft = new TestDemandDraftBuilder()
+                .withStore(store)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(new int[24])
+                .build();
+        when(demandDraftRepository.save(any(DemandDraft.class))).thenReturn(savedDraft);
+
+        int[] expectedZeros = new int[24];
+        ResponseDemandDraftDTO expected = new TestResponseDemandDraftDTO()
+                .withStoreId(STORE_ID)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(expectedZeros)
+                .build();
+        when(demandDraftMapper.toResponseDemandDraftDTO(savedDraft)).thenReturn(expected);
+
+        // when
+        ResponseDemandDraftDTO response = demandDraftServiceImpl.createDemandDraft(STORE_ID, dto);
+
+        // then
+        assertArrayEquals(expectedZeros, response.hourlyDemand());
+        verify(holidayService).isHoliday(DRAFT_DATE);
     }
 
     @Test
     void createDemandDraft_storeDoesNotExistThrowsException() {
-        //given
-        when(storeEntityService.getEntityById(any())).thenThrow(EntityNotFoundException.class);
+        // given
+        when(storeEntityService.getEntityById(STORE_ID)).thenThrow(EntityNotFoundException.class);
+        CreateDemandDraftDTO dto = new TestCreateDemandDraftDTO().build();
 
-        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO().build();
+        // when & then
+        assertThrows(EntityNotFoundException.class,
+                () -> demandDraftServiceImpl.createDemandDraft(STORE_ID, dto));
 
-        //when
-        assertThrows(EntityNotFoundException.class, () -> demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO));
+        verify(demandDraftRepository, never()).save(any());
     }
 
     @Test
     void createDemandDraft_draftAlreadyExistsReturnsExistingDraft() {
         // given
-        when(storeEntityService.getEntityById(any())).thenReturn(store);
-        when(demandDraftRepository.existsByStore_IdAndDraftDate(any(), any())).thenReturn(true);
-
-        CreateDemandDraftDTO createDemandDraftDTO = new TestCreateDemandDraftDTO()
-                .withDraftDate(draftDate)
+        CreateDemandDraftDTO dto = new TestCreateDemandDraftDTO()
+                .withDraftDate(DRAFT_DATE)
                 .build();
+
+        when(storeEntityService.getEntityById(STORE_ID)).thenReturn(store);
+        when(demandDraftRepository.existsByStore_IdAndDraftDate(STORE_ID, DRAFT_DATE)).thenReturn(true);
 
         DemandDraft existingDraft = new TestDemandDraftBuilder()
                 .withStore(store)
-                .withDraftDate(draftDate)
-                .withHourlyDemand(hourlyDemand)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
                 .build();
-
-        when(demandDraftRepository.findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId, draftDate))
+        when(demandDraftRepository.findFirstByStore_IdAndDraftDateOrderByIdDesc(STORE_ID, DRAFT_DATE))
                 .thenReturn(Optional.of(existingDraft));
 
-        ResponseDemandDraftDTO expectedResponse = new TestResponseDemandDraftDTO()
-                .withStoreId(storeId)
-                .withDraftDate(draftDate)
-                .withHourlyDemand(hourlyDemand)
+        ResponseDemandDraftDTO expected = new TestResponseDemandDraftDTO()
+                .withStoreId(STORE_ID)
+                .withDraftDate(DRAFT_DATE)
+                .withHourlyDemand(HOURLY_DEMAND)
                 .build();
-        when(demandDraftMapper.toResponseDemandDraftDTO(existingDraft)).thenReturn(expectedResponse);
+        when(demandDraftMapper.toResponseDemandDraftDTO(existingDraft)).thenReturn(expected);
 
         // when
-        ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.createDemandDraft(storeId, createDemandDraftDTO);
+        ResponseDemandDraftDTO response = demandDraftServiceImpl.createDemandDraft(STORE_ID, dto);
 
         // then
-        assertEquals(draftDate, serviceResponse.draftDate());
-        assertArrayEquals(hourlyDemand, serviceResponse.hourlyDemand());
+        assertEquals(DRAFT_DATE, response.draftDate());
+        assertArrayEquals(HOURLY_DEMAND, response.hourlyDemand());
 
         verify(demandDraftRepository, never()).save(any());
-        verify(demandDraftRepository).findFirstByStore_IdAndDraftDateOrderByIdDesc(storeId, draftDate);
+        verify(demandDraftRepository).findFirstByStore_IdAndDraftDateOrderByIdDesc(STORE_ID, DRAFT_DATE);
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // updateDemandDraft
+    // ─────────────────────────────────────────────────────────────────────
 
     @Test
     void updateDemandDraft_workingTest() {
-        //given
+        // given
         Long draftId = 100L;
 
-        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
-
-        DemandDraft originalDemandDraft = new TestDemandDraftBuilder()
+        DemandDraft originalDraft = new TestDemandDraftBuilder()
                 .withStore(store)
-                .withHourlyDemand(hourlyDemand)
+                .withHourlyDemand(HOURLY_DEMAND)
                 .build();
-
-        when(demandDraftRepository.findById(draftId)).thenReturn(Optional.ofNullable(originalDemandDraft));
 
         LocalDate newDate = LocalDate.of(2025, 12, 16);
-        int[] newDemandDraft = {0,0,0,0,0,0,0,0,3,5,10,10,10,10,11,11,11,11,11,11,10,6,0,0};
-        UpdateDemandDraftDTO updateDemandDraftDTO = new TestUpdateDemandDraftDTO().withHourlyDemand(newDemandDraft).withDraftDate(newDate).build();
-
-        // holidayManager musi zwrócić false żeby demand nie był wyzerowany
-        when(holidayManager.isHoliday(newDate)).thenReturn(false);
-
-        DemandDraft updatedDemandDraft = new TestDemandDraftBuilder()
-                .withStore(store)
+        int[] newDemand = {0,0,0,0,0,0,0,0,3,5,10,10,10,10,11,11,11,11,11,11,10,6,0,0};
+        UpdateDemandDraftDTO dto = new TestUpdateDemandDraftDTO()
+                .withHourlyDemand(newDemand)
                 .withDraftDate(newDate)
-                .withHourlyDemand(newDemandDraft)
                 .build();
 
-        when(demandDraftRepository.save(any())).thenReturn(updatedDemandDraft);
-
-        ResponseDemandDraftDTO responseDemandDraftDTO = new TestResponseDemandDraftDTO()
-                .withDraftDate(newDate)
-                .withHourlyDemand(newDemandDraft)
-                .build();
-
-        when(demandDraftMapper.toResponseDemandDraftDTO(any())).thenReturn(responseDemandDraftDTO);
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(true);
+        when(demandDraftRepository.findById(draftId)).thenReturn(Optional.of(originalDraft));
+        when(holidayService.isHoliday(newDate)).thenReturn(false);            // ← TEGO BRAKOWAŁO!
         when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+        when(demandDraftRepository.save(originalDraft)).thenReturn(originalDraft);
 
-        //when
-        ResponseDemandDraftDTO serviceResponse = demandDraftServiceImpl.updateDemandDraft(storeId, draftId, updateDemandDraftDTO);
+        ResponseDemandDraftDTO expected = new TestResponseDemandDraftDTO()
+                .withDraftDate(newDate)
+                .withHourlyDemand(newDemand)
+                .build();
+        when(demandDraftMapper.toResponseDemandDraftDTO(originalDraft)).thenReturn(expected);
 
-        //then
-        assertEquals(newDate, serviceResponse.draftDate());
-        assertArrayEquals(newDemandDraft, serviceResponse.hourlyDemand());
+        // when
+        ResponseDemandDraftDTO response =
+                demandDraftServiceImpl.updateDemandDraft(STORE_ID, draftId, dto);
+
+        // then
+        assertEquals(newDate, response.draftDate());
+        assertArrayEquals(newDemand, response.hourlyDemand());
+
+        verify(holidayService).isHoliday(newDate);
+        verify(demandDraftMapper).updateDemandDraft(any(UpdateDemandDraftDTO.class), eq(originalDraft));
+        verify(demandDraftRepository).save(originalDraft);
+    }
+
+    @Test
+    void updateDemandDraft_onHolidayZeroesDemand() {
+        // given
+        Long draftId = 100L;
+        DemandDraft originalDraft = new TestDemandDraftBuilder()
+                .withStore(store)
+                .withHourlyDemand(HOURLY_DEMAND)
+                .build();
+
+        LocalDate holidayDate = LocalDate.of(2025, 12, 25);
+        UpdateDemandDraftDTO dto = new TestUpdateDemandDraftDTO()
+                .withHourlyDemand(HOURLY_DEMAND)
+                .withDraftDate(holidayDate)
+                .build();
+
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(true);
+        when(demandDraftRepository.findById(draftId)).thenReturn(Optional.of(originalDraft));
+        when(holidayService.isHoliday(holidayDate)).thenReturn(true);
+        when(currentUserProvider.getCurrentUser()).thenReturn(appUser);
+        when(demandDraftRepository.save(originalDraft)).thenReturn(originalDraft);
+
+        int[] zeros = new int[24];
+        ResponseDemandDraftDTO expected = new TestResponseDemandDraftDTO()
+                .withDraftDate(holidayDate)
+                .withHourlyDemand(zeros)
+                .build();
+        when(demandDraftMapper.toResponseDemandDraftDTO(originalDraft)).thenReturn(expected);
+
+        // when
+        ResponseDemandDraftDTO response =
+                demandDraftServiceImpl.updateDemandDraft(STORE_ID, draftId, dto);
+
+        // then
+        assertArrayEquals(zeros, response.hourlyDemand());
     }
 
     @Test
     void updateDemandDraft_loggedUserHasNotAccessToStoreThrowsException() {
-        //given
+        // given
         Long draftId = 1L;
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(false);
 
-        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
+        UpdateDemandDraftDTO dto = new TestUpdateDemandDraftDTO().build();
 
-        UpdateDemandDraftDTO updateDemandDraftDTO = new TestUpdateDemandDraftDTO().build();
+        // when
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> demandDraftServiceImpl.updateDemandDraft(STORE_ID, draftId, dto));
 
-        //when
-        AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> demandDraftServiceImpl.updateDemandDraft(storeId, draftId, updateDemandDraftDTO));
+        // then
+        assertEquals("Access denied for store with id " + STORE_ID +
+                ", cannot update draft with id " + draftId, ex.getMessage());
 
-        //then
-        assertEquals("Access denied for store with id " + storeId + ", cannot update draft with id " + draftId, exception.getMessage());
-
-        verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(demandDraftRepository, never()).findById(draftId);
+        verify(userAuthorizationService).hasAccessToStore(STORE_ID);
+        verify(demandDraftRepository, never()).findById(any());
+        verify(holidayService, never()).isHoliday(any());
         verify(demandDraftMapper, never()).updateDemandDraft(any(), any());
         verify(demandDraftRepository, never()).save(any());
         verify(demandDraftMapper, never()).toResponseDemandDraftDTO(any());
@@ -246,75 +311,77 @@ class DemandDraftServiceImplTest {
 
     @Test
     void updateDemandDraft_cannotFindDraftToUpdateThrowsException() {
-        //given
+        // given
         Long draftId = 1234L;
-        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
-
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(true);
         when(demandDraftRepository.findById(draftId)).thenReturn(Optional.empty());
 
-        UpdateDemandDraftDTO updateDemandDraftDTO = new TestUpdateDemandDraftDTO().build();
+        UpdateDemandDraftDTO dto = new TestUpdateDemandDraftDTO().build();
 
-        //when
-        EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> demandDraftServiceImpl.updateDemandDraft(storeId, draftId, updateDemandDraftDTO));
+        // when
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> demandDraftServiceImpl.updateDemandDraft(STORE_ID, draftId, dto));
 
-        //then
-        assertEquals("Cannot find demand draft by id " + draftId, exception.getMessage());
+        // then
+        assertEquals("Cannot find demand draft by id " + draftId, ex.getMessage());
 
-        verify(userAuthorizationService, times(1)).hasAccessToStore(any());
-        verify(demandDraftRepository, times(1)).findById(any());
+        verify(demandDraftRepository).findById(draftId);
+        verify(holidayService, never()).isHoliday(any());
         verify(demandDraftMapper, never()).updateDemandDraft(any(), any());
         verify(demandDraftRepository, never()).save(any());
         verify(demandDraftMapper, never()).toResponseDemandDraftDTO(any());
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // deleteDemandDraft
+    // ─────────────────────────────────────────────────────────────────────
+
     @Test
     void deleteDemandDraft_workingTest() {
-        //given
+        // given
         Long draftId = 123L;
-
         when(demandDraftRepository.existsById(draftId)).thenReturn(true);
-        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(true);
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(true);
 
-        //when
-        demandDraftServiceImpl.deleteDemandDraft(storeId, draftId);
+        // when
+        demandDraftServiceImpl.deleteDemandDraft(STORE_ID, draftId);
 
-        //then
-        verify(demandDraftRepository, times(1)).existsById(draftId);
-        verify(userAuthorizationService, times(1)).hasAccessToStore(storeId);
-        verify(demandDraftRepository, times(1)).deleteById(draftId);
+        // then
+        verify(demandDraftRepository).existsById(draftId);
+        verify(userAuthorizationService).hasAccessToStore(STORE_ID);
+        verify(demandDraftRepository).deleteById(draftId);
     }
 
     @Test
     void deleteDemandDraft_draftNotExistThrowsException() {
-        //given
+        // given
         Long notExistingDraftId = 12345656L;
         when(demandDraftRepository.existsById(notExistingDraftId)).thenReturn(false);
 
-        //when
-        EntityNotFoundException exception =
-                assertThrows(EntityNotFoundException.class, () -> demandDraftServiceImpl.deleteDemandDraft(storeId, notExistingDraftId));
+        // when
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> demandDraftServiceImpl.deleteDemandDraft(STORE_ID, notExistingDraftId));
 
-        //then
-        assertEquals("Cannot find demand draft by id " + notExistingDraftId, exception.getMessage());
-        verify(userAuthorizationService, never()).hasAccessToStore(storeId);
-        verify(demandDraftRepository, never()).deleteById(notExistingDraftId);
+        // then
+        assertEquals("Cannot find demand draft by id " + notExistingDraftId, ex.getMessage());
+        verify(userAuthorizationService, never()).hasAccessToStore(any());
+        verify(demandDraftRepository, never()).deleteById(any());
     }
 
     @Test
     void deleteDemandDraft_loggedUserHasNotAccessToStoreThrowsException() {
-        //given
+        // given
         Long draftId = 1L;
         when(demandDraftRepository.existsById(draftId)).thenReturn(true);
-        when(userAuthorizationService.hasAccessToStore(storeId)).thenReturn(false);
+        when(userAuthorizationService.hasAccessToStore(STORE_ID)).thenReturn(false);
 
-        //when
-        AccessDeniedException exception =
-                assertThrows(AccessDeniedException.class, () -> demandDraftServiceImpl.deleteDemandDraft(storeId, draftId));
+        // when
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> demandDraftServiceImpl.deleteDemandDraft(STORE_ID, draftId));
 
-        //then
-        assertEquals("Access denied for store with id " + storeId, exception.getMessage());
-        verify(demandDraftRepository, times(1)).existsById(draftId);
-        verify(demandDraftRepository, never()).deleteById(draftId);
+        // then
+        assertEquals("Access denied for store with id " + STORE_ID, ex.getMessage());
+        verify(demandDraftRepository).existsById(draftId);
+        verify(demandDraftRepository, never()).deleteById(any());
     }
 }

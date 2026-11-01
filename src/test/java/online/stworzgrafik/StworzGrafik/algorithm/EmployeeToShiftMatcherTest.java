@@ -1,16 +1,13 @@
 package online.stworzgrafik.StworzGrafik.algorithm;
 
-import de.focus_shift.jollyday.core.HolidayManager;
-import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursForEmployeeIndexDTO;
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ScheduleAnalyzer;
+import online.stworzgrafik.StworzGrafik.algorithm.analyzer.shift.ShiftAnalyzeType;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
+import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.employee.TestEmployeeBuilder;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsEntityService;
-import online.stworzgrafik.StworzGrafik.schedule.details.ScheduleDetailsService;
-import online.stworzgrafik.StworzGrafik.schedule.message.ScheduleMessageService;
 import online.stworzgrafik.StworzGrafik.shift.Shift;
-import online.stworzgrafik.StworzGrafik.shift.ShiftEntityService;
 import online.stworzgrafik.StworzGrafik.shift.TestShiftBuilder;
 import online.stworzgrafik.StworzGrafik.store.Store;
 import online.stworzgrafik.StworzGrafik.store.TestStoreBuilder;
@@ -28,56 +25,41 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class EmployeeToShiftMatcherTest {
-    @Mock
-    private HolidayManager holidayManager;
 
-    @Mock
-    private ScheduleDetailsService scheduleDetailsService;
-
-    @Mock
-    private ScheduleDetailsEntityService scheduleDetailsEntityService;
-
-    @Mock
-    private ScheduleMessageService scheduleMessageService;
-
-    @Mock
-    private CalendarCalculation calendarCalculation;
-
-    @Mock
-    private ShiftEntityService shiftEntityService;
-
-    @Mock
-    private ScheduleAnalyzer scheduleAnalyzer;
-
+    @Mock private HolidayService holidayService;
+    @Mock private CalendarCalculation calendarCalculation;
+    @Mock private ScheduleAnalyzer scheduleAnalyzer;
 
     @InjectMocks
     private EmployeeToShiftMatcher matcher;
 
-    private final LocalDate DAY = LocalDate.of(2026,3,9);
+    private final LocalDate DAY = LocalDate.of(2026, 3, 9);
     private final Store store = new TestStoreBuilder().build();
 
+    private final OpenCloseHoursForEmployeeIndexDTO HOURS_8_20 =
+            new OpenCloseHoursForEmployeeIndexDTO(8, 20);
+
     @BeforeEach
-    void setupCalendar(){
-//        when(calendarCalculation.getMonthlyMaxWorkingDays(2026, 3)).thenReturn(22);
-//        when(calendarCalculation.getMonthlyStandardWorkingHours(2026, 3)).thenReturn(160);
-//        when(holidayManager.isHoliday(DAY)).thenReturn(false);
+    void setup() {
+        lenient().when(holidayService.isHoliday(any(LocalDate.class))).thenReturn(false);
+        lenient().when(calendarCalculation.getMonthlyMaxWorkingDays(anyInt(), anyInt())).thenReturn(22);
     }
 
     @Test
-    void matchEmployeeToShift_doNotThrowException(){
-        //given
+    void matchEmployeeToShift_doNotThrowException() {
+        // given
         int[] demandDraft = {0,0,0,0,0,0,0,0,3,6,7,7,7,7,9,9,9,9,9,6,0,0,0,0};
         List<Shift> shifts = generateLowestPersonNeededDailyShifts(demandDraft);
         List<Employee> employees = generateEmployees();
 
-       for (Shift shift : shifts){
-           System.out.println(shift.getStartHour() + " - " + shift.getEndHour());
-       }
+        for (Shift shift : shifts) {
+            System.out.println(shift.getStartHour() + " - " + shift.getEndHour());
+        }
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
                 .withStoreNotSpecialActiveEmployees(employees)
@@ -85,35 +67,34 @@ public class EmployeeToShiftMatcherTest {
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
                 .withWorkingDaysCount(generateWorkingDaysCount(employees))
-                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY,new HashMap<>()))
+                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY, new HashMap<>()))
                 .withEmployeeHours(generateEmployeeWorkingHours(employees))
+                .withStoreOpenCloseHoursForEmployeesByDate(Map.of(DAY, HOURS_8_20))
+                .withStoreOpenCloseHoursForClientsByDate(Map.of(DAY, HOURS_8_20))
                 .build();
 
-        //when
+        // when / then
         assertDoesNotThrow(() -> matcher.matchEmployeeToShift(context));
+        verify(holidayService).isHoliday(DAY);
     }
 
     @Test
-    void matchEmployeeToShift_understaffedCaseCancelEmployeeDayOffProposalAndAddToAvailableList(){
-        //
+    void matchEmployeeToShift_understaffedCaseCancelEmployeeDayOffProposalAndAddToAvailableList() {
+        // given
         int[] demandDraft = {0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0};
-        Shift firstShift820 = new TestShiftBuilder().withStartHour(LocalTime.of(8,0)).withEndHour(LocalTime.of(20,0)).build();
-        Shift secondShift820 = new TestShiftBuilder().withStartHour(LocalTime.of(8,0)).withEndHour(LocalTime.of(20,0)).build();
-        Shift thirdShift820 = new TestShiftBuilder().withStartHour(LocalTime.of(8,0)).withEndHour(LocalTime.of(20,0)).build();
+        Shift firstShift820  = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
+        Shift secondShift820 = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
+        Shift thirdShift820  = new TestShiftBuilder().withStartHour(LocalTime.of(8, 0)).withEndHour(LocalTime.of(20, 0)).build();
 
-        List<Shift> shifts = List.of(firstShift820,secondShift820,thirdShift820);
+        List<Shift> shifts = List.of(firstShift820, secondShift820, thirdShift820);
 
-        for (Shift shift : shifts){
-            System.out.println(shift.getStartHour() + " - " + shift.getEndHour());
-        }
-
-        Employee firstManager = new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).build();
+        Employee firstManager  = new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).build();
         Employee secondManager = new TestEmployeeBuilder().withFirstName("Monika").withLastName("Baran").withSap(10000002L).withCanOpenCloseStore(true).withStore(store).build();
-        Employee thirdManager = new TestEmployeeBuilder().withFirstName("Mateusz").withLastName("Kruk").withSap(10000003L).withCanOpenCloseStore(true).withStore(store).build();
+        Employee thirdManager  = new TestEmployeeBuilder().withFirstName("Mateusz").withLastName("Kruk").withSap(10000003L).withCanOpenCloseStore(true).withStore(store).build();
 
-        List<Employee> employees = List.of(firstManager,secondManager);
+        List<Employee> employees = List.of(firstManager, secondManager);
 
-        Map<Employee,int[]> monthlyProposals = new HashMap<>();
+        Map<Employee, int[]> monthlyProposals = new HashMap<>();
         int[] thirdEmployeeDaysOffProposal = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
         monthlyProposals.put(thirdManager, thirdEmployeeDaysOffProposal);
 
@@ -123,15 +104,17 @@ public class EmployeeToShiftMatcherTest {
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
                 .withWorkingDaysCount(generateWorkingDaysCount(employees))
-                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY,new HashMap<>()))
+                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY, new HashMap<>()))
                 .withEmployeeHours(generateEmployeeWorkingHours(employees))
                 .withMonthlyEmployeesProposalDayOff(monthlyProposals)
+                .withStoreOpenCloseHoursForEmployeesByDate(Map.of(DAY, HOURS_8_20))
+                .withStoreOpenCloseHoursForClientsByDate(Map.of(DAY, HOURS_8_20))
                 .build();
 
-        //when
+        // when
         matcher.matchEmployeeToShift(context);
 
-        //then
+        // then
         verify(scheduleAnalyzer).analyzeAndResolve(
                 eq(context),
                 eq(DAY),
@@ -142,18 +125,15 @@ public class EmployeeToShiftMatcherTest {
     }
 
     @Test
-    void matchEmployeeToShift_tooFewEmployeeAvailableRunUnderstaffedAnalysis(){
-        //given
+    void matchEmployeeToShift_tooFewEmployeeAvailableRunUnderstaffedAnalysis() {
+        // given
         int[] demandDraft = {0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0};
-        List<Shift> shifts = new ArrayList<>();
-        for (Shift shift : generateLowestPersonNeededDailyShifts(demandDraft)) {
-            shifts.add(shift);
-        }
+        List<Shift> shifts = new ArrayList<>(generateLowestPersonNeededDailyShifts(demandDraft));
 
         List<Employee> employees = List.of(
                 new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).build(),
                 new TestEmployeeBuilder().withFirstName("Monika").withLastName("Baran").withSap(10000002L).withCanOpenCloseStore(true).withStore(store).build()
-                );
+        );
 
         ScheduleGeneratorContext context = new TestScheduleGeneratorContext()
                 .withStoreNotSpecialActiveEmployees(employees)
@@ -161,31 +141,33 @@ public class EmployeeToShiftMatcherTest {
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
                 .withWorkingDaysCount(generateWorkingDaysCount(employees))
-                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY,new HashMap<>()))
+                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY, new HashMap<>()))
                 .withEmployeeHours(generateEmployeeWorkingHours(employees))
+                .withStoreOpenCloseHoursForEmployeesByDate(Map.of(DAY, HOURS_8_20))
+                .withStoreOpenCloseHoursForClientsByDate(Map.of(DAY, HOURS_8_20))
                 .build();
 
-        //when
+        // when
         matcher.matchEmployeeToShift(context);
 
-        //then
+        // then
         verify(scheduleAnalyzer).analyzeAndResolve(
-                eq(context),
-                eq(DAY),
-                any(),
-                any(),
+                eq(context), eq(DAY), any(), any(),
                 eq(ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS)
+        );
+        verify(scheduleAnalyzer, atLeastOnce()).analyzeAndResolve(
+                eq(context), eq(DAY), any(), any(),
+                eq(ShiftAnalyzeType.UNDERSTAFFED)
         );
     }
 
     @Test
-    void matchEmployeeToShift_onlyOneAvailableManagerModifyHisScheduleFromOpenToCloseStore(){
-        //given
+    void matchEmployeeToShift_onlyOneAvailableManagerModifyHisScheduleFromOpenToCloseStore() {
+        // given
         int[] demandDraft = {0,0,0,0,0,0,0,0,2,3,4,4,4,4,4,5,5,5,5,3,0,0,0,0};
         List<Shift> shifts = new ArrayList<>();
         for (Shift shift : generateLowestPersonNeededDailyShifts(demandDraft)) {
             shifts.add(shift);
-            System.out.println(shift.getStartHour() + " - " + shift.getEndHour());
         }
 
         Employee theOnlyManager = new TestEmployeeBuilder().withFirstName("Damian").withCanOpenCloseStore(true).withStore(store).build();
@@ -205,43 +187,39 @@ public class EmployeeToShiftMatcherTest {
                 .withUneditedOriginalDateStoreDraft(Map.of(DAY, demandDraft))
                 .withGeneratedShiftsByDay(Map.of(DAY, shifts))
                 .withWorkingDaysCount(generateWorkingDaysCount(employees))
-                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY,new HashMap<>()))
+                .withMonthlyEmployeesProposalShiftsByDate(Map.of(DAY, new HashMap<>()))
                 .withEmployeeHours(generateEmployeeWorkingHours(employees))
+                .withStoreOpenCloseHoursForEmployeesByDate(Map.of(DAY, HOURS_8_20))
+                .withStoreOpenCloseHoursForClientsByDate(Map.of(DAY, HOURS_8_20))
                 .build();
 
-        //when
-        matcher.matchEmployeeToShift(context);
-
-        //then
+        // when / then
+        assertDoesNotThrow(() -> matcher.matchEmployeeToShift(context));
     }
 
-    private Map<Employee, BigDecimal> generateEmployeeWorkingHours(List<Employee> employees){
+    private Map<Employee, BigDecimal> generateEmployeeWorkingHours(List<Employee> employees) {
         Map<Employee, BigDecimal> map = new HashMap<>();
-
-        for (Employee e : employees){
-            map.put(e,BigDecimal.valueOf(50));
+        for (Employee e : employees) {
+            map.put(e, BigDecimal.valueOf(50));
         }
-
         return map;
     }
 
-    private Map<Employee,Integer> generateWorkingDaysCount(List<Employee> employees){
+    private Map<Employee, Integer> generateWorkingDaysCount(List<Employee> employees) {
         Map<Employee, Integer> map = new HashMap<>();
-
-        for (Employee e : employees){
-            map.put(e,10);
+        for (Employee e : employees) {
+            map.put(e, 10);
         }
-
         return map;
     }
 
-    private LinkedHashMap<LocalDate, int[]> linkedMapOfDraft(LocalDate DAY, int[] demandDraft){
+    private LinkedHashMap<LocalDate, int[]> linkedMapOfDraft(LocalDate DAY, int[] demandDraft) {
         LinkedHashMap<LocalDate, int[]> map = new LinkedHashMap<>();
         map.put(DAY, demandDraft);
         return map;
     }
 
-    private List<Employee> generateEmployees(){
+    private List<Employee> generateEmployees() {
         return List.of(
                 new TestEmployeeBuilder().withFirstName("Damian").withLastName("Mrozicki").withSap(10000001L).withCanOpenCloseStore(true).withStore(store).build(),
                 new TestEmployeeBuilder().withFirstName("Monika").withLastName("Baran").withSap(10000002L).withCanOpenCloseStore(true).withStore(store).build(),
@@ -269,11 +247,9 @@ public class EmployeeToShiftMatcherTest {
 
     private List<Shift> generateLowestPersonNeededDailyShifts(int[] dailyDemandDraft) {
         List<Shift> startHoursShifts = generateShiftStartHours(dailyDemandDraft);
-
         List<Shift> shiftsSortedDesc = startHoursShifts.stream()
                 .sorted(Comparator.comparing(Shift::getStartHour).reversed())
                 .toList();
-
         return generateShiftEndHours(shiftsSortedDesc, dailyDemandDraft);
     }
 
@@ -281,13 +257,11 @@ public class EmployeeToShiftMatcherTest {
         int index = 0;
         for (int hourOfDay = 23; hourOfDay >= 0; hourOfDay--) {
             int demand = dailyDemandDraft[hourOfDay];
-
             if (demand > 0) {
                 int nextDemand = (hourOfDay == 23) ? 0 : dailyDemandDraft[hourOfDay + 1];
                 for (int i = demand; i > nextDemand; i--) {
-
-                    if (hourOfDay == 23){
-                        shiftsSortedDesc.get(index).setEndHour(LocalTime.of(0,0));
+                    if (hourOfDay == 23) {
+                        shiftsSortedDesc.get(index).setEndHour(LocalTime.of(0, 0));
                     } else {
                         shiftsSortedDesc.get(index).setEndHour(LocalTime.of(hourOfDay + 1, 0));
                     }
@@ -300,15 +274,12 @@ public class EmployeeToShiftMatcherTest {
 
     private List<Shift> generateShiftStartHours(int[] dailyDemandDraft) {
         List<Shift> shifts = new ArrayList<>();
-
         for (int hourOfDay = 0; hourOfDay < dailyDemandDraft.length; hourOfDay++) {
             int demand = dailyDemandDraft[hourOfDay];
-
             if (demand != 0) {
-                int previousDemand = (hourOfDay == 0) ? 0 : dailyDemandDraft[hourOfDay -1];
+                int previousDemand = (hourOfDay == 0) ? 0 : dailyDemandDraft[hourOfDay - 1];
                 for (int i = demand; i > previousDemand; i--) {
-                    Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(hourOfDay,0)).build();
-
+                    Shift shift = new TestShiftBuilder().withStartHour(LocalTime.of(hourOfDay, 0)).build();
                     shifts.add(shift);
                 }
             }

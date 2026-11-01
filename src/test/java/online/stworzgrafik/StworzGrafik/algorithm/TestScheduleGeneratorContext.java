@@ -48,7 +48,8 @@ public class TestScheduleGeneratorContext {
     private Map<Employee, Set<LocalDate>> employeeAssignToCheckout = new HashMap<>();
     private Map<Employee, Set<LocalDate>> employeeAssignToOpenClose = new HashMap<>();
     private Map<Employee, Set<LocalDate>> employeeWeeklyRestRequirementDaysOff = new HashMap<>();
-    private final Map<LocalTime, LocalTime> hoursToModify = new HashMap<>();
+    private final Map<LocalTime, LocalTime> startHoursToModify = new HashMap<>();
+    private final Map<LocalTime, LocalTime> endHoursToModify = new HashMap<>();
     private final List<Employee> employeesToModifyHours = new ArrayList<>();
     private Shift defaultVacationShift = new TestShiftBuilder().withStartHour(LocalTime.of(12,0)).withEndHour(LocalTime.of(20,0)).build();
     private Shift defaultDaysOffShift = new TestShiftBuilder().withStartHour(LocalTime.of(0,0)).withEndHour(LocalTime.of(0,0)).build();
@@ -256,7 +257,8 @@ public class TestScheduleGeneratorContext {
                 employeeAssignToCheckout,
                 employeeAssignToOpenClose,
                 employeeWeeklyRestRequirementDaysOff,
-                hoursToModify,
+                startHoursToModify,
+                endHoursToModify,
                 employeesToModifyHours,
                 allShifts,
                 defaultVacationShift,
