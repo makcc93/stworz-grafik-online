@@ -4,29 +4,25 @@ import online.stworzgrafik.StworzGrafik.employee.Employee;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import org.mapstruct.Mapper;
 
-import java.time.LocalTime;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 interface ShiftHourModificationConfigMapper {
 
-    default List<ShiftHourModificationDTO> toDto(Map<LocalTime, LocalTime> hoursToModify) {
-        if (hoursToModify == null) return List.of();
-        return hoursToModify.entrySet().stream()
-                .map(e -> new ShiftHourModificationDTO(e.getKey(), e.getValue()))
+    default List<ShiftHourModificationDTO> toDto(List<ShiftHourRule> rules) {
+        if (rules == null) return List.of();
+        return rules.stream()
+                .sorted(Comparator.comparing(ShiftHourRule::getOriginalHour).thenComparing(ShiftHourRule::getScope))
+                .map(rule -> new ShiftHourModificationDTO(rule.getOriginalHour(), rule.getModifiedHour(), rule.getScope()))
                 .toList();
     }
 
-    default Map<LocalTime, LocalTime> toMap(List<ShiftHourModificationDTO> dtos) {
-        if (dtos == null) return new HashMap<>();
+    default List<ShiftHourRule> toRules(List<ShiftHourModificationDTO> dtos) {
+        if (dtos == null) return List.of();
         return dtos.stream()
-                .collect(Collectors.toMap(
-                        ShiftHourModificationDTO::originalHour,
-                        ShiftHourModificationDTO::modifiedHour
-                ));
+                .map(dto -> new ShiftHourRule(dto.originalHour(), dto.modifiedHour(), dto.scope()))
+                .toList();
     }
 
     default List<Long> toEmployeeIds(List<Employee> employees) {

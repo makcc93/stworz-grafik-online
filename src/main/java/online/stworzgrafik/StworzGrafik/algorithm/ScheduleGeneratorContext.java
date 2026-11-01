@@ -58,7 +58,10 @@ public class ScheduleGeneratorContext {
     private final Map<Employee, Set<LocalDate>> employeeCheckoutDays;
     private final Map<Employee, Set<LocalDate>> employeeOpenCloseDays;
     private final Map<Employee, Set<LocalDate>> employeeWeeklyRestRequirementDaysOff;
-    private final Map<LocalTime, LocalTime> hoursToModify;
+    /** Przesunięcia godziny ROZPOCZĘCIA zmiany (reguły o zakresie START i BOTH). */
+    private final Map<LocalTime, LocalTime> startHoursToModify;
+    /** Przesunięcia godziny ZAKOŃCZENIA zmiany (reguły o zakresie END i BOTH). */
+    private final Map<LocalTime, LocalTime> endHoursToModify;
     private final List<Employee> employeesToModifyHours;
     private final List<Shift> allShifts;
     private final Shift defaultVacationShift;

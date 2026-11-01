@@ -29,6 +29,7 @@ import online.stworzgrafik.StworzGrafik.store.StoreEntityService;
 import online.stworzgrafik.StworzGrafik.store.delivery.StoreDeliveryService;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.DTO.ShiftHourModificationDTO;
 import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourModificationService;
+import online.stworzgrafik.StworzGrafik.store.modificationHours.ShiftHourScope;
 import online.stworzgrafik.StworzGrafik.store.openingHours.DayHours;
 import online.stworzgrafik.StworzGrafik.store.openingHours.StoreOpeningHoursService;
 import org.springframework.stereotype.Component;
@@ -95,7 +96,8 @@ public class ScheduleGeneratorContextFactory {
                 .employeeCheckoutDays(new HashMap<>())
                 .employeeOpenCloseDays(new HashMap<>())
                 .employeeWeeklyRestRequirementDaysOff(new HashMap<>())
-                .hoursToModify(getHoursToModify(storeId))
+                .startHoursToModify(getHoursToModify(storeId, ShiftHourScope.START))
+                .endHoursToModify(getHoursToModify(storeId, ShiftHourScope.END))
                 .employeesToModifyHours(getEmployeesToModifyHours(storeId))
                 .allShifts(getAllShifts())
                 .defaultVacationShift(shiftEntityService.getEntityByHours(LocalTime.of(0,0),LocalTime.of(8,0)))
@@ -175,13 +177,16 @@ public class ScheduleGeneratorContextFactory {
                 .toList();
     }
 
-    private Map<LocalTime, LocalTime> getHoursToModify(Long storeId){
+    /** Reguły przesunięć godzin dla początku (START) albo końca (END) zmiany; reguła BOTH dotyczy obu. */
+    private Map<LocalTime, LocalTime> getHoursToModify(Long storeId, ShiftHourScope target){
         List<ShiftHourModificationDTO> hours = shiftHourModificationService.getHours(storeId).hours();
 
         return hours.stream()
+                .filter(rule -> rule.scope() == ShiftHourScope.BOTH || rule.scope() == target)
                 .collect(Collectors.toMap(
                         ShiftHourModificationDTO::originalHour,
-                        ShiftHourModificationDTO::modifiedHour
+                        ShiftHourModificationDTO::modifiedHour,
+                        (first, second) -> first
                 ));
     }
 

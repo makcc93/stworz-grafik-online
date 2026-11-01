@@ -23,7 +23,8 @@ public class DailyShiftGeneratorAlgorithm {
     private static final int MAX_SHIFT_DURATION_HOURS = 12;
 
     public void modifyShiftsHours(ScheduleGeneratorContext context){
-        Map<LocalTime, LocalTime> hoursToModify = context.getHoursToModify();
+        Map<LocalTime, LocalTime> startHoursToModify = context.getStartHoursToModify();
+        Map<LocalTime, LocalTime> endHoursToModify = context.getEndHoursToModify();
         LinkedHashMap<LocalDate, Map<Employee, Shift>> schedule = context.getFinalSchedule();
 
         for (Map.Entry<LocalDate, Map<Employee,Shift>> entry : schedule.entrySet()){
@@ -36,8 +37,8 @@ public class DailyShiftGeneratorAlgorithm {
 
                 if (!context.getEmployeesToModifyHours().contains(employee)) continue;
 
-                if (hoursToModify.containsKey(shift.getStartHour())){
-                    LocalTime modifiedStartHour = hoursToModify.get(shift.getStartHour());
+                if (startHoursToModify.containsKey(shift.getStartHour())){
+                    LocalTime modifiedStartHour = startHoursToModify.get(shift.getStartHour());
 
                     Shift updatedShift = employee.getIsSpecial()
                             ? context.findShiftByHours(modifiedStartHour, modifiedStartHour.plusHours(requireMaxDailyHours(employee)))
@@ -46,9 +47,9 @@ public class DailyShiftGeneratorAlgorithm {
                     context.updateShiftOnSchedule(date,employee,updatedShift);
                 }
 
-                if (hoursToModify.containsKey(shift.getEndHour())){
+                if (endHoursToModify.containsKey(shift.getEndHour())){
                     Shift potentialUpdatedStartHourShift = context.getFinalSchedule().getOrDefault(date,Map.of()).getOrDefault(employee,context.getDefaultDaysOffShift());
-                    LocalTime modifiedEndHour = hoursToModify.get(shift.getEndHour());
+                    LocalTime modifiedEndHour = endHoursToModify.get(shift.getEndHour());
 
                     Shift updatedShift = employee.getIsSpecial()
                             ? context.findShiftByHours(modifiedEndHour.minusHours(requireMaxDailyHours(employee)), modifiedEndHour)
