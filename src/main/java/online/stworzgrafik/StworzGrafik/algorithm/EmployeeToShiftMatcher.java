@@ -32,86 +32,113 @@ public class EmployeeToShiftMatcher {
 
     public void matchEmployeeToShift(ScheduleGeneratorContext context) {
         log.info("DOPASOWANIE PRACOWNIKÓW DO ZMIAN");
-        LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc = context.getEveryDayStoreDemandDraftWorkingOn();
+
+        LinkedHashMap<LocalDate, int[]> everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc =
+                context.getEveryDayStoreDemandDraftWorkingOn();
 
         Map<LocalDate, List<Shift>> generatedShiftsByDate = context.getGeneratedShiftsByDay();
         List<Employee> storeActiveEmployees = context.getStoreNotSpecialActiveEmployees();
 
-        for (Map.Entry<LocalDate,int[]> entry : everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc.entrySet()) {
+        for (Map.Entry<LocalDate, int[]> entry :
+                everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc.entrySet()) {
+
             LocalDate date = entry.getKey();
 
-            if (dayIsHolidayOrHasEmptyDemandDraft(date, everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc)) {
-                log.info("Pomijam dzień {} ponieważ jest świętem lub brak ustalonego zapotrzebowania na pracę", date);
+            if (dayIsHolidayOrHasEmptyDemandDraft(
+                    date,
+                    everyDayStoreDemandDraftAfterProposalsSortedByDraftDesc)) {
 
+                log.info(
+                        "Pomijam dzień {} ponieważ jest świętem lub brak ustalonego zapotrzebowania na pracę",
+                        date
+                );
                 continue;
             }
 
-            List<Employee> availableEmployees = getAvailableEmployees(context, storeActiveEmployees, date);
-            List<Shift> shiftsSorted = getShiftsSortedByStartHour(generatedShiftsByDate, date);
+            List<Employee> availableEmployees =
+                    getAvailableEmployees(context, storeActiveEmployees, date);
 
-            showShiftsInLog(shiftsSorted,date);
+            List<Shift> shiftsSorted =
+                    getShiftsSortedByStartHour(generatedShiftsByDate, date);
 
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_OPENING_HOUR);
-            scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.MANAGER_CLOSING_HOUR);
+            showShiftsInLog(shiftsSorted, date);
 
-            if (!morningOpenStoreEmployeeAlreadyInSchedule(context,date)) {
+            scheduleAnalyzer.analyzeAndResolve(
+                    context, date, shiftsSorted, availableEmployees,
+                    ShiftAnalyzeType.TOO_MANY_DAY_OFF_PROPOSALS
+            );
+
+            scheduleAnalyzer.analyzeAndResolve(
+                    context, date, shiftsSorted, availableEmployees,
+                    ShiftAnalyzeType.TOO_MANY_SHIFT_PROPOSALS
+            );
+
+            scheduleAnalyzer.analyzeAndResolve(
+                    context, date, shiftsSorted, availableEmployees,
+                    ShiftAnalyzeType.MANAGER_OPENING_HOUR
+            );
+
+            scheduleAnalyzer.analyzeAndResolve(
+                    context, date, shiftsSorted, availableEmployees,
+                    ShiftAnalyzeType.MANAGER_CLOSING_HOUR
+            );
+
+            if (!morningOpenStoreEmployeeAlreadyInSchedule(context, date)) {
                 applyOpenStoreEmployee(context, date, availableEmployees, shiftsSorted);
-            }
-            else {
+            } else {
                 log.info("JEST RANO KIEROWNIK");
             }
 
-            if (!afternoonCloseStoreEmployeeAlreadyInSchedule(context,date)) {
+            if (!afternoonCloseStoreEmployeeAlreadyInSchedule(context, date)) {
                 applyCloseStoreEmployee(context, date, availableEmployees, shiftsSorted);
-            }
-            else {
+            } else {
                 log.info("JEST POPOŁUDNIU KIEROWNIK");
             }
 
             applyCashierIfPresent(context, date, availableEmployees, shiftsSorted);
 
-            if (!morningCreditEmployeeAlreadyInSchedule(context,date)){
+            if (!morningCreditEmployeeAlreadyInSchedule(context, date)) {
                 applyMorningCreditEmployee(context, availableEmployees, shiftsSorted, date);
-            }
-            else {
+            } else {
                 log.info("JEST RANO RATALNY");
             }
 
-            if (!afternoonCreditEmployeeAlreadyInSchedule(context,date)){
+            if (!afternoonCreditEmployeeAlreadyInSchedule(context, date)) {
                 applyAfternoonCreditEmployee(context, availableEmployees, shiftsSorted, date);
-            }
-            else {
+            } else {
                 log.info("JEST POPOŁUDNIU RATALNY");
             }
 
-            if (!morningCheckoutEmployeeAlreadyInSchedule(context,date)){
-                applyMorningCheckoutEmployee(context,availableEmployees,shiftsSorted,date);
+            if (!morningCheckoutEmployeeAlreadyInSchedule(context, date)) {
+                applyMorningCheckoutEmployee(context, availableEmployees, shiftsSorted, date);
             }
 
-            if (!afternoonCheckoutEmployeeAlreadyInSchedule(context,date)){
-                applyAfternoonCheckoutEmployee(context,availableEmployees,shiftsSorted,date);
+            if (!afternoonCheckoutEmployeeAlreadyInSchedule(context, date)) {
+                applyAfternoonCheckoutEmployee(context, availableEmployees, shiftsSorted, date);
             }
 
             log.info("TERAZ POZOSTALI");
+
             while (!shiftsSorted.isEmpty()) {
 
-                Optional<Shift> shift = shiftsSorted.stream().min(longestShift());
+                Optional<Shift> shift = shiftsSorted.stream()
+                        .min(longestShift());
 
                 if (shift.isEmpty()) {
                     log.info("Brak dostępnych zmian do rozdysponowania w dniu {}", date);
+
                     context.registerMessageOnSchedule(
                             new CreateScheduleMessageDTO(
                                     ScheduleMessageType.INFO,
                                     ScheduleMessageCode.NO_AVAILABLE_SHIFT,
                                     "Brak dostępnych zmian w dniu: " + date,
                                     null,
-                                    date)
+                                    date
+                            )
                     );
                     break;
                 }
-
+                
                 Optional<Employee> employee = availableEmployees.stream()
                         .filter(empl -> !empl.isCashier())
                         .filter(empl -> !empl.isWarehouseman())
@@ -124,30 +151,36 @@ public class EmployeeToShiftMatcher {
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
                             .filter(empl -> context.hasMinimumRestForShift(empl, date, shift.get()))
+                            .filter(empl ->
+                                    context.getWorkingDaysCount().getOrDefault(empl, 0)
+                                            < context.getMonthlyMaxWorkingDays()
+                            )
                             .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
-                    employee.ifPresent(empl -> {
-                        whenEmployeeHoursExceeded(context, date, empl);
-                        whenEmployeeWorkingDaysExceeded(context, date, empl);
-                    });
+                    employee.ifPresent(empl ->
+                            whenEmployeeHoursExceeded(context, date, empl)
+                    );
                 }
 
                 if (employee.isEmpty()) {
                     employee = availableEmployees.stream()
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
+                            .filter(empl ->
+                                    context.getWorkingDaysCount().getOrDefault(empl, 0)
+                                            < context.getMonthlyMaxWorkingDays()
+                            )
                             .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
                     employee.ifPresent(empl -> {
                         registerMinimumRestViolation(context, date, empl, shift.get());
                         whenEmployeeHoursExceeded(context, date, empl);
-                        whenEmployeeWorkingDaysExceeded(context, date, empl);
                     });
                 }
 
-
                 if (employee.isEmpty()) {
                     log.info("Brak dostępnych pracowników w dniu {}", date);
+
                     context.registerMessageOnSchedule(
                             new CreateScheduleMessageDTO(
                                     ScheduleMessageType.INFO,
@@ -157,26 +190,65 @@ public class EmployeeToShiftMatcher {
                                     date
                             )
                     );
+
                     break;
                 }
 
-                context.registerShiftOnSchedule(date, employee.get(), shift.get(), date.getDayOfWeek());
+                Employee selectedEmployee = employee.get();
+
+                int currentWorkingDays = context.getWorkingDaysCount()
+                        .getOrDefault(selectedEmployee, 0);
+
+                if (currentWorkingDays >= context.getMonthlyMaxWorkingDays()) {
+                    log.warn(
+                            "Zablokowano przypisanie zmiany pracownikowi {} {} w dniu {}. " +
+                                    "Liczba dni pracy: {}, limit: {}",
+                            selectedEmployee.getFirstName(),
+                            selectedEmployee.getLastName(),
+                            date,
+                            currentWorkingDays,
+                            context.getMonthlyMaxWorkingDays()
+                    );
+
+                    availableEmployees.remove(selectedEmployee);
+                    continue;
+                }
+
+                context.registerShiftOnSchedule(
+                        date,
+                        selectedEmployee,
+                        shift.get(),
+                        date.getDayOfWeek()
+                );
+
                 shiftsSorted.remove(shift.get());
-                availableEmployees.remove(employee.get());
+                availableEmployees.remove(selectedEmployee);
             }
 
-            while (shiftsSorted.size() > availableEmployees.size()){
+            while (shiftsSorted.size() > availableEmployees.size()) {
                 int sizeBefore = shiftsSorted.size();
 
-                log.warn("Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie", date);
-                scheduleAnalyzer.analyzeAndResolve(context,date,shiftsSorted,availableEmployees, ShiftAnalyzeType.UNDERSTAFFED);
+                log.warn(
+                        "Mamy więcej zmian niż pracowników w dniu {} - wdrażam działanie",
+                        date
+                );
+
+                scheduleAnalyzer.analyzeAndResolve(
+                        context,
+                        date,
+                        shiftsSorted,
+                        availableEmployees,
+                        ShiftAnalyzeType.UNDERSTAFFED
+                );
 
                 if (shiftsSorted.size() == sizeBefore) {
-                    log.warn("Nie udało się rozwiązać niedoboru pracowników dla dnia: {} - pomijam", date);
+                    log.warn(
+                            "Nie udało się rozwiązać niedoboru pracowników dla dnia: {} - pomijam",
+                            date
+                    );
                     break;
                 }
             }
-
         }
     }
 
