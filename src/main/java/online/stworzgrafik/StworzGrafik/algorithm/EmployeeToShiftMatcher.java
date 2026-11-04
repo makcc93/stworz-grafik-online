@@ -138,7 +138,7 @@ public class EmployeeToShiftMatcher {
                     );
                     break;
                 }
-                
+
                 Optional<Employee> employee = availableEmployees.stream()
                         .filter(empl -> !empl.isCashier())
                         .filter(empl -> !empl.isWarehouseman())
@@ -776,7 +776,8 @@ public class EmployeeToShiftMatcher {
             Shift candidateShift,
             java.util.function.Predicate<Employee> roleFilter) {
 
-        Comparator<Employee> comparator = sortByWorkedHoursBalancingShiftType(context, date, candidateShift);
+        Comparator<Employee> comparator =
+                sortByWorkedHoursBalancingShiftType(context, date, candidateShift);
 
         Optional<Employee> compliant = availableEmployees.stream()
                 .filter(roleFilter)
@@ -784,32 +785,36 @@ public class EmployeeToShiftMatcher {
                 .filter(empl -> isEmployeeWithinHoursAndDaysLimit(context, empl))
                 .min(comparator);
 
-        if (compliant.isPresent()) return compliant;
+        if (compliant.isPresent()) {
+            return compliant;
+        }
 
         Optional<Employee> restCompliantOnly = availableEmployees.stream()
                 .filter(roleFilter)
                 .filter(empl -> context.hasMinimumRestForShift(empl, date, candidateShift))
-                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0)
-                        < context.getMonthlyMaxWorkingDays())
+                .filter(empl ->
+                        context.getWorkingDaysCount().getOrDefault(empl, 0)
+                                < context.getMonthlyMaxWorkingDays()
+                )
                 .min(comparator);
 
         if (restCompliantOnly.isPresent()) {
             Employee employee = restCompliantOnly.get();
             whenEmployeeHoursExceeded(context, date, employee);
-            whenEmployeeWorkingDaysExceeded(context, date, employee);
             return restCompliantOnly;
         }
 
         Optional<Employee> fallback = availableEmployees.stream()
                 .filter(roleFilter)
-                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0)
-                        < context.getMonthlyMaxWorkingDays())
+                .filter(empl ->
+                        context.getWorkingDaysCount().getOrDefault(empl, 0)
+                                < context.getMonthlyMaxWorkingDays()
+                )
                 .min(comparator);
 
         fallback.ifPresent(employee -> {
             registerMinimumRestViolation(context, date, employee, candidateShift);
             whenEmployeeHoursExceeded(context, date, employee);
-            whenEmployeeWorkingDaysExceeded(context, date, employee);
         });
 
         return fallback;
