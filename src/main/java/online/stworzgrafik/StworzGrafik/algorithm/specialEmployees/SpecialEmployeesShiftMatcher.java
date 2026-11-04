@@ -44,6 +44,7 @@ public class SpecialEmployeesShiftMatcher {
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
 
+            if (holidayService.isHoliday(date)) continue;
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
             if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
             if (context.employeeIsOnVacation(employee,date)) continue;
@@ -223,7 +224,10 @@ public class SpecialEmployeesShiftMatcher {
 
         for (LocalDate weekend : weekendsScoring.keySet()){
             log.info("[PETLA] sobota={}", weekend);
+            if (holidayService.isHoliday(weekend)) continue;
+
             if (workingWeekends >= maxWorkingWeekends) break;
+
 
             if (context.employeeIsOnDelegation(employee,weekend) || context.employeeHasProposalShift(employee,weekend)) {
                 log.info("[PETLA] delegation CONTINUE");
