@@ -1,5 +1,6 @@
 package online.stworzgrafik.StworzGrafik.calendar;
 
+import lombok.extern.slf4j.Slf4j;
 import online.stworzgrafik.StworzGrafik.calendar.holidays.HolidayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -8,22 +9,14 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
-/**
- * Kalkulator dni roboczych i domyślnej normy – zależy wyłącznie od HolidayService (święta z bazy/jollyday).
- * Wydzielony z CalendarCalculation, żeby WorkingNormService mógł wyliczać wartości domyślne
- * bez cyklicznej zależności (CalendarCalculation -> WorkingNormService -> CalendarCalculation).
- */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StandardWorkingHoursCalculator {
     private static final int STANDARD_DAILY_HOURS = 8;
 
     private final HolidayService holidayService;
 
-    /**
-     * Liczba dni roboczych w miesiącu: pon-pt bez świąt, a każde święto w sobotę
-     * obniża wymiar o jeden dzień (zgodnie z polskim Kodeksem pracy).
-     */
     public int getMonthlyMaxWorkingDays(int year, int month) {
         int monthlyWorkingDays = 0;
 
@@ -45,10 +38,10 @@ public class StandardWorkingHoursCalculator {
             date = date.plusDays(1);
         }
 
+        log.info("____ Montly Max Working Days = {} _____",monthlyWorkingDays);
         return monthlyWorkingDays;
     }
 
-    /** Domyślna norma miesięczna: dni robocze * 8h. */
     public int getDefaultMonthlyHours(int year, int month) {
         return getMonthlyMaxWorkingDays(year, month) * STANDARD_DAILY_HOURS;
     }

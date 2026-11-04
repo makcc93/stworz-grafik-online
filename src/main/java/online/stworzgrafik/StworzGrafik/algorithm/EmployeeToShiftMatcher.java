@@ -120,8 +120,6 @@ public class EmployeeToShiftMatcher {
                         .min(sortByWorkedHoursBalancingShiftType(context, date, shift.get()));
 
                 if (employee.isEmpty()) {
-                    // Brak kandydata mieszczącego się w limicie godzin/dni pracy, a zachowującego 11h odpoczynku -
-                    // próbujemy mimo to, żeby nie zostawić zmiany bez obsady, ale zgłaszamy to jako naruszenie limitu.
                     employee = availableEmployees.stream()
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
@@ -135,8 +133,6 @@ public class EmployeeToShiftMatcher {
                 }
 
                 if (employee.isEmpty()) {
-                    // Brak kandydata zachowującego 11h odpoczynku dobowego - próbujemy mimo to,
-                    // żeby nie zostawić zmiany bez obsady, ale zgłaszamy to jako ostrzeżenie.
                     employee = availableEmployees.stream()
                             .filter(empl -> !empl.isCashier())
                             .filter(empl -> !empl.isWarehouseman())
