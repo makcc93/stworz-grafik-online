@@ -20,6 +20,7 @@ final class EmployeeBuilder {
                 .store(store)
                 .position(position)
                 .enable(true)
+                .isSpecial(false)
                 .build();
     }
 }

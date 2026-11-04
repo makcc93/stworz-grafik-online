@@ -9,6 +9,8 @@ interface EmployeeMapper {
 
     @Mapping(source = "store.id" ,target = "storeId")
     @Mapping(source = "position.id", target = "positionId")
+    @Mapping(source = "specialWorkNorm.id", target = "specialWorkNormId")
+    @Mapping(source = "specialWorkNorm.name", target = "specialWorkNormName")
     ResponseEmployeeDTO toResponseEmployeeDTO(Employee employee);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -16,7 +18,7 @@ interface EmployeeMapper {
     @Mapping(target = "specialWorkNorm", ignore = true)
     void updateEmployee(UpdateEmployeeDTO updateEmployeeDTO, @MappingTarget Employee employee);
 
-    @Mapping(target = "specialWorkNormId", source = "specialWorkNorm.id")
-    @Mapping(target = "specialWorkNormName", source = "specialWorkNorm.name")
-    ResponseEmployeeDTO toDto(Employee employee);
+    default ResponseEmployeeDTO toDto(Employee employee) {
+        return toResponseEmployeeDTO(employee);
+    }
 }
