@@ -33,7 +33,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     @Override
     public ScheduleAnalysisResult analyze(ScheduleGeneratorContext context, LocalDate day, List<Shift> shifts, List<Employee> employees) {
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
 
         LinkedHashMap<Employee,Integer> workingDaysCount = new LinkedHashMap<>();
 
@@ -85,7 +85,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean splitShiftsForManagers(ScheduleGeneratorContext context){
         boolean anySwapDone = false;
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
         List<Employee> managers = context.getStoreNotSpecialActiveEmployees().stream()
@@ -215,7 +215,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean splitShiftsForCredits(ScheduleGeneratorContext context) {
         boolean anySwapDone = false;
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
         List<Employee> creditEmployees = context.getStoreNotSpecialActiveEmployees().stream()
@@ -249,11 +249,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .put(date, shift);
             }
         }
-        // === ZMIANA: sortedData i szukanie kandydatów były wewnątrz pętli "for (int day...)"
-        // powyżej - przez to na wcześniejszych dniach miesiąca szukano zamian mając w puli
-        // tylko część miesiąca (dni 1..day), zamiast całość, a sortedData było przeliczane
-        // od zera 31 razy zamiast raz. Przeniesione poza pętlę, tak jak w
-        // splitShiftsForManagers (tam było zrobione poprawnie).
+
         LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
                 .collect(Collectors.toMap(
@@ -351,7 +347,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean splitShiftsForCheckouts(ScheduleGeneratorContext context){
         boolean anySwapDone = false;
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
         List<Employee> checkoutEmployees = context.getStoreNotSpecialActiveEmployees().stream()
@@ -385,8 +381,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
                         .put(date, shift);
             }
         }
-        // === ZMIANA: patrz komentarz w splitShiftsForCredits - sortedData i szukanie
-        // kandydatów przeniesione poza pętlę "for (int day...)".
+
         LinkedHashMap<Employee, Map<LocalDate, Shift>> sortedData = daysWithShiftsToSplit.entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> context.getWorkingDaysCount().getOrDefault(entry.getKey(), 0)))
                 .collect(Collectors.toMap(
@@ -484,7 +479,7 @@ public class ShiftSplitterAnalysisStrategy implements ScheduleAnalysisStrategy {
 
     private boolean splitShiftsForOthers(ScheduleGeneratorContext context){
         boolean anySwapDone = false;
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         int wantedMaxWorkingDays = monthlyMaxWorkingDays - 1;
 
         List<Employee> others = context.getStoreNotSpecialActiveEmployees().stream()

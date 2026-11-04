@@ -24,6 +24,7 @@ public class TestScheduleGeneratorContext {
     private Integer year = 2026;
     private Integer month =3;
     private Store store = new TestStoreBuilder().build();
+    private int monthlyMaxWorkingDays = 21;
     private Map<Integer, PeriodDateDTO> periodWeek;
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
     private Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;
@@ -233,6 +234,7 @@ public class TestScheduleGeneratorContext {
                 month,
                 schedule,
                 store,
+                monthlyMaxWorkingDays,
                 periodWeek,
                 storeOpenCloseHoursForEmployeesByDate,
                 storeOpenCloseHoursForClientsByDate,

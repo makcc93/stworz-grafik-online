@@ -209,7 +209,7 @@ public class EmployeeToShiftMatcher {
                 .filter(empl -> !context.isEmployeeWorkingInWarehouse(empl,day))
                 .filter(empl -> !context.isEmployeeOnRestRequirementDayOff(empl,day))
                 .filter(empl ->
-                        calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth()) > context.getWorkingDaysCount().getOrDefault(empl,0))
+                        context.getMonthlyMaxWorkingDays() > context.getWorkingDaysCount().getOrDefault(empl,0))
                 .toList()
         );
     }
@@ -717,6 +717,8 @@ public class EmployeeToShiftMatcher {
         Optional<Employee> restCompliantOnly = availableEmployees.stream()
                 .filter(roleFilter)
                 .filter(empl -> context.hasMinimumRestForShift(empl, date, candidateShift))
+                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0)
+                        < context.getMonthlyMaxWorkingDays())
                 .min(comparator);
 
         if (restCompliantOnly.isPresent()) {
@@ -728,6 +730,8 @@ public class EmployeeToShiftMatcher {
 
         Optional<Employee> fallback = availableEmployees.stream()
                 .filter(roleFilter)
+                .filter(empl -> context.getWorkingDaysCount().getOrDefault(empl, 0)
+                        < context.getMonthlyMaxWorkingDays())
                 .min(comparator);
 
         fallback.ifPresent(employee -> {
@@ -742,7 +746,7 @@ public class EmployeeToShiftMatcher {
     private boolean isEmployeeWithinHoursAndDaysLimit(ScheduleGeneratorContext context, Employee employee) {
         boolean withinHoursLimit = context.isEmployeeUnderHoursLimit(employee);
         boolean withinDaysLimit = context.getWorkingDaysCount().getOrDefault(employee, 0)
-                < calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+                < context.getMonthlyMaxWorkingDays();
 
         return withinHoursLimit && withinDaysLimit;
     }
@@ -838,7 +842,7 @@ public class EmployeeToShiftMatcher {
 
     private boolean whenEmployeeWorkingDaysExceeded(ScheduleGeneratorContext context, LocalDate day, Employee employee) {
         Integer workingDaysCount = context.getWorkingDaysCount().getOrDefault(employee, 0);
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
 
         if (workingDaysCount >= monthlyMaxWorkingDays) {
             log.info("Miesięczna suma przepracowanych dni u {} {} przekroczyła maksymalną ilość w dniu {}", employee.getFirstName(), employee.getLastName(), day);

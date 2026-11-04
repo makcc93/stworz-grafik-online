@@ -65,7 +65,7 @@ public class TooManyDayOffProposalStrategy implements ScheduleAnalysisStrategy{
             return false;
         }
 
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(context.getYear(), context.getMonth());
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
 
         Comparator<Employee> byBiggestBufferToLimits = Comparator
                 .comparing((Employee empl) -> context.getRemainingHoursUntilLimit(empl))

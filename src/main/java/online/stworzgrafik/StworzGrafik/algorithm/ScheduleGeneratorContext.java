@@ -34,6 +34,7 @@ public class ScheduleGeneratorContext {
     private final Integer month;
     private final Schedule schedule;
     private final Store store;
+    private final int monthlyMaxWorkingDays;
     private final Map<Integer, PeriodDateDTO> periodWeek;
     private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForEmployeesByDate;
     private final Map<LocalDate, OpenCloseHoursForEmployeeIndexDTO> storeOpenCloseHoursForClientsByDate;

@@ -50,8 +50,6 @@ public class TooManyDayOffProposalStrategyTest {
 
         ScheduleGeneratorContext context = mock(ScheduleGeneratorContext.class);
 
-        when(context.getYear()).thenReturn(year);
-        when(context.getMonth()).thenReturn(month);
         when(context.getWorkingDaysCount()).thenReturn(Collections.emptyMap());
         when(context.isEmployeeUnderHoursLimit(any(Employee.class))).thenReturn(true);
         when(context.getRemainingHoursUntilLimit(emp1)).thenReturn(BigDecimal.valueOf(10));
@@ -70,7 +68,7 @@ public class TooManyDayOffProposalStrategyTest {
         monthlyEmployeesProposalDayOff.put(emp3, emp3MonthlyDayOffProposal);
 
         when(context.getMonthlyEmployeesProposalDayOff()).thenReturn(monthlyEmployeesProposalDayOff);
-        when(calendarCalculation.getMonthlyMaxWorkingDays(anyInt(), anyInt())).thenReturn(21);
+        when(context.getMonthlyMaxWorkingDays()).thenReturn(21);
 
         // when
         strategy.resolve(result, context, date);

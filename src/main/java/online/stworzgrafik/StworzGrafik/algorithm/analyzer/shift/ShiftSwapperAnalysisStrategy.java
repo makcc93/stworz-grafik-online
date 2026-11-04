@@ -82,7 +82,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         YearMonth yearMonth = YearMonth.of(year, month);
 
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
@@ -153,7 +153,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         YearMonth yearMonth = YearMonth.of(year, month);
 
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
@@ -222,7 +222,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         YearMonth yearMonth = YearMonth.of(year, month);
 
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {
@@ -291,7 +291,7 @@ public class ShiftSwapperAnalysisStrategy implements ScheduleAnalysisStrategy {
         boolean anySwapDone = false;
         Integer year = context.getYear();
         Integer month = context.getMonth();
-        int monthlyMaxWorkingDays = calendarCalculation.getMonthlyMaxWorkingDays(year, month);
+        int monthlyMaxWorkingDays = context.getMonthlyMaxWorkingDays();
         YearMonth yearMonth = YearMonth.of(year, month);
 
         for (int repeat = 1; repeat <= timesToRepeat; repeat++) {

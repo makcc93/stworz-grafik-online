@@ -38,7 +38,7 @@ public class StandardWorkingHoursCalculator {
             date = date.plusDays(1);
         }
 
-        log.info("____ Montly Max Working Days = {} _____",monthlyWorkingDays);
+        log.info("Montly Max Working Days = {}",monthlyWorkingDays);
         return monthlyWorkingDays;
     }
 

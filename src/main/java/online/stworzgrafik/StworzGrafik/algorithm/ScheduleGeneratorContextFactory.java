@@ -6,6 +6,7 @@ import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.OpenCloseHoursFor
 import online.stworzgrafik.StworzGrafik.algorithm.analyzer.DTO.PeriodDateDTO;
 import online.stworzgrafik.StworzGrafik.billing.BillingPeriodConfigService;
 import online.stworzgrafik.StworzGrafik.calendar.CalendarCalculation;
+import online.stworzgrafik.StworzGrafik.calendar.StandardWorkingHoursCalculator;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraft;
 import online.stworzgrafik.StworzGrafik.draft.DemandDraftEntityService;
 import online.stworzgrafik.StworzGrafik.employee.Employee;
@@ -62,6 +63,7 @@ public class ScheduleGeneratorContextFactory {
     private final ShiftHourModificationService shiftHourModificationService;
     private final BillingPeriodConfigService billingPeriodConfigService;
     private final EmployeeMonthlyHoursConfirmationEntityService employeeMonthlyHoursConfirmationEntityService;
+    private final StandardWorkingHoursCalculator standardWorkingHoursCalculator;
 
     public ScheduleGeneratorContext create(Long storeId, Integer year, Integer month){
         boolean isLastMonthOfPeriod = isLastMonthOfPeriod(year, month);
@@ -73,6 +75,7 @@ public class ScheduleGeneratorContextFactory {
                 .schedule(scheduleEntityService.findByStoreIdAndYearAndMonth(storeId,year,month))
                 .store(storeEntityService.getEntityById(storeId))
                 .periodWeek(calculatePeriodWeeks(year,month))
+                .monthlyMaxWorkingDays(standardWorkingHoursCalculator.getMonthlyMaxWorkingDays(year,month))
                 .storeOpenCloseHoursForEmployeesByDate(getStoreOpenCloseHourForEmployees(storeId,year,month))
                 .storeOpenCloseHoursForClientsByDate(getStoreOpenCloseHourForClients(storeId,year,month))
                 .storeNotSpecialActiveEmployees(getNotSpecialActiveEmployees(storeId))
