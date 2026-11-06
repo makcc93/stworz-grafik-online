@@ -356,18 +356,28 @@ public class ScheduleGeneratorContextFactory {
 
         List<DemandDraft> monthlyDrafts = demandDraftEntityService.findAllByStoreIdAndDateBetween(storeId, firstDay, lastDay);
 
+        Comparator<DemandDraft> weekendFirst = Comparator.comparing(
+                (DemandDraft draft) -> isWeekend(draft.getDraftDate())
+        ).reversed();
+
+        Comparator<DemandDraft> sortedByTotalDemandDraftDesc = Comparator.comparingInt(
+                (DemandDraft draft) -> Arrays.stream(draft.getHourlyDemand()).sum()
+        ).reversed();
+
         return monthlyDrafts.stream()
-                .sorted(Comparator.comparingInt(
-                                        (DemandDraft demandDraft) -> Arrays.stream(demandDraft.getHourlyDemand()).sum()
-                                )
-                                .reversed()
-                )
+                .sorted(weekendFirst.thenComparing(sortedByTotalDemandDraftDesc))
                 .collect(Collectors.toMap(
                         DemandDraft::getDraftDate,
                         entity -> entity.getHourlyDemand().clone(),
                         (e1, e2) -> {throw new IllegalStateException("Date in store draft cannot be duplicated");},
                         LinkedHashMap::new
                 ));
+    }
+
+    private boolean isWeekend(LocalDate date){
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
     }
 
     private Map<LocalDate,int[]> getOriginalStoreDraft(Long storeId, Integer year, Integer month){

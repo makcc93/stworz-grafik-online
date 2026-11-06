@@ -43,10 +43,8 @@ public class SpecialEmployeesShiftMatcher {
         Map<String,Integer> shifts = shiftsUsedCount();
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++){
             LocalDate date = LocalDate.of(context.getYear(),context.getMonth(),day);
-            Integer workingDaysCount = context.getWorkingDaysCount().getOrDefault(employee, 0);
 
             if (holidayService.isHoliday(date)) continue;
-            if (context.getMonthlyMaxWorkingDays() >= workingDaysCount) break;
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
             if (context.isEmployeeOnRestRequirementDayOff(employee,date)) continue;
             if (context.employeeIsOnVacation(employee,date)) continue;
